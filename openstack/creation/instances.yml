@@ -1,0 +1,19 @@
+---
+- name: instance creation
+  shell: >
+    openstack server create \
+    --image {{ config.image }} \
+    --flavor {{ config.flavor }} \
+    --key-name {{ config.key }} \
+    --port port-{{ item.key }} \
+    {{ item.key }}
+  with_dict: "{{ servers }}"
+
+- name: wait for SSH on each instance
+  command: "ssh -oBatchMode=yes -oStrictHostKeyChecking=no centos@{{ item.value.ip }} true"
+  register: result
+  until: result is success
+  retries: 10
+  delay: 10
+  with_dict: "{{ servers }}"
+

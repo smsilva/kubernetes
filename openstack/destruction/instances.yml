@@ -1,0 +1,6 @@
+---
+- name: delete instance
+  shell: >
+    openstack server delete {{ item.key }}
+  with_dict: "{{ servers }}"
+  ignore_errors: yes
