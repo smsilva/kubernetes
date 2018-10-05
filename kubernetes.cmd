@@ -180,9 +180,23 @@ sudo vim /etc/fstab
 
 sudo hostnamectl set-hostname master-1.example.com
 
+ip=$(ip -4 a | grep inet | grep eth0 | awk '{ print $2 }' | awk -F "/" '{ print $1 }') && \
+hostname=$(hostname | awk -F "." '{ print $1 }') && \
+fqdn=$(hostname) && \
+line=$(echo $ip $hostname $fqdn) && \
+echo $line
+
 sudo vim /etc/hosts
 
 10.0.0.31 master-1 master-1.example.com
+
+  - lineinfile:
+      path: /etc/hosts
+      regexp: '^127\.0\.0\.1'
+      line: '127.0.0.1 localhost'
+      owner: root
+      group: root
+      mode: 0644
 
 sudo kubeadm init --apiserver-advertise-address $(hostname -i)
 
