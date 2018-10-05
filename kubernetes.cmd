@@ -8,47 +8,106 @@ openstack_project_id=devel
 
 openstack port create \
 --disable-port-security \
+--network $openstack_internal_network_id \
 --fixed-ip subnet=$openstack_internal_subnet_id,ip-address=10.0.0.31 \
---network $openstack_internal_network_id \
-port-master-1
+port-master-01
 
-openstack port create \
---disable-port-security \
---fixed-ip subnet=$openstack_internal_subnet_id,ip-address=10.0.0.41 \
---network $openstack_internal_network_id \
-port-node-1
-
-openstack port create \
---disable-port-security \
---fixed-ip subnet=$openstack_internal_subnet_id,ip-address=10.0.0.42 \
---network $openstack_internal_network_id \
-port-node-2
+for node in {1..2}; do
+  openstack port create \
+  --disable-port-security \
+  --network $openstack_internal_network_id \
+  --fixed-ip subnet=$openstack_internal_subnet_id,ip-address=10.0.0.4$node \
+  port-node-0$node;
+done
 
 openstack floating ip create \
 --project $openstack_project_id \
---port port-master-1 \
+--port port-master-01 \
 --floating-ip-address 192.168.1.31 \
-$openstack_public_network_id
+$openstack_public_network_id;
 
-openstack floating ip create \
---project $openstack_project_id \
---port port-node-1 \
---floating-ip-address 192.168.1.41 \
-$openstack_public_network_id
+for node in {1..2}; do
+  openstack floating ip create \
+  --project $openstack_project_id \
+  --port port-node-0$node \
+  --floating-ip-address 192.168.1.4$node \
+  $openstack_public_network_id;
+done
 
-openstack floating ip create \
---project $openstack_project_id \
---port port-node-2 \
---floating-ip-address 192.168.1.42 \
-$openstack_public_network_id
-
-for server in master-1 node-1 node-2; do
+for node in {1..2}; do
   openstack server create \
   --image centos7 \
   --flavor m1.large \
   --key-name director \
-  --port port-$server \
-  $server;
+  --nic port-id=port-node-0$node \
+  node-0$node;
+done
+
+openstack server create \
+--image centos7 \
+--flavor m1.large \
+--key-name director \
+--nic port-id=port-master-01 \
+master-01
+
+########################################################################################################
+
+openstack security group create \
+--description "Security Group for Kubernetes Node" \
+--project $openstack_project_id \
+sg-node
+
+openstack security group rule create \
+--description "ICMP Ingress Traffic" \
+--ingress \
+--remote-ip 0.0.0.0/0 \
+--protocol icmp \
+--project $openstack_project_id \
+sg-node
+
+openstack security group rule create \
+--description "ICMP Ingress Traffic" \
+--ingress \
+--remote-ip 0.0.0.0/0 \
+--dst-port 22 \
+--protocol tcp \
+--project $openstack_project_id \
+sg-node
+
+openstack floating ip create \
+--project $openstack_project_id \
+--floating-ip-address 192.168.1.31 \
+$openstack_public_network_id;
+
+for sequence in {1..2}; do
+  openstack floating ip create \
+  --project $openstack_project_id \
+  --floating-ip-address 192.168.1.4$sequence \
+  $openstack_public_network_id;
+done
+
+for node in {1..2}; do
+  openstack server create \
+  --image centos7 \
+  --flavor m1.large \
+  --key-name director \
+  --nic net-id=$openstack_internal_network_id,v4-fixed-ip=10.0.0.4$node \
+  --security-group sg-node \
+  node-$node;
+done
+
+openstack server create \
+--image centos7 \
+--flavor m1.large \
+--key-name director \
+--nic net-id=$openstack_internal_network_id,v4-fixed-ip=10.0.0.31 \
+--security-group sg-node \
+master-1
+  
+openstack server add floating ip master-1 192.168.1.31
+
+for node in {1..2}; do
+  openstack server add floating ip node-$node 192.168.1.4$node;
 done
 
 cat <<EOF > hosts.ini
@@ -63,6 +122,12 @@ ansible_become=yes
 EOF
 
 ansible -i hosts.ini all -m ping
+
+ansible -i hosts.ini master-1 -m command -a "hostnamectl set-hostname master-1.example.com"
+ansible -i hosts.ini node-1 -m command -a "hostnamectl set-hostname node-1.example.com"
+ansible -i hosts.ini node-2 -m command -a "hostnamectl set-hostname node-2.example.com"
+
+ansible -i hosts.ini master-1 -m command -a "hostnamectl"
 
 sudo yum update -y
 
@@ -89,10 +154,8 @@ sudo systemctl status firewalld
 
 sudo yum install -y kubelet kubeadm kubectl
 
-sudo systemctl enable kubelet
-
-sudo systemctl start kubelet
-
+sudo systemctl enable kubelet && \
+sudo systemctl start kubelet && \
 sudo systemctl status kubelet
 
 sudo vim /etc/sysctl.d/k8s.conf
@@ -100,8 +163,7 @@ sudo vim /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 
-sudo sysctl --system
-
+sudo sysctl --system && \
 sudo docker info | grep -i cgroup
 
 sudo sed -i "s/cgroup-driver=systemd/cgroup-driver=cgroupfs/g" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
@@ -126,7 +188,7 @@ sudo kubeadm init --apiserver-advertise-address $(hostname -i)
 
 # saída do comando kubeadm init para rodar nos nodes:
   
-    sudo kubeadm join 10.0.0.31:6443 --token j6y4jw.108z11ajzaygo6zb --discovery-token-ca-cert-hash sha256:0812a180c5a4e60203e99f6cfa3bb2a3e6b77fb73fa0dec2d017b2816a65d147
+  kubeadm join 10.0.0.31:6443 --token 4d5jp6.pqw7dfvvtusni0sj --discovery-token-ca-cert-hash sha256:6592cf1582e34d8248ba71766c25cf0c9797c436fca3a4455c429a479d9e7800
 
 mkdir -p $HOME/.kube
 
@@ -138,6 +200,6 @@ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl versio
 
 kubectl get pods -n kube-system
 
-kubectl run nginx --image nginx --replicas 10
+kubectl run nginx --image nginx --replicas 4
 
 kubectl get pods -o wide
