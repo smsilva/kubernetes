@@ -9,5 +9,5 @@
 
   #- import_tasks: creation/security-group.yml
   - import_tasks: creation/ports.yml
-  #- import_tasks: creation/floating-ip.yml
+  - import_tasks: creation/floating-ip.yml
   #- import_tasks: creation/instances.yml
