@@ -2,10 +2,10 @@
 servers:
   master-1:
     ip: "192.168.1.31"
-	type: "master"
+    type: "master"
   node-1:
     ip: "192.168.1.41"
-	type: "node"
+    type: "node"
 
 network:
   private: "devel_net"

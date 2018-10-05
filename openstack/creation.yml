@@ -3,11 +3,11 @@
   name: OpenStack Objects Creation
 
   vars_files:
-    - vars/main.yml
+    - vars/openstack.yml
 
   tasks:
 
   #- import_tasks: creation/security-group.yml
-  - import_tasks: openstack/creation/ports.yml
+  - import_tasks: creation/ports.yml
   #- import_tasks: creation/floating-ip.yml
   #- import_tasks: creation/instances.yml

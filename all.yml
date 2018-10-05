@@ -1,4 +1,4 @@
 ---
-- import_playbook: destruction.yml
-- import_playbook: creation.yml
+- import_playbook: openstack/destruction.yml
+- import_playbook: openstack/creation.yml
 #- import_playbook: oracle.yml
