@@ -1,0 +1,8 @@
+---
+- name: port creation
+  shell: >
+    openstack port create \
+    --disable-port-security \
+    --network {{ network.private }} \
+    port-{{ item.key }}
+  with_dict: "{{ servers }}"
