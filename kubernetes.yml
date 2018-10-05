@@ -38,3 +38,53 @@
       groups: docker
       append: yes
 
+  - name: add kubernetes repo
+    yum_repository:
+      name: "Kubernetes"
+      description: "Kubernetes Yum Repo"
+      baseurl: "https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64"
+      enabled: yes
+      gpgcheck: yes
+      gpgkey: "https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"
+
+  - name: disable SELinux
+    selinux:
+      state: disabled
+
+  - name: disable firewall
+    systemd:
+      name: firewalld
+      state: stopped
+      enabled: no
+
+  - name: install required packages
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - kubelet
+      - kubeadm
+      - kubectl
+
+  - name: configure kubelet service
+    systemd:
+      name: kubelet
+      state: started
+      enabled: yes
+
+  - name: sysctl kubernetes conf
+    sysctl:
+      name: "{{ item }}"
+      value: 1
+      sysctl_file: /etc/sysctl.d/k8s.conf
+      reload: yes
+    with_items:
+      - net.bridge.bridge-nf-call-ip6tables
+      - net.bridge.bridge-nf-call-iptables
+
+  - name: restart kubelet service
+    systemd:
+      name: kubelet
+      state: restarted
+      enabled: yes
+      daemon_reload: yes
