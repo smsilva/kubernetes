@@ -7,6 +7,34 @@
  
   tasks:
   
-  - debug:
-      msg: "teste {{ ansible_hostname }}"
-     
+  - name: system update
+    yum:
+      name: "*"
+      state: latest
+
+  - name: add docker-ce repo
+    yum_repository:
+      name: "Docker-CE-Stable"
+      description: "Docker CE Stable Yum Repo"
+      baseurl: "https://download.docker.com/linux/centos/7/$basearch/stable"
+      enabled: yes
+      gpgcheck: yes
+      gpgkey: "https://download.docker.com/linux/centos/gpg"
+
+  - name: install docker-ce
+    yum:
+      name: "docker-ce"
+      state: latest
+
+  - name: configure docker service
+    systemd:
+      name: docker
+      state: started
+      enabled: yes
+
+  - name: config user 'centos' appending the group 'docker'
+    user:
+      name: centos
+      groups: docker
+      append: yes
+
