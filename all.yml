@@ -1,4 +1,3 @@
 ---
 - import_playbook: openstack/destruction.yml
 - import_playbook: openstack/creation.yml
-- import_playbook: kubernetes.yml

@@ -6,6 +6,7 @@
     --flavor {{ config.flavor }} \
     --key-name {{ config.key }} \
     --port port-{{ item.key }} \
+    --user-data creation/cloud-init/{{ item.key }}.yml \
     {{ item.key }}
   with_dict: "{{ servers }}"
 

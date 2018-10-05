@@ -10,4 +10,3 @@
   - import_tasks: destruction/instances.yml
   - import_tasks: destruction/floating-ip.yml
   - import_tasks: destruction/ports.yml
-  #- import_tasks: destruction/security-group.yml

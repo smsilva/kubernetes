@@ -9,9 +9,10 @@
 
   - import_tasks: creation/ports.yml
   - import_tasks: creation/floating-ip.yml
+  - import_tasks: creation/cloud-init.yml
   - import_tasks: creation/instances.yml
   
   - name: creates ansible inventory file
     template:
       src: inventory.ini.j2
-      dest: config/inventory.ini
+      dest: inventory.ini

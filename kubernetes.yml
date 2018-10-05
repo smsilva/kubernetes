@@ -1,8 +1,12 @@
 ---
 - hosts: nodes
   name: Configure Node
-  
+ 
+  vars_files:
+    - openstack/vars/openstack.yml
+ 
   tasks:
   
   - debug:
-    msg: teste
+      msg: "teste {{ ansible_hostname }}"
+     
