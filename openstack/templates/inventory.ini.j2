@@ -1,0 +1,4 @@
+[nodes]
+{% for server in servers.keys() %}
+{{ server }} ansible_host={{ servers[server].ip }} ansible_user=centos ansible_become=yes
+{% endfor %}

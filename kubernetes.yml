@@ -1,0 +1,8 @@
+---
+- hosts: nodes
+  name: Configure Node
+  
+  tasks:
+  
+  - debug:
+    msg: teste
