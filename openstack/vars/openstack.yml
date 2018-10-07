@@ -6,6 +6,9 @@ servers:
   node-1:
     ip: "192.168.1.41"
     type: "node"
+  node-2:
+    ip: "192.168.1.42"
+    type: "node"
 
 network:
   private: "devel_net"
