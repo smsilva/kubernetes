@@ -1,7 +1,6 @@
 ---
-- name: creates ansible inventory file
+- name: create cloud-init files
   template:
     src: "cloud-init.j2"
     dest: "creation/cloud-init/{{ item.key }}.yml" 
   with_dict: "{{ servers }}"
-

@@ -10,8 +10,8 @@ ip=$(ip -4 a | grep inet | grep eth0 | awk '{ print $2 }' | awk -F "/" '{ print 
 hostname=$(hostname | awk -F "." '{ print $1 }') && \
 fqdn=$(hostname) && \
 line=$(echo $ip $hostname $fqdn) && \
-sudo su -c "echo $line >> /etc/hosts"
-
+sudo su -c "echo $line >> /etc/hosts" && \
+cat /etc/hosts && \
 sudo kubeadm init --apiserver-advertise-address $(hostname -i)
 
 # saída do comando kubeadm init para rodar nos nodes:
