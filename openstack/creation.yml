@@ -16,3 +16,6 @@
     template:
       src: inventory.ini.j2
       dest: inventory.ini
+
+  - name: kubernetes nodes config
+    shell: ansible-playbook -i inventory.ini ../kubernetes.yml
