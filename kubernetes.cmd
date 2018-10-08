@@ -1,9 +1,6 @@
 # exclui e cria os objetos no OpenStack
 ansible-playbook -i ./openstack/hosts.ini all.yml
 
-# configura os nodes criados
-ansible-playbook -i ./openstack/inventory.ini kubernetes.yml
- 
 # a partir daqui só no master e o join nos nodes
 
 ip=$(ip -4 a | grep inet | grep eth0 | awk '{ print $2 }' | awk -F "/" '{ print $1 }') && \
@@ -16,7 +13,9 @@ sudo kubeadm init --apiserver-advertise-address $(hostname -i)
 
 # saída do comando kubeadm init para rodar nos nodes:
   
-  sudo kubeadm join 10.0.0.26:6443 --token morvqu.4j8l9hfvx6txcrxw --discovery-token-ca-cert-hash sha256:3d4b61038e70f5a00e2264169e3c426c37e3fbb45f717252d3bc0fc3039288d2
+  sudo kubeadm join 10.0.0.29:6443 --token 2zp0c5.vnd6pic76txkk9hu --discovery-token-ca-cert-hash sha256:fee4b2f226b526a90120fe8b728ecdde47597501f6f89ffb28e47a91eaf368ad
+  
+  ansible -b -i ./openstack/inventory.ini nodes -m command -a "kubeadm join 10.0.0.29:6443 --token 2zp0c5.vnd6pic76txkk9hu --discovery-token-ca-cert-hash sha256:fee4b2f226b526a90120fe8b728ecdde47597501f6f89ffb28e47a91eaf368ad"
 
 # continuando no Master:
   
