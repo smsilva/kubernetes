@@ -1,13 +1,15 @@
 [masters]
 {% for server in servers.keys() %}
 {% if servers[server].type == 'master' %}
-{{ server }}
+{{ server }} ansible_host={{ servers[server].ip }}
 {% endif %}
 {% endfor %}
 
 [nodes]
 {% for server in servers.keys() %}
+{% if servers[server].type == 'node' %}
 {{ server }} ansible_host={{ servers[server].ip }}
+{% endif %}
 {% endfor %}
 
 [all:vars]

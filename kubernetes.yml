@@ -1,5 +1,5 @@
 ---
-- hosts: nodes
+- hosts: all
   name: Configure Node
  
   vars_files:
