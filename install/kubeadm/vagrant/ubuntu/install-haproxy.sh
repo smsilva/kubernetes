@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # HAProxy Install
-sudo apt-get install -y \
+apt-get install -y \
   haproxy
 
 # HAProxy Configuration
-sudo cat <<EOF | sudo tee /etc/haproxy/haproxy.cfg
+cat <<EOF | sudo tee /etc/haproxy/haproxy.cfg
 frontend kubernetes
     bind 192.168.5.30:6443
     option tcplog
@@ -22,4 +22,4 @@ backend kubernetes-master-nodes
 EOF
 
 # Restart HAProxy Service
-sudo service haproxy restart
+service haproxy restart
