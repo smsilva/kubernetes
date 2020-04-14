@@ -3,12 +3,12 @@
 
 # Define the number of master and worker nodes
 # If this number is changed, remember to update setup-hosts.sh script with the new hosts IP details in /etc/hosts of each VM.
-MASTER_NODES_COUNT = 1
-WORKER_NODES_COUNT = 1
+MASTER_NODES_COUNT = 2
+WORKER_NODES_COUNT = 2
 
 IP_NW = "192.168.5."
-MASTER_IP_START = 30
-NODE_IP_START = 40
+MASTER_IP_START = 10
+NODE_IP_START = 20
 
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version. Please don't change it unless you know what you're doing.
@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
   config.vm.box_check_update = false
 
-  # Provision Load Balancer Node
+  # Load Balancer
   config.vm.define "loadbalancer" do |node|
     node.vm.provider "virtualbox" do |vb|
         vb.name = "kubernetes-ha-lb"
@@ -31,37 +31,40 @@ Vagrant.configure("2") do |config|
       s.args = ["enp0s8"]
     end
 
-    node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
-    node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-    node.vm.provision "install-haproxy", type: "shell", :path => "ubuntu/install-haproxy.sh"
+    #node.vm.provision "install-guest-additions", type: "shell", :path => "ubuntu/vagrant/install-guest-additions.sh"
+    node.vm.provision "update-dns", type: "shell", :path => "ubuntu/update-dns.sh"
+    #node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
+    #node.vm.provision "install-haproxy", type: "shell", :path => "ubuntu/install-haproxy.sh"
+
   end
 
-  # Provision Master Nodes
+  # Master Nodes - Control Plane
   (1..MASTER_NODES_COUNT).each do |i|
-    config.vm.define "master-#{i}" do |node|
-      node.vm.provider "virtualbox" do |vb|
-          vb.name = "kubernetes-ha-master-#{i}"
-          vb.memory = 2048
-          vb.cpus = 2
-      end
-      node.vm.hostname = "master-#{i}"
-      node.vm.network :private_network, ip: IP_NW + "#{MASTER_IP_START + i}"
-      node.vm.network "forwarded_port", guest: 22, host: "#{2730 + i}"
+      config.vm.define "master-#{i}" do |node|
+        node.vm.provider "virtualbox" do |vb|
+            vb.name = "kubernetes-ha-master-#{i}"
+            vb.memory = 2048
+            vb.cpus = 2
+        end
+        node.vm.hostname = "master-#{i}"
+        node.vm.network :private_network, ip: IP_NW + "#{MASTER_IP_START + i}"
+        node.vm.network "forwarded_port", guest: 22, host: "#{2730 + i}"
 
-      node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
-        s.args = ["enp0s8"]
-      end
+        node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
+          s.args = ["enp0s8"]
+        end
 
-      node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
-      node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-      node.vm.provision "update-config", type: "shell", :path => "ubuntu/update-config.sh"
-      node.vm.provision "install-docker", type: "shell", :path => "ubuntu/install-docker.sh"
-    end
+        #node.vm.provision "install-guest-additions", type: "shell", :path => "ubuntu/vagrant/install-guest-additions.sh"
+        node.vm.provision "update-dns", type: "shell", :path => "ubuntu/update-dns.sh"
+        #node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
+        #node.vm.provision "install-docker", type: "shell", :path => "ubuntu/install-docker.sh"
+      end
+  
   end
 
-  # Provision Worker Nodes
+  # Worker Nodes
   (1..WORKER_NODES_COUNT).each do |i|
-    config.vm.define "worker-#{i}" do |node|
+      config.vm.define "worker-#{i}" do |node|
         node.vm.provider "virtualbox" do |vb|
             vb.name = "kubernetes-ha-worker-#{i}"
             vb.memory = 512
@@ -69,21 +72,18 @@ Vagrant.configure("2") do |config|
         end
         node.vm.hostname = "worker-#{i}"
         node.vm.network :private_network, ip: IP_NW + "#{NODE_IP_START + i}"
-     		node.vm.network "forwarded_port", guest: 22, host: "#{2740 + i}"
+        node.vm.network "forwarded_port", guest: 22, host: "#{2740 + i}"
 
         node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
           s.args = ["enp0s8"]
         end
 
-        node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
-        node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-        node.vm.provision "update-config", type: "shell", :path => "ubuntu/update-config.sh"
-        node.vm.provision "install-docker", type: "shell", :path => "ubuntu/install-docker.sh"
-
-        config.vm.provision "shell",
-          run: "always",
-          inline: "ip route add 10.96.0.0/16 dev enp0s8 src #{IP_NW}#{NODE_IP_START + i}"
+        #node.vm.provision "install-guest-additions", type: "shell", :path => "ubuntu/vagrant/install-guest-additions.sh"
+        node.vm.provision "update-dns", type: "shell", :path => "ubuntu/update-dns.sh"
+        #node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
+        #node.vm.provision "install-docker", type: "shell", :path => "ubuntu/install-docker.sh"
       end
+  
   end
-
+  
 end

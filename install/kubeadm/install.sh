@@ -1,3 +1,9 @@
+# Vagrant Login
+cat <<EOF > file
+line 1
+line 2
+EOF
+
 # Configure non Root User to be able to use docker command without sudo
 sudo usermod -aG docker ${USER}
 
@@ -19,13 +25,13 @@ cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
-# Execute an Update
-sudo apt update
+# Execute an Update if Needed
+sudo apt update -y
 
 # Set Kubernetes Version
-export KUBERNETES_DESIRED_VERSION='1.17'
-export KUBERNETES_VERSION="$(echo -n $(sudo apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }'))"
-export KUBERNETES_BASE_VERSION="$(echo ${KUBERNETES_VERSION} | cut -d- -f 1)"
+KUBERNETES_DESIRED_VERSION='1.17'
+KUBERNETES_VERSION="$(echo -n $(sudo apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }'))"
+KUBERNETES_BASE_VERSION="$(echo ${KUBERNETES_VERSION} | cut -d- -f 1)"
 
 echo "" && \
 echo "KUBERNETES_DESIRED_VERSION.: ${KUBERNETES_DESIRED_VERSION}" && \
@@ -43,26 +49,27 @@ sudo apt-mark hold \
   kubeadm \
   kubectl
 
-# Preloading Control Plane Images
-kubeadm config images pull
+# Preloading Container Images
+if hostname -s | grep "master"&>/dev/null; then
+  kubeadm config images pull
+else
+  docker pull k8s.gcr.io/kube-proxy:v1.17.4
+fi
 
 # Installing Control Plane on the First Control Plane Node (master-1)
 NETWORK_INTERFACE_NAME='enp0s8'
-LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | head -1 | awk '{print $2}' | cut -d/ -f1)"
-
-export LOAD_BALANCER_DNS='lb'
-export LOAD_BALANCER_IP='192.168.5.30'
-export LOAD_BALANCER_PORT='6443'
+LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | awk '{print $2}' | cut -d '/' -f1)"
+LOAD_BALANCER_PORT='6443'
+LOAD_BALANCER_DNS='lb'
+LOAD_BALANCER_IP="$(echo -n $(cat /etc/hosts | grep ${LOAD_BALANCER_DNS} | cut -d ' ' -f 1))"
 
 echo "" && \
 echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
-echo "LOAD_BALANCER_DNS..........: ${LOAD_BALANCER_DNS}" && \
-echo "LOAD_BALANCER_IP...........: ${LOAD_BALANCER_IP}" && \
-echo "LOAD_BALANCER_PORT.........: ${LOAD_BALANCER_PORT}" && \
+echo "ADVERTISE_ADDRESS..........: ${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" && \
 echo ""
 
 # Test Connectivity to Loadbalancer
-nc -v ${LOAD_BALANCER_IP} ${LOAD_BALANCER_PORT}
+nc -v ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT}
 
 # Initialize master-1
 sudo kubeadm init \
@@ -95,17 +102,17 @@ echo ""
 
 sudo kubeadm join lb:6443 \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token q9uk2o.gdq3i1oilvmgv1mr \
-  --discovery-token-ca-cert-hash sha256:99ce6a0d5bc86d7a7de5c1a803362f4d78232c85e48543335bdc69c2567f666c \
+  --token q49uo0.eb4rbtnr54mmk8p6 \
+  --discovery-token-ca-cert-hash sha256:09752e8686acd7e389dbe22bc24c7258239ece222b5f9666d6f6218730ea92ff \
   --control-plane \
-  --certificate-key 23faca0066ee2746f6994285de2b76daaa9b42e550572211e1e914643c006ffa \
+  --certificate-key dc624715b4654ccb2f3b6d5660b52da76bb94bac8b6f5643cee16a523c69d3dd \
   --v 5
 
 # Add a Node
 # Get this command from the Ouput of the First Control Plane
 sudo kubeadm join lb:6443 \
-  --token q9uk2o.gdq3i1oilvmgv1mr \
-  --discovery-token-ca-cert-hash sha256:99ce6a0d5bc86d7a7de5c1a803362f4d78232c85e48543335bdc69c2567f666c
+  --token q49uo0.eb4rbtnr54mmk8p6 \
+  --discovery-token-ca-cert-hash sha256:09752e8686acd7e389dbe22bc24c7258239ece222b5f9666d6f6218730ea92ff
 
 # Join Control Plane (master-2 and master-3)
 sudo kubeadm reset -f
