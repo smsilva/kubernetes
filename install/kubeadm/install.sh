@@ -1,84 +1,3 @@
-# Install HAProxy
-sudo apt update -y && \
-sudo apt upgrade -y && \
-sudo apt autoremove
-
-sudo apt install -y \
-  haproxy
-
-sudo cat <<EOF | sudo tee /etc/haproxy/haproxy.cfg
-frontend kubernetes
-    bind 192.168.5.30:6443
-    option tcplog
-    mode tcp
-    default_backend kubernetes-master-nodes
-
-backend kubernetes-master-nodes
-    mode tcp
-    balance roundrobin
-    option tcp-check
-    server master-1 192.168.5.111:6443 check fall 3 rise 2
-    server master-2 192.168.5.112:6443 check fall 3 rise 2
-    server master-3 192.168.5.113:6443 check fall 3 rise 2
-EOF
-
-# Restart HAProxy Service
-sudo service haproxy restart
-
-# Create Virtual Box Machines with:
-#   Network Interfaces:
-#   - 1 NAT
-#       - ssh      TCP 127.0.0.1 22111 22
-#       - tcp27111 TCP           27111 22
-#   - 1 Host Only Adapter (create a virtual network before)
-
-# Copy Public SSH Key
-ssh-copy-id silvios@127.0.0.1 -p 22111
-
-# Login into Server - Master 1
-ssh silvios@127.0.0.1 -p 22111
-
-# Update /etc/hosts with the local IP
-NETWORK_INTERFACE_NAME='enp0s3'
-ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | head -1 |awk '{print $2}' | cut -d/ -f1)"
-sudo sed -e "s/^.*${HOSTNAME}.*/${ADDRESS} ${HOSTNAME} ${HOSTNAME}.local/" -i /etc/hosts
-
-# remove ubuntu-bionic entry if exists
-sudo sed -e '/^.*ubuntu-bionic.*/d' -i /etc/hosts
-
-# Update /etc/hosts with other hosts addresses
-sudo cat >> /etc/hosts <<EOF
-192.168.5.111  master-1
-192.168.5.112  master-2
-192.168.5.113  master-3
-192.168.5.121  worker-1
-192.168.5.122  worker-2
-192.168.5.123  worker-3
-192.168.5.30  lb
-EOF
-
-# Must Disable SWAP
-sudo swapoff -a
-
-# Enable Forward Traffic
-cat <<EOF > /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-EOF
-
-# Enable Configuration
-sysctl --system
-
-# Update
-sudo apt update -y && \
-sudo apt upgrade -y && \
-sudo apt autoremove -y
-
-# Install Docker Community Edition
-cd /tmp
-sudo curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh /tmp/get-docker.sh
-
 # Configure non Root User to be able to use docker command without sudo
 sudo usermod -aG docker ${USER}
 
@@ -88,7 +7,7 @@ exit
 # Logon again and test docker command
 docker ps
 
-# Master Nodes
+# All Nodes
 sudo apt update -y && \
 sudo apt install -y \
   apt-transport-https \
@@ -128,11 +47,15 @@ sudo apt-mark hold \
 kubeadm config images pull
 
 # Installing Control Plane on the First Control Plane Node (master-1)
+NETWORK_INTERFACE_NAME='enp0s8'
+LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | head -1 | awk '{print $2}' | cut -d/ -f1)"
+
 export LOAD_BALANCER_DNS='lb'
 export LOAD_BALANCER_IP='192.168.5.30'
 export LOAD_BALANCER_PORT='6443'
 
 echo "" && \
+echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
 echo "LOAD_BALANCER_DNS..........: ${LOAD_BALANCER_DNS}" && \
 echo "LOAD_BALANCER_IP...........: ${LOAD_BALANCER_IP}" && \
 echo "LOAD_BALANCER_PORT.........: ${LOAD_BALANCER_PORT}" && \
@@ -143,7 +66,7 @@ nc -v ${LOAD_BALANCER_IP} ${LOAD_BALANCER_PORT}
 
 # Initialize master-1
 sudo kubeadm init \
-  --apiserver-advertise-address "192.168.5.111" \
+  --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --control-plane-endpoint "${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" \
   --kubernetes-version "${KUBERNETES_BASE_VERSION}" \
   --upload-certs
@@ -153,33 +76,38 @@ mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-# Check Nodes
-kubectl get nodes -o wide
-
-# Check Pods
-kubectl get pods -n kube-system -o wide
-
 # Install the Weave CNI Plugin
 kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 
-# Join Control Plane (master-2 and master-3)
-sudo kubeadm reset -f
-sudo rm -rf /etc/cni/net.d && \
-sudo rm -rf $HOME/.kube/config
+# Watch Nodes and Pods
+watch -n 2 '
+  kubectl get nodes -o wide && \
+  echo "" && \
+  kubectl get pods -n kube-system -o wide'
 
 # Add Another Control Plane
 # Get this command from the Ouput of the First Control Plane
+NETWORK_INTERFACE_NAME='enp0s8' && \
+LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | head -1 | awk '{print $2}' | cut -d/ -f1)" && \
+echo "" && \
+echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
+echo ""
+
 sudo kubeadm join lb:6443 \
-  --apiserver-advertise-address "192.168.5.113" \
-  --token ux1qi2.nawuo8brwk23zy8i \
-  --discovery-token-ca-cert-hash sha256:c9932de3bc1d2cdcfe60054f81bae8ac4f342a65074cc13d14d681e6dc6fa848 \
+  --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
+  --token q9uk2o.gdq3i1oilvmgv1mr \
+  --discovery-token-ca-cert-hash sha256:99ce6a0d5bc86d7a7de5c1a803362f4d78232c85e48543335bdc69c2567f666c \
   --control-plane \
-  --certificate-key a0e39b4c81f5bc410f5ce2eb32af331e8b529709678e4b129ab962d0a30ad2bc \
+  --certificate-key 23faca0066ee2746f6994285de2b76daaa9b42e550572211e1e914643c006ffa \
   --v 5
 
 # Add a Node
 # Get this command from the Ouput of the First Control Plane
 sudo kubeadm join lb:6443 \
-  --token ux1qi2.nawuo8brwk23zy8i \
-  --discovery-token-ca-cert-hash "sha256:c9932de3bc1d2cdcfe60054f81bae8ac4f342a65074cc13d14d681e6dc6fa848" \
-  --v 5
+  --token q9uk2o.gdq3i1oilvmgv1mr \
+  --discovery-token-ca-cert-hash sha256:99ce6a0d5bc86d7a7de5c1a803362f4d78232c85e48543335bdc69c2567f666c
+
+# Join Control Plane (master-2 and master-3)
+sudo kubeadm reset -f
+sudo rm -rf /etc/cni/net.d && \
+sudo rm -rf ${HOME}/.kube/config
