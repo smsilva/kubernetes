@@ -33,8 +33,8 @@ Vagrant.configure("2") do |config|
 
     #node.vm.provision "install-guest-additions", type: "shell", :path => "ubuntu/vagrant/install-guest-additions.sh"
     node.vm.provision "update-dns", type: "shell", :path => "ubuntu/update-dns.sh"
-    #node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-    #node.vm.provision "install-haproxy", type: "shell", :path => "ubuntu/install-haproxy.sh"
+    node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
+    node.vm.provision "install-haproxy", type: "shell", :path => "ubuntu/install-haproxy.sh"
 
   end
 
@@ -56,8 +56,8 @@ Vagrant.configure("2") do |config|
 
         #node.vm.provision "install-guest-additions", type: "shell", :path => "ubuntu/vagrant/install-guest-additions.sh"
         node.vm.provision "update-dns", type: "shell", :path => "ubuntu/update-dns.sh"
-        #node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-        #node.vm.provision "install-docker", type: "shell", :path => "ubuntu/install-docker.sh"
+        node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
+        node.vm.provision "install-docker", type: "shell", :path => "ubuntu/install-docker.sh"
       end
   
   end
@@ -80,8 +80,8 @@ Vagrant.configure("2") do |config|
 
         #node.vm.provision "install-guest-additions", type: "shell", :path => "ubuntu/vagrant/install-guest-additions.sh"
         node.vm.provision "update-dns", type: "shell", :path => "ubuntu/update-dns.sh"
-        #node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-        #node.vm.provision "install-docker", type: "shell", :path => "ubuntu/install-docker.sh"
+        node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
+        node.vm.provision "install-docker", type: "shell", :path => "ubuntu/install-docker.sh"
       end
   
   end
