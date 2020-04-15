@@ -1,9 +1,3 @@
-# Vagrant Login
-cat <<EOF > file
-line 1
-line 2
-EOF
-
 # Configure non Root User to be able to use docker command without sudo
 sudo usermod -aG docker ${USER}
 
@@ -92,7 +86,8 @@ watch -n 2 '
   echo "" && \
   kubectl get pods -n kube-system -o wide'
 
-# Add Another Control Plane
+# Adding a Control Plane Node
+
 # Get this command from the Ouput of the First Control Plane
 NETWORK_INTERFACE_NAME='enp0s8' && \
 LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | head -1 | awk '{print $2}' | cut -d/ -f1)" && \
@@ -101,20 +96,29 @@ echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
 echo ""
 
 sudo kubeadm join lb:6443 \
-  --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token q49uo0.eb4rbtnr54mmk8p6 \
-  --discovery-token-ca-cert-hash sha256:09752e8686acd7e389dbe22bc24c7258239ece222b5f9666d6f6218730ea92ff \
   --control-plane \
-  --certificate-key dc624715b4654ccb2f3b6d5660b52da76bb94bac8b6f5643cee16a523c69d3dd \
+  --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
+  --token xjpr7t.0il99eps1qt29ozj \
+  --discovery-token-ca-cert-hash sha256:81cb6ea738f3f043f9cae7af9d15d38705b23d4040698d8fe1418ae4d818a65f \
+  --certificate-key aca02d990978475a484d8cc0e5fc28211f5b95aabd41730bde6febd193fb439b \
   --v 5
 
-# Add a Node
+# Adding a Worker Node
+
 # Get this command from the Ouput of the First Control Plane
 sudo kubeadm join lb:6443 \
-  --token q49uo0.eb4rbtnr54mmk8p6 \
-  --discovery-token-ca-cert-hash sha256:09752e8686acd7e389dbe22bc24c7258239ece222b5f9666d6f6218730ea92ff
+  --token xjpr7t.0il99eps1qt29ozj \
+  --discovery-token-ca-cert-hash sha256:81cb6ea738f3f043f9cae7af9d15d38705b23d4040698d8fe1418ae4d818a65f
 
 # Join Control Plane (master-2 and master-3)
 sudo kubeadm reset -f
 sudo rm -rf /etc/cni/net.d && \
 sudo rm -rf ${HOME}/.kube/config
+
+# To get Another Token
+
+# 1. Upload Certificates and Get Certificate Key. Eg: 4d0b2b218a270030df347f013d8aad4f67d1a60e54cb7130bf17dc8179065982
+sudo kubeadm init phase upload-certs --upload-certs
+
+# 2. Create a New Token
+sudo kubeadm token create --print-join-command
