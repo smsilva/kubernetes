@@ -47,7 +47,7 @@ sudo apt-mark hold \
 if hostname -s | grep "master"&>/dev/null; then
   kubeadm config images pull
 else
-  docker pull k8s.gcr.io/kube-proxy:v1.17.4
+  docker pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
 fi
 
 # Installing Control Plane on the First Control Plane Node (master-1)
@@ -65,17 +65,12 @@ echo ""
 # Test Connectivity to Loadbalancer
 nc -v ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT}
 
-# Initialize master-1
+# Initialize master-1 (Take note of the two Join commands)
 sudo kubeadm init \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --control-plane-endpoint "${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" \
   --kubernetes-version "${KUBERNETES_BASE_VERSION}" \
+  --control-plane-endpoint "${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" \
   --upload-certs
-
-# To start using your cluster, you need to run the following as a regular user:
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Install the Weave CNI Plugin
 kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
@@ -96,19 +91,20 @@ echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
 echo ""
 
 sudo kubeadm join lb:6443 \
+  --v 5 \
   --control-plane \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token xjpr7t.0il99eps1qt29ozj \
-  --discovery-token-ca-cert-hash sha256:81cb6ea738f3f043f9cae7af9d15d38705b23d4040698d8fe1418ae4d818a65f \
-  --certificate-key aca02d990978475a484d8cc0e5fc28211f5b95aabd41730bde6febd193fb439b \
-  --v 5
+  --token qom7fm.dvd7l9kbccf7gfv8 \
+  --discovery-token-ca-cert-hash sha256:d093e3d42688583f73c6fb7cc4e6845d30bd83bde4a47b31432e1df983bf7991 \
+  --certificate-key 5d181a31831561de3096d05b7fdb028a92a34471a999893658d314c4e3992b2b
 
 # Adding a Worker Node
 
 # Get this command from the Ouput of the First Control Plane
 sudo kubeadm join lb:6443 \
-  --token xjpr7t.0il99eps1qt29ozj \
-  --discovery-token-ca-cert-hash sha256:81cb6ea738f3f043f9cae7af9d15d38705b23d4040698d8fe1418ae4d818a65f
+  --token qom7fm.dvd7l9kbccf7gfv8 \
+  --discovery-token-ca-cert-hash sha256:d093e3d42688583f73c6fb7cc4e6845d30bd83bde4a47b31432e1df983bf7991 \
+  --v 5
 
 # Join Control Plane (master-2 and master-3)
 sudo kubeadm reset -f
