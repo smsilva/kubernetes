@@ -94,16 +94,16 @@ sudo kubeadm join lb:6443 \
   --v 5 \
   --control-plane \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token qom7fm.dvd7l9kbccf7gfv8 \
-  --discovery-token-ca-cert-hash sha256:d093e3d42688583f73c6fb7cc4e6845d30bd83bde4a47b31432e1df983bf7991 \
-  --certificate-key 5d181a31831561de3096d05b7fdb028a92a34471a999893658d314c4e3992b2b
+  --token h77fsm.qamonk97ysj7vofe \
+  --discovery-token-ca-cert-hash sha256:5dd61275bdb400b967ade681c2fc09fbcafb1d0b75d2d8fcc0c42d031cb7ac48 \
+  --certificate-key 053627d6e0a54a8b2bbd4a9583d0847eddd16ebbd0840764dc36aedd3429c77d
 
 # Adding a Worker Node
 
 # Get this command from the Ouput of the First Control Plane
 sudo kubeadm join lb:6443 \
-  --token qom7fm.dvd7l9kbccf7gfv8 \
-  --discovery-token-ca-cert-hash sha256:d093e3d42688583f73c6fb7cc4e6845d30bd83bde4a47b31432e1df983bf7991 \
+  --token h77fsm.qamonk97ysj7vofe \
+  --discovery-token-ca-cert-hash sha256:5dd61275bdb400b967ade681c2fc09fbcafb1d0b75d2d8fcc0c42d031cb7ac48 \
   --v 5
 
 # Join Control Plane (master-2 and master-3)

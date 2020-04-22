@@ -3,7 +3,7 @@
 
 # Define the number of master and worker nodes
 # If this number is changed, remember to update setup-hosts.sh script with the new hosts IP details in /etc/hosts of each VM.
-MASTER_NODES_COUNT = 1
+MASTER_NODES_COUNT = 3
 WORKER_NODES_COUNT = 2
 
 IP_NW = "192.168.5."
