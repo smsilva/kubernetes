@@ -23,7 +23,7 @@ EOF
 sudo apt update -y
 
 # Set Kubernetes Version
-KUBERNETES_DESIRED_VERSION='1.17'
+KUBERNETES_DESIRED_VERSION='1.18'
 KUBERNETES_VERSION="$(echo -n $(sudo apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }'))"
 KUBERNETES_BASE_VERSION="$(echo ${KUBERNETES_VERSION} | cut -d- -f 1)"
 
@@ -51,7 +51,7 @@ else
 fi
 
 # Installing Control Plane on the First Control Plane Node (master-1)
-NETWORK_INTERFACE_NAME='enp0s8'
+NETWORK_INTERFACE_NAME='eth1'
 LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | awk '{print $2}' | cut -d '/' -f1)"
 LOAD_BALANCER_PORT='6443'
 LOAD_BALANCER_DNS='lb'
@@ -84,7 +84,7 @@ watch -n 2 '
 # Adding a Control Plane Node
 
 # Get this command from the Ouput of the First Control Plane
-NETWORK_INTERFACE_NAME='enp0s8' && \
+NETWORK_INTERFACE_NAME='eth1' && \
 LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | head -1 | awk '{print $2}' | cut -d/ -f1)" && \
 echo "" && \
 echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
@@ -94,16 +94,16 @@ sudo kubeadm join lb:6443 \
   --v 5 \
   --control-plane \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token h77fsm.qamonk97ysj7vofe \
-  --discovery-token-ca-cert-hash sha256:5dd61275bdb400b967ade681c2fc09fbcafb1d0b75d2d8fcc0c42d031cb7ac48 \
-  --certificate-key 053627d6e0a54a8b2bbd4a9583d0847eddd16ebbd0840764dc36aedd3429c77d
+  --token 4txjqb.rdb0czcfbszzg1tp \
+  --discovery-token-ca-cert-hash sha256:901a09e2df808f5bfb2db4e37b82b15ba1e59f0db0fa28f2607f79439a2007b6 \
+  --certificate-key fcf510e7979c4630d96dbceb5f56f4ea2d38426bf4b0d121342b80eee45ad926
 
 # Adding a Worker Node
 
 # Get this command from the Ouput of the First Control Plane
 sudo kubeadm join lb:6443 \
-  --token h77fsm.qamonk97ysj7vofe \
-  --discovery-token-ca-cert-hash sha256:5dd61275bdb400b967ade681c2fc09fbcafb1d0b75d2d8fcc0c42d031cb7ac48 \
+  --token 4txjqb.rdb0czcfbszzg1tp \
+  --discovery-token-ca-cert-hash sha256:901a09e2df808f5bfb2db4e37b82b15ba1e59f0db0fa28f2607f79439a2007b6 \
   --v 5
 
 # Join Control Plane (master-2 and master-3)
