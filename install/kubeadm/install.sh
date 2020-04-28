@@ -45,6 +45,11 @@ sudo apt-mark hold \
 
 # Preloading Container Images
 if hostname -s | grep "master"&>/dev/null; then
+  echo 'source <(kubectl completion bash)' >> ~/.bashrc
+  echo 'alias k=kubectl' >> ~/.bashrc
+  echo 'complete -F __start_kubectl k' >> ~/.bashrc
+  source ~/.bashrc
+
   kubeadm config images pull
 else
   docker pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
@@ -63,7 +68,7 @@ echo "ADVERTISE_ADDRESS..........: ${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" &
 echo ""
 
 # Test Connectivity to Loadbalancer
-nc -v ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT}
+nc -dv ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT}
 
 # Initialize master-1 (Take note of the two Join commands)
 sudo kubeadm init \
@@ -94,16 +99,16 @@ sudo kubeadm join lb:6443 \
   --v 5 \
   --control-plane \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token 4txjqb.rdb0czcfbszzg1tp \
-  --discovery-token-ca-cert-hash sha256:901a09e2df808f5bfb2db4e37b82b15ba1e59f0db0fa28f2607f79439a2007b6 \
-  --certificate-key fcf510e7979c4630d96dbceb5f56f4ea2d38426bf4b0d121342b80eee45ad926
+  --token vthovi.oa5etnr5p5pcsvcx \
+  --discovery-token-ca-cert-hash sha256:d3ac5f6192538572a948b6f5923d99faeb769e353fac2f84bfee89381887d416 \
+  --certificate-key d3e39b9864dc516024f23c2cdca1adc8a986e97b414e0d3d85a21474fe5b6063
 
 # Adding a Worker Node
 
 # Get this command from the Ouput of the First Control Plane
 sudo kubeadm join lb:6443 \
-  --token 4txjqb.rdb0czcfbszzg1tp \
-  --discovery-token-ca-cert-hash sha256:901a09e2df808f5bfb2db4e37b82b15ba1e59f0db0fa28f2607f79439a2007b6 \
+  --token vthovi.oa5etnr5p5pcsvcx \
+  --discovery-token-ca-cert-hash sha256:d3ac5f6192538572a948b6f5923d99faeb769e353fac2f84bfee89381887d416 \
   --v 5
 
 # Join Control Plane (master-2 and master-3)
