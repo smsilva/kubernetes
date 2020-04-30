@@ -56,7 +56,7 @@ else
 fi
 
 # Installing Control Plane on the First Control Plane Node (master-1)
-NETWORK_INTERFACE_NAME='eth1'
+NETWORK_INTERFACE_NAME='enp0s8'
 LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | awk '{print $2}' | cut -d '/' -f1)"
 LOAD_BALANCER_PORT='6443'
 LOAD_BALANCER_DNS='lb'
@@ -89,7 +89,7 @@ watch -n 2 '
 # Adding a Control Plane Node
 
 # Get this command from the Ouput of the First Control Plane
-NETWORK_INTERFACE_NAME='eth1' && \
+NETWORK_INTERFACE_NAME='enp0s8' && \
 LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | head -1 | awk '{print $2}' | cut -d/ -f1)" && \
 echo "" && \
 echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
@@ -99,16 +99,16 @@ sudo kubeadm join lb:6443 \
   --v 5 \
   --control-plane \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token vthovi.oa5etnr5p5pcsvcx \
-  --discovery-token-ca-cert-hash sha256:d3ac5f6192538572a948b6f5923d99faeb769e353fac2f84bfee89381887d416 \
-  --certificate-key d3e39b9864dc516024f23c2cdca1adc8a986e97b414e0d3d85a21474fe5b6063
+  --token ug2dfo.kb4ebl4o2h553bl4 \
+  --discovery-token-ca-cert-hash sha256:d451ff2b1811081730a5719a8ebe00fa4c8ded49af70be273f097e63f2cf0399 \
+  --certificate-key 005e6d2f884d9faee760857eef42f19e6708d3651e3608d34d9acd9caa98765e
 
 # Adding a Worker Node
 
 # Get this command from the Ouput of the First Control Plane
 sudo kubeadm join lb:6443 \
-  --token vthovi.oa5etnr5p5pcsvcx \
-  --discovery-token-ca-cert-hash sha256:d3ac5f6192538572a948b6f5923d99faeb769e353fac2f84bfee89381887d416 \
+  --token ug2dfo.kb4ebl4o2h553bl4 \
+  --discovery-token-ca-cert-hash sha256:d451ff2b1811081730a5719a8ebe00fa4c8ded49af70be273f097e63f2cf0399 \
   --v 5
 
 # Join Control Plane (master-2 and master-3)

@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi:set ft=ruby sw=2 ts=2 sts=2:
 
-ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
 
 # Define the number of master and worker nodes
 # If this number is changed, remember to update setup-hosts-file.sh script with the new hosts IP details in /etc/hosts of each VM.
@@ -9,24 +9,25 @@ ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 MASTER_NODES_COUNT = 1
 WORKER_NODES_COUNT = 2
 
-IP_NETWORK = "192.168.5."
+IP_NETWORK = "192.168.10."
 MASTER_IP_START = 10
 NODE_IP_START = 20
-NETWORK_DEVICE_NAME = "eth1"
+NETWORK_DEVICE_NAME = "enp0s8"
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/ubuntu1804"
+  config.vm.box = "ubuntu/bionic64"
+  config.vm.box_version = "20200429.0.0"
   config.vm.box_check_update = false
 
   # Load Balancer
   config.vm.define "loadbalancer" do |node|
-    node.vm.provider "libvirt" do |vb|
+    node.vm.provider "virtualbox" do |vb|
         vb.memory = 512
         vb.cpus = 1
     end
     node.vm.hostname = "loadbalancer"
     node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{MASTER_IP_START}"
-    node.vm.network "forwarded_port", guest: 22, host: 2730
+    node.vm.network "forwarded_port", guest: 22, host: 2230
 
     node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/vagrant/setup-hosts-file.sh" do |s|
       s.args = ["#{NETWORK_DEVICE_NAME}"]
@@ -35,8 +36,11 @@ Vagrant.configure("2") do |config|
     node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
     node.vm.provision "update-dns-config", type: "shell", :path => "ubuntu/update-dns.sh"
     node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-    node.vm.provision "install-haproxy", type: "shell", :path => "ubuntu/install-haproxy.sh"
 
+    node.vm.provision "install-haproxy", type: "shell", :path => "ubuntu/install-haproxy.sh" do |s|
+      s.args = ["#{NETWORK_DEVICE_NAME}"]
+    end
+ 
   end
 
   # Master Nodes - Control Plane
