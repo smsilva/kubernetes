@@ -19,8 +19,8 @@ cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
-# Execute an Update if Needed
-sudo apt update -y
+# Update package list
+sudo apt update
 
 # Set Kubernetes Version
 KUBERNETES_DESIRED_VERSION='1.18'
@@ -56,13 +56,14 @@ else
 fi
 
 # Installing Control Plane on the First Control Plane Node (master-1)
-NETWORK_INTERFACE_NAME='enp0s8'
-LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | awk '{print $2}' | cut -d '/' -f1)"
+LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | cut -d " " -f 1)
+NETWORK_INTERFACE_NAME=$(ip addr show | grep ${LOCAL_IP_ADDRESS} | awk '{ print $7 }')
 LOAD_BALANCER_PORT='6443'
 LOAD_BALANCER_DNS='lb'
 LOAD_BALANCER_IP="$(echo -n $(cat /etc/hosts | grep ${LOAD_BALANCER_DNS} | cut -d ' ' -f 1))"
 
 echo "" && \
+echo "NETWORK_INTERFACE_NAME.....: ${NETWORK_INTERFACE_NAME}" && \
 echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
 echo "ADVERTISE_ADDRESS..........: ${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" && \
 echo ""
@@ -87,14 +88,18 @@ watch -n 2 '
   kubectl get pods -n kube-system -o wide'
 
 # Adding a Control Plane Node
+LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | cut -d " " -f 1)
+NETWORK_INTERFACE_NAME=$(ip addr show | grep ${LOCAL_IP_ADDRESS} | awk '{ print $7 }')
 
-# Get this command from the Ouput of the First Control Plane
-NETWORK_INTERFACE_NAME='enp0s8' && \
-LOCAL_IP_ADDRESS="$(ip -4 addr show ${NETWORK_INTERFACE_NAME} | grep "inet" | head -1 | awk '{print $2}' | cut -d/ -f1)" && \
 echo "" && \
+echo "NETWORK_INTERFACE_NAME.....: ${NETWORK_INTERFACE_NAME}" && \
 echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
 echo ""
 
+# The parameters below are getting from the first Contol Plane Config
+#   - token
+#   - discovery-token-ca-cert-hash
+#   - certificate-key
 sudo kubeadm join lb:6443 \
   --v 5 \
   --control-plane \
@@ -104,14 +109,16 @@ sudo kubeadm join lb:6443 \
   --certificate-key 005e6d2f884d9faee760857eef42f19e6708d3651e3608d34d9acd9caa98765e
 
 # Adding a Worker Node
-
-# Get this command from the Ouput of the First Control Plane
+#
+# The parameters below are getting from the first Contol Plane Config
+#   - token
+#   - discovery-token-ca-cert-hash
 sudo kubeadm join lb:6443 \
   --token ug2dfo.kb4ebl4o2h553bl4 \
   --discovery-token-ca-cert-hash sha256:d451ff2b1811081730a5719a8ebe00fa4c8ded49af70be273f097e63f2cf0399 \
   --v 5
 
-# Join Control Plane (master-2 and master-3)
+# Reseting kubeadm config to try again
 sudo kubeadm reset -f
 sudo rm -rf /etc/cni/net.d && \
 sudo rm -rf ${HOME}/.kube/config
