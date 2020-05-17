@@ -16,4 +16,3 @@ EOF
 sysctl --system
 
 # Update Netplan Config
-
