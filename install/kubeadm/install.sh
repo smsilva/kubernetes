@@ -56,11 +56,10 @@ else
 fi
 
 # Installing Control Plane on the First Control Plane Node (master-1)
-LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | cut -d " " -f 1)
+LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | awk '{ print $1 }')
 NETWORK_INTERFACE_NAME=$(ip addr show | grep ${LOCAL_IP_ADDRESS} | awk '{ print $7 }')
 LOAD_BALANCER_PORT='6443'
 LOAD_BALANCER_DNS='lb'
-LOAD_BALANCER_IP="$(echo -n $(cat /etc/hosts | grep ${LOAD_BALANCER_DNS} | cut -d ' ' -f 1))"
 
 echo "" && \
 echo "NETWORK_INTERFACE_NAME.....: ${NETWORK_INTERFACE_NAME}" && \
@@ -104,9 +103,9 @@ sudo kubeadm join lb:6443 \
   --v 5 \
   --control-plane \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token ug2dfo.kb4ebl4o2h553bl4 \
-  --discovery-token-ca-cert-hash sha256:d451ff2b1811081730a5719a8ebe00fa4c8ded49af70be273f097e63f2cf0399 \
-  --certificate-key 005e6d2f884d9faee760857eef42f19e6708d3651e3608d34d9acd9caa98765e
+  --token npaz9m.hqf83h83dvq7bylp \
+  --discovery-token-ca-cert-hash sha256:07b023a80af3320a013da868708be8c710580f0dcb19a387e5d6bd047cb5eae1 \
+  --certificate-key 72a42a68e06239e31370f4e2d5a1cbada0e68c195343b8dba085ca60c3717e58
 
 # Adding a Worker Node
 #
@@ -114,8 +113,8 @@ sudo kubeadm join lb:6443 \
 #   - token
 #   - discovery-token-ca-cert-hash
 sudo kubeadm join lb:6443 \
-  --token ug2dfo.kb4ebl4o2h553bl4 \
-  --discovery-token-ca-cert-hash sha256:d451ff2b1811081730a5719a8ebe00fa4c8ded49af70be273f097e63f2cf0399 \
+  --token npaz9m.hqf83h83dvq7bylp \
+  --discovery-token-ca-cert-hash sha256:07b023a80af3320a013da868708be8c710580f0dcb19a387e5d6bd047cb5eae1 \
   --v 5
 
 # Reseting kubeadm config to try again
