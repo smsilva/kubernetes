@@ -1,14 +1,8 @@
-# Configure non Root User to be able to use docker command without sudo
-sudo usermod -aG docker ${USER}
-
-# Logoff to change take effect
-exit
-
-# Logon again and test docker command
+# Docker Test
 docker ps
 
 # All Nodes
-sudo apt update -y && \
+sudo apt update && \
 sudo apt install -y \
   apt-transport-https \
   curl && \
