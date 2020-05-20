@@ -5,6 +5,8 @@ MASTER_IP_START=$3
 MASTER_NODES_COUNT=$4
 NODE_IP_START=$5
 WORKER_NODES_COUNT=$6
+IP_NETWORK=$7
+IP_NETWORK_REVERSE=$(echo ${IP_NETWORK} | awk -F. '{ print $3 "." $2 "." $1 }')
 
 echo "NETWORK_DEVICE_NAME...: ${NETWORK_DEVICE_NAME}"
 echo "DOMAIN_NAME...........: ${DOMAIN_NAME}"
@@ -12,6 +14,8 @@ echo "MASTER_IP_START.......: ${MASTER_IP_START}"
 echo "MASTER_NODES_COUNT....: ${MASTER_NODES_COUNT}"
 echo "NODE_IP_START.........: ${NODE_IP_START}"
 echo "WORKER_NODES_COUNT....: ${WORKER_NODES_COUNT}"
+echo "IP_NETWORK............: ${IP_NETWORK}"
+echo "IP_NETWORK_REVERSE....: ${IP_NETWORK_REVERSE}"
 
 apt-get install \
   bind9 \
@@ -26,29 +30,31 @@ options {
         directory "/var/cache/bind";
         auth-nxdomain no;    # conform to RFC1035
      // listen-on-v6 { any; };
-        listen-on port 53 { localhost; 192.168.10.0/24; };
-        allow-query { localhost; 192.168.10.0/24; };
+        listen-on port 53 { localhost; ${IP_NETWORK}0/24; };
+        allow-query { localhost; ${IP_NETWORK}0/24; };
         forwarders { 8.8.8.8; };
         recursion yes;
         };
 EOF
 
 cat <<EOF > named.conf.local
-zone    "example.com"   {
+zone    "${DOMAIN_NAME}"   {
         type master;
-        file    "/etc/bind/forward.example.com";
+        file    "/etc/bind/forward.${DOMAIN_NAME}";
  };
 
-zone   "10.168.192.in-addr.arpa"        {
+zone   "${IP_NETWORK_REVERSE}.in-addr.arpa"        {
        type master;
-       file    "/etc/bind/reverse.example.com";
+       file    "/etc/bind/reverse.${DOMAIN_NAME}";
  };
 EOF
 
-cat <<EOF > forward.example.com
+FORWARD_FILE="forward.${DOMAIN_NAME}"
+
+cat <<EOF > "${FORWARD_FILE}"
 \$TTL    604800
 
-@       IN      SOA     primary.example.com. root.primary.example.com. (
+@       IN      SOA     primary.${DOMAIN_NAME}. root.primary.${DOMAIN_NAME}. (
                               6         ; Serial
                          604820         ; Refresh
                           86600         ; Retry
@@ -56,32 +62,30 @@ cat <<EOF > forward.example.com
                          604600 )       ; Negative Cache TTL
 
 ;Name Server Information
-@       IN      NS      primary.example.com.
+@       IN      NS      primary.${DOMAIN_NAME}.
 
 ;IP address of Your Domain Name Server(DNS)
-primary IN       A      192.168.10.2
-
-;Mail Server MX (Mail exchanger) Record
-example.com. IN  MX  100  mail.example.com.
+primary IN       A      ${IP_NETWORK}2
 
 ;A Record for Host names
-dns          IN       A       192.168.10.2
-lb           IN       A       192.168.10.10
-loadbalancer IN       A       192.168.10.10
-master-1     IN       A       192.168.10.11
-master-2     IN       A       192.168.10.12
-master-3     IN       A       192.168.10.13
-worker-1     IN       A       192.168.10.21
-worker-2     IN       A       192.168.10.22
-worker-3     IN       A       192.168.10.23
-
-;CNAME Record
-ftp     IN      CNAME    www.example.com.
+dns          IN       A       ${IP_NETWORK}2
+lb           IN       A       ${IP_NETWORK}${MASTER_IP_START}
+loadbalancer IN       A       ${IP_NETWORK}${MASTER_IP_START}
 EOF
 
-cat <<EOF > reverse.example.com
+for ((line = 1; line <= ${MASTER_NODES_COUNT}; line++)); do
+  echo "master-${line}     IN       A       ${IP_NETWORK}$((${MASTER_IP_START} + ${line}))" >> "${FORWARD_FILE}"
+done
+
+for ((line = 1; line <= ${WORKER_NODES_COUNT}; line++)); do
+  echo "worker-${line}     IN       A       ${IP_NETWORK}$((${NODE_IP_START} + ${line}))" >> "${FORWARD_FILE}"
+done
+
+REVERSE_FILE="reverse.${DOMAIN_NAME}"
+
+cat <<EOF > "${REVERSE_FILE}"
 \$TTL    604800
-@       IN      SOA     example.com. root.example.com. (
+@       IN      SOA     ${DOMAIN_NAME}. root.${DOMAIN_NAME}. (
                              21         ; Serial
                          604820         ; Refresh
                           864500        ; Retry
@@ -89,28 +93,30 @@ cat <<EOF > reverse.example.com
                          604880 )       ; Negative Cache TTL
 
 ;Your Name Server Info
-@       IN      NS      primary.example.com.
-primary IN      A       192.168.10.2
+@       IN      NS      primary.${DOMAIN_NAME}.
+primary IN      A       ${IP_NETWORK}2
 
 ;Reverse Lookup for Your DNS Server
-2       IN      PTR     primary.example.com.
+2       IN      PTR     primary.${DOMAIN_NAME}.
 
 ;PTR Record IP address to HostName
-2       IN      PTR     dns.example.com.
-10      IN      PTR     lb.example.com.
-10      IN      PTR     loadbalancer.example.com.
-11      IN      PTR     master-1.example.com.
-12      IN      PTR     master-2.example.com.
-13      IN      PTR     master-3.example.com.
-21      IN      PTR     worker-1.example.com.
-22      IN      PTR     worker-2.example.com.
-23      IN      PTR     worker-3.example.com.
+2       IN      PTR     dns.${DOMAIN_NAME}.
+${MASTER_IP_START}      IN      PTR     lb.${DOMAIN_NAME}.
+${MASTER_IP_START}      IN      PTR     loadbalancer.${DOMAIN_NAME}.
 EOF
+
+for ((line = 1; line <= ${MASTER_NODES_COUNT}; line++)); do
+  echo "$((${MASTER_IP_START} + ${line}))      IN      PTR     master-${line}.${DOMAIN_NAME}." >> "${REVERSE_FILE}"
+done
+
+for ((line = 1; line <= ${WORKER_NODES_COUNT}; line++)); do
+  echo "$((${NODE_IP_START} + ${line}))      IN      PTR     worker-${line}.${DOMAIN_NAME}." >> "${REVERSE_FILE}"
+done
 
 mv named.conf.options /etc/bind/
 mv named.conf.local /etc/bind/
-mv forward.example.com /etc/bind/
-mv reverse.example.com /etc/bind/
+mv "${FORWARD_FILE}" /etc/bind/
+mv "${REVERSE_FILE}" /etc/bind/
 
 systemctl restart bind9
 systemctl enable bind9
@@ -118,5 +124,5 @@ systemctl enable bind9
 ufw allow 53
 
 named-checkconf /etc/bind/named.conf.local
-named-checkzone example.com /etc/bind/forward.example.com
-named-checkzone example.com /etc/bind/reverse.example.com
+named-checkzone ${DOMAIN_NAME} /etc/bind/"${FORWARD_FILE}"
+named-checkzone ${DOMAIN_NAME} /etc/bind/"${REVERSE_FILE}"
