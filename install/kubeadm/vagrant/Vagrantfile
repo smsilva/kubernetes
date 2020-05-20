@@ -16,7 +16,7 @@ NETWORK_DEVICE_NAME = "enp0s8"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
-  config.vm.box_version = "20200514.0.0"
+  config.vm.box_version = "20200518.1.0"
   config.vm.box_check_update = false
 
   # DNS
@@ -29,13 +29,15 @@ Vagrant.configure("2") do |config|
     node.vm.network :private_network, ip: "#{IP_NETWORK}" + "2"
     node.vm.network "forwarded_port", guest: 22, host: 2224
 
-    node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/vagrant/setup-hosts-file.sh" do |s|
-      s.args = ["#{NETWORK_DEVICE_NAME}"]
+    node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
+      s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
     end
 
     node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
     node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-    node.vm.provision "install-dns-server-bind9", type: "shell", :path => "ubuntu/install-dns-server-bind9.sh"
+    node.vm.provision "install-dns-server-bind9", type: "shell", :path => "ubuntu/install-dns-server-bind9.sh" do |s|
+      s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}","#{MASTER_IP_START}","#{MASTER_NODES_COUNT}","#{NODE_IP_START}","#{WORKER_NODES_COUNT}"]
+    end
   end
 
   # Load Balancer
@@ -48,8 +50,8 @@ Vagrant.configure("2") do |config|
     node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{MASTER_IP_START}"
     node.vm.network "forwarded_port", guest: 22, host: 2225
 
-    node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/vagrant/setup-hosts-file.sh" do |s|
-      s.args = ["#{NETWORK_DEVICE_NAME}"]
+    node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
+      s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
     end
 
     node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
@@ -57,7 +59,7 @@ Vagrant.configure("2") do |config|
     node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
 
     node.vm.provision "install-haproxy", type: "shell", :path => "ubuntu/install-haproxy.sh" do |s|
-      s.args = ["#{NETWORK_DEVICE_NAME}"]
+      s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}","#{MASTER_IP_START}","#{MASTER_NODES_COUNT}"]
     end
  
   end
@@ -73,8 +75,8 @@ Vagrant.configure("2") do |config|
         node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{MASTER_IP_START + i}"
         node.vm.network "forwarded_port", guest: 22, host: "#{2730 + i}"
 
-        node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/vagrant/setup-hosts-file.sh" do |s|
-          s.args = ["#{NETWORK_DEVICE_NAME}"]
+        node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
+          s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
         end
 
         node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
@@ -97,8 +99,8 @@ Vagrant.configure("2") do |config|
         node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{NODE_IP_START + i}"
         node.vm.network "forwarded_port", guest: 22, host: "#{2740 + i}"
 
-        node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/vagrant/setup-hosts-file.sh" do |s|
-          s.args = ["#{NETWORK_DEVICE_NAME}"]
+        node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
+          s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
         end
 
         node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
@@ -107,7 +109,7 @@ Vagrant.configure("2") do |config|
         node.vm.provision "install-docker", type: "shell", :path => "ubuntu/install-docker.sh"
         
         node.vm.provision "worker-route", type: "shell", :path => "ubuntu/worker-route.sh" do |s|
-          s.args = ["#{NETWORK_DEVICE_NAME}"]
+          s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
         end
       end
   

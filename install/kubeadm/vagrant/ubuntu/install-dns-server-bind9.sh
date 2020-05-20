@@ -1,4 +1,18 @@
 #!/bin/bash
+NETWORK_DEVICE_NAME=$1
+DOMAIN_NAME=$2
+MASTER_IP_START=$3
+MASTER_NODES_COUNT=$4
+NODE_IP_START=$5
+WORKER_NODES_COUNT=$6
+
+echo "NETWORK_DEVICE_NAME...: ${NETWORK_DEVICE_NAME}"
+echo "DOMAIN_NAME...........: ${DOMAIN_NAME}"
+echo "MASTER_IP_START.......: ${MASTER_IP_START}"
+echo "MASTER_NODES_COUNT....: ${MASTER_NODES_COUNT}"
+echo "NODE_IP_START.........: ${NODE_IP_START}"
+echo "WORKER_NODES_COUNT....: ${WORKER_NODES_COUNT}"
+
 apt-get install \
   bind9 \
   bind9utils \
@@ -87,10 +101,10 @@ primary IN      A       192.168.10.2
 10      IN      PTR     loadbalancer.example.com.
 11      IN      PTR     master-1.example.com.
 12      IN      PTR     master-2.example.com.
-13      IN      PTR     master-2.example.com.
+13      IN      PTR     master-3.example.com.
 21      IN      PTR     worker-1.example.com.
 22      IN      PTR     worker-2.example.com.
-23      IN      PTR     worker-2.example.com.
+23      IN      PTR     worker-3.example.com.
 EOF
 
 mv named.conf.options /etc/bind/
