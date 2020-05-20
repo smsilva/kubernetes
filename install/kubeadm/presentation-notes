@@ -1,5 +1,10 @@
+- YAML Ain't Markup Language
+- sudo snap install yq
+- sudo apt install jq
+- Kubectl Create Deploy usage, dry-run=client, -o yaml, -o json
+
 - https://github.com/sharkdp/bat/releases/download/v0.15.1/bat_0.15.1_amd64.deb
-- show kubernetes service on default namespace
+- kubernetes service on default namespace
 - create namespace: example
 - kubernetes contexts (config view)
 - watch deployments,replicasets,pods,services,endpoints
