@@ -19,6 +19,7 @@ ADDRES_START=$(echo ${ADDRESS} | awk -F '.' '{ print $1 "." $2 "." $3 }')
 echo "ADDRESS.............: ${ADDRESS}" && \
 echo "ADDRES_START........: ${ADDRES_START}" && \
 echo "HOSTNAME............: ${HOSTNAME}"
+echo "HAPROXY_CONFIG_FILE.: ${HAPROXY_CONFIG_FILE}"
 
 apt-get install -y \
   haproxy

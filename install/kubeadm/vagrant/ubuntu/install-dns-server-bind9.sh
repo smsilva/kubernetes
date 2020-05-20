@@ -7,6 +7,7 @@ NODE_IP_START=$5
 WORKER_NODES_COUNT=$6
 IP_NETWORK=$7
 IP_NETWORK_REVERSE=$(echo ${IP_NETWORK} | awk -F. '{ print $3 "." $2 "." $1 }')
+IP_DNS=$8
 
 echo "NETWORK_DEVICE_NAME...: ${NETWORK_DEVICE_NAME}"
 echo "DOMAIN_NAME...........: ${DOMAIN_NAME}"
@@ -16,6 +17,7 @@ echo "NODE_IP_START.........: ${NODE_IP_START}"
 echo "WORKER_NODES_COUNT....: ${WORKER_NODES_COUNT}"
 echo "IP_NETWORK............: ${IP_NETWORK}"
 echo "IP_NETWORK_REVERSE....: ${IP_NETWORK_REVERSE}"
+echo "IP_DNS................: ${IP_DNS}"
 
 apt-get install \
   bind9 \
@@ -65,10 +67,10 @@ cat <<EOF > "${FORWARD_FILE}"
 @       IN      NS      primary.${DOMAIN_NAME}.
 
 ;IP address of Your Domain Name Server(DNS)
-primary IN       A      ${IP_NETWORK}2
+primary IN       A      ${IP_DNS}
 
 ;A Record for Host names
-dns          IN       A       ${IP_NETWORK}2
+dns          IN       A       ${IP_DNS}
 lb           IN       A       ${IP_NETWORK}${MASTER_IP_START}
 loadbalancer IN       A       ${IP_NETWORK}${MASTER_IP_START}
 EOF
@@ -94,13 +96,13 @@ cat <<EOF > "${REVERSE_FILE}"
 
 ;Your Name Server Info
 @       IN      NS      primary.${DOMAIN_NAME}.
-primary IN      A       ${IP_NETWORK}2
+primary IN      A       ${IP_DNS}
 
 ;Reverse Lookup for Your DNS Server
-2       IN      PTR     primary.${DOMAIN_NAME}.
+${IP_DNS##*.}       IN      PTR     primary.${DOMAIN_NAME}.
 
 ;PTR Record IP address to HostName
-2       IN      PTR     dns.${DOMAIN_NAME}.
+${IP_DNS##*.}       IN      PTR     dns.${DOMAIN_NAME}.
 ${MASTER_IP_START}      IN      PTR     lb.${DOMAIN_NAME}.
 ${MASTER_IP_START}      IN      PTR     loadbalancer.${DOMAIN_NAME}.
 EOF
