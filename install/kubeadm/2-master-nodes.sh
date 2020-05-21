@@ -55,10 +55,17 @@ echo ""
 #   - token
 #   - discovery-token-ca-cert-hash
 #   - certificate-key
+NODE_NAME=$(hostname -s) && \
 sudo kubeadm join lb:6443 \
-  --v 5 \
+  --v 3 \
   --control-plane \
+  --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token 7ers7r.gpa3s5c1qzruju7l \
-  --discovery-token-ca-cert-hash sha256:2ccab60fa1c058dd1ab716e0508d408996ddddbd7a98280776ddad7f15484442 \
-  --certificate-key bc8c62a731e984c811590d2f219c7909402e6dc37eed7ad668eaffc9f76e7dd8
+  --token eql8x7.frxy06rj6ijbry3w \
+  --discovery-token-ca-cert-hash sha256:c9fba29f17ccd845fb065491f10b9472faac23c2f59d6f9754c63ca00e8b3121 \
+  --certificate-key 6b3f7575c3bccabab85f5a475d237c5570e0c7a360e1f8ab12fd8daf22520917
+
+# Reset Node Config
+sudo kubeadm reset -f
+sudo rm -rf /etc/cni/net.d && \
+sudo rm -rf ${HOME}/.kube/config

@@ -5,10 +5,10 @@ nc -dv lb 6443
 docker ps
 
 # All Nodes
-sudo apt update && \
+sudo apt update &> /dev/null && \
 sudo apt install -y \
   apt-transport-https \
-  curl && \
+  curl &> /dev/null && \
 sudo curl -s "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo apt-key add -
 
 # Add Kubernetes Repository
@@ -17,7 +17,7 @@ deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
 # Update package list
-sudo apt update
+sudo apt-get update | grep -v -E "^Hit|^Get"
 
 # Set Kubernetes Version
 KUBERNETES_DESIRED_VERSION='1.18'

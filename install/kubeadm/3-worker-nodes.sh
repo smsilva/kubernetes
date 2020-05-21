@@ -4,7 +4,14 @@ route -n | grep "10.96.0.0"; if [[ $? == 0 ]]; then echo "OK"; else echo "FAIL";
 # The parameters below are getting from the first Contol Plane Config
 #   - token
 #   - discovery-token-ca-cert-hash
+NODE_NAME=$(hostname -s) && \
 sudo kubeadm join lb:6443 \
-  --token 7ers7r.gpa3s5c1qzruju7l \
-  --discovery-token-ca-cert-hash sha256:2ccab60fa1c058dd1ab716e0508d408996ddddbd7a98280776ddad7f15484442 \
-  --v 5
+  --node-name "${NODE_NAME}" \
+  --token eql8x7.frxy06rj6ijbry3w \
+  --discovery-token-ca-cert-hash sha256:c9fba29f17ccd845fb065491f10b9472faac23c2f59d6f9754c63ca00e8b3121 \
+  --v 3
+
+# Reset Node Config
+sudo kubeadm reset -f
+sudo rm -rf /etc/cni/net.d && \
+sudo rm -rf ${HOME}/.kube/config
