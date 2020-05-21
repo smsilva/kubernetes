@@ -1,6 +1,9 @@
 # Test Connectivity to Loadbalancer
 nc -dv lb 6443
 
+# Check if there are a route that will be used by kube-proxy to communicate with API Server on Masters with kubernetes service Cluster IP Address (10.96.0.1)
+route -n | grep "10.96.0.0"; if [[ $? == 0 ]]; then echo "OK"; else echo "FAIL"; fi
+
 # Docker Test
 docker ps
 

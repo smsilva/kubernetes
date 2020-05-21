@@ -14,7 +14,9 @@ echo ""
 # Initialize master-1 (Take note of the two Join commands)
 SECONDS=0
 
+NODE_NAME=$(hostname -s) && \
 sudo kubeadm init \
+  --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --kubernetes-version "${KUBERNETES_BASE_VERSION}" \
   --control-plane-endpoint "${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" \
@@ -30,7 +32,7 @@ printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/
 #
 
 # Watch Nodes and Pods from kube-system namespace
-watch '
+watch -n 3 '
   kubectl get nodes -o wide && \
   echo "" && \
   kubectl get pods -n kube-system -o wide'
@@ -57,13 +59,12 @@ echo ""
 #   - certificate-key
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm join lb:6443 \
-  --v 3 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token eql8x7.frxy06rj6ijbry3w \
-  --discovery-token-ca-cert-hash sha256:c9fba29f17ccd845fb065491f10b9472faac23c2f59d6f9754c63ca00e8b3121 \
-  --certificate-key 6b3f7575c3bccabab85f5a475d237c5570e0c7a360e1f8ab12fd8daf22520917
+  --token rsettg.2t2q7qg6jo08w3cg \
+  --discovery-token-ca-cert-hash sha256:2bc955831b6fc8420178ffeeb608c5fbee8e013c2214a13b3932451cd6c5fa9b \
+  --certificate-key 69059cf652b818d620d7aba6406f3019fe1bf7c20e966d4f867b93eda0122e3c
 
 # Reset Node Config
 sudo kubeadm reset -f

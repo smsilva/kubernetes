@@ -1,10 +1,10 @@
 - kubernetes service on default namespace
 - create namespace: example
-- watch deployments,replicasets,pods,services,endpoints
 - kubernetes contexts (config view)
 - config default namespace
+- watch deployments,replicasets,pods,services,endpoints
 - imperative vs declarative
-- nginx:1.18.0
+- nginx:1.17.10
 - api-resources
 - deploy declarative
 - explore
@@ -18,6 +18,6 @@
 - https://kubernetes.io/docs/concepts/services-networking/service/
 - service selectors
 - rollout
-- nginx:1.17.10
+- nginx:1.18.0
 - expose with NodePort
 - explain
