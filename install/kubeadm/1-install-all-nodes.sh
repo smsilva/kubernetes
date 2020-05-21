@@ -1,5 +1,5 @@
 # Test Connectivity to Loadbalancer
-nc -dv ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT}
+nc -dv lb 6443
 
 # Docker Test
 docker ps
@@ -22,7 +22,7 @@ sudo apt update
 # Set Kubernetes Version
 KUBERNETES_DESIRED_VERSION='1.18'
 KUBERNETES_VERSION="$(echo -n $(sudo apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }'))"
-KUBERNETES_BASE_VERSION="$(echo ${KUBERNETES_VERSION} | cut -d- -f 1)"
+KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}"
 
 echo "" && \
 echo "KUBERNETES_DESIRED_VERSION.: ${KUBERNETES_DESIRED_VERSION}" && \
@@ -40,7 +40,7 @@ sudo apt-mark hold \
   kubeadm \
   kubectl
 
-# Preloading Container Images
+# Preloading Container Images and Install some Tools on Master Nodes
 if hostname -s | grep "master" &>/dev/null; then
   echo 'source <(kubectl completion bash)' >> ~/.bashrc
   echo 'alias k=kubectl' >> ~/.bashrc

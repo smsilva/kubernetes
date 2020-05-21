@@ -5,6 +5,6 @@ route -n | grep "10.96.0.0"; if [[ $? == 0 ]]; then echo "OK"; else echo "FAIL";
 #   - token
 #   - discovery-token-ca-cert-hash
 sudo kubeadm join lb:6443 \
-  --token f0818g.r9fakwhksxmbj0ui \
-  --discovery-token-ca-cert-hash sha256:5037f60906c7dd6ff1fa7fa606ab8d7b62ab164bcf2e52b19f19acd929b7d651 \
+  --token 7ers7r.gpa3s5c1qzruju7l \
+  --discovery-token-ca-cert-hash sha256:2ccab60fa1c058dd1ab716e0508d408996ddddbd7a98280776ddad7f15484442 \
   --v 5
