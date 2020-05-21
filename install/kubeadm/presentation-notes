@@ -1,10 +1,9 @@
 - kubernetes service on default namespace
 - create namespace: example
-- kubernetes contexts (config view)
 - watch deployments,replicasets,pods,services,endpoints
+- kubernetes contexts (config view)
 - config default namespace
 - imperative vs declarative
-- kubectl Create Deploy usage, dry-run=client, -o yaml, -o json
 - nginx:1.18.0
 - api-resources
 - deploy declarative
@@ -12,8 +11,8 @@
 - describe
 - get
 - log
-- exec
 - run
+- exec
 - attach
 - yauritux/busybox-curl
 - https://kubernetes.io/docs/concepts/services-networking/service/
