@@ -2,6 +2,10 @@
 
 SECONDS=0
 
-vagrant up --no-parallel
+MACHINES=$*
+
+for machine in ${MACHINES}; do
+  vagrant up ${machine}
+done
 
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
