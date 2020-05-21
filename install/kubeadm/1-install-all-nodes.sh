@@ -1,3 +1,6 @@
+# Test Connectivity to Loadbalancer
+nc -dv ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT}
+
 # Docker Test
 docker ps
 
@@ -45,6 +48,12 @@ if hostname -s | grep "master" &>/dev/null; then
   source ~/.bashrc
 
   kubeadm config images pull
+
+  sudo apt-get install -y jq
+  sudo snap install yq
+  wget https://github.com/sharkdp/bat/releases/download/v0.15.1/bat_0.15.1_amd64.deb -O bat_amd64.deb
+  sudo dpkg -i bat_amd64.deb && rm bat_amd64.deb
+  echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases 
 else
   docker pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
 fi

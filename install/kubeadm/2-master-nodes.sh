@@ -10,9 +10,6 @@ echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
 echo "ADVERTISE_ADDRESS..........: ${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" && \
 echo ""
 
-# Test Connectivity to Loadbalancer
-nc -dv ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT}
-
 # Initialize master-1 (Take note of the two Join commands)
 sudo kubeadm init \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
@@ -20,15 +17,22 @@ sudo kubeadm init \
   --control-plane-endpoint "${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" \
   --upload-certs
 
-# Install the Weave CNI Plugin
-# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
-kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+# Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file. 
+#
+#   --token f0818g.r9fakwhksxmbj0ui \
+#   --discovery-token-ca-cert-hash sha256:5037f60906c7dd6ff1fa7fa606ab8d7b62ab164bcf2e52b19f19acd929b7d651 \
+#   --certificate-key d654f4c9a4337f50cf4cfe8ccab0b5a7ff3a31c1dbdece9142dca81689d45546
+#
 
 # Watch Nodes and Pods
 watch -n 2 '
   kubectl get nodes -o wide && \
   echo "" && \
   kubectl get pods -n kube-system -o wide'
+
+# Install the Weave CNI Plugin
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 
 # Adding a Control Plane Node
 LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | cut -d " " -f 1)
