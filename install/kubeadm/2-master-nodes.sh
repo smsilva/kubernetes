@@ -35,7 +35,7 @@ printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/
 watch -n 3 '
   kubectl get nodes -o wide && \
   echo "" && \
-  kubectl get pods -n kube-system -o wide'
+  kubectl get pods -o wide'
 
 # Install the Weave CNI Plugin
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
@@ -62,10 +62,10 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token rsettg.2t2q7qg6jo08w3cg \
-  --discovery-token-ca-cert-hash sha256:2bc955831b6fc8420178ffeeb608c5fbee8e013c2214a13b3932451cd6c5fa9b \
-  --certificate-key 69059cf652b818d620d7aba6406f3019fe1bf7c20e966d4f867b93eda0122e3c
-
+  --token jzmmxw.9n9snti5mbjdg2q6 \
+  --discovery-token-ca-cert-hash sha256:44a541f3ec63fb72385352a13abe5ce4c9b0b2aac60cf7ba61148f8e2a51785f \
+  --certificate-key 5add7bc64920c7f09f32d3ea69d01cf62880bfcd85da77b1897d5a705609d61f
+  
 # Reset Node Config
 sudo kubeadm reset -f
 sudo rm -rf /etc/cni/net.d && \

@@ -4,8 +4,8 @@
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
-  --token rsettg.2t2q7qg6jo08w3cg \
-  --discovery-token-ca-cert-hash sha256:2bc955831b6fc8420178ffeeb608c5fbee8e013c2214a13b3932451cd6c5fa9b \
+  --token jzmmxw.9n9snti5mbjdg2q6 \
+  --discovery-token-ca-cert-hash sha256:44a541f3ec63fb72385352a13abe5ce4c9b0b2aac60cf7ba61148f8e2a51785f \
   --v 1
 
 # Reset Node Config
