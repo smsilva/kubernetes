@@ -25,9 +25,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file. 
-  --token 43g3tq.eoc7u9mb7t3zxkkx \
-  --discovery-token-ca-cert-hash sha256:5aa40a8d2aaaf2af2524561e9efc1d5bf453266cd013362b65b6d3fa9bef47d7 \
-  --certificate-key ad680dc327b835ac439ab3fec899eef5a56759b7d749487ec0e800f06320863d
+  --token 7u4s03.43wgc0blrfqjs71n \
+  --discovery-token-ca-cert-hash sha256:8eba5ee02bfb846ad418ad425c908eb3cf726ece25dca48b8b4333b163059ae5 \
+  --certificate-key 0562945b794879906d12b59dd104c0b00052159c35d080b0aa935cdebd25be55
 
 # Set Default Namespace to kube-system
 kubectl config set-context --current --namespace kube-system
@@ -79,6 +79,16 @@ wget \
   --quiet && \
 kubectl apply -f "${CNI_ADD_ON_FILE}"
 
+# Optional
+BAT_VERSION="0.15.1" && \
+BAT_DEB_FILE="bat_${BAT_VERSION}_amd64.deb" && \
+wget "https://github.com/sharkdp/bat/releases/download/v${BAT_VERSION}/${BAT_DEB_FILE}" \
+  --output-document "${BAT_DEB_FILE}" \
+  --quiet && \
+sudo dpkg -i "${BAT_DEB_FILE}" && rm "${BAT_DEB_FILE}"
+
+echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases
+
 # Adding a Control Plane Node
 LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | cut -d " " -f 1) && \
 echo "" && \
@@ -94,9 +104,9 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token 43g3tq.eoc7u9mb7t3zxkkx \
-  --discovery-token-ca-cert-hash sha256:5aa40a8d2aaaf2af2524561e9efc1d5bf453266cd013362b65b6d3fa9bef47d7 \
-  --certificate-key ad680dc327b835ac439ab3fec899eef5a56759b7d749487ec0e800f06320863d
+  --token 7u4s03.43wgc0blrfqjs71n \
+  --discovery-token-ca-cert-hash sha256:8eba5ee02bfb846ad418ad425c908eb3cf726ece25dca48b8b4333b163059ae5 \
+  --certificate-key 0562945b794879906d12b59dd104c0b00052159c35d080b0aa935cdebd25be55
 
 # Reset Node Config
 sudo kubeadm reset -f

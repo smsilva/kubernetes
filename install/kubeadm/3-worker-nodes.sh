@@ -4,9 +4,9 @@
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
-  --token 43g3tq.eoc7u9mb7t3zxkkx \
-  --discovery-token-ca-cert-hash sha256:5aa40a8d2aaaf2af2524561e9efc1d5bf453266cd013362b65b6d3fa9bef47d7 \
-  --v 1
+  --token 7u4s03.43wgc0blrfqjs71n \
+  --discovery-token-ca-cert-hash sha256:8eba5ee02bfb846ad418ad425c908eb3cf726ece25dca48b8b4333b163059ae5 \
+  --v 5
 
 ######################## Hey!!! Check Container Images after Node Join please!!!
 

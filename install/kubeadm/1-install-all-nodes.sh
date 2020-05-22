@@ -11,7 +11,7 @@ docker ps
 sudo apt update &> /dev/null && \
 sudo apt install -y \
   apt-transport-https \
-  curl &> /dev/null && \
+  curl && \
 sudo curl -s "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo apt-key add -
 
 # Add Kubernetes Repository
@@ -50,14 +50,6 @@ if hostname -s | grep "master" &>/dev/null; then
   source ~/.bashrc
 
   kubeadm config images pull
-
-  BAT_VERSION="0.15.1" && \
-  BAT_DEB_FILE="bat_${BAT_VERSION}_amd64.deb" && \
-  wget "https://github.com/sharkdp/bat/releases/download/v${BAT_VERSION}/${BAT_DEB_FILE}" \
-    --output-document "${BAT_DEB_FILE}" \
-    --quiet && \
-  sudo dpkg -i "${BAT_DEB_FILE}" && rm "${BAT_DEB_FILE}" && \
-  echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases
 else
   docker pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
 fi
