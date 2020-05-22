@@ -25,25 +25,49 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file. 
-#
-#   --token f0818g.r9fakwhksxmbj0ui \
-#   --discovery-token-ca-cert-hash sha256:5037f60906c7dd6ff1fa7fa606ab8d7b62ab164bcf2e52b19f19acd929b7d651 \
-#   --certificate-key d654f4c9a4337f50cf4cfe8ccab0b5a7ff3a31c1dbdece9142dca81689d45546
-#
+  --token 69qawj.xcghgjhqkx4ifwd4 \
+  --discovery-token-ca-cert-hash sha256:5b995e595271f940bc3c7198ff05048aa43cae5522e47b9baa8ba13d5d730975 \
+  --certificate-key f8198522b008eddcc259f46197c8dc02a3a638b7572768a395fe7411806c4063
+
+# Set Default Namespace to kube-system
+kubectl config set-context --current --namespace kube-system
+
+CUSTOM_COLUMNS_NODES_FILE="~/.kube/custom-columns-node.template"
+
+cat <<EOF > "${CUSTOM_COLUMNS_NODES_FILE}"
+NAME           STATUS                                               INTERNAL_IP                                        VERSION
+.metadata.name .status.conditions[?(@.type=="Ready")].reason .status.addresses[?(@.type=="InternalIP")].address .status.nodeInfo.kubeletVersion
+EOF
+
+echo "PATH=${PATH}:~/bin/" >> ~/.bashrc
+
+source ~/.bashrc
+
+cat <<EOF > ~/bin/kubectl-nodes
+#!/bin/bash
+NODES=$*
+
+CUSTOM_COLUMNS_NODES_FILE="/home/vagrant/.kube/custom-columns-node.template"
+
+kubectl get nodes ${NODES} \
+  --output custom-columns-file="${CUSTOM_COLUMNS_NODES_FILE}" | sed 's/KubeletReady/Ready/;s/NodeStatusUnknown/NotReady/' | column -t
+EOF
+
+chmod +x ~/bin/kubectl-nodes
 
 # Watch Nodes and Pods from kube-system namespace
 watch -n 3 '
-  kubectl get nodes -o wide && \
-  echo "" && \
-  kubectl get pods -o wide'
+  kubectl nodes && \
+  echo " " && \
+  kubectl get deployments,pods,services,endpoints -o wide'
 
 # Install the Weave CNI Plugin
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
 CNI_ADD_ON_FILE="cni-add-on-weave.yaml" && \
 wget \
-  --quiet \
   "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')" \
-  --output-documen "${CNI_ADD_ON_FILE}" && \
+  --output-document "${CNI_ADD_ON_FILE}" \
+  --quiet && \
 kubectl apply -f "${CNI_ADD_ON_FILE}"
 
 # Adding a Control Plane Node
@@ -62,10 +86,10 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token jzmmxw.9n9snti5mbjdg2q6 \
-  --discovery-token-ca-cert-hash sha256:44a541f3ec63fb72385352a13abe5ce4c9b0b2aac60cf7ba61148f8e2a51785f \
-  --certificate-key 5add7bc64920c7f09f32d3ea69d01cf62880bfcd85da77b1897d5a705609d61f
-  
+  --token 69qawj.xcghgjhqkx4ifwd4 \
+  --discovery-token-ca-cert-hash sha256:5b995e595271f940bc3c7198ff05048aa43cae5522e47b9baa8ba13d5d730975 \
+  --certificate-key f8198522b008eddcc259f46197c8dc02a3a638b7572768a395fe7411806c4063
+
 # Reset Node Config
 sudo kubeadm reset -f
 sudo rm -rf /etc/cni/net.d && \
