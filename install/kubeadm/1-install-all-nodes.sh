@@ -23,10 +23,9 @@ EOF
 sudo apt-get update | grep -v -E "^Hit|^Get"
 
 # Set Kubernetes Version
-KUBERNETES_DESIRED_VERSION='1.18'
-KUBERNETES_VERSION="$(echo -n $(sudo apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }'))"
-KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}"
-
+KUBERNETES_DESIRED_VERSION='1.18' && \
+KUBERNETES_VERSION="$(echo -n $(sudo apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }'))" && \
+KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}" && \
 echo "" && \
 echo "KUBERNETES_DESIRED_VERSION.: ${KUBERNETES_DESIRED_VERSION}" && \
 echo "KUBERNETES_VERSION.........: ${KUBERNETES_VERSION}" && \
@@ -56,9 +55,9 @@ if hostname -s | grep "master" &>/dev/null; then
   BAT_DEB_FILE="bat_${BAT_VERSION}_amd64.deb" && \
   wget "https://github.com/sharkdp/bat/releases/download/v${BAT_VERSION}/${BAT_DEB_FILE}" \
     --output-document "${BAT_DEB_FILE}" \
-    --quiet && \ 
+    --quiet && \
   sudo dpkg -i "${BAT_DEB_FILE}" && rm "${BAT_DEB_FILE}" && \
-  echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases 
+  echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases
 else
   docker pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
 fi

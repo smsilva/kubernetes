@@ -25,35 +25,44 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file. 
-  --token 69qawj.xcghgjhqkx4ifwd4 \
-  --discovery-token-ca-cert-hash sha256:5b995e595271f940bc3c7198ff05048aa43cae5522e47b9baa8ba13d5d730975 \
-  --certificate-key f8198522b008eddcc259f46197c8dc02a3a638b7572768a395fe7411806c4063
+  --token 43g3tq.eoc7u9mb7t3zxkkx \
+  --discovery-token-ca-cert-hash sha256:5aa40a8d2aaaf2af2524561e9efc1d5bf453266cd013362b65b6d3fa9bef47d7 \
+  --certificate-key ad680dc327b835ac439ab3fec899eef5a56759b7d749487ec0e800f06320863d
 
 # Set Default Namespace to kube-system
 kubectl config set-context --current --namespace kube-system
 
-CUSTOM_COLUMNS_NODES_FILE="~/.kube/custom-columns-node.template"
+# Configure PATH
+echo "PATH=${PATH}:${HOME}/bin/" >> ~/.bashrc && source ~/.bashrc && mkdir "${HOME}/bin"
 
-cat <<EOF > "${CUSTOM_COLUMNS_NODES_FILE}"
+# Custom Columns Template
+CUSTOM_COLUMNS_TEMPLATE_DIRECTORY="${HOME}/.kube/templates"
+CUSTOM_COLUMNS_NODES_FILE="custom-columns-nodes.template"
+
+mkdir -p "${CUSTOM_COLUMNS_TEMPLATE_DIRECTORY}"
+
+cat <<EOF > "${CUSTOM_COLUMNS_TEMPLATE_DIRECTORY}/${CUSTOM_COLUMNS_NODES_FILE}"
 NAME           STATUS                                               INTERNAL_IP                                        VERSION
 .metadata.name .status.conditions[?(@.type=="Ready")].reason .status.addresses[?(@.type=="InternalIP")].address .status.nodeInfo.kubeletVersion
 EOF
 
-echo "PATH=${PATH}:~/bin/" >> ~/.bashrc
-
-source ~/.bashrc
+cat <<EOF > ~/bin/custom-columns-config-templates
+#!/bin/bash
+TEMPLATE_DIRECTORY="${CUSTOM_COLUMNS_TEMPLATE_DIRECTORY}"
+CUSTOM_COLUMNS_NODES_FILE="\${TEMPLATE_DIRECTORY}/${CUSTOM_COLUMNS_NODES_FILE}"
+EOF
 
 cat <<EOF > ~/bin/kubectl-nodes
 #!/bin/bash
-NODES=$*
+. custom-columns-config-templates
 
-CUSTOM_COLUMNS_NODES_FILE="/home/vagrant/.kube/custom-columns-node.template"
+NODES=\$*
 
-kubectl get nodes ${NODES} \
-  --output custom-columns-file="${CUSTOM_COLUMNS_NODES_FILE}" | sed 's/KubeletReady/Ready/;s/NodeStatusUnknown/NotReady/' | column -t
+kubectl get nodes \${NODES} \\
+  --output custom-columns-file="\${CUSTOM_COLUMNS_NODES_FILE}" | sed 's/KubeletReady/Ready/;s/NodeStatusUnknown/NotReady/;' | column -t
 EOF
 
-chmod +x ~/bin/kubectl-nodes
+chmod +x ~/bin/*
 
 # Watch Nodes and Pods from kube-system namespace
 watch -n 3 '
@@ -71,8 +80,7 @@ wget \
 kubectl apply -f "${CNI_ADD_ON_FILE}"
 
 # Adding a Control Plane Node
-LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | cut -d " " -f 1)
-
+LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | cut -d " " -f 1) && \
 echo "" && \
 echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
 echo ""
@@ -86,9 +94,9 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token 69qawj.xcghgjhqkx4ifwd4 \
-  --discovery-token-ca-cert-hash sha256:5b995e595271f940bc3c7198ff05048aa43cae5522e47b9baa8ba13d5d730975 \
-  --certificate-key f8198522b008eddcc259f46197c8dc02a3a638b7572768a395fe7411806c4063
+  --token 43g3tq.eoc7u9mb7t3zxkkx \
+  --discovery-token-ca-cert-hash sha256:5aa40a8d2aaaf2af2524561e9efc1d5bf453266cd013362b65b6d3fa9bef47d7 \
+  --certificate-key ad680dc327b835ac439ab3fec899eef5a56759b7d749487ec0e800f06320863d
 
 # Reset Node Config
 sudo kubeadm reset -f
