@@ -1,4 +1,4 @@
-# Installing Control Plane on the First Control Plane Node (master-1)
+# Installing Control Plane on the First Control Plane Node only (master-1)
 LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | awk '{ print $1 }')
 NETWORK_INTERFACE_NAME=$(ip addr show | grep ${LOCAL_IP_ADDRESS} | awk '{ print $7 }')
 LOAD_BALANCER_PORT='6443'
@@ -25,18 +25,12 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file. 
-  --token 7u4s03.43wgc0blrfqjs71n \
-  --discovery-token-ca-cert-hash sha256:8eba5ee02bfb846ad418ad425c908eb3cf726ece25dca48b8b4333b163059ae5 \
-  --certificate-key 0562945b794879906d12b59dd104c0b00052159c35d080b0aa935cdebd25be55
+  --token u32c89.1p22tpar81a64oip \
+  --discovery-token-ca-cert-hash sha256:6a4667711975b74b7dec401c8c389b83278a28722ed5cead4e60166630938e8c \
+  --certificate-key 08e64aaadd103bdcb5b8f1df3bfc24816540259ab0ae92b717af8382c4be5071
 
 # Set Default Namespace to kube-system
 kubectl config set-context --current --namespace kube-system
-
-# Watch Nodes and Pods from kube-system namespace
-watch -n 3 '
-  kubectl nodes && \
-  echo " " && \
-  kubectl get deployments,pods,services,endpoints -o wide'
 
 # Install the Weave CNI Plugin
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
@@ -46,6 +40,9 @@ wget \
   --output-document "${CNI_ADD_ON_FILE}" \
   --quiet && \
 kubectl apply -f "${CNI_ADD_ON_FILE}"
+
+# Watch Nodes and Pods from kube-system namespace
+watch -n 3 'kubectl get nodes,deployments,replicasets,pods,services,endpoints -o wide'
 
 # Optional
 BAT_VERSION="0.15.1" && \
@@ -72,9 +69,9 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token 7u4s03.43wgc0blrfqjs71n \
-  --discovery-token-ca-cert-hash sha256:8eba5ee02bfb846ad418ad425c908eb3cf726ece25dca48b8b4333b163059ae5 \
-  --certificate-key 0562945b794879906d12b59dd104c0b00052159c35d080b0aa935cdebd25be55
+  --token u32c89.1p22tpar81a64oip \
+  --discovery-token-ca-cert-hash sha256:6a4667711975b74b7dec401c8c389b83278a28722ed5cead4e60166630938e8c \
+  --certificate-key 08e64aaadd103bdcb5b8f1df3bfc24816540259ab0ae92b717af8382c4be5071
 
 # Reset Node Config
 sudo kubeadm reset -f

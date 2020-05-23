@@ -4,24 +4,18 @@
 - create namespace: example
 - kubernetes contexts (config view)
 - config default namespace
-- watch deployments,replicasets,pods,services,endpoints
-- imperative vs declarative
-- nginx:1.17.10
+- imperative vs declarative - nginx:1.17.10/nginx:1.18.0
+- rollout
 - api-resources
-- deploy declarative
 - explore
 - describe
-- get
 - log
 - run
 - exec yauritux/busybox-curl
 - attach
-- https://kubernetes.io/docs/concepts/services-networking/service/
-- service selectors
-- rollout
-- nginx:1.18.0
 - expose with NodePort
 - explain
+- service selectors
 '
 
 # Configure PATH
