@@ -1,2 +1,2 @@
 #!/bin/bash
-./tmux-vagrant-connect-ssh.sh
+./tmux-vagrant-ssh.sh
