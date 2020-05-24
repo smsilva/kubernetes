@@ -17,7 +17,7 @@ NETWORK_DEVICE_NAME = "enp0s8"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
-  config.vm.box_version = "20200518.1.0"
+  config.vm.box_version = "20200521.0.0"
   config.vm.box_check_update = false
 
   # DNS

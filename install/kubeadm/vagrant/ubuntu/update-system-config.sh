@@ -4,7 +4,7 @@
 swapoff -a
 
 # Update /etc/fstab remove lines with 'swap'
-sed -i '/swap/d' /etc/fstab
+sed '/swap/d' /etc/fstab -i
 
 # Enable Forward Traffic
 cat <<EOF > /etc/sysctl.d/k8s.conf
@@ -14,5 +14,3 @@ EOF
 
 # Enable Configuration
 sysctl --system
-
-# Update Netplan Config
