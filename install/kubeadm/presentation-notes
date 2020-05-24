@@ -6,12 +6,12 @@
 - config default namespace
 - imperative vs declarative - nginx:1.17.10/nginx:1.18.0
 - rollout
-- explore
 - describe
-- log
-- run
-- exec yauritux/busybox-curl
+- logs
+- expose
+- run yauritux/busybox-curl
 - attach
+- exec
 - expose with NodePort
 - explain
 - service selectors

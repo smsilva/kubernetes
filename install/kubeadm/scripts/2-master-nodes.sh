@@ -25,9 +25,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file. 
-  --token u32c89.1p22tpar81a64oip \
-  --discovery-token-ca-cert-hash sha256:6a4667711975b74b7dec401c8c389b83278a28722ed5cead4e60166630938e8c \
-  --certificate-key 08e64aaadd103bdcb5b8f1df3bfc24816540259ab0ae92b717af8382c4be5071
+  --token wmhxjw.1fm8gobad6w52k9a \
+  --discovery-token-ca-cert-hash sha256:64f217127e34d21f38a1f15dae2177d1cb61ce7f6d82de1c05a469168240b56c \
+  --certificate-key d14e22260a69e81a80ea459fc6ea576954508963b3b284464831e4a8d9540089
 
 # Set Default Namespace to kube-system
 kubectl config set-context --current --namespace kube-system
@@ -69,9 +69,9 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token u32c89.1p22tpar81a64oip \
-  --discovery-token-ca-cert-hash sha256:6a4667711975b74b7dec401c8c389b83278a28722ed5cead4e60166630938e8c \
-  --certificate-key 08e64aaadd103bdcb5b8f1df3bfc24816540259ab0ae92b717af8382c4be5071
+  --token wmhxjw.1fm8gobad6w52k9a \
+  --discovery-token-ca-cert-hash sha256:64f217127e34d21f38a1f15dae2177d1cb61ce7f6d82de1c05a469168240b56c \
+  --certificate-key d14e22260a69e81a80ea459fc6ea576954508963b3b284464831e4a8d9540089
 
 # Reset Node Config
 sudo kubeadm reset -f
