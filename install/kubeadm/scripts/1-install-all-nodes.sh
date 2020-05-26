@@ -5,7 +5,7 @@ nc -dv lb 6443
 route -n | grep "10.96.0.0"; if [[ $? == 0 ]]; then echo "OK"; else echo "FAIL"; fi
 
 # Docker Test
-docker ps
+docker images
 
 # All Nodes
 sudo apt update &> /dev/null && \
