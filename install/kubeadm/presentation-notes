@@ -1,10 +1,10 @@
-#!/bin/bash
-: '
 - kubernetes service on default namespace
 - create namespace: example
 - kubernetes contexts (config view)
 - config default namespace
-- imperative vs declarative - nginx:1.17.10/nginx:1.18.0
+- imperative vs declarative
+  - nginx:1.17.10
+  - nginx:1.18.0
 - rollout
 - describe
 - logs
@@ -16,7 +16,6 @@
 - explain
 - service selectors
 - api-resources
-'
 
 # Configure PATH
 echo "PATH=${PATH}:${HOME}/bin/" >> ~/.bashrc && \
