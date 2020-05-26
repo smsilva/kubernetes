@@ -25,9 +25,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file. 
-  --token wmhxjw.1fm8gobad6w52k9a \
-  --discovery-token-ca-cert-hash sha256:64f217127e34d21f38a1f15dae2177d1cb61ce7f6d82de1c05a469168240b56c \
-  --certificate-key d14e22260a69e81a80ea459fc6ea576954508963b3b284464831e4a8d9540089
+  --token tz04xo.bbtrcbeeqmuxlc9l \
+  --discovery-token-ca-cert-hash sha256:4e115444bf73d7c34aab6a7d2131fa51aa1767bde5d9750694fa4b6979ac05e1 \
+  --certificate-key 9593b7bb19d5230387ebc0d15638f6994ba088b25b0db89f3cf1039cb2d5656e
 
 # Set Default Namespace to kube-system
 kubectl config set-context --current --namespace kube-system
@@ -56,9 +56,7 @@ echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases
 
 # Adding a Control Plane Node
 LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | cut -d " " -f 1) && \
-echo "" && \
-echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
-echo ""
+echo "" && echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}"
 
 # The parameters below are getting from the first Contol Plane Config
 #   - token
@@ -69,11 +67,11 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token wmhxjw.1fm8gobad6w52k9a \
-  --discovery-token-ca-cert-hash sha256:64f217127e34d21f38a1f15dae2177d1cb61ce7f6d82de1c05a469168240b56c \
-  --certificate-key d14e22260a69e81a80ea459fc6ea576954508963b3b284464831e4a8d9540089
+  --token tz04xo.bbtrcbeeqmuxlc9l \
+  --discovery-token-ca-cert-hash sha256:4e115444bf73d7c34aab6a7d2131fa51aa1767bde5d9750694fa4b6979ac05e1 \
+  --certificate-key 9593b7bb19d5230387ebc0d15638f6994ba088b25b0db89f3cf1039cb2d5656e
 
-# Reset Node Config
+# Reset Node Config (if needed)
 sudo kubeadm reset -f
 sudo rm -rf /etc/cni/net.d && \
 sudo rm -rf ${HOME}/.kube/config

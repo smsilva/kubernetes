@@ -4,13 +4,6 @@
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
-  --token wmhxjw.1fm8gobad6w52k9a \
-  --discovery-token-ca-cert-hash sha256:64f217127e34d21f38a1f15dae2177d1cb61ce7f6d82de1c05a469168240b56c \
+  --token tz04xo.bbtrcbeeqmuxlc9l \
+  --discovery-token-ca-cert-hash sha256:4e115444bf73d7c34aab6a7d2131fa51aa1767bde5d9750694fa4b6979ac05e1 \
   --v 5
-
-######################## Hey!!! Check Container Images after Node Join please!!!
-
-# Reset Node Config
-sudo kubeadm reset -f
-sudo rm -rf /etc/cni/net.d && \
-sudo rm -rf ${HOME}/.kube/config

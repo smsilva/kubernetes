@@ -6,7 +6,7 @@ ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
 # Define the number of master and worker nodes
 # If this number is changed, remember to update setup-hosts-file.sh script with the new hosts IP details in /etc/hosts of each VM.
 MASTER_NODES_COUNT = 3
-WORKER_NODES_COUNT = 3
+WORKER_NODES_COUNT = 2
 
 DOMAIN_NAME="example.com"
 IP_NETWORK = "192.168.10."
