@@ -13,7 +13,6 @@ LOAD_BALANCER_PORT='6443' && \
 LOAD_BALANCER_NAME='lb' && \
 CONTROL_PLANE_ENDPOINT="${LOAD_BALANCER_NAME}:${LOAD_BALANCER_PORT}"
 echo "" && \
-echo "NETWORK_INTERFACE_NAME.....: ${NETWORK_INTERFACE_NAME}" && \
 echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
 echo "CONTROL_PLANE_ENDPOINT.....: ${CONTROL_PLANE_ENDPOINT}" && \
 echo "KUBERNETES_BASE_VERSION....: ${KUBERNETES_BASE_VERSION}" && \
@@ -31,9 +30,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token p7xlwo.yh9ro28tubgoqsic \
-  --discovery-token-ca-cert-hash sha256:3aa0ce694fd3538b9fd30274015d1734673cceff76afa26631e8d947f033f25a \
-  --certificate-key 8484b11bd6a6da90ed07880897814098a2f491e83f8128bb83de394f97e107e6
+  --token awzwx8.vdt5bzstukgmziyf \
+  --discovery-token-ca-cert-hash sha256:b7adba78720b5ca0fed6c03d0bd723980c53f0e158d1a886275af778ab2cc0e2 \
+  --certificate-key b1f158a4792f13a8d20f6a02cba9fbe385b4ed3d7781c1e6f8ab50f2a1b85a0c
 
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,deployments,pods,services -o wide -n kube-system'
@@ -70,9 +69,9 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 5 \
-  --token p7xlwo.yh9ro28tubgoqsic \
-  --discovery-token-ca-cert-hash sha256:3aa0ce694fd3538b9fd30274015d1734673cceff76afa26631e8d947f033f25a \
-  --certificate-key 8484b11bd6a6da90ed07880897814098a2f491e83f8128bb83de394f97e107e6
+  --token awzwx8.vdt5bzstukgmziyf \
+  --discovery-token-ca-cert-hash sha256:b7adba78720b5ca0fed6c03d0bd723980c53f0e158d1a886275af778ab2cc0e2 \
+  --certificate-key b1f158a4792f13a8d20f6a02cba9fbe385b4ed3d7781c1e6f8ab50f2a1b85a0c
 
 # Reset Node Config (if needed)
 sudo kubeadm reset -f && \

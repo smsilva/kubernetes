@@ -47,4 +47,7 @@ if hostname -s | grep "master" &>/dev/null; then
   kubeadm config images pull
 else
   docker pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
+  docker pull nginx:1.17.10
+  docker pull nginx:1.18.0
+  docker pull yauritux/busybox-curl
 fi
