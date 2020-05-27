@@ -38,7 +38,7 @@ backend kubernetes-master-nodes
 EOF
 
 for ((line = 1; line <= ${MASTER_NODES_COUNT}; line++)); do
-  echo "    server master-${line} ${ADDRES_START}.$((${MASTER_IP_START} + ${line})):6443 check fall 3 rise 2" >> "${HAPROXY_CONFIG_FILE}"
+  echo "    server master-${line} master-${line}.${DOMAIN_NAME}:6443 check fall 3 rise 2" >> "${HAPROXY_CONFIG_FILE}"
 done
 
 cat "${HAPROXY_CONFIG_FILE}"
