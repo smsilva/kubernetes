@@ -1,36 +1,42 @@
-# Installing Control Plane on the First Control Plane Node only (master-1)
-LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | awk '{ print $1 }')
-NETWORK_INTERFACE_NAME=$(ip addr show | grep ${LOCAL_IP_ADDRESS} | awk '{ print $7 }')
-LOAD_BALANCER_PORT='6443'
-LOAD_BALANCER_DNS='lb'
+# Configure Bash Completion
+echo 'source <(kubectl completion bash)' >> ~/.bashrc
+echo 'alias k=kubectl' >> ~/.bashrc
+echo 'complete -F __start_kubectl k' >> ~/.bashrc
+source ~/.bashrc
 
+# ATTENTION: We should run these commands ONLY on master-1
+KUBERNETES_DESIRED_VERSION='1.18' && \
+KUBERNETES_VERSION="$(echo -n $(sudo apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }'))" && \
+KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}" && \
+LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | awk '{ print $1 }') && \
+LOAD_BALANCER_PORT='6443' && \
+LOAD_BALANCER_NAME='lb' && \
+CONTROL_PLANE_ENDPOINT="${LOAD_BALANCER_NAME}:${LOAD_BALANCER_PORT}"
 echo "" && \
 echo "NETWORK_INTERFACE_NAME.....: ${NETWORK_INTERFACE_NAME}" && \
 echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
-echo "ADVERTISE_ADDRESS..........: ${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" && \
+echo "CONTROL_PLANE_ENDPOINT.....: ${CONTROL_PLANE_ENDPOINT}" && \
 echo "KUBERNETES_BASE_VERSION....: ${KUBERNETES_BASE_VERSION}" && \
 echo ""
 
 # Initialize master-1 (Take note of the two Join commands)
-SECONDS=0
-
+SECONDS=0 && \
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm init \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --kubernetes-version "${KUBERNETES_BASE_VERSION}" \
-  --control-plane-endpoint "${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}" \
-  --upload-certs
-
+  --control-plane-endpoint "${CONTROL_PLANE_ENDPOINT}" \
+  --upload-certs && \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
-# Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file. 
-  --token 0ynt9m.x377ny7dw2xiteco \
-  --discovery-token-ca-cert-hash sha256:cc57e9cb3339d88b934e98595d3521b6accf2fb99307a9f5fcf845c128dd0067 \
-  --certificate-key d1a35a57919cf966f78a00b4ae63020d6605f1ae15a839219506ad0d14a7743e
+# Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
+  --token p7xlwo.yh9ro28tubgoqsic \
+  --discovery-token-ca-cert-hash sha256:3aa0ce694fd3538b9fd30274015d1734673cceff76afa26631e8d947f033f25a \
+  --certificate-key 8484b11bd6a6da90ed07880897814098a2f491e83f8128bb83de394f97e107e6
 
 # Watch Nodes and Pods from kube-system namespace
-watch 'kubectl get nodes,deployments,pods,services,endpoints -o wide -n kube-system'
+watch 'kubectl get nodes,deployments,pods,services -o wide -n kube-system'
 
 # Install the Weave CNI Plugin
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
@@ -47,8 +53,7 @@ BAT_DEB_FILE="bat_${BAT_VERSION}_amd64.deb" && \
 wget "https://github.com/sharkdp/bat/releases/download/v${BAT_VERSION}/${BAT_DEB_FILE}" \
   --output-document "${BAT_DEB_FILE}" \
   --quiet && \
-sudo dpkg -i "${BAT_DEB_FILE}" && rm "${BAT_DEB_FILE}"
-
+sudo dpkg -i "${BAT_DEB_FILE}" && rm "${BAT_DEB_FILE}" && \
 echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases
 
 # Adding a Control Plane Node
@@ -65,11 +70,11 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 5 \
-  --token 0ynt9m.x377ny7dw2xiteco \
-  --discovery-token-ca-cert-hash sha256:cc57e9cb3339d88b934e98595d3521b6accf2fb99307a9f5fcf845c128dd0067 \
-  --certificate-key d1a35a57919cf966f78a00b4ae63020d6605f1ae15a839219506ad0d14a7743e
+  --token p7xlwo.yh9ro28tubgoqsic \
+  --discovery-token-ca-cert-hash sha256:3aa0ce694fd3538b9fd30274015d1734673cceff76afa26631e8d947f033f25a \
+  --certificate-key 8484b11bd6a6da90ed07880897814098a2f491e83f8128bb83de394f97e107e6
 
 # Reset Node Config (if needed)
-sudo kubeadm reset -f
+sudo kubeadm reset -f && \
 sudo rm -rf /etc/cni/net.d && \
 sudo rm -rf ${HOME}/.kube/config

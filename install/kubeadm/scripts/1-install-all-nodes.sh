@@ -44,11 +44,6 @@ sudo apt-mark hold \
 
 # Preloading Container Images and Install some Tools on Master Nodes
 if hostname -s | grep "master" &>/dev/null; then
-  echo 'source <(kubectl completion bash)' >> ~/.bashrc
-  echo 'alias k=kubectl' >> ~/.bashrc
-  echo 'complete -F __start_kubectl k' >> ~/.bashrc
-  source ~/.bashrc
-
   kubeadm config images pull
 else
   docker pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"

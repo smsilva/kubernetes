@@ -1,10 +1,10 @@
-- kubernetes service - default namespace
-- create namespaces: dev, qa, uat
+- default namespace
+- create namespaces: dev
 - api-resources
-- kubernetes contexts (config view)
+- contexts
 - config default namespace
 - imperative vs declarative
-  - deployment, replicaset, pods
+  - deploy, rs, pod
   - nginx:1.17.10
 - test curl
 - rollout
@@ -18,4 +18,3 @@
 - exec
 - expose with NodePort
 - explain
-- service selectors
