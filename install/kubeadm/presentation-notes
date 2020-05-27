@@ -14,5 +14,5 @@
 - expose
   - services, endpoints
 - run yauritux/busybox-curl
-- expose with NodePort
+- expose with NodePort 32080
 - explain

@@ -83,13 +83,7 @@ for ((line = 1; line <= ${WORKER_NODES_COUNT}; line++)); do
   echo "worker-${line}     IN       A       ${IP_NETWORK}$((${NODE_IP_START} + ${line}))" >> "${FORWARD_FILE}"
 done
 
-for ((line = 1; line <= ${WORKER_NODES_COUNT}; line++)); do
-  if [[ ((${line} == 1)) ]]; then
-    echo "*.apps             IN       A       ${IP_NETWORK}$((${NODE_IP_START} + ${line}))" >> "${FORWARD_FILE}"
-  else
-    echo "                   IN       A       ${IP_NETWORK}$((${NODE_IP_START} + ${line}))" >> "${FORWARD_FILE}"
-  fi
-done
+echo "*.apps       IN       CNAME   lb" >> "${FORWARD_FILE}"
 
 REVERSE_FILE="reverse.${DOMAIN_NAME}"
 

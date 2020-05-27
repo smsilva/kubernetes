@@ -25,6 +25,23 @@ apt-get install -y \
   haproxy
 
 cat <<EOF | tee "${HAPROXY_CONFIG_FILE}"
+frontend apps
+    bind 192.168.10.10:80
+    mode http
+    default_backend apps
+
+backend apps
+    mode http
+    balance roundrobin
+    option tcp-check
+EOF
+
+for ((line = 1; line <= ${MASTER_NODES_COUNT}; line++)); do
+  echo "    server master-${line} master-${line}.${DOMAIN_NAME}:32080 check fall 3 rise 2" >> "${HAPROXY_CONFIG_FILE}"
+done
+
+cat <<EOF | tee -a "${HAPROXY_CONFIG_FILE}"
+
 frontend kubernetes
     bind ${ADDRESS}:6443
     option tcplog
