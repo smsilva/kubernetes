@@ -26,7 +26,7 @@ apt-get install -y \
 
 cat <<EOF | tee "${HAPROXY_CONFIG_FILE}"
 frontend apps
-    bind 192.168.10.10:80
+    bind ${ADDRESS}:80
     mode http
     default_backend apps
 
