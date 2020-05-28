@@ -3,8 +3,8 @@
 - api-resources
 - contexts
 - config default namespace
+- nodes,deploy,rs,po,svc,ep,ing
 - imperative vs declarative
-  - deploy, rs, pod
   - nginx:1.17.10
 - test curl
 - rollout
@@ -16,3 +16,4 @@
 - run yauritux/busybox-curl
 - expose with NodePort 32080
 - explain
+- ingress

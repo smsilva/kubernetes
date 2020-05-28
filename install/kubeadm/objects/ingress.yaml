@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: nginx
+  annotations:
+    ingress.kubernetes.io/rewrite-target: "/"
+    ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - host: nginx.apps.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: nginx-1-18
+          servicePort: 80
+        path: /v18
+      - backend:
+          serviceName: nginx-1-17
+          servicePort: 80
+        path: /v17
+      - backend:
+          serviceName: nginx-1-18
+          servicePort: 80
+        path: /

@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-1-17
+  name: nginx-1-17
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-1-17
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: nginx-1-17
+    spec:
+      containers:
+      - image: nginx:1.17.10
+        name: nginx
+        resources: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-1-18
+  name: nginx-1-18
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-1-18
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: nginx-1-18
+    spec:
+      containers:
+      - image: nginx:1.18.0
+        name: nginx
+        resources: {}
