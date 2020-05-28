@@ -7,6 +7,11 @@ route -n | grep "10.96.0.0"; if [[ $? == 0 ]]; then echo "OK"; else echo "FAIL";
 # Docker Test
 docker images
 
+# Configure Vim to use yaml format a little bit better
+cat <<EOF >> .vimrc
+autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+EOF
+
 # All Nodes
 sudo apt update &> /dev/null && \
 sudo apt install -y \
