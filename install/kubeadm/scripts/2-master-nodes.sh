@@ -39,9 +39,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token bwd5jj.8di7n41xygk4aa7m \
-  --discovery-token-ca-cert-hash sha256:3d8f620006d1a3cb4a6f6212e07f84e224588a4b34a4fa55cdd5e98f6f6a70c2 \
-  --certificate-key b2644ecf9316138a03845df8d0d7534b4c120e38fb493223b27af70fed9c3110
+  --token 5zigmr.6vj9jntboaz2zjll \
+  --discovery-token-ca-cert-hash sha256:ffb3e0938ebe1e48cf192013bea0467edfa41b771cb2adcb28588261ebdccf9e \
+  --certificate-key 83bb177a000ecb866c30732e8f4f5d4a752db67522587dae8971585090f5f391
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,deployments,pods,services -o wide -n kube-system'
@@ -69,10 +69,10 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 1 \
-  --token bwd5jj.8di7n41xygk4aa7m \
-  --discovery-token-ca-cert-hash sha256:3d8f620006d1a3cb4a6f6212e07f84e224588a4b34a4fa55cdd5e98f6f6a70c2 \
-  --certificate-key b2644ecf9316138a03845df8d0d7534b4c120e38fb493223b27af70fed9c3110
-
+  --token 5zigmr.6vj9jntboaz2zjll \
+  --discovery-token-ca-cert-hash sha256:ffb3e0938ebe1e48cf192013bea0467edfa41b771cb2adcb28588261ebdccf9e \
+  --certificate-key 83bb177a000ecb866c30732e8f4f5d4a752db67522587dae8971585090f5f391
+  
 # Reset Node Config (if needed)
 sudo kubeadm reset -f && \
 sudo rm -rf /etc/cni/net.d && \
