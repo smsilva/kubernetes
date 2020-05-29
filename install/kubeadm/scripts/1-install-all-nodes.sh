@@ -50,6 +50,7 @@ sudo apt-mark hold \
 # Preloading Container Images
 if hostname -s | grep "master" &>/dev/null; then
   kubeadm config images pull
+  docker pull quay.io/jcmoraisjr/haproxy-ingress:latest
 else
   docker pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
   docker pull nginx:1.17.10
@@ -61,7 +62,6 @@ fi
 # https://github.com/jcmoraisjr/haproxy-ingress
 # https://haproxy-ingress.github.io/docs/getting-started/
 # https://haproxy-ingress.github.io/docs/configuration/keys/
-
 kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.yaml
 
 for NODE in master-{1..3}; do

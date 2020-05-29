@@ -38,12 +38,12 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token g0lt0m.dx5orzp4tp45h7xh \
-  --discovery-token-ca-cert-hash sha256:142294b72aaf62b2b2662fafda9d6b1848df755409e5418790e92150720f9c18 \
-  --certificate-key fbabf7b8bc7f66873718c0b7c860322507af34c5d4097f05f024f2011ffb653d
+  --token f2a6s5.j5t5bgjfwqh8orps \
+  --discovery-token-ca-cert-hash sha256:a2387ed5fa157093f99fc4cf3eabd8104de2ce99fff1c624dffb3f149901d4b2 \
+  --certificate-key 8dccca5012e011e2d3ca97bdaed22d625ef362c787f0980f8a5ea5cec771aefb
   
 # Watch Nodes and Pods from kube-system namespace
-watch 'kubectl get nodes,deployments,pods,services -o wide -n kube-system'
+watch 'kubectl get nodes,pods,services -o wide -n kube-system'
 
 # Install the Weave CNI Plugin
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
@@ -58,19 +58,15 @@ kubectl apply -f "${CNI_ADD_ON_FILE}"
 LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | awk '{ print $1 }') && \
 echo "" && echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}"
 
-# The parameters below are getting from the first Contol Plane Config
-#   - token
-#   - discovery-token-ca-cert-hash
-#   - certificate-key
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 1 \
-  --token g0lt0m.dx5orzp4tp45h7xh \
-  --discovery-token-ca-cert-hash sha256:142294b72aaf62b2b2662fafda9d6b1848df755409e5418790e92150720f9c18 \
-  --certificate-key fbabf7b8bc7f66873718c0b7c860322507af34c5d4097f05f024f2011ffb653d
+  --token f2a6s5.j5t5bgjfwqh8orps \
+  --discovery-token-ca-cert-hash sha256:a2387ed5fa157093f99fc4cf3eabd8104de2ce99fff1c624dffb3f149901d4b2 \
+  --certificate-key 8dccca5012e011e2d3ca97bdaed22d625ef362c787f0980f8a5ea5cec771aefb
   
 # Reset Node Config (if needed)
 sudo kubeadm reset -f && \

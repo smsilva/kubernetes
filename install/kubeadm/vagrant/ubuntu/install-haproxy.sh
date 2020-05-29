@@ -27,6 +27,11 @@ apt-get install -y \
 cp "${HAPROXY_CONFIG_FILE}" "${HOME}/"
 
 cat <<EOF | tee "${HAPROXY_CONFIG_FILE}"
+
+EOF
+
+cat <<EOF | tee -a "${HAPROXY_CONFIG_FILE}"
+
 frontend apps-nodeport-frontend
     bind ${ADDRESS}:32080
     mode http
@@ -47,6 +52,12 @@ cat <<EOF | tee -a "${HAPROXY_CONFIG_FILE}"
 frontend apps-ingress-frontend
     bind ${ADDRESS}:80
     mode http
+    stats enable
+    stats auth admin:aneasyvaluetoforget
+    stats hide-version
+    stats show-node
+    stats refresh 60s
+    stats uri /haproxy?stats
     default_backend apps-ingress
 
 backend apps-ingress
