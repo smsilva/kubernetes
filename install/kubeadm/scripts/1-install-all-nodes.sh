@@ -47,7 +47,7 @@ sudo apt-mark hold \
   kubeadm \
   kubectl
 
-# Preloading Container Images and Install some Tools on Master Nodes
+# Preloading Container Images
 if hostname -s | grep "master" &>/dev/null; then
   kubeadm config images pull
 else
@@ -57,7 +57,11 @@ else
   docker pull yauritux/busybox-curl
 fi
 
-# Ingress HAProxy Controller
+# Optional - Ingress HAProxy Controller
+# https://github.com/jcmoraisjr/haproxy-ingress
+# https://haproxy-ingress.github.io/docs/getting-started/
+# https://haproxy-ingress.github.io/docs/configuration/keys/
+
 kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.yaml
 
 kubectl -n ingress-controller edit configmap haproxy-ingress

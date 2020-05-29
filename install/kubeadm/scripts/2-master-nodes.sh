@@ -8,10 +8,9 @@ source ~/.bashrc
 BAT_VERSION="0.15.1" && \
 BAT_DEB_FILE="bat_${BAT_VERSION}_amd64.deb" && \
 wget "https://github.com/sharkdp/bat/releases/download/v${BAT_VERSION}/${BAT_DEB_FILE}" \
-  --output-document "${BAT_DEB_FILE}" \
-  --quiet && \
+  --output-document "${BAT_DEB_FILE}" && \
 sudo dpkg -i "${BAT_DEB_FILE}" && rm "${BAT_DEB_FILE}" && \
-echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases
+echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases && bat --version
 
 # ATTENTION: We should run these commands ONLY on master-1
 KUBERNETES_DESIRED_VERSION='1.18' && \
@@ -39,9 +38,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token 5zigmr.6vj9jntboaz2zjll \
-  --discovery-token-ca-cert-hash sha256:ffb3e0938ebe1e48cf192013bea0467edfa41b771cb2adcb28588261ebdccf9e \
-  --certificate-key 83bb177a000ecb866c30732e8f4f5d4a752db67522587dae8971585090f5f391
+  --token g0lt0m.dx5orzp4tp45h7xh \
+  --discovery-token-ca-cert-hash sha256:142294b72aaf62b2b2662fafda9d6b1848df755409e5418790e92150720f9c18 \
+  --certificate-key fbabf7b8bc7f66873718c0b7c860322507af34c5d4097f05f024f2011ffb653d
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,deployments,pods,services -o wide -n kube-system'
@@ -69,9 +68,9 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 1 \
-  --token 5zigmr.6vj9jntboaz2zjll \
-  --discovery-token-ca-cert-hash sha256:ffb3e0938ebe1e48cf192013bea0467edfa41b771cb2adcb28588261ebdccf9e \
-  --certificate-key 83bb177a000ecb866c30732e8f4f5d4a752db67522587dae8971585090f5f391
+  --token g0lt0m.dx5orzp4tp45h7xh \
+  --discovery-token-ca-cert-hash sha256:142294b72aaf62b2b2662fafda9d6b1848df755409e5418790e92150720f9c18 \
+  --certificate-key fbabf7b8bc7f66873718c0b7c860322507af34c5d4097f05f024f2011ffb653d
   
 # Reset Node Config (if needed)
 sudo kubeadm reset -f && \

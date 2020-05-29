@@ -4,6 +4,6 @@
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
-  --token 5zigmr.6vj9jntboaz2zjll \
-  --discovery-token-ca-cert-hash sha256:ffb3e0938ebe1e48cf192013bea0467edfa41b771cb2adcb28588261ebdccf9e \
+  --token g0lt0m.dx5orzp4tp45h7xh \
+  --discovery-token-ca-cert-hash sha256:142294b72aaf62b2b2662fafda9d6b1848df755409e5418790e92150720f9c18 \
   --v 1

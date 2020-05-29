@@ -12,8 +12,6 @@ spec:
     targetPort: 80
   selector:
     app: nginx-1-17
-status:
-  loadBalancer: {}
 ---
 apiVersion: v1
 kind: Service

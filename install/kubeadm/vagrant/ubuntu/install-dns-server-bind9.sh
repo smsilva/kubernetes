@@ -56,7 +56,7 @@ FORWARD_FILE="forward.${DOMAIN_NAME}"
 cat <<EOF > "${FORWARD_FILE}"
 \$TTL    604800
 
-@       IN      SOA     primary.${DOMAIN_NAME}. root.primary.${DOMAIN_NAME}. (
+@            IN      SOA primary.${DOMAIN_NAME}. root.primary.${DOMAIN_NAME}. (
                               6         ; Serial
                          604820         ; Refresh
                           86600         ; Retry
@@ -64,10 +64,10 @@ cat <<EOF > "${FORWARD_FILE}"
                          604600 )       ; Negative Cache TTL
 
 ;Name Server Information
-@       IN      NS      primary.${DOMAIN_NAME}.
+@            IN       NS      primary.${DOMAIN_NAME}.
 
 ;IP address of Your Domain Name Server(DNS)
-primary IN       A      ${IP_DNS}
+primary      IN       A       ${IP_DNS}
 
 ;A Record for Host names
 dns          IN       A       ${IP_DNS}
@@ -97,8 +97,8 @@ cat <<EOF > "${REVERSE_FILE}"
                          604880 )       ; Negative Cache TTL
 
 ;Your Name Server Info
-@       IN      NS      primary.${DOMAIN_NAME}.
-primary IN      A       ${IP_DNS}
+@                   IN      NS      primary.${DOMAIN_NAME}.
+primary             IN      A       ${IP_DNS}
 
 ;Reverse Lookup for Your DNS Server
 ${IP_DNS##*.}       IN      PTR     primary.${DOMAIN_NAME}.

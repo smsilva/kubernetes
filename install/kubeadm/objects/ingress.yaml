@@ -13,23 +13,19 @@ spec:
       - backend:
           serviceName: nginx-1-18
           servicePort: 80
-        path: /v18
+        path: /v2
       - backend:
           serviceName: nginx-1-17
           servicePort: 80
-        path: /v17
-      - backend:
-          serviceName: nginx-1-18
-          servicePort: 80
-        path: /
+        path: /v1
   - host: foo.apps.example.com
     http:
       paths:
       - backend:
           serviceName: nginx-1-18
           servicePort: 80
-        path: /v1
+        path: /v2
       - backend:
           serviceName: nginx-1-17
           servicePort: 80
-        path: /v2
+        path: /v1

@@ -25,12 +25,12 @@ apt-get install -y \
   haproxy
 
 cat <<EOF | tee "${HAPROXY_CONFIG_FILE}"
-frontend apps
-    bind ${ADDRESS}:80
+frontend apps-nodeport-frontend
+    bind ${ADDRESS}:32080
     mode http
-    default_backend apps
+    default_backend apps-nodeport
 
-backend apps
+backend apps-nodeport
     mode http
     balance roundrobin
     option tcp-check
@@ -41,14 +41,30 @@ for ((line = 1; line <= ${MASTER_NODES_COUNT}; line++)); do
 done
 
 cat <<EOF | tee -a "${HAPROXY_CONFIG_FILE}"
+frontend apps-ingress-frontend
+    bind ${ADDRESS}:80
+    mode http
+    default_backend apps-ingress
 
-frontend kubernetes
+backend apps-ingress
+    mode http
+    balance roundrobin
+    option tcp-check
+EOF
+
+for ((line = 1; line <= ${MASTER_NODES_COUNT}; line++)); do
+  echo "    server master-${line} master-${line}.${DOMAIN_NAME}:80 check fall 3 rise 2" >> "${HAPROXY_CONFIG_FILE}"
+done
+
+cat <<EOF | tee -a "${HAPROXY_CONFIG_FILE}"
+
+frontend kubernetes-apiserver-frontend
     bind ${ADDRESS}:6443
     option tcplog
     mode tcp
-    default_backend kubernetes-master-nodes
+    default_backend kubernetes-apiserver
 
-backend kubernetes-master-nodes
+backend kubernetes-apiserver
     mode tcp
     balance roundrobin
     option tcp-check

@@ -2,7 +2,7 @@
 - default namespace
 - create namespaces: dev
 - api-resources
-- nodes,deploy,rs,ds,po,svc,ep,ing
+- nodes,cm,deploy,rs,ds,po,svc,ep,ing
 - contexts
 - config default namespace
 - imperative vs declarative
