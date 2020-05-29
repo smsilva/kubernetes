@@ -64,9 +64,6 @@ fi
 
 kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.yaml
 
-kubectl -n ingress-controller edit configmap haproxy-ingress
-kubectl -n ingress-controller edit daemonset haproxy-ingress
-
 for NODE in master-{1..3}; do
   kubectl label node ${NODE} role=ingress-controller
 done

@@ -24,6 +24,8 @@ echo "HAPROXY_CONFIG_FILE.: ${HAPROXY_CONFIG_FILE}"
 apt-get install -y \
   haproxy
 
+cp "${HAPROXY_CONFIG_FILE}" "${HOME}/"
+
 cat <<EOF | tee "${HAPROXY_CONFIG_FILE}"
 frontend apps-nodeport-frontend
     bind ${ADDRESS}:32080
@@ -41,6 +43,7 @@ for ((line = 1; line <= ${MASTER_NODES_COUNT}; line++)); do
 done
 
 cat <<EOF | tee -a "${HAPROXY_CONFIG_FILE}"
+
 frontend apps-ingress-frontend
     bind ${ADDRESS}:80
     mode http

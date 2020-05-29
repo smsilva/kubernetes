@@ -72,7 +72,10 @@ primary      IN       A       ${IP_DNS}
 ;A Record for Host names
 dns          IN       A       ${IP_DNS}
 lb           IN       A       ${IP_NETWORK}${MASTER_IP_START}
-loadbalancer IN       A       ${IP_NETWORK}${MASTER_IP_START}
+loadbalancer IN       CNAME   lb
+masters      IN       CNAME   lb
+k8s          IN       CNAME   lb
+cluster      IN       CNAME   lb
 EOF
 
 for ((line = 1; line <= ${MASTER_NODES_COUNT}; line++)); do
