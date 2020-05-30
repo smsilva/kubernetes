@@ -38,9 +38,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token 8ictb2.m2jivzdf67aybwhg \
-  --discovery-token-ca-cert-hash sha256:b92a2166fec16fb76641fff6cfaf89f7440575e81a43b90346d69d15d2a9fbed \
-  --certificate-key 3e304b826294b9d1163963fc1044dcba804382077eebe1a13e60ed06e6a85810
+  --token i34v35.628qnjrwyvh9rvv7 \
+  --discovery-token-ca-cert-hash sha256:45499460023073a566f2c37d2af3965453a608a0af6e2e40feaf9b281c9bab00 \
+  --certificate-key 2208ed49dfdeed42cded33bd1b2886b7e4602473d3886e8cca3611106c8a05b8
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'

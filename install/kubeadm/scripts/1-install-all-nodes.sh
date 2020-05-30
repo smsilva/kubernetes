@@ -4,8 +4,8 @@ nc -dv lb 6443
 # Check if there are a route that will be used by kube-proxy to communicate with API Server on Masters with kubernetes service Cluster IP Address (10.96.0.1)
 route -n | grep "10.96.0.0"; if [[ $? == 0 ]]; then echo "OK"; else echo "FAIL"; fi
 
-# Docker Test
-docker images
+# CRI Test
+sudo crictl images
 
 # Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc
@@ -49,11 +49,11 @@ sudo apt-mark hold \
 
 # Preloading Container Images
 if hostname -s | grep "master" &>/dev/null; then
-  kubeadm config images pull
-  docker pull quay.io/jcmoraisjr/haproxy-ingress:latest
+  sudo kubeadm config images pull --v 5
+  sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
 else
-  docker pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
-  docker pull nginx:1.17.10
-  docker pull nginx:1.18.0
-  docker pull yauritux/busybox-curl
+  sudo crictl pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
+  sudo crictl pull nginx:1.17.10
+  sudo crictl pull nginx:1.18.0
+  sudo crictl pull yauritux/busybox-curl
 fi
