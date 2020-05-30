@@ -4,9 +4,6 @@ nc -dv lb 6443
 # Check if there are a route that will be used by kube-proxy to communicate with API Server on Masters with kubernetes service Cluster IP Address (10.96.0.1)
 route -n | grep "10.96.0.0"; if [[ $? == 0 ]]; then echo "OK"; else echo "FAIL"; fi
 
-# CRI Test
-sudo crictl images
-
 # Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc
 autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
@@ -47,7 +44,9 @@ sudo apt-mark hold \
   kubeadm \
   kubectl
 
+# CRI Config
 sudo crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock
+sudo crictl images
 
 # Preloading Container Images
 if hostname -s | grep "master" &>/dev/null; then
