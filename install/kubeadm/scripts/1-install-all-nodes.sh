@@ -47,6 +47,8 @@ sudo apt-mark hold \
   kubeadm \
   kubectl
 
+sudo crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock
+
 # Preloading Container Images
 if hostname -s | grep "master" &>/dev/null; then
   sudo kubeadm config images pull --v 5

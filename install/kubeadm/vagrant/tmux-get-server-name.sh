@@ -2,7 +2,7 @@
 WINDOW_NAME=$(tmux list-windows | grep active | awk '{ print $2 }' | sed 's/^all.*/all/')
 NODE_NAME=$(tmux list-windows | grep active | awk '{ print $2 }' | sed 's/^masters.*/master/;s/^workers.*/worker/')
 
-export NODES=$(cat .status | grep -E "^master|^worker" | awk '{ print $1 }')
+export NODES=$(cat .running | grep -E "^master|^worker" | awk '{ print $1 }')
 
 tmux list-panes | while read line; do
   VALUES=$(echo $line | awk '{ print $1 " " $7 }' | sed 's/: %/-/')

@@ -45,6 +45,4 @@ containerd config default > /etc/containerd/config.toml
 # Restart containerd
 systemctl restart containerd
 
-crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock
-
 containerd --version
