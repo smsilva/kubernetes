@@ -57,13 +57,3 @@ else
   docker pull nginx:1.18.0
   docker pull yauritux/busybox-curl
 fi
-
-# Optional - Ingress HAProxy Controller
-# https://github.com/jcmoraisjr/haproxy-ingress
-# https://haproxy-ingress.github.io/docs/getting-started/
-# https://haproxy-ingress.github.io/docs/configuration/keys/
-kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.yaml
-
-for NODE in master-{1..3}; do
-  kubectl label node ${NODE} role=ingress-controller
-done

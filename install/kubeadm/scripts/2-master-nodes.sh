@@ -38,9 +38,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token f2a6s5.j5t5bgjfwqh8orps \
-  --discovery-token-ca-cert-hash sha256:a2387ed5fa157093f99fc4cf3eabd8104de2ce99fff1c624dffb3f149901d4b2 \
-  --certificate-key 8dccca5012e011e2d3ca97bdaed22d625ef362c787f0980f8a5ea5cec771aefb
+  --token 8ictb2.m2jivzdf67aybwhg \
+  --discovery-token-ca-cert-hash sha256:b92a2166fec16fb76641fff6cfaf89f7440575e81a43b90346d69d15d2a9fbed \
+  --certificate-key 3e304b826294b9d1163963fc1044dcba804382077eebe1a13e60ed06e6a85810
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'
@@ -54,19 +54,28 @@ wget \
   --quiet && \
 kubectl apply -f "${CNI_ADD_ON_FILE}"
 
+# Optional - Ingress HAProxy Controller
+# https://github.com/jcmoraisjr/haproxy-ingress
+# https://haproxy-ingress.github.io/docs/getting-started/
+# https://haproxy-ingress.github.io/docs/configuration/keys/
+kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.yaml
+
+for NODE in master-{1..3}; do
+  kubectl label node ${NODE} role=ingress-controller
+done
+
 # Adding a Control Plane Node
 LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | awk '{ print $1 }') && \
-echo "" && echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}"
-
+echo "" && echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 1 \
-  --token f2a6s5.j5t5bgjfwqh8orps \
-  --discovery-token-ca-cert-hash sha256:a2387ed5fa157093f99fc4cf3eabd8104de2ce99fff1c624dffb3f149901d4b2 \
-  --certificate-key 8dccca5012e011e2d3ca97bdaed22d625ef362c787f0980f8a5ea5cec771aefb
+  --token 8ictb2.m2jivzdf67aybwhg \
+  --discovery-token-ca-cert-hash sha256:b92a2166fec16fb76641fff6cfaf89f7440575e81a43b90346d69d15d2a9fbed \
+  --certificate-key 3e304b826294b9d1163963fc1044dcba804382077eebe1a13e60ed06e6a85810
   
 # Reset Node Config (if needed)
 sudo kubeadm reset -f && \
