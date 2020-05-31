@@ -38,9 +38,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token i34v35.628qnjrwyvh9rvv7 \
-  --discovery-token-ca-cert-hash sha256:45499460023073a566f2c37d2af3965453a608a0af6e2e40feaf9b281c9bab00 \
-  --certificate-key 2208ed49dfdeed42cded33bd1b2886b7e4602473d3886e8cca3611106c8a05b8
+  --token wlnkan.if22ton4xi5gfpn0 \
+  --discovery-token-ca-cert-hash sha256:0439bd3b876c85e6eb8fbeba6684c7d6c7e012c1be202c324a3c4bcce193e513 \
+  --certificate-key 64fac37d044f2cc2f70667e7628aac71a842853be76de41e2d11bad9b694f4f5
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'
@@ -54,6 +54,19 @@ wget \
   --quiet && \
 kubectl apply -f "${CNI_ADD_ON_FILE}"
 
+# Adding a Control Plane Node
+LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | awk '{ print $1 }') && \
+echo "" && echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
+NODE_NAME=$(hostname -s) && \
+sudo kubeadm join lb:6443 \
+  --control-plane \
+  --node-name "${NODE_NAME}" \
+  --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
+  --v 1 \
+  --token wlnkan.if22ton4xi5gfpn0 \
+  --discovery-token-ca-cert-hash sha256:0439bd3b876c85e6eb8fbeba6684c7d6c7e012c1be202c324a3c4bcce193e513 \
+  --certificate-key 64fac37d044f2cc2f70667e7628aac71a842853be76de41e2d11bad9b694f4f5
+
 # Optional - Ingress HAProxy Controller
 # https://github.com/jcmoraisjr/haproxy-ingress
 # https://haproxy-ingress.github.io/docs/getting-started/
@@ -64,19 +77,6 @@ for NODE in master-{1..3}; do
   kubectl label node ${NODE} role=ingress-controller
 done
 
-# Adding a Control Plane Node
-LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | awk '{ print $1 }') && \
-echo "" && echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
-NODE_NAME=$(hostname -s) && \
-sudo kubeadm join lb:6443 \
-  --control-plane \
-  --node-name "${NODE_NAME}" \
-  --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --v 1 \
-  --token 8ictb2.m2jivzdf67aybwhg \
-  --discovery-token-ca-cert-hash sha256:b92a2166fec16fb76641fff6cfaf89f7440575e81a43b90346d69d15d2a9fbed \
-  --certificate-key 3e304b826294b9d1163963fc1044dcba804382077eebe1a13e60ed06e6a85810
-  
 # Reset Node Config (if needed)
 sudo kubeadm reset -f && \
 sudo rm -rf /etc/cni/net.d && \

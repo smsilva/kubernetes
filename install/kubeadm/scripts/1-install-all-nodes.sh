@@ -10,10 +10,7 @@ autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 EOF
 
 # All Nodes
-sudo apt update &> /dev/null && \
-sudo apt install -y \
-  apt-transport-https \
-  curl && \
+sudo apt-get update | grep -v -E "^Hit|^Get" && \
 sudo curl -s "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo apt-key add -
 
 # Add Kubernetes Repository
@@ -54,7 +51,9 @@ if hostname -s | grep "master" &>/dev/null; then
   sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
 else
   sudo crictl pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
-  sudo crictl pull nginx:1.17.10
-  sudo crictl pull nginx:1.18.0
+  sudo crictl pull nginx:1.17
+  sudo crictl pull nginx:1.18
   sudo crictl pull yauritux/busybox-curl
 fi
+
+sudo crictl images

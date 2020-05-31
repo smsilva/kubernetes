@@ -6,9 +6,9 @@
 - contexts
 - config default namespace
 - imperative vs declarative
-  - nginx:1.17.10
+  - nginx:1.17
 - rollout
-  - nginx:1.18.0
+  - nginx:1.18
 - describe
 - logs
 - expose
