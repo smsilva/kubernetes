@@ -136,9 +136,6 @@ BASE_COMMAND="kubectl config view -o jsonpath='{.clusters[?(@.name==\"%s\")].clu
 COMMAND=$(printf "${BASE_COMMAND}" "${CLUSTER_NAME}" "certificate-authority-data") && export CERTIFICATE_AUTHORITY_DATA=$(${COMMAND} | tr -d "'")
 COMMAND=$(printf "${BASE_COMMAND}" "${CLUSTER_NAME}" "server") && export CLUSTER_ENDPOINT=$(${COMMAND} | tr -d "'")
 
-# API Server endpoint
-#export CLUSTER_ENDPOINT=$(kubectl config view --raw -o json | jq -r '.clusters[] | select(.name == "'$(kubectl config current-context)'") | .cluster."server"')
-
 echo "USER........................: ${USER}" && \
 echo "CLUSTER_NAME................: ${CLUSTER_NAME}" && \
 echo "CLIENT_CERTIFICATE_DATA.....: ${#CLIENT_CERTIFICATE_DATA} (length)" && \
@@ -148,5 +145,58 @@ echo "CLUSTER_ENDPOINT............: ${CLUSTER_ENDPOINT}"
 # View Template File
 cat kubeconfig.tpl | yq r -
 
-# Generate a new kubeconfig file
+# Only show a template with values
 cat kubeconfig.tpl | envsubst | yq r -
+
+# Save it to a file
+cat kubeconfig.tpl | envsubst > dave_kubeconfig
+
+# Dave should save the file as:
+${HOME}/.kube/config
+
+# And add his private key to it:
+kubectl config set-credentials dave \
+  --client-key=$PWD/dave.key \
+  --embed-certs=true
+
+# Try to get Nodes
+k get nodes
+
+mkdir dave && cd dave
+
+cat <<EOF > www.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: www
+  namespace: development
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: www
+  template:
+    metadata:
+      labels:
+        app: www
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.18
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: www
+  namespace: development
+spec:
+  selector:
+    app: vote
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+EOF
+
