@@ -4,14 +4,6 @@ echo 'alias k=kubectl' >> ~/.bashrc
 echo 'complete -F __start_kubectl k' >> ~/.bashrc
 source ~/.bashrc
 
-# Optional
-BAT_VERSION="0.15.1" && \
-BAT_DEB_FILE="bat_${BAT_VERSION}_amd64.deb" && \
-wget "https://github.com/sharkdp/bat/releases/download/v${BAT_VERSION}/${BAT_DEB_FILE}" \
-  --output-document "${BAT_DEB_FILE}" && \
-sudo dpkg -i "${BAT_DEB_FILE}" && rm "${BAT_DEB_FILE}" && \
-echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases && bat --version
-
 # ATTENTION: We should run these commands ONLY on master-1
 KUBERNETES_DESIRED_VERSION='1.18' && \
 KUBERNETES_VERSION="$(echo -n $(sudo apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }'))" && \
@@ -76,6 +68,20 @@ kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.ya
 for NODE in master-{1..3}; do
   kubectl label node ${NODE} role=ingress-controller
 done
+
+# Optional - bat
+BAT_VERSION="0.15.1" && \
+BAT_DEB_FILE="bat_${BAT_VERSION}_amd64.deb" && \
+wget "https://github.com/sharkdp/bat/releases/download/v${BAT_VERSION}/${BAT_DEB_FILE}" \
+  --output-document "${BAT_DEB_FILE}" && \
+sudo dpkg -i "${BAT_DEB_FILE}" && rm "${BAT_DEB_FILE}" && \
+echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases && bat --version
+
+# Optional - jq
+sudo apt install jq -y
+
+# Optional - yq
+sudo snap install yq
 
 # Reset Node Config (if needed)
 sudo kubeadm reset -f && \

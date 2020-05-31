@@ -22,7 +22,10 @@ keyUsage=keyEncipherment,dataEncipherment
 extendedKeyUsage=serverAuth,clientAuth
 EOF
 
-openssl req -config ./csr.cnf -new -key dave.key -nodes -out dave.csr
+openssl req \
+  -config ./csr.cnf \
+  -new -key dave.key \
+  -nodes -out dave.csr
 
 cat <<EOF > csr.yaml
 apiVersion: certificates.k8s.io/v1beta1
@@ -43,6 +46,8 @@ EOF
 # Encoding the .csr file in base64
 export BASE64_CSR=$(cat ./dave.csr | base64 | tr -d '\n')
 
+echo ${BASE64_CSR}
+
 # Substitution of the BASE64_CSR env variable and creation of the CertificateSigninRequest resource
 cat csr.yaml | envsubst | kubectl apply -f -
 
@@ -61,6 +66,8 @@ openssl x509 -in ./dave.crt -noout -text
 
 # Create a Namespace
 kubectl create ns development
+
+k config set-context --current --namespace=development
 
 cat <<EOF > role.yaml
 kind: Role
@@ -102,7 +109,7 @@ apiVersion: v1
 kind: Config
 clusters:
 - cluster:
-    certificate-authority-data: \${CLUSTER_CA}
+    certificate-authority-data: \${CERTIFICATE_AUTHORITY_DATA}
     server: \${CLUSTER_ENDPOINT}
   name: \${CLUSTER_NAME}
 users:
@@ -119,21 +126,27 @@ EOF
 
 # User identifier
 export USER="dave"
-
-# Cluster Name (get it from the current context)
 export CLUSTER_NAME=$(kubectl config current-context | awk -F "@" '{ print $2 }')
-
-# Client certificate
 export CLIENT_CERTIFICATE_DATA=$(kubectl get csr mycsr -o jsonpath='{.status.certificate}')
 
-# Cluster Certificate Authority
-export CLUSTER_CA=$(kubectl config view --raw -o json | jq -r '.clusters[] | select(.name == "${CLUSTER_NAME}") | .cluster."certificate-authority-data"')
+# Base Command to Extract "server" and "cluster.certificate-authority-data"
+BASE_COMMAND="kubectl config view -o jsonpath='{.clusters[?(@.name==\"%s\")].cluster.%s}' --raw"
+
+# Cluster Certificate Authority and API Server endpoint
+COMMAND=$(printf "${BASE_COMMAND}" "${CLUSTER_NAME}" "certificate-authority-data") && export CERTIFICATE_AUTHORITY_DATA=$(${COMMAND} | tr -d "'")
+COMMAND=$(printf "${BASE_COMMAND}" "${CLUSTER_NAME}" "server") && export CLUSTER_ENDPOINT=$(${COMMAND} | tr -d "'")
 
 # API Server endpoint
-export CLUSTER_ENDPOINT=$(kubectl config view --raw -o json | jq -r '.clusters[] | select(.name == "'$(kubectl config current-context)'") | .cluster."server"')
+#export CLUSTER_ENDPOINT=$(kubectl config view --raw -o json | jq -r '.clusters[] | select(.name == "'$(kubectl config current-context)'") | .cluster."server"')
 
-echo "USER.......................: ${USER}" && \
-echo "CLUSTER_NAME...............: ${CLUSTER_NAME}" && \
-echo "CLIENT_CERTIFICATE_DATA....: ${CLIENT_CERTIFICATE_DATA}" && \
-echo "CLUSTER_CA.................: ${CLUSTER_CA}" && \
-echo "CLUSTER_ENDPOINT...........: ${CLUSTER_ENDPOINT}"
+echo "USER........................: ${USER}" && \
+echo "CLUSTER_NAME................: ${CLUSTER_NAME}" && \
+echo "CLIENT_CERTIFICATE_DATA.....: ${#CLIENT_CERTIFICATE_DATA} (length)" && \
+echo "CERTIFICATE_AUTHORITY_DATA..: ${#CERTIFICATE_AUTHORITY_DATA} (length)" && \
+echo "CLUSTER_ENDPOINT............: ${CLUSTER_ENDPOINT}"
+
+# View Template File
+cat kubeconfig.tpl | yq r -
+
+# Generate a new kubeconfig file
+cat kubeconfig.tpl | envsubst | yq r -
