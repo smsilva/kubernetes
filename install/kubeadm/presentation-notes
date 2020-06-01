@@ -1,10 +1,10 @@
 - workers
 - default namespace
-- create namespaces: dev
-- api-resources
 - nodes,cm,deploy,rs,ds,po,svc,ep,ing
 - contexts
 - config default namespace
+- create namespaces: dev
+- api-resources
 - imperative vs declarative
   - nginx:1.17
 - rollout

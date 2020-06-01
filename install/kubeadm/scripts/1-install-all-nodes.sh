@@ -4,12 +4,7 @@ nc -dv lb 6443
 # Check if there are a route that will be used by kube-proxy to communicate with API Server on Masters with kubernetes service Cluster IP Address (10.96.0.1)
 route -n | grep "10.96.0.0"; if [[ $? == 0 ]]; then echo "OK"; else echo "FAIL"; fi
 
-# Configure Vim to use yaml format a little bit better
-cat <<EOF >> .vimrc
-autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
-EOF
-
-# All Nodes
+# Update and Get Google Cloud Apt Key
 sudo apt-get update | grep -v -E "^Hit|^Get" && \
 sudo curl -s "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo apt-key add -
 
@@ -47,7 +42,7 @@ sudo crictl images
 
 # Preloading Container Images
 if hostname -s | grep "master" &>/dev/null; then
-  sudo kubeadm config images pull --v 5
+  sudo kubeadm config images pull --v 3
   sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
 else
   sudo crictl pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"

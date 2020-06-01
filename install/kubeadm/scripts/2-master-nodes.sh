@@ -30,9 +30,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token wlnkan.if22ton4xi5gfpn0 \
-  --discovery-token-ca-cert-hash sha256:0439bd3b876c85e6eb8fbeba6684c7d6c7e012c1be202c324a3c4bcce193e513 \
-  --certificate-key 64fac37d044f2cc2f70667e7628aac71a842853be76de41e2d11bad9b694f4f5
+  --token ina84f.l9iwjyh1a9nxuleo \
+  --discovery-token-ca-cert-hash sha256:931913f5838058e4d6ae1f198a6f9156acf17a703689ed7b79a2d4d2510e4f49 \
+  --certificate-key f4738ae4b6d1b29aad0ede6ff9b46a5dfb5d12b814ab548f0761a0e432a7f899
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'
@@ -55,9 +55,9 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 1 \
-  --token wlnkan.if22ton4xi5gfpn0 \
-  --discovery-token-ca-cert-hash sha256:0439bd3b876c85e6eb8fbeba6684c7d6c7e012c1be202c324a3c4bcce193e513 \
-  --certificate-key 64fac37d044f2cc2f70667e7628aac71a842853be76de41e2d11bad9b694f4f5
+  --token ina84f.l9iwjyh1a9nxuleo \
+  --discovery-token-ca-cert-hash sha256:931913f5838058e4d6ae1f198a6f9156acf17a703689ed7b79a2d4d2510e4f49 \
+  --certificate-key f4738ae4b6d1b29aad0ede6ff9b46a5dfb5d12b814ab548f0761a0e432a7f899
 
 # Optional - Ingress HAProxy Controller
 # https://github.com/jcmoraisjr/haproxy-ingress
@@ -68,6 +68,11 @@ kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.ya
 for NODE in master-{1..3}; do
   kubectl label node ${NODE} role=ingress-controller
 done
+
+# Optional - Configure Vim to use yaml format a little bit better
+cat <<EOF >> .vimrc
+autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+EOF
 
 # Optional - bat
 BAT_VERSION="0.15.1" && \
