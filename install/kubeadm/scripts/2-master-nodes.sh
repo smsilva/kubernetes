@@ -30,9 +30,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token ina84f.l9iwjyh1a9nxuleo \
-  --discovery-token-ca-cert-hash sha256:931913f5838058e4d6ae1f198a6f9156acf17a703689ed7b79a2d4d2510e4f49 \
-  --certificate-key f4738ae4b6d1b29aad0ede6ff9b46a5dfb5d12b814ab548f0761a0e432a7f899
+  --token l0xasw.hnc4j8mvm243yn9z \
+  --discovery-token-ca-cert-hash sha256:2c8a48062590399dbd4f0412da3d44dc9b783bbe72b9e238508e9adb1e7a2c56 \
+  --certificate-key 3f07607e33018d29484ac5fc74d213e3fd4695b1fd4d14d873ceec551a496b4a
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'
@@ -55,9 +55,9 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 1 \
-  --token ina84f.l9iwjyh1a9nxuleo \
-  --discovery-token-ca-cert-hash sha256:931913f5838058e4d6ae1f198a6f9156acf17a703689ed7b79a2d4d2510e4f49 \
-  --certificate-key f4738ae4b6d1b29aad0ede6ff9b46a5dfb5d12b814ab548f0761a0e432a7f899
+  --token l0xasw.hnc4j8mvm243yn9z \
+  --discovery-token-ca-cert-hash sha256:2c8a48062590399dbd4f0412da3d44dc9b783bbe72b9e238508e9adb1e7a2c56 \
+  --certificate-key 3f07607e33018d29484ac5fc74d213e3fd4695b1fd4d14d873ceec551a496b4a
 
 # Optional - Ingress HAProxy Controller
 # https://github.com/jcmoraisjr/haproxy-ingress

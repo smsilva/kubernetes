@@ -41,7 +41,7 @@ sudo crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock
 sudo crictl images
 
 # Preloading Container Images
-if hostname -s | grep "master" &>/dev/null; then
+if hostname -s | grep "master" &> /dev/null; then
   sudo kubeadm config images pull --v 3
   sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
 else
