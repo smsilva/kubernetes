@@ -27,14 +27,23 @@ echo "KUBERNETES_BASE_VERSION....: ${KUBERNETES_BASE_VERSION}" && \
 echo ""
 
 # Install Kubelet, Kubeadm and Kubectl
-sudo apt-get install -y \
-  kubeadm="${KUBERNETES_VERSION}" \
-  kubelet="${KUBERNETES_VERSION}" \
-  kubectl="${KUBERNETES_VERSION}" && \
-sudo apt-mark hold \
-  kubelet \
-  kubeadm \
-  kubectl
+if hostname -s | grep "master" &> /dev/null; then
+  sudo apt-get install -y \
+    kubeadm="${KUBERNETES_VERSION}" \
+    kubelet="${KUBERNETES_VERSION}" \
+    kubectl="${KUBERNETES_VERSION}" && \
+  sudo apt-mark hold \
+    kubelet \
+    kubeadm \
+    kubectl
+else
+  sudo apt-get install -y \
+    kubeadm="${KUBERNETES_VERSION}" \
+    kubelet="${KUBERNETES_VERSION}" && \
+  sudo apt-mark hold \
+    kubelet \
+    kubeadm
+fi
 
 # CRI Config
 sudo crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock

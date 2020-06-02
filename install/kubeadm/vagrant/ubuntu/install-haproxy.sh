@@ -32,7 +32,7 @@ EOF
 
 cat <<EOF | tee -a "${HAPROXY_CONFIG_FILE}"
 
-frontend apps-nodeport-frontend
+frontend apps-nodeport
     bind ${ADDRESS}:32080
     mode http
     default_backend apps-nodeport
@@ -49,7 +49,7 @@ done
 
 cat <<EOF | tee -a "${HAPROXY_CONFIG_FILE}"
 
-frontend apps-ingress-frontend
+frontend apps-ingress
     bind ${ADDRESS}:80
     mode http
     stats enable
@@ -72,7 +72,7 @@ done
 
 cat <<EOF | tee -a "${HAPROXY_CONFIG_FILE}"
 
-frontend kubernetes-apiserver-frontend
+frontend kubernetes-apiserver
     bind ${ADDRESS}:6443
     option tcplog
     mode tcp

@@ -30,9 +30,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token l0xasw.hnc4j8mvm243yn9z \
-  --discovery-token-ca-cert-hash sha256:2c8a48062590399dbd4f0412da3d44dc9b783bbe72b9e238508e9adb1e7a2c56 \
-  --certificate-key 3f07607e33018d29484ac5fc74d213e3fd4695b1fd4d14d873ceec551a496b4a
+  --token l3tpb7.8vppdcejxoxq0jpk \
+  --discovery-token-ca-cert-hash sha256:488b572fe50c46271f9c8ceea035490209fc8b55be3089212684240ea155021e \
+  --certificate-key eefcc81a035efaaaba721249ac73bf77988c3266f8cb7fc31f32607662256aa4
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'
@@ -55,19 +55,9 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 1 \
-  --token l0xasw.hnc4j8mvm243yn9z \
-  --discovery-token-ca-cert-hash sha256:2c8a48062590399dbd4f0412da3d44dc9b783bbe72b9e238508e9adb1e7a2c56 \
-  --certificate-key 3f07607e33018d29484ac5fc74d213e3fd4695b1fd4d14d873ceec551a496b4a
-
-# Optional - Ingress HAProxy Controller
-# https://github.com/jcmoraisjr/haproxy-ingress
-# https://haproxy-ingress.github.io/docs/getting-started/
-# https://haproxy-ingress.github.io/docs/configuration/keys/
-kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.yaml
-
-for NODE in master-{1..3}; do
-  kubectl label node ${NODE} role=ingress-controller
-done
+  --token l3tpb7.8vppdcejxoxq0jpk \
+  --discovery-token-ca-cert-hash sha256:488b572fe50c46271f9c8ceea035490209fc8b55be3089212684240ea155021e \
+  --certificate-key eefcc81a035efaaaba721249ac73bf77988c3266f8cb7fc31f32607662256aa4
 
 # Optional - Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc
@@ -87,6 +77,17 @@ sudo apt install jq -y
 
 # Optional - yq
 sudo snap install yq
+
+# Optional - Ingress HAProxy Controller
+# https://kubernetes.io/docs/concepts/services-networking/ingress/
+# https://github.com/jcmoraisjr/haproxy-ingress
+# https://haproxy-ingress.github.io/docs/getting-started/
+# https://haproxy-ingress.github.io/docs/configuration/keys/
+kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.yaml
+
+for NODE in $(kubectl get nodes -l node-role.kubernetes.io/master="" --no-headers -o custom-columns="NAME:.metadata.name"); do
+  kubectl label node ${NODE} role=ingress-controller
+done
 
 # Reset Node Config (if needed)
 sudo kubeadm reset -f && \
