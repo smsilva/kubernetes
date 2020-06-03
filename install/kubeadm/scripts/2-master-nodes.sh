@@ -22,6 +22,7 @@ echo ""
 SECONDS=0 && \
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm init \
+  --pod-network-cidr="10.217.0.0/16" \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --kubernetes-version "${KUBERNETES_BASE_VERSION}" \
@@ -30,21 +31,17 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token l3tpb7.8vppdcejxoxq0jpk \
-  --discovery-token-ca-cert-hash sha256:488b572fe50c46271f9c8ceea035490209fc8b55be3089212684240ea155021e \
-  --certificate-key eefcc81a035efaaaba721249ac73bf77988c3266f8cb7fc31f32607662256aa4
+  --token uojo7w.yns0c16xkh6kbc5d \
+  --discovery-token-ca-cert-hash sha256:ecd91606aedeaad7435c074fd2fe58901cf638da435d7e659a06d714daeef16e \
+  --certificate-key dff50dd589e80a76b58ea80f78728def4c0939a870d399b7b359a95832afde0b
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'
 
-# Install the Weave CNI Plugin
+# Install CNI Plugin
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
-CNI_ADD_ON_FILE="cni-add-on-weave.yaml" && \
-wget \
-  "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')" \
-  --output-document "${CNI_ADD_ON_FILE}" \
-  --quiet && \
-kubectl apply -f "${CNI_ADD_ON_FILE}"
+# kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+kubectl create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/install/kubernetes/quick-install.yaml
 
 # Adding a Control Plane Node
 LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | awk '{ print $1 }') && \
@@ -54,10 +51,10 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --v 1 \
-  --token l3tpb7.8vppdcejxoxq0jpk \
-  --discovery-token-ca-cert-hash sha256:488b572fe50c46271f9c8ceea035490209fc8b55be3089212684240ea155021e \
-  --certificate-key eefcc81a035efaaaba721249ac73bf77988c3266f8cb7fc31f32607662256aa4
+  --v 3 \
+  --token uojo7w.yns0c16xkh6kbc5d \
+  --discovery-token-ca-cert-hash sha256:ecd91606aedeaad7435c074fd2fe58901cf638da435d7e659a06d714daeef16e \
+  --certificate-key dff50dd589e80a76b58ea80f78728def4c0939a870d399b7b359a95832afde0b
 
 # Optional - Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc
