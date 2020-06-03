@@ -8,6 +8,8 @@ WORKER_NODES_COUNT=$6
 IP_NETWORK=$7
 IP_NETWORK_REVERSE=$(echo ${IP_NETWORK} | awk -F. '{ print $3 "." $2 "." $1 }')
 IP_DNS=$8
+GLUSTERFS_NODES_COUNT=$9
+GLUSTERFS_IP_START=${10}
 
 echo "NETWORK_DEVICE_NAME...: ${NETWORK_DEVICE_NAME}"
 echo "DOMAIN_NAME...........: ${DOMAIN_NAME}"
@@ -18,6 +20,8 @@ echo "WORKER_NODES_COUNT....: ${WORKER_NODES_COUNT}"
 echo "IP_NETWORK............: ${IP_NETWORK}"
 echo "IP_NETWORK_REVERSE....: ${IP_NETWORK_REVERSE}"
 echo "IP_DNS................: ${IP_DNS}"
+echo "GLUSTERFS_NODES_COUNT.: ${GLUSTERFS_NODES_COUNT}"
+echo "GLUSTERFS_IP_START....: ${GLUSTERFS_IP_START}"
 
 apt-get install \
   bind9 \
@@ -86,6 +90,10 @@ for ((line = 1; line <= ${WORKER_NODES_COUNT}; line++)); do
   echo "worker-${line}     IN       A       ${IP_NETWORK}$((${NODE_IP_START} + ${line}))" >> "${FORWARD_FILE}"
 done
 
+for ((line = 1; line <= ${GLUSTERFS_NODES_COUNT}; line++)); do
+  echo "gluster-${line}    IN       A       ${IP_NETWORK}$((${GLUSTERFS_IP_START} + ${line}))" >> "${FORWARD_FILE}"
+done
+
 echo "*.apps       IN       CNAME   lb" >> "${FORWARD_FILE}"
 
 REVERSE_FILE="reverse.${DOMAIN_NAME}"
@@ -118,6 +126,10 @@ done
 
 for ((line = 1; line <= ${WORKER_NODES_COUNT}; line++)); do
   echo "$((${NODE_IP_START} + ${line}))      IN      PTR     worker-${line}.${DOMAIN_NAME}." >> "${REVERSE_FILE}"
+done
+
+for ((line = 1; line <= ${GLUSTERFS_NODES_COUNT}; line++)); do
+  echo "$((${GLUSTERFS_IP_START} + ${line}))      IN      PTR     gluster-${line}.${DOMAIN_NAME}." >> "${REVERSE_FILE}"
 done
 
 mv named.conf.options /etc/bind/

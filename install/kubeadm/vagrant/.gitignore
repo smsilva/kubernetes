@@ -1,4 +1,5 @@
 log/
+disks/
 .vagrant/
 .vagrant/**/*
 **/*.log
