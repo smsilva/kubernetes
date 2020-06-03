@@ -22,7 +22,6 @@ echo ""
 SECONDS=0 && \
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm init \
-  --pod-network-cidr="10.217.0.0/16" \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --kubernetes-version "${KUBERNETES_BASE_VERSION}" \
@@ -31,17 +30,17 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token uojo7w.yns0c16xkh6kbc5d \
-  --discovery-token-ca-cert-hash sha256:ecd91606aedeaad7435c074fd2fe58901cf638da435d7e659a06d714daeef16e \
-  --certificate-key dff50dd589e80a76b58ea80f78728def4c0939a870d399b7b359a95832afde0b
+  --token 69h7fq.z49owr2v60165fna \
+  --discovery-token-ca-cert-hash sha256:859f4ca265326db63b8b9ff0278bf461ddc7e37919ba6fa2d669e6890f0e8f04 \
+  --certificate-key c288d9af966c84927a75917eb33a05a7f8da8e869a8f5ef6779e118507229e78
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'
 
 # Install CNI Plugin
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
-# kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
-kubectl create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/install/kubernetes/quick-install.yaml
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+#kubectl create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/install/kubernetes/quick-install.yaml
 
 # Adding a Control Plane Node
 LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | awk '{ print $1 }') && \
@@ -52,10 +51,10 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 3 \
-  --token uojo7w.yns0c16xkh6kbc5d \
-  --discovery-token-ca-cert-hash sha256:ecd91606aedeaad7435c074fd2fe58901cf638da435d7e659a06d714daeef16e \
-  --certificate-key dff50dd589e80a76b58ea80f78728def4c0939a870d399b7b359a95832afde0b
-
+  --token 69h7fq.z49owr2v60165fna \
+  --discovery-token-ca-cert-hash sha256:859f4ca265326db63b8b9ff0278bf461ddc7e37919ba6fa2d669e6890f0e8f04 \
+  --certificate-key c288d9af966c84927a75917eb33a05a7f8da8e869a8f5ef6779e118507229e78
+  
 # Optional - Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc
 autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
