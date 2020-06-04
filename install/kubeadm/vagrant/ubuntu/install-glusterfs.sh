@@ -3,8 +3,9 @@ GLUSTERFS_NODES_COUNT=$1
 GLUSTERFS_IP_START=$2
 DOMAIN_NAME=$3
 
-GLUSTERFS_NODES_COUNT=3
-GLUSTERFS_IP_START=30
+# GLUSTERFS_NODES_COUNT=3
+# GLUSTERFS_IP_START=30
+# DOMAIN_NAME=example.com
 
 echo "GLUSTERFS_NODES_COUNT.: ${GLUSTERFS_NODES_COUNT}" && \
 echo "GLUSTERFS_IP_START....: ${GLUSTERFS_IP_START}"
@@ -24,9 +25,3 @@ apt install --yes glusterfs-server
 for ((line = 1; line <= ${GLUSTERFS_NODES_COUNT}; line++)); do
   iptables -I INPUT -p all -s "gluster-${line}" -j ACCEPT
 done
-
-for ((line = 1; line <= ${GLUSTERFS_NODES_COUNT}; line++)); do
-  gluster peer probe "gluster-${line}.${DOMAIN_NAME}"
-done
-
-gluster peer status

@@ -1,5 +1,14 @@
 #!/bin/bash
 
+GLUSTERFS_NODES_COUNT=3
+DOMAIN_NAME="example.com"
+
+for ((line = 1; line <= ${GLUSTERFS_NODES_COUNT}; line++)); do
+  gluster peer probe "gluster-${line}.${DOMAIN_NAME}"
+done
+
+gluster peer status
+
 # From any GlusterFS Node
 gluster volume create "gv0" replica "3" \
   "gluster-1:/data/brick1/gv0" \
