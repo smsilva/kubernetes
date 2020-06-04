@@ -3,12 +3,12 @@
 
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
 
-# Define the number of master and worker nodes
-# If this number is changed, remember to update setup-hosts-file.sh script with the new hosts IP details in /etc/hosts of each VM.
+# Servers
 MASTER_NODES_COUNT = 1
 WORKER_NODES_COUNT = 1
 GLUSTERFS_NODES_COUNT = 3
 
+# Network
 DOMAIN_NAME="example.com"
 IP_NETWORK = "192.168.10."
 IP_DNS = "#{IP_NETWORK}2"
@@ -17,6 +17,7 @@ NODE_IP_START = 20
 GLUSTERFS_IP_START = 30
 NETWORK_DEVICE_NAME = "enp0s8"
 
+# Memory
 DNS_MEMORY=512
 LOAD_BALANCER_MEMORY=512
 MASTER_NODE_MEMORY_SIZE=2048
@@ -140,7 +141,7 @@ Vagrant.configure("2") do |config|
   
   end
 
-    # GlusterFS Servers
+    # GlusterFS Servers for External Cluster
     (1..GLUSTERFS_NODES_COUNT).each do |i|
       config.vm.define "gluster-#{i}" do |node|
         node.vm.provider "virtualbox" do |vb|
