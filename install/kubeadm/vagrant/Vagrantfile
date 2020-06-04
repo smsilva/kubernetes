@@ -75,107 +75,103 @@ Vagrant.configure("2") do |config|
     node.vm.provision "install-haproxy", type: "shell", :path => "ubuntu/install-haproxy.sh" do |s|
       s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}","#{MASTER_IP_START}","#{MASTER_NODES_COUNT}"]
     end
- 
   end
 
   # Master Nodes - Control Plane
   (1..MASTER_NODES_COUNT).each do |i|
-      config.vm.define "master-#{i}" do |node|
-        node.vm.provider "virtualbox" do |vb|
-          vb.memory = "#{MASTER_NODE_MEMORY_SIZE}"
-          vb.cpus = 2
-        end
-        node.vm.hostname = "master-#{i}"
-        node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{MASTER_IP_START + i}"
-        node.vm.network "forwarded_port", guest: 22, host: "#{2730 + i}"
-
-        node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
-          s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
-        end
-
-        node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
-
-        node.vm.provision "update-dns-config", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
-          s.args = ["#{IP_DNS}"]
-        end
-
-        node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-        node.vm.provision "install-cri", type: "shell", :path => "ubuntu/install-containerd.sh"
-
-        node.vm.provision "setup-route", type: "shell", :path => "ubuntu/setup-route.sh" do |s|
-          s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
-        end
+    config.vm.define "master-#{i}" do |node|
+      node.vm.provider "virtualbox" do |vb|
+        vb.memory = "#{MASTER_NODE_MEMORY_SIZE}"
+        vb.cpus = 2
       end
-  
+      node.vm.hostname = "master-#{i}"
+      node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{MASTER_IP_START + i}"
+      node.vm.network "forwarded_port", guest: 22, host: "#{2730 + i}"
+
+      node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
+        s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
+      end
+
+      node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
+
+      node.vm.provision "update-dns-config", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
+        s.args = ["#{IP_DNS}"]
+      end
+
+      node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
+      node.vm.provision "install-cri", type: "shell", :path => "ubuntu/install-containerd.sh"
+
+      node.vm.provision "setup-route", type: "shell", :path => "ubuntu/setup-route.sh" do |s|
+        s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
+      end
+    end
   end
 
   # Worker Nodes
   (1..WORKER_NODES_COUNT).each do |i|
-      config.vm.define "worker-#{i}" do |node|
-        node.vm.provider "virtualbox" do |vb|
-          vb.memory = "#{WORKER_NODE_MEMORY_SIZE}"
-          vb.cpus = 2
-        end
-
-        node.vm.hostname = "worker-#{i}"
-        node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{NODE_IP_START + i}"
-        node.vm.network "forwarded_port", guest: 22, host: "#{2740 + i}"
-
-        node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
-          s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
-        end
-
-        node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
-
-        node.vm.provision "update-dns-config", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
-          s.args = ["#{IP_DNS}"]
-        end
-
-        node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-        node.vm.provision "install-cri", type: "shell", :path => "ubuntu/install-containerd.sh"
-        
-        node.vm.provision "setup-route", type: "shell", :path => "ubuntu/setup-route.sh" do |s|
-          s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
-        end
+    config.vm.define "worker-#{i}" do |node|
+      node.vm.provider "virtualbox" do |vb|
+        vb.memory = "#{WORKER_NODE_MEMORY_SIZE}"
+        vb.cpus = 2
       end
-  
+
+      node.vm.hostname = "worker-#{i}"
+      node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{NODE_IP_START + i}"
+      node.vm.network "forwarded_port", guest: 22, host: "#{2740 + i}"
+
+      node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
+        s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
+      end
+
+      node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
+
+      node.vm.provision "update-dns-config", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
+        s.args = ["#{IP_DNS}"]
+      end
+
+      node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
+      node.vm.provision "install-cri", type: "shell", :path => "ubuntu/install-containerd.sh"
+      
+      node.vm.provision "setup-route", type: "shell", :path => "ubuntu/setup-route.sh" do |s|
+        s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
+      end
+    end
   end
 
-    # GlusterFS Servers for External Cluster
-    (1..GLUSTERFS_NODES_COUNT).each do |i|
-      config.vm.define "gluster-#{i}" do |node|
-        node.vm.provider "virtualbox" do |vb|
-          vb.memory = "#{GLUSTER_NODE_MEMORY_SIZE}"
-          vb.cpus = 1
-          
-          unless File.exist?("disks/gluster-#{i}/gluster-disk-1.vdi")
-            vb.customize ['createhd', '--filename', "disks/gluster-#{i}/gluster-disk-1.vdi", '--size', 1 * 1024]
-          end
-          
-          vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', "disks/gluster-#{i}/gluster-disk-1.vdi"]
+  # GlusterFS Servers for External Cluster
+  (1..GLUSTERFS_NODES_COUNT).each do |i|
+    config.vm.define "gluster-#{i}" do |node|
+      node.vm.provider "virtualbox" do |vb|
+        vb.memory = "#{GLUSTER_NODE_MEMORY_SIZE}"
+        vb.cpus = 1
+        
+        unless File.exist?("disks/gluster-#{i}/gluster-disk-1.vdi")
+          vb.customize ['createhd', '--filename', "disks/gluster-#{i}/gluster-disk-1.vdi", '--size', 1 * 1024]
         end
-
-        node.vm.hostname = "gluster-#{i}"
-        node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{GLUSTERFS_IP_START + i}"
-        node.vm.network "forwarded_port", guest: 22, host: "#{2840 + i}"
-
-        node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
-          s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
-        end
-
-        node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
-
-        node.vm.provision "update-dns-config", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
-          s.args = ["#{IP_DNS}"]
-        end
-
-        node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
-
-        node.vm.provision "install-glusterfs", :type => "shell", :path => "ubuntu/install-glusterfs.sh" do |s|
-          s.args = ["#{GLUSTERFS_NODES_COUNT}","#{GLUSTERFS_IP_START}","#{DOMAIN_NAME}"]
-        end
+        
+        vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', "disks/gluster-#{i}/gluster-disk-1.vdi"]
       end
-  
+
+      node.vm.hostname = "gluster-#{i}"
+      node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{GLUSTERFS_IP_START + i}"
+      node.vm.network "forwarded_port", guest: 22, host: "#{2840 + i}"
+
+      node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
+        s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
+      end
+
+      node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
+
+      node.vm.provision "update-dns-config", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
+        s.args = ["#{IP_DNS}"]
+      end
+
+      node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
+
+      node.vm.provision "install-glusterfs", :type => "shell", :path => "ubuntu/install-glusterfs.sh" do |s|
+        s.args = ["#{GLUSTERFS_NODES_COUNT}","#{GLUSTERFS_IP_START}","#{DOMAIN_NAME}"]
+      end
+    end
   end
   
 end
