@@ -5,13 +5,13 @@ metadata:
 spec:
   containers:
   - name: glusterfs
-    image: nginx
+    image: nginx:1.18
     volumeMounts:
-    - mountPath: "/mnt/glusterfs"
+    - mountPath: "/mnt/data"
       name: glusterfsvol
   volumes:
   - name: glusterfsvol
     glusterfs:
       endpoints: glusterfs-cluster
       path: gv0
-      readOnly: true
+      readOnly: false

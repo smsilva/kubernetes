@@ -18,9 +18,9 @@ mount -a && lsblk -p
 apt-get install software-properties-common
 
 add-apt-repository --yes ppa:gluster/glusterfs-7
-apt update
+apt-get update
 
-apt install --yes glusterfs-server
+apt-get install --yes glusterfs-server
 
 for ((line = 1; line <= ${GLUSTERFS_NODES_COUNT}; line++)); do
   iptables -I INPUT -p all -s "gluster-${line}" -j ACCEPT

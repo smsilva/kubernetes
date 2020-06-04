@@ -146,7 +146,11 @@ Vagrant.configure("2") do |config|
         node.vm.provider "virtualbox" do |vb|
           vb.memory = "#{GLUSTER_NODE_MEMORY_SIZE}"
           vb.cpus = 1
-          vb.customize ['createhd', '--filename', "disks/gluster-#{i}/gluster-disk-1.vdi", '--size', 1 * 1024]
+          
+          unless File.exist?("disks/gluster-#{i}/gluster-disk-1.vdi")
+            vb.customize ['createhd', '--filename', "disks/gluster-#{i}/gluster-disk-1.vdi", '--size', 1 * 1024]
+          end
+          
           vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', "disks/gluster-#{i}/gluster-disk-1.vdi"]
         end
 
