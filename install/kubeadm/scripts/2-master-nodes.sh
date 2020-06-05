@@ -11,7 +11,7 @@ KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}" && \
 LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | awk '{ print $1 }') && \
 LOAD_BALANCER_PORT='6443' && \
 LOAD_BALANCER_NAME='lb' && \
-CONTROL_PLANE_ENDPOINT="${LOAD_BALANCER_NAME}:${LOAD_BALANCER_PORT}"
+CONTROL_PLANE_ENDPOINT="${LOAD_BALANCER_NAME}:${LOAD_BALANCER_PORT}" && \
 echo "" && \
 echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
 echo "CONTROL_PLANE_ENDPOINT.....: ${CONTROL_PLANE_ENDPOINT}" && \
@@ -30,9 +30,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token 0mdt83.rhtx3fxsl5wfsew6 \
-  --discovery-token-ca-cert-hash sha256:1afea38beb1c2059d9c67d2e3910ef6dff546c3fd2c551762eab757f6ffbb949 \
-  --certificate-key 0123e9aae2c337f2ac6a3781b170a9ad8fe24a93482f79ced70d2608a96d181e
+  --token b2m55d.4m6g6hd4h9dcgupi \
+  --discovery-token-ca-cert-hash sha256:5f17c0b7fb720ffa16b33fd9d686d1868f4c58fded1ba65238ab15cfc3ad5e55 \
+  --certificate-key c2372bbf9d33839742f0511d5dcc0d8b0719701a0c1e491dd54614357585876b
   
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'
@@ -51,9 +51,9 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 3 \
-  --token 0mdt83.rhtx3fxsl5wfsew6 \
-  --discovery-token-ca-cert-hash sha256:1afea38beb1c2059d9c67d2e3910ef6dff546c3fd2c551762eab757f6ffbb949 \
-  --certificate-key 0123e9aae2c337f2ac6a3781b170a9ad8fe24a93482f79ced70d2608a96d181e
+  --token b2m55d.4m6g6hd4h9dcgupi \
+  --discovery-token-ca-cert-hash sha256:5f17c0b7fb720ffa16b33fd9d686d1868f4c58fded1ba65238ab15cfc3ad5e55 \
+  --certificate-key c2372bbf9d33839742f0511d5dcc0d8b0719701a0c1e491dd54614357585876b
 
 # Optional - Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc

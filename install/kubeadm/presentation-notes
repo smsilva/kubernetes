@@ -1,6 +1,6 @@
 - workers
 - default namespace
-- cm,deploy,rs,ds,po,svc,ep,ing
+- cm,deploy,rs,ds,po,svc,ep,ing,pv,pvc
 - contexts
 - config default namespace
 - create namespaces: dev
