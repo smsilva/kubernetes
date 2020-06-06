@@ -30,17 +30,17 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token b2m55d.4m6g6hd4h9dcgupi \
-  --discovery-token-ca-cert-hash sha256:5f17c0b7fb720ffa16b33fd9d686d1868f4c58fded1ba65238ab15cfc3ad5e55 \
-  --certificate-key c2372bbf9d33839742f0511d5dcc0d8b0719701a0c1e491dd54614357585876b
-  
+  --token 5cwx97.qhdguv30e2puhl8e \
+  --discovery-token-ca-cert-hash sha256:b87f95ddde0c93f2ec2059079e1f73eed16f6f2e1251eb15ea224259ac676d42 \
+  --certificate-key 5e00bda27013e84dffb268af9f2f4bdde325336b2f3a69cb4a4060d42c274a9c
+
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'
 
 # Install CNI Plugin
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
-kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 #kubectl create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/install/kubernetes/quick-install.yaml
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 
 # Adding a Control Plane Node
 LOCAL_IP_ADDRESS=$(grep $(hostname -s) /etc/hosts | head -1 | awk '{ print $1 }') && \
@@ -51,9 +51,9 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 3 \
-  --token b2m55d.4m6g6hd4h9dcgupi \
-  --discovery-token-ca-cert-hash sha256:5f17c0b7fb720ffa16b33fd9d686d1868f4c58fded1ba65238ab15cfc3ad5e55 \
-  --certificate-key c2372bbf9d33839742f0511d5dcc0d8b0719701a0c1e491dd54614357585876b
+  --token 5cwx97.qhdguv30e2puhl8e \
+  --discovery-token-ca-cert-hash sha256:b87f95ddde0c93f2ec2059079e1f73eed16f6f2e1251eb15ea224259ac676d42 \
+  --certificate-key 5e00bda27013e84dffb268af9f2f4bdde325336b2f3a69cb4a4060d42c274a9c
 
 # Optional - Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc
@@ -79,6 +79,8 @@ sudo snap install yq
 # https://github.com/jcmoraisjr/haproxy-ingress
 # https://haproxy-ingress.github.io/docs/getting-started/
 # https://haproxy-ingress.github.io/docs/configuration/keys/
+sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
+
 kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.yaml
 
 for NODE in $(kubectl get nodes -l node-role.kubernetes.io/master="" --no-headers -o custom-columns="NAME:.metadata.name"); do

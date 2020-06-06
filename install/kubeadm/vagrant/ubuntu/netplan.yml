@@ -1,0 +1,11 @@
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s8:
+      addresses:
+      - ${IPV4_ADDRESS}/24
+      routes:
+      - to: 10.96.0.0/16
+        via: ${IPV4_ADDRESS}
