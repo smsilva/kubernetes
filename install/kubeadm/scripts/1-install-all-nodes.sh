@@ -49,7 +49,10 @@ else
 fi
 
 # CRI Config
-sudo crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock
+sudo crictl config \
+  runtime-endpoint unix:///var/run/containerd/containerd.sock \
+  image-endpoint unix:///run/containerd/containerd.sock
+
 sudo crictl images
 
 # Preloading Container Images
@@ -65,10 +68,7 @@ sudo crictl images
 # vagrant plugin install vagrant-scp
 # https://blog.scottlowe.org/2020/01/25/manually-loading-container-images-with-containerd/
 
-# Export Images as tar files
-docker images | sed '1d' | awk '{ print "docker save " $3 " -o " $1 ":" $2 ".tar" }' | sed 's/\//_/g; s/:/#/g' | sh
-
-# Copy files to Masters and Workers
+# Copy files to Masters and/or to Workers
 MASTERS=$(vgs | grep running | grep -E "master" | awk '{ print $1 }')
 WORKERS=$(vgs | grep running | grep -E "worker" | awk '{ print $1 }')
 IMAGES_DIRECTORY="/home/silvios/ssd-1/containers/images"
@@ -96,32 +96,19 @@ for FILE in ${IMAGE_FILES}; do
   echo ""
 done
 
-# Pulling Images
-sudo crictl pull k8s.gcr.io/coredns:1.6.7
-sudo crictl pull k8s.gcr.io/etcd:3.4.3-0
-sudo crictl pull k8s.gcr.io/kube-apiserver:v1.18.3
-sudo crictl pull k8s.gcr.io/kube-controller-manager:v1.18.3
-sudo crictl pull k8s.gcr.io/kube-proxy:v1.18.3
-sudo crictl pull k8s.gcr.io/kube-scheduler:v1.18.3
-sudo crictl pull k8s.gcr.io/pause:3.2
-sudo crictl pull nginx:1.19
-sudo crictl pull nginx:1.18
-sudo crictl pull yauritux/busybox-curl
-sudo crictl pull weaveworks/weave-npc:2.6.4
-sudo crictl pull weaveworks/weave-kube:2.6.4
-sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
-
-# Pull for All Platforms
-# https://github.com/containerd/containerd/issues/3340
-sudo crictl images | awk '{ print "sudo ctr image pull --all-platforms " $1 ":" $2 }' | sed '1d' | sh
-
-# Export images to tar files
-sudo crictl images | awk '{ print $1 ":" $2 }' | sed '1d' | while read line; do
-FILE_NAME=$(echo $(sed 's/\//_/g; s/:/#/' <<< ${line}).tar)
-echo "${line} --> ${FILE_NAME}"
-sudo ctr image export ${FILE_NAME} $line
+# Import Images
+ls | while read line; do
+  FILE=${line}
+  BASE_NAME=$(awk -F "#" '{ print $1 }' <<< ${FILE##*_})
+  echo "${FILE} --> ${BASE_NAME}"
+  sudo ctr -n=k8s.io images import --base-name "${BASE_NAME}" "${FILE}"
 done
 
-# Remove
-sudo ctr images ls | sed '1d' | awk '{ print $1 }' | while read line; do sudo ctr images remove ${line}; done
-sudo crictl images | sed '1d' | awk '{ print $3 }' | while read line; do sudo crictl rmi ${line}; done
+# Preloading Container Images
+if hostname -s | grep "master" &> /dev/null; then
+  sudo kubeadm config images pull --v 3
+else
+  sudo crictl pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
+fi
+
+sudo ctr -n=k8s.io images ls
