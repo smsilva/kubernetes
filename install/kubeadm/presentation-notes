@@ -6,9 +6,9 @@
 - create namespaces: dev
 - api-resources
 - imperative vs declarative
-  - nginx:1.17
-- rollout
   - nginx:1.18
+- rollout
+  - nginx:1.19
 - describe
 - logs
 - expose

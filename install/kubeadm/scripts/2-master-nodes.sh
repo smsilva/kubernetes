@@ -30,9 +30,9 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token 30a372.cqbwhqwz9vwoypxa \
-  --discovery-token-ca-cert-hash sha256:b118694b4bd316cfecfa986175b6799d7a32e7c8e633e6b195cc3ad46e2bdece \
-  --certificate-key 6d71c7651c6bd23db1dd8d36b6ebe04a77beded302ca5955cb725aaf457671b3
+  --token hjxdra.ce9fbkxc0pz4z2ch \
+  --discovery-token-ca-cert-hash sha256:b4415d0eabc5f91825ad5e34eff8b757ae89d415efa2ce36e5db6bdab0ebeeb0 \
+  --certificate-key ceb0ec80b0409546a42e437ce68d88dcf341f1c846bdcc4d875b5d5c8edf2804
 
 # Watch Nodes and Pods from kube-system namespace
 watch 'kubectl get nodes,pods,services -o wide -n kube-system'
@@ -51,9 +51,9 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 3 \
-  --token 30a372.cqbwhqwz9vwoypxa \
-  --discovery-token-ca-cert-hash sha256:b118694b4bd316cfecfa986175b6799d7a32e7c8e633e6b195cc3ad46e2bdece \
-  --certificate-key 6d71c7651c6bd23db1dd8d36b6ebe04a77beded302ca5955cb725aaf457671b3
+  --token hjxdra.ce9fbkxc0pz4z2ch \
+  --discovery-token-ca-cert-hash sha256:b4415d0eabc5f91825ad5e34eff8b757ae89d415efa2ce36e5db6bdab0ebeeb0 \
+  --certificate-key ceb0ec80b0409546a42e437ce68d88dcf341f1c846bdcc4d875b5d5c8edf2804
 
 # Optional - Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc
