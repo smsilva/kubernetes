@@ -4,9 +4,6 @@ nc -dv lb 6443
 # Check if there are a route that will be used by kube-proxy to communicate with API Server on Masters with kubernetes service Cluster IP Address (10.96.0.1)
 route -n | grep "10.96.0.0"; if [[ $? == 0 ]]; then echo "OK"; else echo "FAIL"; fi
 
-# Create a directory structure
-mkdir images
-
 # Update and Get Google Cloud Apt Key
 sudo apt-get update | grep -v -E "^Hit|^Get" && \
 sudo curl -s "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo apt-key add -
@@ -67,6 +64,9 @@ sudo crictl images
 # Optional - Copy and Load Images
 # vagrant plugin install vagrant-scp
 # https://blog.scottlowe.org/2020/01/25/manually-loading-container-images-with-containerd/
+
+# Create a directory for image files
+mkdir images
 
 # Copy files to Masters and/or to Workers
 MASTERS=$(vgs | grep running | grep -E "master" | awk '{ print $1 }')
