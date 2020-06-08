@@ -59,6 +59,9 @@ else
   sudo crictl pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
 fi
 
+sudo crictl pull docker.io/weaveworks/weave-kube:2.6.4
+sudo crictl pull docker.io/weaveworks/weave-npc:2.6.4
+
 sudo crictl images
 
 # Optional - Copy and Load Images
