@@ -1,10 +1,12 @@
+- nodes
+- masters
 - workers
-- default namespace
+- api-resources
 - cm,deploy,rs,ds,po,svc,ep,ing,pv,pvc
 - contexts
+- default namespace
+- create namespace
 - config default namespace
-- create namespaces: dev
-- api-resources
 - imperative vs declarative
   - nginx:1.18
 - rollout
@@ -16,3 +18,5 @@
 - expose with NodePort 32080
 - explain
 - ingress
+- glusterfs
+- pv, pvc
