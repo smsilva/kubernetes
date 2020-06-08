@@ -2,6 +2,7 @@
 sudo crictl pull nginx:1.19
 sudo crictl pull nginx:1.18
 sudo crictl pull yauritux/busybox-curl
+sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
 
 # The parameters below are getting from the first Contol Plane Config
 NODE_NAME=$(hostname -s) && \

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-IFNAME=$1
+ADDRESS=$1
 DOMAIN_NAME=$2
 MASTER_IP_START=$3
 MASTER_NODES_COUNT=$4
@@ -13,8 +13,7 @@ echo "DOMAIN_NAME.........: ${DOMAIN_NAME}"
 echo "MASTER_IP_START.....: ${MASTER_IP_START}"
 echo "MASTER_NODES_COUNT..: ${MASTER_IP_START}"
 
-ADDRESS="$(ip -4 addr show ${IFNAME} | grep "inet" | head -1 | awk '{ print $2 }' | cut -d/ -f1)"
-ADDRES_START=$(echo ${ADDRESS} | awk -F '.' '{ print $1 "." $2 "." $3 }')
+ADDRES_START=$(awk '{ print $1,$2,$3 }' FS='.' OFS='.' <<< ${ADDRESS})
 
 echo "ADDRESS.............: ${ADDRESS}" && \
 echo "ADDRES_START........: ${ADDRES_START}" && \
@@ -24,14 +23,9 @@ echo "HAPROXY_CONFIG_FILE.: ${HAPROXY_CONFIG_FILE}"
 apt-get install -y \
   haproxy
 
-cp "${HAPROXY_CONFIG_FILE}" "${HOME}/"
+mv "${HAPROXY_CONFIG_FILE}" "${HOME}/"
 
 cat <<EOF | tee "${HAPROXY_CONFIG_FILE}"
-
-EOF
-
-cat <<EOF | tee -a "${HAPROXY_CONFIG_FILE}"
-
 frontend apps-nodeport
     bind ${ADDRESS}:32080
     mode http

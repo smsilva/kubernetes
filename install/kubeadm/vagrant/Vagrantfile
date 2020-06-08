@@ -11,11 +11,11 @@ GLUSTERFS_NODES_COUNT = 0
 # Network
 DOMAIN_NAME="example.com"
 IP_NETWORK = "192.168.10."
-IP_DNS = "#{IP_NETWORK}2"
 MASTER_IP_START = 10
 NODE_IP_START = 20
 GLUSTERFS_IP_START = 30
-NETWORK_DEVICE_NAME = "enp0s8"
+IP_DNS = "#{IP_NETWORK}" + "2"
+IP_LOADBALANCER = "#{IP_NETWORK}" + "#{MASTER_IP_START}"
 
 # Memory
 DNS_MEMORY=512
@@ -26,7 +26,7 @@ GLUSTER_NODE_MEMORY_SIZE=2048
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
-  config.vm.box_version = "20200525.0.0"
+  config.vm.box_version = "20200605.0.0"
   config.vm.box_check_update = false
 
   # DNS
@@ -36,17 +36,22 @@ Vagrant.configure("2") do |config|
       vb.cpus = 1
     end
     node.vm.hostname = "dns"
-    node.vm.network :private_network, ip: "#{IP_DNS}"
+    node.vm.network :private_network, ip: "#{IP_DNS}", auto_config: false
     node.vm.network "forwarded_port", guest: 22, host: 2224
 
     node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
-      s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
+      s.args = ["#{IP_DNS}","#{DOMAIN_NAME}"]
     end
 
     node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
     node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
     node.vm.provision "install-dns-server-bind9", type: "shell", :path => "ubuntu/install-dns-server-bind9.sh" do |s|
-      s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}","#{MASTER_IP_START}","#{MASTER_NODES_COUNT}","#{NODE_IP_START}","#{WORKER_NODES_COUNT}","#{IP_NETWORK}","#{IP_DNS}","#{GLUSTERFS_NODES_COUNT}","#{GLUSTERFS_IP_START}"]
+      s.args = ["#{DOMAIN_NAME}","#{MASTER_IP_START}","#{MASTER_NODES_COUNT}","#{NODE_IP_START}","#{WORKER_NODES_COUNT}","#{IP_NETWORK}","#{IP_DNS}","#{GLUSTERFS_NODES_COUNT}","#{GLUSTERFS_IP_START}"]
+    end
+
+    node.vm.provision "file", source: "ubuntu/netplan-vagrant-template.yaml", destination: "${HOME}/.netplan-vagrant-template.yaml"
+    node.vm.provision "setup-netplan", type: "shell", :path => "ubuntu/setup-netplan.sh" do |s|
+      s.args = ["#{IP_DNS}"]
     end
   end
 
@@ -57,11 +62,16 @@ Vagrant.configure("2") do |config|
       vb.cpus = 1
     end
     node.vm.hostname = "loadbalancer"
-    node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{MASTER_IP_START}"
+    node.vm.network :private_network, ip: "#{IP_LOADBALANCER}", auto_config: false
     node.vm.network "forwarded_port", guest: 22, host: 2225
 
     node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
-      s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
+      s.args = ["#{IP_LOADBALANCER}","#{DOMAIN_NAME}"]
+    end
+
+    node.vm.provision "file", source: "ubuntu/netplan-vagrant-template.yaml", destination: "${HOME}/.netplan-vagrant-template.yaml"
+    node.vm.provision "setup-netplan", type: "shell", :path => "ubuntu/setup-netplan.sh" do |s|
+      s.args = ["#{IP_LOADBALANCER}"]
     end
 
     node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
@@ -73,7 +83,7 @@ Vagrant.configure("2") do |config|
     node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
 
     node.vm.provision "install-haproxy", type: "shell", :path => "ubuntu/install-haproxy.sh" do |s|
-      s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}","#{MASTER_IP_START}","#{MASTER_NODES_COUNT}"]
+      s.args = ["#{IP_LOADBALANCER}","#{DOMAIN_NAME}","#{MASTER_IP_START}","#{MASTER_NODES_COUNT}"]
     end
   end
 
@@ -84,12 +94,20 @@ Vagrant.configure("2") do |config|
         vb.memory = "#{MASTER_NODE_MEMORY_SIZE}"
         vb.cpus = 2
       end
+
+      IP_SERVER="#{IP_NETWORK}" + "#{MASTER_IP_START + i}"
+
       node.vm.hostname = "master-#{i}"
-      node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{MASTER_IP_START + i}"
+      node.vm.network :private_network, ip: "#{IP_SERVER}", auto_config: false
       node.vm.network "forwarded_port", guest: 22, host: "#{2730 + i}"
 
       node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
-        s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
+        s.args = ["#{IP_SERVER}","#{DOMAIN_NAME}"]
+      end
+
+      node.vm.provision "file", source: "ubuntu/netplan-vagrant-template.yaml", destination: "${HOME}/.netplan-vagrant-template.yaml"
+      node.vm.provision "setup-netplan", type: "shell", :path => "ubuntu/setup-netplan.sh" do |s|
+        s.args = ["#{IP_SERVER}"]
       end
 
       node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
@@ -100,10 +118,6 @@ Vagrant.configure("2") do |config|
 
       node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
       node.vm.provision "install-cri", type: "shell", :path => "ubuntu/install-containerd.sh"
-
-      node.vm.provision "setup-route", type: "shell", :path => "ubuntu/setup-route.sh" do |s|
-        s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
-      end
     end
   end
 
@@ -115,12 +129,19 @@ Vagrant.configure("2") do |config|
         vb.cpus = 2
       end
 
+      IP_SERVER="#{IP_NETWORK}" + "#{NODE_IP_START + i}"
+
       node.vm.hostname = "worker-#{i}"
-      node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{NODE_IP_START + i}"
+      node.vm.network :private_network, ip: "#{IP_SERVER}", auto_config: false
       node.vm.network "forwarded_port", guest: 22, host: "#{2740 + i}"
 
       node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
-        s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
+        s.args = ["#{IP_SERVER}","#{DOMAIN_NAME}"]
+      end
+
+      node.vm.provision "file", source: "ubuntu/netplan-vagrant-template.yaml", destination: "${HOME}/.netplan-vagrant-template.yaml"
+      node.vm.provision "setup-netplan", type: "shell", :path => "ubuntu/setup-netplan.sh" do |s|
+        s.args = ["#{IP_SERVER}"]
       end
 
       node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
@@ -131,10 +152,6 @@ Vagrant.configure("2") do |config|
 
       node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
       node.vm.provision "install-cri", type: "shell", :path => "ubuntu/install-containerd.sh"
-      
-      node.vm.provision "setup-route", type: "shell", :path => "ubuntu/setup-route.sh" do |s|
-        s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
-      end
     end
   end
 
@@ -152,12 +169,19 @@ Vagrant.configure("2") do |config|
         vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', "disks/gluster-#{i}/gluster-disk-1.vdi"]
       end
 
+      IP_SERVER="#{IP_NETWORK}" + "#{GLUSTERFS_IP_START + i}"
+
       node.vm.hostname = "gluster-#{i}"
-      node.vm.network :private_network, ip: "#{IP_NETWORK}" + "#{GLUSTERFS_IP_START + i}"
+      node.vm.network :private_network, ip: "#{IP_SERVER}", auto_config: false
       node.vm.network "forwarded_port", guest: 22, host: "#{2840 + i}"
 
       node.vm.provision "setup-hosts-file", :type => "shell", :path => "ubuntu/setup-hosts-file.sh" do |s|
-        s.args = ["#{NETWORK_DEVICE_NAME}","#{DOMAIN_NAME}"]
+        s.args = ["#{IP_SERVER}","#{DOMAIN_NAME}"]
+      end
+
+      node.vm.provision "file", source: "ubuntu/netplan-vagrant-template.yaml", destination: "${HOME}/.netplan-vagrant-template.yaml"
+      node.vm.provision "setup-netplan", type: "shell", :path => "ubuntu/setup-netplan.sh" do |s|
+        s.args = ["#{IP_SERVER}"]
       end
 
       node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"

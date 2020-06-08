@@ -30,7 +30,7 @@ echo "KUBERNETES_BASE_VERSION....: ${KUBERNETES_BASE_VERSION}" && \
 echo ""
 
 # Install Kubelet, Kubeadm and Kubectl
-if hostname -s | grep "master" &> /dev/null; then
+if grep --quiet "master" <<< $(hostname --short); then
   sudo apt-get install -y \
     kubeadm="${KUBERNETES_VERSION}" \
     kubelet="${KUBERNETES_VERSION}" \
@@ -51,13 +51,13 @@ fi
 # CRI Config
 sudo crictl config \
   runtime-endpoint unix:///var/run/containerd/containerd.sock \
-  image-endpoint unix:///run/containerd/containerd.sock
+  image-endpoint unix:///var/run/containerd/containerd.sock
 
 sudo crictl images
 
 # Preloading Container Images
-if hostname -s | grep "master" &> /dev/null; then
-  sudo kubeadm config images pull --v 3
+if grep --quiet "master" <<< $(hostname --short); then
+  sudo kubeadm config images pull --v 10
 else
   sudo crictl pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
 fi
@@ -73,8 +73,8 @@ MASTERS=$(vgs | grep running | grep -E "master" | awk '{ print $1 }')
 WORKERS=$(vgs | grep running | grep -E "worker" | awk '{ print $1 }')
 IMAGES_DIRECTORY="/home/silvios/ssd-1/containers/images"
 IMAGES_FOR_ALL="kube-proxy|pause|weave"
-IMAGES_FOR_WORKERS="${IMAGES_FOR_ALL}|nginx|yauritux"
-IMAGES_FOR_MASTERS="kube-apiserver|kube-controller-manager|kube-scheduler|etcd|coredns|${IMAGES_FOR_ALL}|(jcmoraisjr.*).*(haproxy-ingress)"
+IMAGES_FOR_WORKERS="${IMAGES_FOR_ALL}|nginx|yauritux|(jcmoraisjr.*).*(haproxy-ingress)"
+IMAGES_FOR_MASTERS="kube-apiserver|kube-controller-manager|kube-scheduler|etcd|coredns|${IMAGES_FOR_ALL}"
 IMAGE_FILES=$(ls ${IMAGES_DIRECTORY}/*.tar)
 
 for FILE in ${IMAGE_FILES}; do
