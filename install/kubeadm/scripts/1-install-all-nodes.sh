@@ -1,7 +1,7 @@
 # Test Connectivity to Loadbalancer
 nc -d lb 6443 && echo "OK" || echo "FAIL"
 
-# Check if there are a route that will be used by kube-proxy to communicate with API Server on Masters with kubernetes service Cluster IP Address (10.96.0.1)
+# Check if there are a route that will be used by Services
 route -n | grep --quiet "10.96.0.0" && echo "OK" || echo "FAIL"
 
 # Update and Get Google Cloud Apt Key
@@ -50,8 +50,7 @@ printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/
 # CRI Config
 sudo crictl config \
   runtime-endpoint unix:///var/run/containerd/containerd.sock \
-  image-endpoint   unix:///var/run/containerd/containerd.sock
-
+  image-endpoint   unix:///var/run/containerd/containerd.sock && \
 sudo crictl images
 
 # Preloading Container Images

@@ -48,7 +48,7 @@ watch -n 3 'kubectl get nodes,pods,services -o wide -n kube-system'
 # https://medium.com/google-cloud/understanding-kubernetes-networking-pods-7117dd28727
 kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 
-# Retrieve token information
+# Retrieve token information from log file
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
 grep "\-\-certificate-key" "${KUBEADM_LOG_FILE}" --before 2 | grep \
   --only-matching \
@@ -65,9 +65,9 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token lz1j48.frem3xul39ykidy1 \
-  --discovery-token-ca-cert-hash sha256:902a634e7fd74eef21c62a5443624f32a9a022ec3c817686a6b9295a31531c63 \
-  --certificate-key ca740f580574aec5e300dd45a214cc697d74e897cf21d2cb1348a5971e7096ed
+  --token zqvyzl.gvjyh9biqqzi02c9 \
+  --discovery-token-ca-cert-hash sha256:288b39766f30e89f7c68740d7e33e3a669dac97648358472b634f880448cd7b4 \
+  --certificate-key 8650849e8edb18eefffc684f29d8a4e46419cc00ea87fd50b66c7cbe6a13eeff
 
 # Optional - Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc
@@ -88,20 +88,4 @@ sudo apt install jq --yes
 # Optional - yq
 sudo snap install yq
 
-# Optional - Ingress HAProxy Controller
-# https://kubernetes.io/docs/concepts/services-networking/ingress/
-# https://github.com/jcmoraisjr/haproxy-ingress
-# https://haproxy-ingress.github.io/docs/getting-started/
-# https://haproxy-ingress.github.io/docs/configuration/keys/
-sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
-
-kubectl create -f https://haproxy-ingress.github.io/resources/haproxy-ingress.yaml
-
-for NODE in $(kubectl get nodes -l node-role.kubernetes.io/master="" --no-headers -o custom-columns="NAME:.metadata.name"); do
-  kubectl label node ${NODE} role=ingress-controller
-done
-
-# Reset Node Config (if needed)
-sudo kubeadm reset --force && \
-sudo rm -rf /etc/cni/net.d && \
-sudo rm -rf ${HOME}/.kube/config
+echo "alias yq='yq -C -P'" >> ~/.bashrc && source ~/.bashrc
