@@ -54,7 +54,7 @@ sudo crictl images
 
 # Preloading Container Images
 if grep --quiet "master" <<< $(hostname --short); then
-  sudo kubeadm config images pull --v 10
+  sudo kubeadm config images pull
 else
   sudo crictl pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
 fi

@@ -10,6 +10,6 @@ sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
 NODE_NAME=$(hostname -s) && \
 sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
-  --token srmffa.43ahrenjxt3hsxor \
-  --discovery-token-ca-cert-hash sha256:ade4239dce6272f7eeb27ed1fd5df7678b5c1ffb1c9ca16dcc4ebbdc141ede59 \
+  --token jiyoc2.aqgayeyf8jwt9m6f \
+  --discovery-token-ca-cert-hash sha256:554c4354d7d996f4da6fb8a55cf6018116cfe406d60d68329b703d8c90b7d32e \
   --v 3

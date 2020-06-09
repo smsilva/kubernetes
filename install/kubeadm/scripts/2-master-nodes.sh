@@ -30,12 +30,12 @@ sudo kubeadm init \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # Copy token information like those 3 lines below and paste at the end of this file and into 3-worker-nodes.sh file.
-  --token srmffa.43ahrenjxt3hsxor \
-  --discovery-token-ca-cert-hash sha256:ade4239dce6272f7eeb27ed1fd5df7678b5c1ffb1c9ca16dcc4ebbdc141ede59 \
-  --certificate-key 5e2d56bbcb8404fc8b8d7756de159919b30734a8dc6f795bd4d5a91a7404c569
+  --token jiyoc2.aqgayeyf8jwt9m6f \
+  --discovery-token-ca-cert-hash sha256:554c4354d7d996f4da6fb8a55cf6018116cfe406d60d68329b703d8c90b7d32e \
+  --certificate-key 13f94a946bf3d174cea31c09d728839f433745b6920fbe3bf15a53551a52ec67
 
 # Watch Nodes and Pods from kube-system namespace
-watch 'kubectl get nodes,pods,services -o wide -n kube-system'
+watch -n 3 'kubectl get nodes,pods,services -o wide -n kube-system'
 
 # Install CNI Plugin
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
@@ -51,9 +51,9 @@ sudo kubeadm join lb:6443 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --v 3 \
-  --token srmffa.43ahrenjxt3hsxor \
-  --discovery-token-ca-cert-hash sha256:ade4239dce6272f7eeb27ed1fd5df7678b5c1ffb1c9ca16dcc4ebbdc141ede59 \
-  --certificate-key 5e2d56bbcb8404fc8b8d7756de159919b30734a8dc6f795bd4d5a91a7404c569
+  --token jiyoc2.aqgayeyf8jwt9m6f \
+  --discovery-token-ca-cert-hash sha256:554c4354d7d996f4da6fb8a55cf6018116cfe406d60d68329b703d8c90b7d32e \
+  --certificate-key 13f94a946bf3d174cea31c09d728839f433745b6920fbe3bf15a53551a52ec67
 
 # Optional - Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc
