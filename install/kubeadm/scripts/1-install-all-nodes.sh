@@ -1,12 +1,12 @@
 # Test Connectivity to Loadbalancer
-nc -dv lb 6443
+nc -d lb 6443 && echo "OK" || echo "FAIL"
 
 # Check if there are a route that will be used by kube-proxy to communicate with API Server on Masters with kubernetes service Cluster IP Address (10.96.0.1)
-route -n | grep "10.96.0.0"; if [[ $? == 0 ]]; then echo "OK"; else echo "FAIL"; fi
+route -n | grep --quiet "10.96.0.0" && echo "OK" || echo "FAIL"
 
 # Update and Get Google Cloud Apt Key
-sudo apt-get update | grep -v -E "^Hit|^Get" && \
-sudo curl -s "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo apt-key add -
+sudo apt-get update | grep --invert-match --extended-regexp "^Hit|^Get" && \
+sudo curl --silent "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo apt-key add -
 
 # Add Kubernetes Repository
 cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
@@ -14,7 +14,7 @@ deb https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
 # Update package list
-sudo apt-get update | grep -v -E "^Hit|^Get"
+sudo apt-get update | grep --invert-match --extended-regexp "^Hit|^Get"
 
 # Set Kubernetes Version
 KUBERNETES_DESIRED_VERSION='1.18' && \
@@ -27,8 +27,10 @@ echo "KUBERNETES_BASE_VERSION....: ${KUBERNETES_BASE_VERSION}" && \
 echo ""
 
 # Install Kubelet, Kubeadm and Kubectl
+SECONDS=0
+
 if grep --quiet "master" <<< $(hostname --short); then
-  sudo apt-get install -y \
+  sudo apt-get install --yes \
     kubeadm="${KUBERNETES_VERSION}" \
     kubelet="${KUBERNETES_VERSION}" \
     kubectl="${KUBERNETES_VERSION}" && \
@@ -37,7 +39,7 @@ if grep --quiet "master" <<< $(hostname --short); then
     kubeadm \
     kubectl
 else
-  sudo apt-get install -y \
+  sudo apt-get install --yes \
     kubeadm="${KUBERNETES_VERSION}" \
     kubelet="${KUBERNETES_VERSION}" && \
   sudo apt-mark hold \
@@ -45,14 +47,20 @@ else
     kubeadm
 fi
 
+printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
+
 # CRI Config
 sudo crictl config \
   runtime-endpoint unix:///var/run/containerd/containerd.sock \
-  image-endpoint unix:///var/run/containerd/containerd.sock
+  image-endpoint   unix:///var/run/containerd/containerd.sock
 
 sudo crictl images
 
 # Preloading Container Images
+#   masters =~ 1 minute 30 seconds
+#   workers < 1 minute
+SECONDS=0
+
 if grep --quiet "master" <<< $(hostname --short); then
   sudo kubeadm config images pull
 else
@@ -62,56 +70,7 @@ fi
 sudo crictl pull docker.io/weaveworks/weave-kube:2.6.4
 sudo crictl pull docker.io/weaveworks/weave-npc:2.6.4
 
+printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
+
+# List Images
 sudo crictl images
-
-# Optional - Copy and Load Images
-# vagrant plugin install vagrant-scp
-# https://blog.scottlowe.org/2020/01/25/manually-loading-container-images-with-containerd/
-
-# Create a directory for image files
-mkdir images
-
-# Copy files to Masters and/or to Workers
-MASTERS=$(vgs | grep running | grep -E "master" | awk '{ print $1 }')
-WORKERS=$(vgs | grep running | grep -E "worker" | awk '{ print $1 }')
-IMAGES_DIRECTORY="/home/silvios/ssd-1/containers/images"
-IMAGES_FOR_ALL="kube-proxy|pause|weave"
-IMAGES_FOR_WORKERS="${IMAGES_FOR_ALL}|nginx|yauritux|(jcmoraisjr.*).*(haproxy-ingress)"
-IMAGES_FOR_MASTERS="kube-apiserver|kube-controller-manager|kube-scheduler|etcd|coredns|${IMAGES_FOR_ALL}"
-IMAGE_FILES=$(ls ${IMAGES_DIRECTORY}/*.tar)
-
-for FILE in ${IMAGE_FILES}; do
-  FILE_NAME="${FILE##*/}"
-  echo "[${FILE_NAME}]"
-  if grep -q -E "${IMAGES_FOR_MASTERS}" <<< "${FILE_NAME}"; then
-    for SERVER in ${MASTERS}; do
-      echo "  ${SERVER}..."
-      vagrant scp ${FILE} ${SERVER}:~/images/ &> /dev/null
-    done
-  fi
-
-  if grep -q -E "${IMAGES_FOR_WORKERS}" <<< "${FILE_NAME}"; then
-    for SERVER in ${WORKERS}; do
-      echo "  ${SERVER}..."
-      vagrant scp ${FILE} ${SERVER}:~/images/ &> /dev/null
-    done
-  fi
-  echo ""
-done
-
-# Import Images
-ls | while read line; do
-  FILE=${line}
-  BASE_NAME=$(awk -F "#" '{ print $1 }' <<< ${FILE##*_})
-  echo "${FILE} --> ${BASE_NAME}"
-  sudo ctr -n=k8s.io images import --base-name "${BASE_NAME}" "${FILE}"
-done
-
-# Preloading Container Images
-if hostname -s | grep "master" &> /dev/null; then
-  sudo kubeadm config images pull --v 3
-else
-  sudo crictl pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
-fi
-
-sudo ctr -n=k8s.io images ls

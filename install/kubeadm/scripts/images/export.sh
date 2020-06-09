@@ -21,13 +21,7 @@ sudo crictl images | awk '{ print "sudo ctr image pull --all-platforms " $1 ":" 
 
 # Export images to tar files
 sudo crictl images | awk '{ print $1 ":" $2 }' | sed '1d' | while read line; do
-FILE_NAME=$(echo $(sed 's/\//_/g; s/:/#/' <<< ${line}).tar)
-echo "${line} --> ${FILE_NAME}"
-sudo ctr image export ${FILE_NAME} $line
+  FILE_NAME=$(echo $(sed 's/\//_/g; s/:/#/' <<< ${line}).tar)
+  echo "${line} --> ${FILE_NAME}"
+  sudo ctr image export ${FILE_NAME} $line
 done
-
-# Remove
-sudo ctr images ls | sed '1d' | awk '{ print $1 }' | while read line; do sudo ctr images remove ${line}; done
-sudo crictl images | sed '1d' | awk '{ print $3 }' | while read line; do sudo crictl rmi ${line}; done
-sudo ctr images ls
-sudo crictl images
