@@ -65,9 +65,9 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token 25jr9f.n5xcucjkc32mszgs \
-  --discovery-token-ca-cert-hash sha256:7c3753fb8578fe37a95ddb62db9fac4c96f8ab526dadba237cd64d944eccedb6 \
-  --certificate-key 5c768a32ea3b0a18e964c824f7c655a326d0a3b0fe80ab4677578665f146c397
+  --token lz1j48.frem3xul39ykidy1 \
+  --discovery-token-ca-cert-hash sha256:902a634e7fd74eef21c62a5443624f32a9a022ec3c817686a6b9295a31531c63 \
+  --certificate-key ca740f580574aec5e300dd45a214cc697d74e897cf21d2cb1348a5971e7096ed
 
 # Optional - Configure Vim to use yaml format a little bit better
 cat <<EOF >> .vimrc
@@ -83,7 +83,7 @@ sudo dpkg -i "${BAT_DEB_FILE}" && rm "${BAT_DEB_FILE}" && \
 echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases && bat --version
 
 # Optional - jq
-sudo apt install jq -y
+sudo apt install jq --yes
 
 # Optional - yq
 sudo snap install yq

@@ -18,7 +18,7 @@ sudo apt-get update | grep --invert-match --extended-regexp "^Hit|^Get"
 
 # Set Kubernetes Version
 KUBERNETES_DESIRED_VERSION='1.18' && \
-KUBERNETES_VERSION="$(echo -n $(sudo apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }'))" && \
+KUBERNETES_VERSION="$(sudo apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }')" && \
 KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}" && \
 echo "" && \
 echo "KUBERNETES_DESIRED_VERSION.: ${KUBERNETES_DESIRED_VERSION}" && \
@@ -27,8 +27,7 @@ echo "KUBERNETES_BASE_VERSION....: ${KUBERNETES_BASE_VERSION}" && \
 echo ""
 
 # Install Kubelet, Kubeadm and Kubectl
-SECONDS=0
-
+SECONDS=0 && \
 if grep --quiet "master" <<< $(hostname --short); then
   sudo apt-get install --yes \
     kubeadm="${KUBERNETES_VERSION}" \
@@ -45,8 +44,7 @@ else
   sudo apt-mark hold \
     kubelet \
     kubeadm
-fi
-
+fi && \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # CRI Config
@@ -59,17 +57,14 @@ sudo crictl images
 # Preloading Container Images
 #   masters =~ 1 minute 30 seconds
 #   workers < 1 minute
-SECONDS=0
-
+SECONDS=0 && \
 if grep --quiet "master" <<< $(hostname --short); then
   sudo kubeadm config images pull
 else
   sudo crictl pull "k8s.gcr.io/kube-proxy:v${KUBERNETES_BASE_VERSION}"
 fi
-
 sudo crictl pull docker.io/weaveworks/weave-kube:2.6.4
 sudo crictl pull docker.io/weaveworks/weave-npc:2.6.4
-
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 # List Images

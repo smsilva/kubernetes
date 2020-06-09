@@ -1,12 +1,11 @@
 - nodes
 - masters
 - workers
-- cm,deploy,rs,ds,po,svc,ep,ing,pv,pvc
+- contexts
 - default namespace
 - create namespace
 - api-resources
-- contexts
-- config default namespace
+- cm,deploy,rs,ds,po,svc,ep,ing,pv,pvc
 - imperative vs declarative
   - nginx:1.18
 - rollout
