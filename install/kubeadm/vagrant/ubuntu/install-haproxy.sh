@@ -27,7 +27,7 @@ mv "${HAPROXY_CONFIG_FILE}" "${HOME}/"
 
 cat <<EOF | tee "${HAPROXY_CONFIG_FILE}"
 frontend apps-nodeport
-    bind ${ADDRESS}:32080
+    bind ${ADDRESS}:32080,${ADDRESS}:32081
     mode http
     default_backend apps-nodeport
 

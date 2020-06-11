@@ -5,7 +5,6 @@ source <(kubectl completion bash)
 alias k=kubectl
 complete -F __start_kubectl k
 EOF
-
 source ~/.bashrc
 
 # WARNING: We should run these commands ONLY on master-1
@@ -35,11 +34,6 @@ sudo kubeadm init \
   --upload-certs | tee "${KUBEADM_LOG_FILE}" && \
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
-# Config
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
 # Watch Nodes and Pods from kube-system namespace
 watch -n 3 'kubectl get nodes,pods,services -o wide -n kube-system'
 
@@ -65,6 +59,6 @@ sudo kubeadm join lb:6443 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token zqvyzl.gvjyh9biqqzi02c9 \
-  --discovery-token-ca-cert-hash sha256:288b39766f30e89f7c68740d7e33e3a669dac97648358472b634f880448cd7b4 \
-  --certificate-key 8650849e8edb18eefffc684f29d8a4e46419cc00ea87fd50b66c7cbe6a13eeff
+  --token ft16yn.ogrktrhdj1zz1zcl \
+  --discovery-token-ca-cert-hash sha256:66431463104a274ab585abfd4aacecc2c5eca233a32de5be80580ca51bc3b0b1 \
+  --certificate-key ae8ec32c61122fab7c554745a85cfeea00b1a318dbc55d39397e4cc3b7b8ce6b
