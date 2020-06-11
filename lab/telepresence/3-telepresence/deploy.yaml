@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-telepresence
+  name: nginx-telepresence
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-telepresence
+  template:
+    metadata:
+      labels:
+        app: nginx-telepresence
+    spec:
+      containers:
+      - image: datawire/telepresence-k8s:0.105
+        name: telepresence-k8s
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        - name: http-debug
+          protocol: TCP
+          containerPort: 8080

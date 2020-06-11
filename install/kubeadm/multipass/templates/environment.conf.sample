@@ -1,0 +1,27 @@
+#!/bin/bash
+export SERVERS=$(echo dns loadbalancer master-{1..3} worker-{1..3})
+
+export DOMAIN_NAME="example.com"
+export IP_NETWORK="THIS_VALUE_WILL_BE_REPLACED_AUTOMATICALLY"
+export IP_NETWORK_REVERSE=$(awk '{print $3,$2,$1 }' FS='.' OFS='.' <<< ${IP_NETWORK})
+
+export DNS_MEMORY="$((1 * 768))M"
+export DNS_CPU_COUNT="1"
+export DNS_DISK_SIZE="30G"
+
+export LOADBALANCER_MEMORY="$((1 * 512))M"
+export LOADBALANCER_CPU_COUNT="1"
+export LOADBALANCER_DISK_SIZE="30G"
+
+export MASTER_MEMORY="$((2 * 1024))M"
+export MASTER_CPU_COUNT="2"
+export MASTER_DISK_SIZE="80G"
+
+export WORKER_MEMORY="$((2 * 1024))M"
+export WORKER_CPU_COUNT="2"
+export WORKER_DISK_SIZE="80G"
+
+export CLOUD_INIT_TARGET_DIRECTORY="cloud-init"
+export CLOUD_INIT_TEMPLATE_DIRECTORY="templates/cloud-init"
+
+export DOLLAR='$'

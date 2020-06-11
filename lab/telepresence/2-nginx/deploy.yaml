@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx:1.18
+        name: nginx
+        ports:
+        - name: http
+          protocol: TCP
+          containerPort: 80
+        - name: http-debug
+          protocol: TCP
+          containerPort: 8080

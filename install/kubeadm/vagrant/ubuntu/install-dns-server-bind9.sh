@@ -10,22 +10,11 @@ IP_DNS=$7
 GLUSTERFS_NODES_COUNT=$8
 GLUSTERFS_IP_START=$9
 
-echo "DOMAIN_NAME...........: ${DOMAIN_NAME}"
-echo "MASTER_IP_START.......: ${MASTER_IP_START}"
-echo "MASTER_NODES_COUNT....: ${MASTER_NODES_COUNT}"
-echo "NODE_IP_START.........: ${NODE_IP_START}"
-echo "WORKER_NODES_COUNT....: ${WORKER_NODES_COUNT}"
-echo "IP_NETWORK............: ${IP_NETWORK}"
-echo "IP_NETWORK_REVERSE....: ${IP_NETWORK_REVERSE}"
-echo "IP_DNS................: ${IP_DNS}"
-echo "GLUSTERFS_NODES_COUNT.: ${GLUSTERFS_NODES_COUNT}"
-echo "GLUSTERFS_IP_START....: ${GLUSTERFS_IP_START}"
-
-apt-get install \
+apt-get install -y -qqq \
   bind9 \
   bind9utils \
   bind9-doc \
-  dnsutils
+  dnsutils  &> /dev/null
 
 mkdir bind && cd bind
 
@@ -135,10 +124,10 @@ mv named.conf.local /etc/bind/
 mv "${FORWARD_FILE}" /etc/bind/
 mv "${REVERSE_FILE}" /etc/bind/
 
-systemctl restart bind9
-systemctl enable bind9
+systemctl restart bind9 &> /dev/null
+systemctl enable bind9 &> /dev/null
 
-ufw allow 53
+ufw allow 53 &> /dev/null
 
 named-checkconf /etc/bind/named.conf.local
 named-checkzone ${DOMAIN_NAME} /etc/bind/"${FORWARD_FILE}"

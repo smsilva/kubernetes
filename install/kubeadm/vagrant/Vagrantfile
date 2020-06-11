@@ -9,10 +9,10 @@ WORKER_NODES_COUNT = 3
 GLUSTERFS_NODES_COUNT = 0
 
 # Memory
-DNS_MEMORY="#{1 * 1024}"
-LOAD_BALANCER_MEMORY="#{1 * 1024}"
-MASTER_NODE_MEMORY_SIZE="#{3 * 1024}"
-WORKER_NODE_MEMORY_SIZE="#{3 * 1024}"
+DNS_MEMORY="#{1 * 256}"
+LOAD_BALANCER_MEMORY="#{1 * 256}"
+MASTER_NODE_MEMORY_SIZE="#{2 * 1024}"
+WORKER_NODE_MEMORY_SIZE="#{2 * 1024}"
 GLUSTER_NODE_MEMORY_SIZE="#{2 * 1024}"
 
 # Network
@@ -26,7 +26,7 @@ IP_LOADBALANCER = "#{IP_NETWORK}" + "#{MASTER_IP_START}"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
-  config.vm.box_version = "20200605.0.0"
+  config.vm.box_version = "20200701.0.0"
   config.vm.box_check_update = false
 
   # DNS
@@ -51,7 +51,7 @@ Vagrant.configure("2") do |config|
 
     node.vm.provision "file", source: "ubuntu/netplan-vagrant-template.yaml", destination: "${HOME}/.netplan-vagrant-template.yaml"
     node.vm.provision "setup-netplan", type: "shell", :path => "ubuntu/setup-netplan.sh" do |s|
-      s.args = ["#{IP_DNS}"]
+      s.args = ["#{IP_DNS}","#{DOMAIN_NAME}","#{IP_DNS}"]
     end
   end
 
@@ -71,14 +71,14 @@ Vagrant.configure("2") do |config|
 
     node.vm.provision "file", source: "ubuntu/netplan-vagrant-template.yaml", destination: "${HOME}/.netplan-vagrant-template.yaml"
     node.vm.provision "setup-netplan", type: "shell", :path => "ubuntu/setup-netplan.sh" do |s|
-      s.args = ["#{IP_LOADBALANCER}"]
+      s.args = ["#{IP_LOADBALANCER}","#{DOMAIN_NAME}","#{IP_DNS}"]
+    end
+
+    node.vm.provision "update-dns", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
+      s.args = ["#{IP_DNS}"]
     end
 
     node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
-    
-    node.vm.provision "update-dns-config", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
-      s.args = ["#{IP_DNS}"]
-    end
 
     node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
 
@@ -107,14 +107,14 @@ Vagrant.configure("2") do |config|
 
       node.vm.provision "file", source: "ubuntu/netplan-vagrant-template.yaml", destination: "${HOME}/.netplan-vagrant-template.yaml"
       node.vm.provision "setup-netplan", type: "shell", :path => "ubuntu/setup-netplan.sh" do |s|
-        s.args = ["#{IP_SERVER}"]
+        s.args = ["#{IP_SERVER}","#{DOMAIN_NAME}","#{IP_DNS}"]
+      end
+
+      node.vm.provision "update-dns", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
+        s.args = ["#{IP_DNS}"]
       end
 
       node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
-
-      node.vm.provision "update-dns-config", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
-        s.args = ["#{IP_DNS}"]
-      end
 
       node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
       node.vm.provision "install-cri", type: "shell", :path => "ubuntu/install-containerd.sh"
@@ -142,14 +142,14 @@ Vagrant.configure("2") do |config|
 
       node.vm.provision "file", source: "ubuntu/netplan-vagrant-template.yaml", destination: "${HOME}/.netplan-vagrant-template.yaml"
       node.vm.provision "setup-netplan", type: "shell", :path => "ubuntu/setup-netplan.sh" do |s|
-        s.args = ["#{IP_SERVER}"]
+        s.args = ["#{IP_SERVER}","#{DOMAIN_NAME}","#{IP_DNS}"]
+      end
+
+      node.vm.provision "update-dns", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
+        s.args = ["#{IP_DNS}"]
       end
 
       node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"
-
-      node.vm.provision "update-dns-config", type: "shell", :path => "ubuntu/update-dns.sh" do |s|
-        s.args = ["#{IP_DNS}"]
-      end
 
       node.vm.provision "update-system", type: "shell", :path => "ubuntu/update-system.sh"
       node.vm.provision "install-cri", type: "shell", :path => "ubuntu/install-containerd.sh"
@@ -182,7 +182,7 @@ Vagrant.configure("2") do |config|
 
       node.vm.provision "file", source: "ubuntu/netplan-vagrant-template.yaml", destination: "${HOME}/.netplan-vagrant-template.yaml"
       node.vm.provision "setup-netplan", type: "shell", :path => "ubuntu/setup-netplan.sh" do |s|
-        s.args = ["#{IP_SERVER}"]
+        s.args = ["#{IP_SERVER}","#{DOMAIN_NAME}","#{IP_DNS}"]
       end
 
       node.vm.provision "update-system-config", type: "shell", :path => "ubuntu/update-system-config.sh"

@@ -1,0 +1,19 @@
+${DOLLAR}TTL    604800
+@       IN      SOA     ${DOMAIN_NAME}. root.${DOMAIN_NAME}. (
+                             21         ; Serial
+                         604820         ; Refresh
+                          864500        ; Retry
+                        2419270         ; Expire
+                         604880 )       ; Negative Cache TTL
+
+;Your Name Server Info
+@        IN      NS      primary.${DOMAIN_NAME}.
+primary  IN      A       ${IP_DNS}
+
+;Reverse Lookup for Your DNS Server
+${IP_LAST_OCTET_DNS}      IN      PTR     primary.${DOMAIN_NAME}.
+
+;PTR Record IP address to HostName
+${IP_LAST_OCTET_DNS}      IN      PTR     dns.${DOMAIN_NAME}.
+${IP_LAST_OCTET_LOADBALANCER}      IN      PTR     lb.${DOMAIN_NAME}.
+${IP_LAST_OCTET_LOADBALANCER}      IN      PTR     loadbalancer.${DOMAIN_NAME}.

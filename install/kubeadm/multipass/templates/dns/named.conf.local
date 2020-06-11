@@ -1,0 +1,9 @@
+zone    "${DOMAIN_NAME}"   {
+        type master;
+        file    "/etc/bind/forward.${DOMAIN_NAME}";
+ };
+
+zone   "${IP_NETWORK_REVERSE}.in-addr.arpa"        {
+       type master;
+       file    "/etc/bind/reverse.${DOMAIN_NAME}";
+ };

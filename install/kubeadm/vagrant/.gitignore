@@ -1,8 +1,0 @@
-log/
-disks/
-.vagrant/
-.vagrant/**/*
-**/*.log
-.vagrant/machines/master-1/virtualbox/vagrant_cwd
-.status
-.running

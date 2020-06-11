@@ -18,3 +18,6 @@ done
 ls ../objects/ingress/*.yaml | while read FILE; do
   vg scp "${FILE}" master-1:/home/vagrant/example/ingress/
 done
+
+curl -Is foo.apps.example.com/v1
+curl -Is nginx.apps.example.com/v2

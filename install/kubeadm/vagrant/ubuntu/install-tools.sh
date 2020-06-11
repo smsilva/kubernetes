@@ -9,27 +9,9 @@ EOF
 BAT_VERSION="0.15.1" && \
 BAT_DEB_FILE="bat_${BAT_VERSION}_amd64.deb" && \
 wget "https://github.com/sharkdp/bat/releases/download/v${BAT_VERSION}/${BAT_DEB_FILE}" \
-  --output-document "${BAT_DEB_FILE}" && \
-sudo dpkg -i "${BAT_DEB_FILE}" && rm "${BAT_DEB_FILE}" && \
-echo "alias cat='bat -p'" >> ~/.bash_aliases && source ~/.bash_aliases && bat --version
-
-# jq
-sudo apt-get install jq --yes && jq --version
-
-# yq
-sudo snap install yq
-
-yq --version
-
-echo "alias yq='yq -C -P'" >> ~/.bashrc && source ~/.bashrc
-
-# ytop
-VERSION="0.6.2"
-
-TAR_FILE="ytop-${VERSION}-x86_64-unknown-linux-gnu.tar.gz"
-
-wget "https://github.com/cjbassi/ytop/releases/download/0.6.2/${TAR_FILE}"
-
-tar xvf "${TAR_FILE}" && \
-mv ytop /usr/bin/ && \
-rm "${TAR_FILE}"
+  --output-document "${BAT_DEB_FILE}" --quiet && \
+sudo dpkg -i "${BAT_DEB_FILE}" &> /dev/null && \
+rm "${BAT_DEB_FILE}" && \
+echo "alias cat='bat -p'" >> ~/.bash_aliases && \
+  source ~/.bash_aliases && \
+  bat --version

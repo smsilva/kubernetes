@@ -1,0 +1,23 @@
+${DOLLAR}TTL    604800
+
+@            IN      SOA primary.${DOMAIN_NAME}. root.primary.${DOMAIN_NAME}. (
+                              6         ; Serial
+                         604820         ; Refresh
+                          86600         ; Retry
+                        2419600         ; Expire
+                         604600 )       ; Negative Cache TTL
+
+;Name Server Information
+@            IN       NS      primary.${DOMAIN_NAME}.
+
+;IP address of Your Domain Name Server(DNS)
+primary      IN       A       ${IP_DNS}
+
+;A Record for Host names
+dns          IN       A       ${IP_DNS}
+lb           IN       A       ${IP_LOADBALANCER}
+loadbalancer IN       CNAME   lb
+masters      IN       CNAME   lb
+k8s          IN       CNAME   lb
+cluster      IN       CNAME   lb
+*.apps       IN       CNAME   lb

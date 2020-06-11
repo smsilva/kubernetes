@@ -1,0 +1,13 @@
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ens4:
+      dhcp4-overrides:
+        route-metric: 10
+      nameservers:
+        search: [${DOMAIN_NAME}]
+        addresses: [${IP_DNS}, 8.8.8.8, 8.8.4.4]
+      routes:
+        - to: 10.96.0.0/16
+          via: ${IP_SERVER}

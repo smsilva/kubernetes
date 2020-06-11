@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: app
+  name: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      volumes:
+      - name: monitor-tool-secret
+        secret:
+          secretName: monitor-tool-secret
+      containers:
+      - image: demo-health:0.0.3
+        name: app
+        resources: {}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /actuator/info
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 60
+      - image: health-check:1.0
+        name: health-check
+        env:
+        - name: INTERVAL
+          value: "10"
+        - name: PORT
+          value: "8080"
+        - name: ENDPOINT
+          value: "/actuator/health"
+        volumeMounts:
+         - name: monitor-tool-secret
+           mountPath: "/etc/health-check/secret"
+           readOnly: true
+        resources:
+          requests:
+            memory: "20Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
