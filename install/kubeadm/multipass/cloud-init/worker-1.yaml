@@ -1,0 +1,3 @@
+#cloud-config
+hostname: worker-1
+fqdn: worker-1.example.com

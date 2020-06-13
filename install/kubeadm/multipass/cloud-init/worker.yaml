@@ -1,0 +1,3 @@
+#cloud-config
+hostname: ${SERVER_HOST_NAME}
+fqdn: ${SERVER_HOST_NAME}.${DOMAIN_NAME}

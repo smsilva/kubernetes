@@ -1,0 +1,3 @@
+#cloud-config
+hostname: dns
+fqdn: dns.example.com

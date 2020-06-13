@@ -1,0 +1,3 @@
+#cloud-config
+hostname: loadbalancer
+fqdn: loadbalancer.example.com
