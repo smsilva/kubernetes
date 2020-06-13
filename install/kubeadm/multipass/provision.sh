@@ -7,8 +7,9 @@ if [ ! -e environment.conf ]; then
   echo "  cp templates/environment.conf.sample environment.conf"
   echo ""
 
-  exit 1
-fi
+for SERVER in dns loadbalancer master-{1..1} worker-{1..1}; do
+  CLOUD_INIT_TEMPLATE_NAME=$(awk -F '-' '{ print $1 }' <<< "${SERVER}")
+  CLOUD_INIT_FILE="cloud-init/${SERVER}.yaml"
 
 log_time() {
   MESSAGE=$1
