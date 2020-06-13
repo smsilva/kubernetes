@@ -1,0 +1,9 @@
+options {
+        directory "/var/cache/bind";
+        auth-nxdomain no;    # conform to RFC1035
+     // listen-on-v6 { any; };
+        listen-on port 53 { localhost; 10.45.144.0/24; };
+        allow-query { localhost; 10.45.144.0/24; };
+        forwarders { 8.8.8.8; };
+        recursion yes;
+        };

@@ -1,6 +1,6 @@
 #cloud-config
-hostname: dns
-fqdn: dns.example.com
+hostname: ${SERVER_HOST_NAME}
+fqdn: ${SERVER_HOST_NAME}.${DOMAIN_NAME}
 
 packages:
  - bind9
