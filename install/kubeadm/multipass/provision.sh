@@ -7,7 +7,7 @@ if [ ! -e environment.conf ]; then
   echo "  cp templates/environment.conf.sample environment.conf"
   echo ""
 
-SERVERS=$(echo dns loadbalancer master-{1..3} worker-{1..3})
+SERVERS=$(echo dns loadbalancer master-{1..1} worker-{1..1})
 
 for SERVER in ${SERVERS}; do
   CLOUD_INIT_TEMPLATE_NAME=$(awk -F '-' '{ print $1 }' <<< "${SERVER}")
@@ -40,7 +40,9 @@ for SERVER in ${SERVERS}; do
   echo ""
 done
 
-printf 'Server were created in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
+printf 'Servers were created in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
+
+echo ""
 
 [ -e shared/dns/servers.conf ] && rm shared/dns/servers.conf
 
@@ -110,8 +112,12 @@ awk '/#.*:.*/ { print $1 }' < "${FILE}" | while read KEY; do
   sed -i "/${KEY}/ d" "${FILE}"
 done
 
-bat "${FILE}"
+cat "${FILE}"
 
 MASTERS=$(./masters.sh | xargs | sed 's/ /;/g')
 
-mp exec loadbalancer -- sudo /shared/loadbalancer/install.sh ${IP_LOADBALANCER} ${DOMAIN_NAME} ${MASTERS}
+multipass exec loadbalancer -- sudo /shared/loadbalancer/install.sh ${IP_LOADBALANCER} ${DOMAIN_NAME} ${MASTERS}
+
+printf 'Provision finished in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
+
+echo ""
