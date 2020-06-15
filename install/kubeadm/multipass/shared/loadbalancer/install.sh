@@ -1,14 +1,10 @@
-#!/bin/bash
-<<<<<<< HEAD
+
 cp "/shared/loadbalancer/haproxy.cfg" "/etc/haproxy/haproxy.cfg"
 
 service haproxy restart
-=======
 set -e
 
-ADDRESS=$1
-DOMAIN_NAME=$2
-SERVERS=$3
+cp "shared/loadbalancer/haproxy.cfg" "/etc/haproxy/haproxy.cfg"
 
 HAPROXY_CONFIG_FILE="/etc/haproxy/haproxy.cfg"
 

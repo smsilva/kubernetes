@@ -112,4 +112,6 @@ done
 
 bat "${FILE}"
 
-mp exec loadbalancer -- /shared/loadbalancer/install.sh ${IP_LOADBALANCER} ${DOMAIN_NAME} ${MASTERS}
+MASTERS=$(./masters.sh | xargs | sed 's/ /;/g')
+
+mp exec loadbalancer -- sudo /shared/loadbalancer/install.sh ${IP_LOADBALANCER} ${DOMAIN_NAME} ${MASTERS}
