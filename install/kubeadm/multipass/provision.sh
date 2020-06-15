@@ -44,6 +44,7 @@ printf 'Servers were created in %d hour %d minute %d seconds\n' $((${SECONDS}/36
 
 echo ""
 
+# DNS
 [ -e shared/dns/servers.conf ] && rm shared/dns/servers.conf
 
 ./list.sh | while read line; do
@@ -115,6 +116,12 @@ done
 cat "${FILE}"
 
 multipass exec loadbalancer -- sudo /shared/loadbalancer/install.sh
+
+# containerd
+for SERVER in $(echo $(./masters.sh) $(./workers.sh)); do
+  echo ${SERVER}
+  multipass exec ${SERVER} -- sudo /shared/containerd/install.sh
+done
 
 printf 'Provision finished in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
