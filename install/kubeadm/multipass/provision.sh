@@ -91,3 +91,25 @@ chmod +x shared/update-system-config-all.sh
 
 shared/dns/setup-resolv.conf-all.sh
 shared/update-system-config-all.sh
+
+# HAProxy
+FILE="shared/loadbalancer/haproxy.cfg"
+
+cat templates/loadbalancer/haproxy.cfg | envsubst > "${FILE}"
+
+awk '/#.*:.*/ { print $1 }' < "${FILE}" | while read KEY; do
+  PORT=$(awk -F ":" '{ print $2 }' <<< "${KEY}")
+  LINE_NUMBER=$(sed -n "/${KEY}/=" "${FILE}")
+
+  ./masters.sh | while read SERVER; do
+    LINE="server ${SERVER} ${SERVER}.${DOMAIN_NAME}:${PORT} check fall 3 rise 2"
+    sed -i "${LINE_NUMBER}i\    ${LINE}" "${FILE}"
+    LINE_NUMBER=$((${LINE_NUMBER} + 1))
+  done
+
+  sed -i "/${KEY}/ d" "${FILE}"
+done
+
+bat "${FILE}"
+
+mp exec loadbalancer -- /shared/loadbalancer/install.sh ${IP_LOADBALANCER} ${DOMAIN_NAME} ${MASTERS}
