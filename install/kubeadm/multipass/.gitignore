@@ -1,0 +1,7 @@
+**/*.log
+.status
+.running
+shared/dns/forward.example.com
+shared/dns/reverse.example.com
+shared/dns/servers.conf
+shared/dns/setup-resolv.conf-all.sh
