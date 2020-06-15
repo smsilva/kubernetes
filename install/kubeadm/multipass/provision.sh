@@ -114,9 +114,7 @@ done
 
 cat "${FILE}"
 
-MASTERS=$(./masters.sh | xargs | sed 's/ /;/g')
-
-multipass exec loadbalancer -- sudo /shared/loadbalancer/install.sh ${IP_LOADBALANCER} ${DOMAIN_NAME} ${MASTERS}
+multipass exec loadbalancer -- sudo /shared/loadbalancer/install.sh
 
 printf 'Provision finished in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 

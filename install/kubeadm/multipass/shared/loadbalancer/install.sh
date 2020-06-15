@@ -4,7 +4,7 @@ cp "/shared/loadbalancer/haproxy.cfg" "/etc/haproxy/haproxy.cfg"
 service haproxy restart
 set -e
 
-cp "shared/loadbalancer/haproxy.cfg" "/etc/haproxy/haproxy.cfg"
+cp "/shared/loadbalancer/haproxy.cfg" "/etc/haproxy/haproxy.cfg"
 
 HAPROXY_CONFIG_FILE="/etc/haproxy/haproxy.cfg"
 
