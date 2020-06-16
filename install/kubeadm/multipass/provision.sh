@@ -22,7 +22,7 @@ for SERVER in ${SERVERS}; do
   SERVER_CPU_COUNT_KEY="${CLOUD_INIT_TEMPLATE_NAME^^}_CPU_COUNT"
   SERVER_DISK_SIZE_KEY="${CLOUD_INIT_TEMPLATE_NAME^^}_DISK_SIZE"
 
-  echo "Server...............................: ${SERVER}.${DOMAIN_NAME} (ip: ${CLOUD_INIT_IP} / vcpu: ${!SERVER_CPU_COUNT_KEY} / mem: ${!SERVER_MEMORY_KEY} / disk: ${!SERVER_DISK_SIZE_KEY})"
+  echo "Server...............................: ${SERVER}.${DOMAIN_NAME} (vcpu: ${!SERVER_CPU_COUNT_KEY} / mem: ${!SERVER_MEMORY_KEY} / disk: ${!SERVER_DISK_SIZE_KEY})"
   echo "cloud-init file......................: ${CLOUD_INIT_FILE}"
   echo "DNS Server IP........................: ${CLOUD_INIT_IP_DNS}"
 
@@ -33,6 +33,12 @@ for SERVER in ${SERVERS}; do
     --name "${SERVER}" \
     --cloud-init "${CLOUD_INIT_FILE}" && \
   multipass mount shared/ "${SERVER}":/shared
+
+  export CLOUD_INIT_IP=$(multipass list | grep -E "^${SERVER}" | awk '{ print $3 }')
+
+  cat "templates/netplan.yaml" | envsubst > "shared/network/60-extra-interfaces-${SERVER}.yaml"
+
+  multipass exec ${SERVER} -- sudo /shared/network/install.sh
 
   echo ""
 done

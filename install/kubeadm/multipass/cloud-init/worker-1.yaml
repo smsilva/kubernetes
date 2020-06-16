@@ -1,8 +1,0 @@
-#cloud-config
-hostname: worker-1
-fqdn: worker-1.example.com
-
-routes:
-  - to: 10.96.0.0/16
-    via: 
-    metric: 3
