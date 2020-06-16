@@ -37,13 +37,12 @@ for SERVER in ${SERVERS}; do
   cat "templates/netplan.yaml" | envsubst > "shared/network/60-extra-interfaces-${SERVER}.yaml"
 
   multipass exec ${SERVER} -- sudo /shared/network/install.sh
+  multipass exec ${SERVER} -- sudo /shared/network/setup-hosts-file.sh ${DOMAIN_NAME}
 
   echo ""
 done
 
 printf 'Servers were created in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
-
-exit 1
 
 # DNS
 [ -e shared/dns/servers.conf ] && rm shared/dns/servers.conf
