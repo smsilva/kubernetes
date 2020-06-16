@@ -1,3 +1,0 @@
-#cloud-config
-hostname: master-3
-fqdn: master-3.example.com

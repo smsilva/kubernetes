@@ -16,17 +16,14 @@ for SERVER in ${SERVERS}; do
   export SERVER_HOST_NAME="${SERVER}"
   export CLOUD_INIT_IP_DNS=$(multipass list | grep -E "^dns" | awk '{ print $3 }')
 
-  cat "cloud-init/templates/${CLOUD_INIT_TEMPLATE_NAME}.yaml" | envsubst > "${CLOUD_INIT_FILE}"
+  cat "templates/cloud-init/${CLOUD_INIT_TEMPLATE_NAME}.yaml" | envsubst > "${CLOUD_INIT_FILE}"
 
   SERVER_MEMORY_KEY="${CLOUD_INIT_TEMPLATE_NAME^^}_MEMORY"
   SERVER_CPU_COUNT_KEY="${CLOUD_INIT_TEMPLATE_NAME^^}_CPU_COUNT"
   SERVER_DISK_SIZE_KEY="${CLOUD_INIT_TEMPLATE_NAME^^}_DISK_SIZE"
 
-  echo "Server...............................: ${SERVER}.${DOMAIN_NAME}"
+  echo "Server...............................: ${SERVER}.${DOMAIN_NAME} (ip: ${CLOUD_INIT_IP} / vcpu: ${!SERVER_CPU_COUNT_KEY} / mem: ${!SERVER_MEMORY_KEY} / disk: ${!SERVER_DISK_SIZE_KEY})"
   echo "cloud-init file......................: ${CLOUD_INIT_FILE}"
-  echo "Memory...............................: ${!SERVER_MEMORY_KEY}"
-  echo "vCPU Count...........................: ${!SERVER_CPU_COUNT_KEY}"
-  echo "Disk Size............................: ${!SERVER_DISK_SIZE_KEY}"
   echo "DNS Server IP........................: ${CLOUD_INIT_IP_DNS}"
 
   multipass launch \
@@ -42,7 +39,7 @@ done
 
 printf 'Servers were created in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
-echo ""
+exit 1
 
 # DNS
 [ -e shared/dns/servers.conf ] && rm shared/dns/servers.conf
