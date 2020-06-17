@@ -38,6 +38,7 @@ for SERVER in ${SERVERS}; do
   cat "templates/netplan.yaml" | envsubst > "shared/network/60-extra-interfaces-${SERVER}.yaml"
 
   multipass exec ${SERVER} -- sudo /shared/network/install.sh
+  multipass exec ${SERVER} -- sudo /shared/network/setup-hosts-file.sh ${DOMAIN_NAME}
 
   echo ""
 done
@@ -96,6 +97,7 @@ shared/dns/setup-resolv.conf-all.sh
 shared/update-system-config-all.sh
 
 # HAProxy
+# https://www.haproxy.com/blog/the-four-essential-sections-of-an-haproxy-configuration/
 FILE="shared/loadbalancer/haproxy.cfg"
 
 cat templates/loadbalancer/haproxy.cfg | envsubst > "${FILE}"
@@ -105,7 +107,7 @@ awk '/#.*:.*/ { print $1 }' < "${FILE}" | while read KEY; do
   LINE_NUMBER=$(sed -n "/${KEY}/=" "${FILE}")
 
   ./masters.sh | while read SERVER; do
-    LINE="server ${SERVER} ${SERVER}.${DOMAIN_NAME}:${PORT} check fall 3 rise 2"
+    LINE="server ${SERVER} ${SERVER}.${DOMAIN_NAME} cookie ${SERVER}"
     sed -i "${LINE_NUMBER}i\    ${LINE}" "${FILE}"
     LINE_NUMBER=$((${LINE_NUMBER} + 1))
   done
