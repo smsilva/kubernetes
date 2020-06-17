@@ -7,6 +7,7 @@ if [ ! -e environment.conf ]; then
   echo "  cp templates/environment.conf.sample environment.conf"
   echo ""
 
+# List Servers that need to be created
 SERVERS=$(echo dns loadbalancer master-{1..1} worker-{1..1})
 
 for SERVER in ${SERVERS}; do
@@ -37,7 +38,6 @@ for SERVER in ${SERVERS}; do
   cat "templates/netplan.yaml" | envsubst > "shared/network/60-extra-interfaces-${SERVER}.yaml"
 
   multipass exec ${SERVER} -- sudo /shared/network/install.sh
-  multipass exec ${SERVER} -- sudo /shared/network/setup-hosts-file.sh ${DOMAIN_NAME}
 
   echo ""
 done
