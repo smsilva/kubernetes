@@ -120,11 +120,14 @@ cat "${FILE}"
 multipass exec loadbalancer -- sudo /shared/loadbalancer/install.sh
 
 # Updat host /etc/hosts file
-IP_LOADBALANCER_MULTIPASS=$(mp list | grep -E "^loadbalancer" | awk '{ print $3 }') && \
-IP_LOADBALANCER_ETC_HOSTS=$(grep -E 'haproxy' /etc/hosts | awk '{ print $1 }') && \
-echo "IP_LOADBALANCER_MULTIPASS...: ${IP_LOADBALANCER_MULTIPASS}" && \
-echo "IP_LOADBALANCER_ETC_HOSTS...: ${IP_LOADBALANCER_ETC_HOSTS}" && \
+IP_LOADBALANCER_MULTIPASS=$(mp list | grep -E "^loadbalancer" | awk '{ print $3 }')
+
+sudo sed -i "/.*example.com.*/ d" /etc/hosts
 sudo sed -i "s/${IP_LOADBALANCER_ETC_HOSTS}/${IP_LOADBALANCER_MULTIPASS}/g" /etc/hosts
+
+for SERVER in $(echo {haproxy,nginx,foo,bar}.example.com); do
+  echo "${IP_LOADBALANCER_MULTIPASS} ${SERVER}" | sudo tee -a /etc/hosts
+done
 
 # containerd
 for SERVER in $(echo $(./masters.sh) $(./workers.sh)); do
