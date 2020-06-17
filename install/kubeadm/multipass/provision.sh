@@ -14,8 +14,7 @@ for SERVER in ${SERVERS}; do
   CLOUD_INIT_FILE="cloud-init/${SERVER}.yaml"
 
   export SERVER_HOST_NAME="${SERVER}"
-  export CLOUD_INIT_IP_DNS=$(multipass list | grep -E "^dns" | awk '{ print $3 }')
-
+  
   cat "templates/cloud-init/${CLOUD_INIT_TEMPLATE_NAME}.yaml" | envsubst > "${CLOUD_INIT_FILE}"
 
   SERVER_MEMORY_KEY="${CLOUD_INIT_TEMPLATE_NAME^^}_MEMORY"
@@ -32,6 +31,7 @@ for SERVER in ${SERVERS}; do
     --cloud-init "${CLOUD_INIT_FILE}" && \
   multipass mount shared/ "${SERVER}":/shared
 
+  export CLOUD_INIT_IP_DNS=$(multipass list | grep -E "^dns" | awk '{ print $3 }')
   export CLOUD_INIT_IP=$(multipass list | grep -E "^${SERVER}" | awk '{ print $3 }')
 
   cat "templates/netplan.yaml" | envsubst > "shared/network/60-extra-interfaces-${SERVER}.yaml"
