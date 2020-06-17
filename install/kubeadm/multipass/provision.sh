@@ -119,6 +119,13 @@ cat "${FILE}"
 
 multipass exec loadbalancer -- sudo /shared/loadbalancer/install.sh
 
+# Updat host /etc/hosts file
+IP_LOADBALANCER_MULTIPASS=$(mp list | grep -E "^loadbalancer" | awk '{ print $3 }') && \
+IP_LOADBALANCER_ETC_HOSTS=$(grep -E 'haproxy' /etc/hosts | awk '{ print $1 }') && \
+echo "IP_LOADBALANCER_MULTIPASS...: ${IP_LOADBALANCER_MULTIPASS}" && \
+echo "IP_LOADBALANCER_ETC_HOSTS...: ${IP_LOADBALANCER_ETC_HOSTS}" && \
+sudo sed -i "s/${IP_LOADBALANCER_ETC_HOSTS}/${IP_LOADBALANCER_MULTIPASS}/g" /etc/hosts
+
 # containerd
 for SERVER in $(echo $(./masters.sh) $(./workers.sh)); do
   echo ${SERVER}
@@ -128,10 +135,3 @@ done
 printf 'Provision finished in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
 
 echo ""
-
-# Updat host /etc/hosts file
-IP_LOADBALANCER_MULTIPASS=$(mp list | grep -E "^loadbalancer" | awk '{ print $3 }') && \
-IP_LOADBALANCER_ETC_HOSTS=$(grep -E 'haproxy' /etc/hosts | awk '{ print $1 }') && \
-echo "IP_LOADBALANCER_MULTIPASS...: ${IP_LOADBALANCER_MULTIPASS}" && \
-echo "IP_LOADBALANCER_ETC_HOSTS...: ${IP_LOADBALANCER_ETC_HOSTS}" && \
-sudo sed -i "s/${IP_LOADBALANCER_ETC_HOSTS}/${IP_LOADBALANCER_MULTIPASS}/g" /etc/hosts
