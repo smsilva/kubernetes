@@ -1,9 +1,14 @@
 #!/bin/bash
-./check-environment-variables.sh
+. ./check-environment-variables.sh
+
+if [ -z "${CLOUD_INIT_TARGET_DIRECTORY}" ]; then
+  echo "You need to configure CLOUD_INIT_TARGET_DIRECTORY parameter in source environment.conf file."
+  exit 1
+fi
+
+[ -e "${CLOUD_INIT_TARGET_DIRECTORY}" ] && rm -rf "${CLOUD_INIT_TARGET_DIRECTORY}"
 
 mkdir --parents "${CLOUD_INIT_TARGET_DIRECTORY}"
-
-rm -rf "${CLOUD_INIT_TARGET_DIRECTORY}/*.yaml"
 
 for SERVER in ${SERVERS}; do
   export SERVER_HOST_NAME="${SERVER}"

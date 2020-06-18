@@ -1,5 +1,5 @@
 #!/bin/bash
-./check-environment-variables.sh
+. ./check-environment-variables.sh
 
 for SERVER in ${SERVERS}; do
   SERVER_PREFIX_KEY_NAME=$(awk -F '-' '{ print $1 }' <<< "${SERVER}")
