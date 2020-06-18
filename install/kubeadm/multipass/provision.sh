@@ -7,6 +7,8 @@ if [ ! -e environment.conf ]; then
   echo "  cp templates/environment.conf.sample environment.conf"
   echo ""
 
+mkdir -p cloud-init
+
 # List Servers that need to be created
 SERVERS=$(echo dns loadbalancer master-{1..1} worker-{1..1})
 
