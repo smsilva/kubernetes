@@ -4,6 +4,8 @@ cat <<EOF | tee --append ~/.bashrc
 source <(kubectl completion bash)
 alias k=kubectl
 complete -F __start_kubectl k
+
+alias cat='bat -p'
 EOF
 source ~/.bashrc
 
