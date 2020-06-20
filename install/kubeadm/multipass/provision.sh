@@ -7,7 +7,29 @@ if [ ! -e environment.conf ]; then
   echo "  cp templates/environment.conf.sample environment.conf"
   echo ""
 
-mkdir -p cloud-init
+. ./generate-cloud-init-files.sh
+
+echo ""
+
+. ./create-servers.sh
+
+echo ""
+
+. ./list.sh
+
+echo ""
+
+$(./set-environment-variables-with-servers-information.sh)
+
+echo ""
+
+env | grep IP_
+
+echo ""
+
+. ./network-config.sh
+
+exit 0
 
 # List Servers that need to be created
 SERVERS=$(echo dns loadbalancer master-{1..1} worker-{1..1})
