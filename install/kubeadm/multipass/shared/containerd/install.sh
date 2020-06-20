@@ -16,7 +16,7 @@ EOF
 
 sysctl --system &> /dev/null
 
-## Set up the repository
+## Setting up the repository
 ### Install packages to allow apt to use a repository over HTTPS
 apt-get update -qqq && \
   apt-get install -y -qqq \
