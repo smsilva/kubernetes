@@ -10,7 +10,7 @@ for SERVER in ${SERVERS}; do
 
   echo "${SERVER}.${DOMAIN_NAME} (vcpu: ${!SERVER_CPU_COUNT_KEY} / mem: ${!SERVER_MEMORY_KEY} / disk: ${!SERVER_DISK_SIZE_KEY})"
 
-  if [[ ! $(multipass info "${SERVER}") ]]; then
+  if ! ./list.sh | grep -q -E ${SERVER}; then
     multipass launch \
       --cpus "${!SERVER_CPU_COUNT_KEY}" \
       --disk "${!SERVER_DISK_SIZE_KEY}" \

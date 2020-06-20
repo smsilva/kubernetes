@@ -16,6 +16,6 @@ $(./set-environment-variables-with-servers-information.sh)
 . ./setup-loadbalancer-haproxy.sh
 . ./update-system-config.sh
 . ./setup-cri-containerd.sh
-. ./update-host-etc-hosts.sh
+. ./setup-masters-tools.sh
 
 printf 'Provision finished in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
