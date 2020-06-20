@@ -7,27 +7,12 @@ if [ ! -e environment.conf ]; then
   echo "  cp templates/environment.conf.sample environment.conf"
   echo ""
 
-. ./generate-cloud-init-files.sh
-
-echo ""
-
-. ./create-servers.sh
-
-echo ""
-
-. ./list.sh
-
-echo ""
-
-$(./set-environment-variables-with-servers-information.sh)
-
-echo ""
-
-env | grep IP_
-
-echo ""
-
-. ./network-config.sh
+. ./generate-cloud-init-files.sh && echo ""
+. ./create-servers.sh && echo ""
+. ./list.sh && echo ""
+$(./set-environment-variables-with-servers-information.sh) && echo ""
+. ./setup-netplan.sh && echo ""
+. ./setup-hosts-file.sh && echo ""
 
 exit 0
 
