@@ -6,5 +6,4 @@ for SERVER in ${SERVERS}; do
 
   multipass exec ${SERVER} -- sudo sed -e "s/.*${SERVER}.*/${IPV4_ADDRESS} ${SERVER} ${SERVER}.${DOMAIN_NAME} ${SERVER}.local/" -i /etc/hosts
   multipass exec ${SERVER} -- sudo hostnamectl set-hostname "${SERVER}.${DOMAIN_NAME}"
-  multipass exec ${SERVER} -- cat /etc/hosts
 done
