@@ -2,11 +2,13 @@
 . ./check-environment-variables.sh
 
 for SERVER in ${SERVERS}; do
-  SERVER_IP_KEY_NAME=$(echo IP_${SERVER^^} | sed 's/-/_/')
-  SERVER_IP=${!SERVER_IP_KEY_NAME}
+  IP_SERVER_KEY_NAME=$(echo IP_${SERVER^^} | sed 's/-/_/')
+  export IP_SERVER=${!IP_SERVER_KEY_NAME}
 
-  cat "templates/netplan.yaml" | envsubst | sed "s/IP_SERVER/${SERVER_IP}/g" > "shared/network/netplan-template-${SERVER}.yaml"
+  NETPLAN_TEMPLATE_FILE="shared/network/netplan-template-${SERVER}.yaml"
 
-  multipass exec ${SERVER} -- sudo cp "/shared/network/netplan-template-${SERVER}.yaml" "/etc/netplan/60-${SERVER}.yaml"
+  cat "templates/netplan.yaml" | envsubst > "${NETPLAN_TEMPLATE_FILE}"
+
+  multipass exec ${SERVER} -- sudo cp "/${NETPLAN_TEMPLATE_FILE}" "/etc/netplan/60-${SERVER}.yaml"
   multipass exec ${SERVER} -- sudo netplan apply 
 done
