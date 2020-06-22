@@ -5,7 +5,7 @@ if [ ! -e environment.conf ]; then
   echo "You should create a environment.conf file. Try to start cloning templates/environment.conf.sample file."
   echo ""
   echo "  cp templates/environment.conf.sample environment.conf"
-  echo ""
+fi
 
 . ./generate-cloud-init-files.sh
 . ./create-servers.sh
