@@ -22,4 +22,7 @@ $(./set-environment-variables-with-servers-information.sh)
 . ./setup-cri-containerd.sh
 . ./setup-masters-tools.sh
 
-printf 'Provision finished in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
+  printf 'Provision finished in %d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))
+}
+
+provision | tee provision.log
