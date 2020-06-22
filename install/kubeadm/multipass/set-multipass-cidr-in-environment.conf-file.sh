@@ -21,9 +21,6 @@ config_environment_conf_file() {
   MULTIPASS_PRIMARY_MACHINE_IP=$(multipass list | grep -E "^primary" | awk '{ print $3 }')
   MULTIPASS_PRIMARY_MACHINE_IP_BASE="${MULTIPASS_PRIMARY_MACHINE_IP%.*}"
 
-  echo "MULTIPASS_PRIMARY_MACHINE_IP......: ${MULTIPASS_PRIMARY_MACHINE_IP}" && \
-  echo "MULTIPASS_PRIMARY_MACHINE_IP_BASE.: ${MULTIPASS_PRIMARY_MACHINE_IP_BASE}" && \
-
   sed --in-place "/.*IP_NETWORK=.*/ s/=.*/=\"${MULTIPASS_PRIMARY_MACHINE_IP_BASE}.0\/24\"/" environment.conf
 
   echo "done"
