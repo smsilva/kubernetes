@@ -22,8 +22,6 @@ config_environment_conf_file() {
   MULTIPASS_PRIMARY_MACHINE_IP_BASE="${MULTIPASS_PRIMARY_MACHINE_IP%.*}"
 
   sed --in-place "/.*IP_NETWORK=.*/ s/=.*/=\"${MULTIPASS_PRIMARY_MACHINE_IP_BASE}.0\/24\"/" environment.conf
-
-  echo "done"
 }
 
 if ! multipass list | grep -E "^primary" -q; then

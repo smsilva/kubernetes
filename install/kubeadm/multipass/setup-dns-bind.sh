@@ -17,16 +17,8 @@ for SERVER in ${SERVERS}; do
     IP_VALUE="${!IP_KEY}"
     IP_LAST_OCTET_VALUE="${!IP_LAST_OCTET_KEY}"
 
-    echo "SERVER..................: ${SERVER}"
-    echo "SERVER_NAME_FOR_KEY.....: ${SERVER_NAME_FOR_KEY}"
-    echo "IP_KEY..................: ${IP_KEY}"
-    echo "IP_LAST_OCTET_KEY.......: ${IP_LAST_OCTET_KEY}"
-    echo "IP_VALUE................: ${IP_VALUE}"
-    echo "IP_LAST_OCTET_VALUE.....: ${IP_LAST_OCTET_VALUE}"
-
     echo "${SERVER}     IN       A       ${IP_VALUE}" >> shared/dns/${FORWARD_FILE}
     echo "${IP_LAST_OCTET_VALUE}      IN      PTR     ${SERVER}.${DOMAIN_NAME}." >> shared/dns/${REVERSE_FILE}
-    echo ""
   fi
 done
 

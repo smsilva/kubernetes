@@ -20,6 +20,4 @@ awk '/#.*:.*/ { print $1 }' < "${FILE}" | while read KEY; do
   sed -i "/${KEY}/ d" "${FILE}"
 done
 
-cat "${FILE}"
-
 multipass exec loadbalancer -- sudo /shared/loadbalancer/install.sh

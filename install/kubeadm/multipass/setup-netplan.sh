@@ -10,5 +10,5 @@ for SERVER in ${SERVERS}; do
   cat "templates/netplan.yaml" | envsubst > "${NETPLAN_TEMPLATE_FILE}"
 
   multipass exec ${SERVER} -- sudo cp "/${NETPLAN_TEMPLATE_FILE}" "/etc/netplan/60-${SERVER}.yaml"
-  multipass exec ${SERVER} -- sudo netplan apply 
+  multipass exec ${SERVER} -- sudo netplan apply
 done
