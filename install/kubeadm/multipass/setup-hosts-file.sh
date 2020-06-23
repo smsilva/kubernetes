@@ -7,7 +7,7 @@ for SERVER in ${SERVERS}; do
   multipass exec ${SERVER} -- sudo sed \
     -e "/${SERVER}/d" \
     -e "2i${SERVER_IP} ${SERVER} ${SERVER}.${DOMAIN_NAME} ${SERVER}.local" \
-    -e "3i127.0.0.1 ${SERVER}" \
+    -e "3i127.0.0.1 localhost" \
     -i /etc/hosts
 
   multipass exec ${SERVER} -- sudo hostnamectl set-hostname "${SERVER}.${DOMAIN_NAME}"
