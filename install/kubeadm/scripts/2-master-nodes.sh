@@ -54,6 +54,9 @@ watch -n 3 'kubectl get nodes,ds,pods,services -o wide -A'
 # kubectl apply -f "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
 kubectl apply -f "https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml"
 
+# Optional
+sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
+
 # Retrieve token information from log file
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
 grep '\-\-certificate-key' "${KUBEADM_LOG_FILE?}" --before 2 | grep \
