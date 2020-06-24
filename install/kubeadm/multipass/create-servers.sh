@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 . ./check-environment-variables.sh
 
 for SERVER in ${SERVERS}; do

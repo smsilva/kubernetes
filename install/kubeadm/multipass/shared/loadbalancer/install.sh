@@ -1,4 +1,4 @@
-
+#!/bin/bash
 cp "/shared/loadbalancer/haproxy.cfg" "/etc/haproxy/haproxy.cfg"
 
 service haproxy restart
@@ -82,4 +82,3 @@ echo "HAPROXY_CONFIG_FILE.: ${HAPROXY_CONFIG_FILE}"
 # cat "${HAPROXY_CONFIG_FILE}"
 
 # service haproxy restart
->>>>>>> fb19243 (Configurações para o HAProxy)
