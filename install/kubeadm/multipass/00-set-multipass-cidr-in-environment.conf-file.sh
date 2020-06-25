@@ -24,28 +24,30 @@ config_environment_conf_file() {
   sed --in-place "/.*IP_NETWORK=.*/ s/=.*/=\"${MULTIPASS_PRIMARY_MACHINE_IP_BASE}.0\/24\"/" environment.conf
 }
 
-if ! multipass list | grep -E "^primary" -q; then
-  primary_create
+if grep -q "THIS_VALUE_WILL_BE_REPLACED_AUTOMATICALLY" environment.conf; then
+  if ! multipass list | grep -E "^primary" -q; then
+    primary_create
+  fi
+  
+  STATUS=$(primary_status)
+  
+  if [ ${STATUS} == "Stopped" ]; then
+    primary_start
+  
+    for ((n=1; n <= 10; n++)); do
+      STATUS=$(primary_status)
+  
+      if [ ${STATUS} == "Running" ]; then
+        break
+      else
+        echo "Primary Multipass Machine Status (${n}): ${STATUS}"
+      fi
+  
+      sleep 2
+    done
+  fi
+  
+  config_environment_conf_file
+  
+  primary_stop
 fi
-
-STATUS=$(primary_status)
-
-if [ ${STATUS} == "Stopped" ]; then
-  primary_start
-
-  for ((n=1; n <= 10; n++)); do
-    STATUS=$(primary_status)
-
-    if [ ${STATUS} == "Running" ]; then
-      break
-    else
-      echo "Primary Multipass Machine Status (${n}): ${STATUS}"
-    fi
-
-    sleep 2
-  done
-fi
-
-config_environment_conf_file
-
-primary_stop
