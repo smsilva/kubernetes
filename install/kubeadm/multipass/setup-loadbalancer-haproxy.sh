@@ -1,6 +1,8 @@
 #!/bin/bash
 . ./check-environment-variables.sh
 
+./wait-for-running.sh loadbalancer
+
 # HAProxy
 # https://www.haproxy.com/blog/the-four-essential-sections-of-an-haproxy-configuration/
 FILE="shared/loadbalancer/haproxy.cfg"
