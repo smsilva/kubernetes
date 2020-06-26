@@ -1,6 +1,8 @@
 #!/bin/bash
 . ./check-environment-variables.sh
 
+mkdir -p shared/network
+
 for SERVER in ${SERVERS}; do
   IP_SERVER_KEY_NAME=$(echo IP_${SERVER^^} | sed 's/-/_/')
   export IP_SERVER=${!IP_SERVER_KEY_NAME}
