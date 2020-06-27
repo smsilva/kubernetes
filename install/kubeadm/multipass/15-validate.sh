@@ -58,6 +58,20 @@ check_command() {
   fi
 }
 
+check_images() {
+  SERVER=$1
+
+  if [[ ${SERVER} =~ ^master|^worker ]]; then
+    if [[ $(check_command ${SERVER} crictl) == "YES" ]]; then
+      echo "Y-1"
+    else
+      echo "CRICTL NOT INSTALLED"
+    fi
+  else
+    echo "${EMPTY_RESPONSE}"
+  fi
+}
+
 execute() {
   for SERVER in ${SERVERS}; do
     VALIDATION_DNS=$(check_dns_reponse ${SERVER})
@@ -65,12 +79,21 @@ execute() {
     VALIDATION_CONTAINERD=$(check_containerd ${SERVER})
     VALIDATION_CONTROL_PLANE_PORT=$(check_control_plane_port ${SERVER})
     VALIDATION_KUBEADM=$(check_command ${SERVER} kubeadm)
+    VALIDATION_KUBELET=$(check_command ${SERVER} kubelet)
+    VALIDATION_KUBECTL=$(check_command ${SERVER} kubectl)
+    VALIDATION_IMAGES=$(check_images ${SERVER})
   
-    echo "${SERVER};${VALIDATION_DNS};${VALIDATION_ROUTE};${VALIDATION_CONTAINERD};${VALIDATION_CONTROL_PLANE_PORT};${VALIDATION_KUBEADM}"
+    echo "${SERVER};${VALIDATION_DNS};${VALIDATION_ROUTE};${VALIDATION_CONTAINERD};${VALIDATION_CONTROL_PLANE_PORT};${VALIDATION_KUBEADM};${VALIDATION_KUBELET};${VALIDATION_KUBECTL};${VALIDATION_IMAGES}"
   done
 }
 
-HEADER_LINE_1="SERVER;DNS;ROUTE;CONTAINERD;LB_PORT_6443;KUBEADM"
-HEADER_LINE_2="=============;=====;=====;=============;==============;======="
+HEADER_LINE_1="SERVER;DNS;ROUTE;CONTAINERD;LB_PORT_6443;KUBEADM;KUBELET;KUBECTL;IMAGES"
+HEADER_LINE_2="=============;=====;=====;=============;==============;=======;=======;=======;===================="
+
+SECONDS=0
 
 execute | sed -e "1i${HEADER_LINE_1}" -e "1i${HEADER_LINE_2}" | column -t -s ";"
+
+echo ""
+
+printf 'Elapsed time: %02d:%02d:%02d\n' $((${SECONDS} / 3600)) $((${SECONDS} % 3600 / 60)) $((${SECONDS} % 60))
