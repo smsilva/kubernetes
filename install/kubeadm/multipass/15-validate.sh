@@ -34,14 +34,18 @@ check_control_plane_port() {
   SERVER=$1
 
   if [[ ${SERVER} =~ ^master|^worker ]]; then
-    multipass exec ${SERVER} -- curl -Is lb:6443
+    multipass exec ${SERVER} -- curl -Is lb:6443 > /dev/null
 
     COMMAND_RESPONSE_CODE=$?
 
     if [[ ${COMMAND_RESPONSE_CODE} == 52 ]]; then
       echo "EMPTY RESPONSE"
     else
-      echo "CODE: ${COMMAND_RESPONSE_CODE}"
+      if [[ ${COMMAND_RESPONSE_CODE} == 0 ]]; then
+        echo "UP"
+      else
+        echo "CODE: ${COMMAND_RESPONSE_CODE}"
+      fi
     fi
   else
     echo "${EMPTY_RESPONSE}"
@@ -85,10 +89,10 @@ check_images() {
 
         IMAGE_COUNT=$(multipass exec ${SERVER} -- sudo crictl images | sed 1d | awk '{ print $1 }' | grep -E "${IMAGES}" | wc -l)
 
-        if (( ${IMAGE_COUNT} != ${EXPECTED_IMAGE_COUNT} )); then
+        if (( ${IMAGE_COUNT} < ${EXPECTED_IMAGE_COUNT} )); then
           echo "AVAILABLE/EXPECTED: ${IMAGE_COUNT}/${EXPECTED_IMAGE_COUNT}"
         else
-          echo "OK (${IMAGE_COUNT})"
+          echo "OK (${IMAGE_COUNT}/${EXPECTED_IMAGE_COUNT})"
         fi
       else
         echo "runtime-endpoint not set"
@@ -117,7 +121,7 @@ execute() {
 }
 
 HEADER_LINE_1="SERVER;DNS;ROUTE;CONTAINERD;LB_PORT_6443;KUBEADM;KUBELET;KUBECTL;IMAGES"
-HEADER_LINE_2="=============;=====;=====;=============;==============;=======;=======;=======;===================="
+HEADER_LINE_2="=============;=====;=====;=============;==============;=======;=======;=======;======================="
 
 SECONDS=0
 
