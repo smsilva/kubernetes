@@ -8,7 +8,12 @@ check_dns_reponse() {
 
 check_route() {
   SERVER=$1
-  multipass exec ${SERVER} -- route -n | grep --quiet "10.96.0.0" && echo "OK" || echo "FAIL"
+
+  if [[ ${SERVER} =~ ^master|^worker ]]; then
+    multipass exec ${SERVER} -- route -n | grep --quiet "10.96.0.0" && echo "OK" || echo "FAIL"
+  else
+    echo "${EMPTY_RESPONSE}"
+  fi
 }
 
 check_containerd() {
@@ -80,7 +85,7 @@ execute() {
     VALIDATION_CONTROL_PLANE_PORT=$(check_control_plane_port ${SERVER})
     VALIDATION_KUBEADM=$(check_command ${SERVER} kubeadm)
     VALIDATION_KUBELET=$(check_command ${SERVER} kubelet)
-    VALIDATION_KUBECTL=$(check_command ${SERVER} kubectl)
+    [[ ${SERVER} =~ ^master ]] && VALIDATION_KUBECTL=$(check_command ${SERVER} kubectl) || VALIDATION_KUBECTL="${EMPTY_RESPONSE}"
     VALIDATION_IMAGES=$(check_images ${SERVER})
   
     echo "${SERVER};${VALIDATION_DNS};${VALIDATION_ROUTE};${VALIDATION_CONTAINERD};${VALIDATION_CONTROL_PLANE_PORT};${VALIDATION_KUBEADM};${VALIDATION_KUBELET};${VALIDATION_KUBECTL};${VALIDATION_IMAGES}"
