@@ -66,9 +66,33 @@ check_command() {
 check_images() {
   SERVER=$1
 
+  MASTER_IMAGES="k8s.gcr.io/coredns|k8s.gcr.io/etcd|k8s.gcr.io/kube-apiserver|k8s.gcr.io/kube-controller-manager|k8s.gcr.io/kube-proxy|k8s.gcr.io/kube-scheduler|k8s.gcr.io/pause"
+  WORKER_IMAGES="k8s.gcr.io/kube-proxy"
+
   if [[ ${SERVER} =~ ^master|^worker ]]; then
     if [[ $(check_command ${SERVER} crictl) == "YES" ]]; then
-      echo "Y-1"
+      RUNTIME_ENDPOINT=$(multipass exec ${SERVER} -- sudo crictl config --get runtime-endpoint)
+
+      if [ -n "${RUNTIME_ENDPOINT}" ]; then
+        if [[ ${SERVER} =~ ^master ]]; then
+          IMAGES="${MASTER_IMAGES}"
+        else
+          IMAGES="${WORKER_IMAGES}"
+        fi
+
+        IMAGES_WITHOUT_SEPARATOR=$(sed 's/|//g' <<< "${IMAGES}")
+        EXPECTED_IMAGE_COUNT=$((${#IMAGES} - ${#IMAGES_WITHOUT_SEPARATOR} + 1))
+
+        IMAGE_COUNT=$(multipass exec ${SERVER} -- sudo crictl images | sed 1d | awk '{ print $1 }' | grep -E "${IMAGES}" | wc -l)
+
+        if (( ${IMAGE_COUNT} != ${EXPECTED_IMAGE_COUNT} )); then
+          echo "AVAILABLE/EXPECTED: ${IMAGE_COUNT}/${EXPECTED_IMAGE_COUNT}"
+        else
+          echo "OK (${IMAGE_COUNT})"
+        fi
+      else
+        echo "runtime-endpoint not set"
+      fi
     else
       echo "CRICTL NOT INSTALLED"
     fi
