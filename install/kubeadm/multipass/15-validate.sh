@@ -43,18 +43,34 @@ check_control_plane_port() {
   fi
 }
 
+check_command() {
+  SERVER=$1
+  COMMAND=$2
+
+  if [[ ${SERVER} =~ ^master|^worker ]]; then
+    if multipass exec ${SERVER} -- which ${COMMAND} > /dev/null; then
+      echo "YES"
+    else
+      echo "NO"
+    fi
+  else
+    echo "${EMPTY_RESPONSE}"
+  fi
+}
+
 execute() {
   for SERVER in ${SERVERS}; do
     VALIDATION_DNS=$(check_dns_reponse ${SERVER})
     VALIDATION_ROUTE=$(check_route ${SERVER})
     VALIDATION_CONTAINERD=$(check_containerd ${SERVER})
     VALIDATION_CONTROL_PLANE_PORT=$(check_control_plane_port ${SERVER})
+    VALIDATION_KUBEADM=$(check_command ${SERVER} kubeadm)
   
-    echo "${SERVER};${VALIDATION_DNS};${VALIDATION_ROUTE};${VALIDATION_CONTAINERD};${VALIDATION_CONTROL_PLANE_PORT}"
+    echo "${SERVER};${VALIDATION_DNS};${VALIDATION_ROUTE};${VALIDATION_CONTAINERD};${VALIDATION_CONTROL_PLANE_PORT};${VALIDATION_KUBEADM}"
   done
 }
 
-HEADER_LINE_1="SERVER;DNS;ROUTE;CONTAINERD;LB_PORT_6443"
-HEADER_LINE_2="=============;=====;=====;=============;=============="
+HEADER_LINE_1="SERVER;DNS;ROUTE;CONTAINERD;LB_PORT_6443;KUBEADM"
+HEADER_LINE_2="=============;=====;=====;=============;==============;======="
 
 execute | sed -e "1i${HEADER_LINE_1}" -e "1i${HEADER_LINE_2}" | column -t -s ";"
