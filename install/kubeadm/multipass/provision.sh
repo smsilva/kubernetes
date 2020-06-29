@@ -22,7 +22,7 @@ $(./set-environment-variables-with-servers-information.sh)
 . ./setup-cri-containerd.sh
 . ./setup-masters-tools.sh
 
-  log_time "servers provisioned"
+  log_time "provision process is done"
 }
 
 provision | tee provision.log
