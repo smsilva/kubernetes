@@ -32,7 +32,7 @@ wget \
   "https://download.docker.com/linux/ubuntu/gpg"
 
 ## Add Docker apt repository.
-add-apt-repository -q \
+add-apt-repository \
     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
     $(lsb_release --codename --short) \
     stable" &> /dev/null
