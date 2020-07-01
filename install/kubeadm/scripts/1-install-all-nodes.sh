@@ -82,4 +82,4 @@ fi
 
 # List Images
 sudo crictl images && echo "" && \
-  sudo crictl images | sed 1d | wc -l 
+  sudo crictl images | sed 1d | wc -l
