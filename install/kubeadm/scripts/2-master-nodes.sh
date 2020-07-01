@@ -50,6 +50,11 @@ watch -n 3 'kubectl get nodes,ds,pods,services -o wide -A'
 # (Another Terminal) Watch Interfaces and Route information
 ./watch-for-interfaces-and-routes.sh
 
+# Config
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
 # Install CNI Plugin
 # kubectl apply -f "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
 kubectl apply -f "https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml"
