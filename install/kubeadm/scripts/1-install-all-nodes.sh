@@ -20,7 +20,7 @@ deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.k
 EOF
 
 # Update package list
-sudo apt update -q
+sudo apt-get update -q
 
 # Set Kubernetes Version
 KUBERNETES_DESIRED_VERSION='1.25' && \
