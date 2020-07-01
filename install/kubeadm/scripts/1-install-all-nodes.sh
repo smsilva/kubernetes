@@ -81,4 +81,5 @@ else
 fi
 
 # List Images
-sudo crictl images
+sudo crictl images && echo "" && \
+  sudo crictl images | sed 1d | wc -l 
