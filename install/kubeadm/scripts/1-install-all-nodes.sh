@@ -56,19 +56,13 @@ clear && \
 sudo crictl images
 
 # CNI Plugin
-#   CIDR.......: 172.16.0.0/16 (https://community.spiceworks.com/tools/subnet-calc/)
-#   Start......: 172.16.0.1
-#   End........: 172.16.255.254
+#   CIDR.......: 10.32.0.0/16 (https://community.spiceworks.com/tools/subnet-calc/)
+#   Start......: 10.32.0.1
+#   End........: 10.32.255.254
 #   Hosts......: 65.534
-# WEAVE_NET_CNI_PLUGIN_IPALLOCRANGE="172.16.0.0/16" && \
-# WEAVE_NET_CNI_PLUGIN_IPALLOCRANGE="10.32.0.0/16" && \
-# WEAVE_NET_CNI_PLUGIN_FILE="weave-net-cni-plugin.yaml" && \
-# WEAVE_NET_CNI_PLUGIN_URL="https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version 2> /dev/null | base64 | tr -d '\n')&env.IPALLOC_RANGE=${WEAVE_NET_CNI_PLUGIN_IPALLOCRANGE}" && \
-# wget "${WEAVE_NET_CNI_PLUGIN_URL}" \
-#   --quiet \
-#   --output-document "${WEAVE_NET_CNI_PLUGIN_FILE}"
+WEAVE_NET_CNI_PLUGIN_IPALLOCRANGE="10.32.0.0/16" && \
 WEAVE_NET_CNI_PLUGIN_FILE="weave-net-cni-plugin.yaml" && \
-WEAVE_NET_CNI_PLUGIN_URL="https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version 2> /dev/null | base64 | tr -d '\n')" && \
+WEAVE_NET_CNI_PLUGIN_URL="https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version 2> /dev/null | base64 | tr -d '\n')&env.IPALLOC_RANGE=${WEAVE_NET_CNI_PLUGIN_IPALLOCRANGE}" && \
 wget "${WEAVE_NET_CNI_PLUGIN_URL}" \
   --quiet \
   --output-document "${WEAVE_NET_CNI_PLUGIN_FILE}"

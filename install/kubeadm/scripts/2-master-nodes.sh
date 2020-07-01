@@ -58,6 +58,15 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 # Watch Nodes and Pods from kube-system namespace
 watch -n 3 'kubectl get nodes,pods,services -o wide -n kube-system'
 
+# Watch network changes
+while true; do
+  ip -4 a | sed -e '/valid_lft/d' | awk '{ print $1, $2 }' | sed 'N;s/\n/ /' | tr -d ":" | awk '{ print $2, $4 }' | sort | sed '1iINTERFACE CIDR' | column -t && \
+  echo "" && \
+  route -n | sed /^Kernel/d | awk '{ print $1, $2, $3, $4, $5, $8 }' | column -t && echo "" && \
+  sleep 3 && \
+  clear
+done
+
 # Install CNI Plugin
 # kubectl apply -f "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
 kubectl apply -f "https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml"
