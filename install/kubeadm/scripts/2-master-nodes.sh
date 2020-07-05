@@ -56,16 +56,15 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Watch Nodes and Pods from kube-system namespace
+# [Presentation]
+# get nodes -o wide | sed "s/Ubuntu.*LTS/Ubuntu/g" | awk '{ print $1,$2,$5,$6,$10 }' | column -t
 watch -n 3 'kubectl get nodes,pods,services -o wide -n kube-system'
 
-# Watch network changes
-while true; do
-  ip -4 a | sed -e '/valid_lft/d' | awk '{ print $1, $2 }' | sed 'N;s/\n/ /' | tr -d ":" | awk '{ print $2, $4 }' | sort | sed '1iINTERFACE CIDR' | column -t && \
-  echo "" && \
-  route -n | sed /^Kernel/d | awk '{ print $1, $2, $3, $4, $5, $8 }' | column -t && echo "" && \
-  sleep 3 && \
-  clear
-done
+watch -n 3 'kubectl get nodes,cm,deploy,rs,ds,po,svc,ep,ing,pv,pvc -o wide -n dev'
+
+cat <<EOF > monitor.sh
+kubectl get nodes -o wide | sed "s/Ubuntu.*LTS/Ubuntu/g" | awk '{ print \$1,\$2,\$5,\$6,\$10 }' | column -t
+EOF
 
 # Install CNI Plugin
 # kubectl apply -f "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
