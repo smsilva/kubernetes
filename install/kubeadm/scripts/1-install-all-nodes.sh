@@ -81,7 +81,7 @@ sudo crictl images && echo "" && \
   sudo crictl images | sed 1d | wc -l
 
 # Script to Watch Interfaces and Route information
-cat <<EOF > monitor-network-changes.sh
+cat <<EOF > watch-for-interfaces-and-routes.sh
 while true; do
   ip -4 a | sed -e '/valid_lft/d' | awk '{ print \$1, \$2 }' | sed 'N;s/\n/ /' | tr -d ":" | awk '{ print \$2, \$4 }' | sort | sed '1iINTERFACE CIDR' | column -t && \
   echo "" && \
@@ -90,9 +90,9 @@ while true; do
   clear
 done
 EOF
-chmod +x monitor-network-changes.sh
+chmod +x watch-for-interfaces-and-routes.sh
 clear
-ls
+./watch-for-interfaces-and-routes.sh
 
 # Optional
 if grep --quiet "master" <<< $(hostname --short); then
