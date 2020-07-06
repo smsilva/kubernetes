@@ -56,8 +56,6 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Watch Nodes and Pods from kube-system namespace
-# [Presentation]
-# get nodes -o wide | sed "s/Ubuntu.*LTS/Ubuntu/g" | awk '{ print $1,$2,$5,$6,$10 }' | column -t
 watch -n 3 'kubectl get nodes,pods,services -o wide -n kube-system'
 
 # Install CNI Plugin
