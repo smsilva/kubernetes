@@ -20,7 +20,7 @@ deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.k
 EOF
 
 # Update package list
-sudo apt-get update -qq
+sudo apt-get update -q
 
 # Set Kubernetes Version
 KUBERNETES_DESIRED_VERSION='1.25' && \
@@ -66,6 +66,8 @@ WEAVE_NET_CNI_PLUGIN_URL="https://cloud.weave.works/k8s/net?k8s-version=$(kubect
 wget "${WEAVE_NET_CNI_PLUGIN_URL}" \
   --quiet \
   --output-document "${WEAVE_NET_CNI_PLUGIN_FILE}"
+clear
+ls
 
 # Preloading Container Images
 if grep --quiet "master" <<< $(hostname --short); then
@@ -77,3 +79,22 @@ fi
 # List Images
 sudo crictl images && echo "" && \
   sudo crictl images | sed 1d | wc -l
+
+# Script to Watch Interfaces and Route information
+cat <<EOF > monitor-network-changes.sh
+while true; do
+  ip -4 a | sed -e '/valid_lft/d' | awk '{ print \$1, \$2 }' | sed 'N;s/\n/ /' | tr -d ":" | awk '{ print \$2, \$4 }' | sort | sed '1iINTERFACE CIDR' | column -t && \
+  echo "" && \
+  route -n | sed /^Kernel/d | awk '{ print \$1, \$2, \$3, \$4, \$5, \$8 }' | column -t && echo "" && \
+  sleep 3 && \
+  clear
+done
+EOF
+chmod +x monitor-network-changes.sh
+clear
+ls
+
+# Optional
+if grep --quiet "master" <<< $(hostname --short); then
+  sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
+fi
