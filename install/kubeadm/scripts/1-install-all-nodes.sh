@@ -97,4 +97,8 @@ clear
 # Optional
 if grep --quiet "master" <<< $(hostname --short); then
   sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
+else
+  sudo crictl pull nginx:1.18 && \
+  sudo crictl pull nginx:1.19 && \
+  sudo crictl pull yauritux/busybox-curl
 fi

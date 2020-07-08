@@ -56,7 +56,7 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Watch Nodes and Pods from kube-system namespace
-watch -n 3 'kubectl get nodes,pods,services -o wide -n kube-system'
+watch -n 3 'kubectl get nodes,daemonset,pods,services -o wide -n kube-system'
 
 # Install CNI Plugin
 # kubectl apply -f "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
