@@ -11,7 +11,6 @@ spec:
       app: myserver
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: myserver
     spec:
