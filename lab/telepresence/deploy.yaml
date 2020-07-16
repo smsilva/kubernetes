@@ -2,30 +2,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: hello
-  name: hello
+    app: myserver
+  name: myserver
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hello
-  strategy: {}
+      app: myserver
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: hello
+        app: myserver
     spec:
       containers:
-      - image: datawire/hello-world
-        name: hello-world
+      - image: datawire/telepresence-k8s:0.105
+        name: telepresence-k8s
         ports:
         - protocol: TCP
-          containerPort: 8000
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
-          requests:
-            memory: "128Mi"
-            cpu: "250m"
+          containerPort: 8080
