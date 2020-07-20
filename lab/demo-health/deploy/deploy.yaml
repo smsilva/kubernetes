@@ -34,6 +34,13 @@ spec:
           timeoutSeconds: 60
       - image: health-check:1.0
         name: health-check
+        env:
+        - name: INTERVAL
+          value: "10"
+        - name: PORT
+          value: "8080"
+        - name: ENDPOINT
+          value: "actuator/health"
         resources:
           requests:
             memory: "20Mi"
