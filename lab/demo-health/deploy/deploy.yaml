@@ -19,7 +19,7 @@ spec:
         secret:
           secretName: monitor-tool-secret
       containers:
-      - image: demo:1.0.1
+      - image: demo:1.0.2
         name: app
         resources: {}
         livenessProbe:

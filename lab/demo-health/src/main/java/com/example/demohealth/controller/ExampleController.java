@@ -22,6 +22,7 @@ public class ExampleController {
     @ResponseBody
     public ResponseEntity<ApplicationInfo>  sayHello() throws Exception {
         HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set("hostname", info.getHostname());
 
         final Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
         while (networkInterfaces.hasMoreElements()) {
