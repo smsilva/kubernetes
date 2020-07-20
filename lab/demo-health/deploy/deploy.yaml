@@ -34,3 +34,10 @@ spec:
           timeoutSeconds: 60
       - image: health-check:1.0
         name: health-check
+        resources:
+          requests:
+            memory: "20Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
