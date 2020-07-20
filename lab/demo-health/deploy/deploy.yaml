@@ -2,25 +2,25 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: demo-app
-  name: demo-app
+    app: app
+  name: app
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: demo-app
+      app: app
   template:
     metadata:
       labels:
-        app: demo-app
+        app: app
     spec:
       volumes:
       - name: monitor-tool-secret
         secret:
           secretName: monitor-tool-secret
       containers:
-      - image: demo:1.0
-        name: demo
+      - image: demo:1.0.1
+        name: app
         resources: {}
         livenessProbe:
           httpGet:
