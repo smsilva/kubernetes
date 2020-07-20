@@ -32,3 +32,5 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 60
+      - image: health-check:1.0
+        name: health-check
