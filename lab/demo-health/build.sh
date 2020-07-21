@@ -14,6 +14,10 @@ APP_VERSION=$(awk -F ':' '{ print $2 }' <<< ${PROJECT_VALUES})
 
 echo "${APP_NAME}:${APP_VERSION}"
 
+if grep --quiet "There is no local cluster named" <<< $(minikube status); then
+  minikube start --driver=docker
+fi
+
 eval $(minikube docker-env)
 
 docker build -t health-check:1.0 scripts/health-check/
