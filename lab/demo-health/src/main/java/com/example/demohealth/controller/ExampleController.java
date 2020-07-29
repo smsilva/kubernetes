@@ -8,10 +8,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.util.Enumeration;
-
 @Controller
 public class ExampleController {
 
@@ -22,16 +18,8 @@ public class ExampleController {
     @ResponseBody
     public ResponseEntity<ApplicationInfo>  sayHello() throws Exception {
         HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set("hostname", info.getHostname());
-
-        final Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
-        while (networkInterfaces.hasMoreElements()) {
-            final NetworkInterface networkInterface = networkInterfaces.nextElement();
-            final InetAddress inetAddress = networkInterface.getInetAddresses().nextElement();
-            if ("eth0".equalsIgnoreCase(networkInterface.getDisplayName())) {
-                responseHeaders.set("ipv4-address-" + networkInterface.getDisplayName(), inetAddress.getHostAddress());
-            }
-        }
+        responseHeaders.set("hostname", info.getHost().getName());
+        responseHeaders.set("ipv4-address-eth0", info.getHost().getIpv4());
 
         return ResponseEntity.ok()
                 .headers(responseHeaders)
