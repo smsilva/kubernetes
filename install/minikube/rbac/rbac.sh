@@ -224,6 +224,9 @@ kubectl config \
 kubectl get pods -n development
 kubectl get pods -n default
 
+# Check if the user can create a Deployment on namespace development
+kubectl auth can-i create deployments --namespace development
+
 # Create a Deployment and a Service
 mkdir nginx && cd nginx
 
