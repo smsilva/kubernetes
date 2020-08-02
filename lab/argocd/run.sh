@@ -1,4 +1,13 @@
 #!/bin/bash
+export MINIKUBE_IN_STYLE=false
+minikube start \
+  --kubernetes-version v1.17.7 \
+  --driver=docker \
+  --network-plugin=cni
+
+kubectl config use-context minikube
+
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml  
 
 kubectl config use-context minikube
 
@@ -25,7 +34,9 @@ argocd login \
 argocd account update-password \
   --account admin \
   --current-password "${ARGOCD_INITIAL_PASSWORD}" \
-  --new-password "MyStrongPassword"
+  --new-password "anystrongpassword"
+
+kubectl create ns dev
 
 argocd app create nginx \
   --repo https://github.com/smsilva/argocd-k8s-nginx.git \
@@ -42,3 +53,7 @@ argocd app sync nginx
 argocd app set nginx --sync-policy automated
 argocd app set nginx --auto-prune
 argocd app set nginx --self-heal
+
+watch -n 3 kubectl -n dev get deploy,rs,pod,svc,ep -o wide
+
+curl $(minikube service nginx -n dev --url) -Is | head -2
