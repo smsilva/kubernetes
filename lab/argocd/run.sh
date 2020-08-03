@@ -14,38 +14,46 @@ kubectl config use-context minikube
 kubectl create namespace argocd
 
 clear && \
-for ((i=1; i <= 60; i++)); do
+for ((i=1; i <= 90; i++)); do
   NOT_READY_PODS=$(kubectl -n kube-system get deploy | grep -e "0/[1-9]" | wc -l)
   
   if [ "${NOT_READY_PODS:-0}" -eq "0" ]; then
     echo "All PODs are ready!"
     break
   else
-    printf "There are %s PODs not ready [Attempt #%i/60]\r" ${NOT_READY_PODS} ${i}
-    sleep 3
+    printf "[Minikube] There are %s PODs not ready [Attempt #%i/60]\r" ${NOT_READY_PODS} ${i}
+    sleep 5
   fi
 done
 
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+which argocd &> /dev/null
 
-sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/${VERSION}/argocd-linux-amd64
+if [ $? -ne 0 ]; then
+  echo "Need to download and install argocd CLI..."
 
-sudo chmod +x /usr/local/bin/argocd
+  VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+
+  echo "Downloading version: ${VERSION}"
+
+  sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/${VERSION}/argocd-linux-amd64
+
+  sudo chmod +x /usr/local/bin/argocd
+fi
 
 kubectl apply -n argocd -f argocd-server-service.yaml
 
 clear && \
-for ((i=1; i <= 60; i++)); do
+for ((i=1; i <= 90; i++)); do
   NOT_READY_PODS=$(kubectl -n argocd get deploy | grep -e "0/[1-9]" | wc -l)
   
   if [ "${NOT_READY_PODS:-0}" -eq "0" ]; then
     echo "All PODs are ready!"
     break
   else
-    printf "There are %s PODs not ready [Attempt #%i/60]\r" ${NOT_READY_PODS} ${i}
-    sleep 3
+    printf "[Argo CD] There are %s PODs not ready [Attempt #%i/60]\r" ${NOT_READY_PODS} ${i}
+    sleep 5
   fi
 done
 
@@ -80,6 +88,6 @@ argocd app set nginx --sync-policy automated
 argocd app set nginx --auto-prune
 argocd app set nginx --self-heal
 
-watch -n 3 kubectl -n dev get deploy,rs,pod,svc,ep -o wide
+kubectl -n dev get deploy,rs,pod,svc,ep -o wide
 
 curl $(minikube service nginx -n dev --url) -Is | head -2
