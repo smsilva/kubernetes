@@ -17,13 +17,13 @@ TOTAL_ATTEMPTS=90
 
 clear && \
 for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
-  NOT_READY_PODS=$(kubectl -n kube-system get deploy | grep -e "0/[1-9]" | wc -l)
+  NOT_READY_DEPLOYMENTS=$(kubectl -n kube-system get deploy | grep -e "0/[1-9]" | wc -l)
   
-  if [ "${NOT_READY_PODS:-0}" -eq "0" ]; then
-    echo "All PODs are ready!"
+  if [ "${NOT_READY_DEPLOYMENTS:-0}" -eq "0" ]; then
+    echo "All Deployments are ready!"
     break
   else
-    printf "[Minikube] There are %s PODs not ready [Attempt #%i/%i]\r" ${NOT_READY_PODS} ${i} ${TOTAL_ATTEMPTS}
+    printf "[Minikube] There are %s PODs not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
     sleep 5
   fi
 done
@@ -44,13 +44,13 @@ fi
 
 clear && \
 for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
-  NOT_READY_PODS=$(kubectl -n argocd get deploy | grep -e "0/[1-9]" | wc -l)
+  NOT_READY_DEPLOYMENTS=$(kubectl -n argocd get deploy | grep -e "0/[1-9]" | wc -l)
   
-  if [ "${NOT_READY_PODS:-0}" -eq "0" ]; then
-    echo "All PODs are ready!"
+  if [ "${NOT_READY_DEPLOYMENTS:-0}" -eq "0" ]; then
+    echo "All Deployments are ready!"
     break
   else
-    printf "[Argo CD] There are %s PODs not ready [Attempt #%i/%i]\r" ${NOT_READY_PODS} ${i} ${TOTAL_ATTEMPTS}
+    printf "[Argo CD] There are %s PODs not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
     sleep 5
   fi
 done
@@ -93,6 +93,17 @@ argocd app set nginx --sync-policy automated
 argocd app set nginx --auto-prune
 argocd app set nginx --self-heal
 
-kubectl -n dev get deploy,rs,pod,svc,ep -o wide
+clear && \
+for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
+  NOT_READY_DEPLOYMENTS=$(kubectl -n dev get deploy | grep -e "0/[1-9]" | wc -l)
+  
+  if [ "${NOT_READY_DEPLOYMENTS:-0}" -eq "0" ]; then
+    echo "All Deployments are ready!"
+    break
+  else
+    printf "[NGINX Sample Project] There are %s PODs not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
+    sleep 5
+  fi
+done
 
 curl $(minikube service nginx -n dev --url) -Is | head -2
