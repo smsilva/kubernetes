@@ -13,24 +13,24 @@ kubectl config use-context minikube
 
 kubectl create namespace argocd
 
+TOTAL_ATTEMPTS=90
+
 clear && \
-for ((i=1; i <= 90; i++)); do
+for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
   NOT_READY_PODS=$(kubectl -n kube-system get deploy | grep -e "0/[1-9]" | wc -l)
   
   if [ "${NOT_READY_PODS:-0}" -eq "0" ]; then
     echo "All PODs are ready!"
     break
   else
-    printf "[Minikube] There are %s PODs not ready [Attempt #%i/60]\r" ${NOT_READY_PODS} ${i}
+    printf "[Minikube] There are %s PODs not ready [Attempt #%i/%i]\r" ${NOT_READY_PODS} ${i} ${TOTAL_ATTEMPTS}
     sleep 5
   fi
 done
 
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-which argocd &> /dev/null
-
-if [ $? -ne 0 ]; then
+if ! which argocd &> /dev/null; then
   echo "Need to download and install argocd CLI..."
 
   VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
@@ -42,25 +42,30 @@ if [ $? -ne 0 ]; then
   sudo chmod +x /usr/local/bin/argocd
 fi
 
-kubectl apply -n argocd -f argocd-server-service.yaml
-
 clear && \
-for ((i=1; i <= 90; i++)); do
+for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
   NOT_READY_PODS=$(kubectl -n argocd get deploy | grep -e "0/[1-9]" | wc -l)
   
   if [ "${NOT_READY_PODS:-0}" -eq "0" ]; then
     echo "All PODs are ready!"
     break
   else
-    printf "[Argo CD] There are %s PODs not ready [Attempt #%i/60]\r" ${NOT_READY_PODS} ${i}
+    printf "[Argo CD] There are %s PODs not ready [Attempt #%i/%i]\r" ${NOT_READY_PODS} ${i} ${TOTAL_ATTEMPTS}
     sleep 5
   fi
 done
 
+kubectl apply -n argocd -f argocd-server-service.yaml
+
 ARGOCD_INITIAL_PASSWORD=$(kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d '/' -f 2)
+ARGOCD_URL=$(minikube service argocd-server -n argocd --url | grep 32443 | sed "s/http:\/\///")
+
+clear && \
+echo "ARGOCD_URL...............: ${ARGOCD_URL}" && \
+echo "ARGOCD_INITIAL_PASSWORD..: ${ARGOCD_INITIAL_PASSWORD}"
 
 argocd login \
-  $(minikube service argocd-server -n argocd --url | grep 32443 | sed "s/http:\/\///") \
+  ${ARGOCD_URL} \
   --username admin \
   --password "${ARGOCD_INITIAL_PASSWORD}" \
   --insecure
