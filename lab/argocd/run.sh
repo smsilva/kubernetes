@@ -1,4 +1,6 @@
 #!/bin/bash
+SECONDS=0
+
 export MINIKUBE_IN_STYLE=false
 minikube start \
   --kubernetes-version v1.17.7 \
@@ -23,7 +25,7 @@ for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
     echo "All Deployments are ready!"
     break
   else
-    printf "[Minikube] There are %s PODs not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
+    printf "[Minikube] There are %s Deployments not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
     sleep 5
   fi
 done
@@ -50,7 +52,7 @@ for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
     echo "All Deployments are ready!"
     break
   else
-    printf "[Argo CD] There are %s PODs not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
+    printf "[Argo CD] There are %s Deployments not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
     sleep 5
   fi
 done
@@ -101,9 +103,11 @@ for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
     echo "All Deployments are ready!"
     break
   else
-    printf "[NGINX Sample Project] There are %s PODs not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
+    printf "[NGINX Sample Project] There are %s Deployments not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
     sleep 5
   fi
 done
 
 curl $(minikube service nginx -n dev --url) -Is | head -2
+
+elapsed ${SECONDS}
