@@ -4,7 +4,7 @@ metadata:
   name: wd
 spec:
   version: "v0.0.1"
-  homepage: https://github.com/smsilva/kubernetes/krew/plugins/wd
+  homepage: https://github.com/smsilva/kubernetes/tree/master/krew/plugins/wd
   shortDescription: "Waits for all Deployment Replicas become Ready"
   description: |
     Waits for all Deployment Replicas become Ready.
@@ -17,9 +17,9 @@ spec:
         - linux
     uri: https://github.com/smsilva/kubernetes/releases/download/v0.0.1/kubectl-wd-0.0.1.tar.gz
     # 'sha256' is the sha256sum of the url above
-    sha256: 9506d729090ac2da8dd12a9c3bd98e6322216fa850249cd2169376bc3b40755e
+    sha256: e297bf17a210f8aa92684f0aedf7576cc79a8e157c6c6a3d91b0fe2844ec8ea8
     # 'files' lists which files should be extracted out from downloaded archive
     files:
-    - from: "kubectl-wd-*/wd.sh"
-      to: "./kwd.sh"
-    bin: kwd.sh
+    - from: "wd.sh"
+      to: "kubectl-wd.sh"
+    bin: kubectl-wd.sh
