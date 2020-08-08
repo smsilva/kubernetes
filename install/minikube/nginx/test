@@ -1,0 +1,14 @@
+#!/bin/bash
+kubectl config set-context minikube --namespace dev
+
+kubectl delete -f . &> /dev/null
+
+kubectl apply -f .
+
+kubectl wd \
+  --namespace dev \
+  --deployments nginx \
+  --attempts 30 \
+  --interval 3
+
+kubectl -n dev get deploy,rs,pods,svc
