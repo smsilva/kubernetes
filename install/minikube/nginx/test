@@ -1,4 +1,20 @@
 #!/bin/bash
+export MINIKUBE_IN_STYLE=false
+
+minikube start \
+  --kubernetes-version v1.18.6 \
+  --driver=docker \
+  --network-plugin=cni
+
+kubectl config use-context minikube
+
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+kubectl wd \
+  --namespace kube-system
+
+kubectl create namespace dev
+
 kubectl config set-context minikube --namespace dev
 
 kubectl delete -f . &> /dev/null
