@@ -14,7 +14,7 @@ minikube start \
 
 kubectl config use-context minikube
 
-kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml  
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 
 kubectl config get-contexts minikube
 
