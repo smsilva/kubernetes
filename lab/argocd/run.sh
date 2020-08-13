@@ -17,17 +17,13 @@ kubectl create namespace argocd
 
 TOTAL_ATTEMPTS=90
 
-clear && \
-for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
-  NOT_READY_DEPLOYMENTS=$(kubectl -n kube-system get deploy | grep -e "0/[1-9]" | wc -l)
-  
-  if [ "${NOT_READY_DEPLOYMENTS:-0}" -eq "0" ]; then
-    echo "All Deployments are ready!"
-    break
-  else
-    printf "[Minikube] There are %s Deployments not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
-    sleep 5
-  fi
+for deploymentName in $(kubectl -n kube-system get deploy -o name); do
+   echo "Waiting for: ${deploymentName}"
+
+   kubectl \
+     -n kube-system \
+     wait --for condition=available \
+     ${deploymentName};
 done
 
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
@@ -44,17 +40,13 @@ if ! which argocd &> /dev/null; then
   sudo chmod +x /usr/local/bin/argocd
 fi
 
-clear && \
-for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
-  NOT_READY_DEPLOYMENTS=$(kubectl -n argocd get deploy | grep -e "0/[1-9]" | wc -l)
-  
-  if [ "${NOT_READY_DEPLOYMENTS:-0}" -eq "0" ]; then
-    echo "All Deployments are ready!"
-    break
-  else
-    printf "[Argo CD] There are %s Deployments not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
-    sleep 5
-  fi
+for deploymentName in $(kubectl -n argocd get deploy -o name); do
+   echo "Waiting for: ${deploymentName}"
+
+   kubectl \
+     -n argocd \
+     wait --for condition=available \
+     ${deploymentName};
 done
 
 kubectl apply -n argocd -f argocd-server-service.yaml
@@ -95,17 +87,13 @@ argocd app set nginx --sync-policy automated
 argocd app set nginx --auto-prune
 argocd app set nginx --self-heal
 
-clear && \
-for ((i=1; i <= ${TOTAL_ATTEMPTS}; i++)); do
-  NOT_READY_DEPLOYMENTS=$(kubectl -n dev get deploy | grep -e "0/[1-9]" | wc -l)
-  
-  if [ "${NOT_READY_DEPLOYMENTS:-0}" -eq "0" ]; then
-    echo "All Deployments are ready!"
-    break
-  else
-    printf "[NGINX Sample Project] There are %s Deployments not ready [Attempt #%i/%i]\r" ${NOT_READY_DEPLOYMENTS} ${i} ${TOTAL_ATTEMPTS}
-    sleep 5
-  fi
+for deploymentName in $(kubectl -n dev get deploy -o name); do
+   echo "Waiting for: ${deploymentName}"
+
+   kubectl \
+     -n dev \
+     wait --for condition=available \
+     ${deploymentName};
 done
 
 curl $(minikube service nginx -n dev --url) -Is | head -2
