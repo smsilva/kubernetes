@@ -11,20 +11,18 @@ kubectl config use-context minikube
 
 kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml  
 
-kubectl config use-context minikube
-
-kubectl create namespace argocd
-
-TOTAL_ATTEMPTS=90
-
 for deploymentName in $(kubectl -n kube-system get deploy -o name); do
    echo "Waiting for: ${deploymentName}"
 
    kubectl \
      -n kube-system \
-     wait --for condition=available \
-     ${deploymentName};
+     wait \
+     --for condition=available \
+     --timeout=120s \
+     "${deploymentName}";
 done
+
+kubectl create namespace argocd
 
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
@@ -45,7 +43,9 @@ for deploymentName in $(kubectl -n argocd get deploy -o name); do
 
    kubectl \
      -n argocd \
-     wait --for condition=available \
+     wait \
+     --for condition=available \
+     --timeout=120s \
      ${deploymentName};
 done
 
@@ -93,9 +93,13 @@ for deploymentName in $(kubectl -n dev get deploy -o name); do
    kubectl \
      -n dev \
      wait --for condition=available \
+     --timeout=90s \
      ${deploymentName};
 done
 
 curl $(minikube service nginx -n dev --url) -Is | head -2
 
 elapsed ${SECONDS}
+
+# Access ArgoCD UI
+# minikube service argocd-server -n argocd
