@@ -14,14 +14,16 @@ minikube start \
 
 kubectl config use-context minikube
 
-kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+#kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 
 for deploymentName in $(kubectl -n kube-system get deploy -o name); do
    echo "Waiting for: ${deploymentName}"
 
    kubectl \
      -n kube-system \
-     wait --for condition=available \
+     wait \
+     --for condition=available \
      --timeout=90s \
      ${deploymentName};
 done
