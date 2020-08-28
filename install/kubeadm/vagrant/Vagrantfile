@@ -9,8 +9,8 @@ WORKER_NODES_COUNT = 3
 GLUSTERFS_NODES_COUNT = 0
 
 # Memory
-DNS_MEMORY="#{1 * 256}"
-LOAD_BALANCER_MEMORY="#{1 * 256}"
+DNS_MEMORY="#{1 * 512}"
+LOAD_BALANCER_MEMORY="#{1 * 512}"
 MASTER_NODE_MEMORY_SIZE="#{2 * 1024}"
 WORKER_NODE_MEMORY_SIZE="#{2 * 1024}"
 GLUSTER_NODE_MEMORY_SIZE="#{2 * 1024}"
@@ -26,7 +26,7 @@ IP_LOADBALANCER = "#{IP_NETWORK}" + "#{MASTER_IP_START}"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
-  config.vm.box_version = "20200701.0.0"
+  config.vm.box_version = "20200826.0.0"
   config.vm.box_check_update = false
 
   # DNS

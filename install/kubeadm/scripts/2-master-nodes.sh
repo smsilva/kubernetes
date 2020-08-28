@@ -10,7 +10,7 @@ EOF
 source ~/.bashrc
 
 # WARNING: We should run these commands ONLY on master-1
-KUBERNETES_DESIRED_VERSION='1.18' && \
+KUBERNETES_DESIRED_VERSION='1.19' && \
 KUBERNETES_VERSION="$(apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }')" && \
 KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}" && \
 LOCAL_IP_ADDRESS=$(grep $(hostname --short) /etc/hosts | awk '{ print $1 }') && \
@@ -33,7 +33,7 @@ SECONDS=0 && \
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
 NODE_NAME=$(hostname --short) && \
 sudo kubeadm init \
-  --v 5 \
+  --v 3 \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
   --kubernetes-version "${KUBERNETES_BASE_VERSION}" \
@@ -47,7 +47,7 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Watch Nodes and Pods from kube-system namespace
-watch -n 3 'kubectl get nodes,daemonset,pods,services -o wide -n kube-system'
+watch -n 3 'kubectl get nodes,pods,services -o wide -n kube-system'
 
 # Install CNI Plugin
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
@@ -70,9 +70,9 @@ grep '\-\-certificate-key' "${KUBEADM_LOG_FILE}" --before 2 | grep \
     -e 's/^/export KUBEADM_/'
 
 # Execute on master-2 and master-3 and on all workers
-export KUBEADM_TOKEN=fjoufv.d6w0epq4cbtuqh9m
-export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:8dd4b5b3e2e375f0914307af162151a22d736c13a6cccd5c39f49e7907ab64e2
-export KUBEADM_CERTIFICATE_KEY=e2d143ef995cb80286c4482d5278742d540b2fef33a558706581fa73efa77b2f
+export KUBEADM_TOKEN=fixbrh.x812k3tqj0h9x7pa
+export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:f32c97bade150d7ee4053de0b921698907565f242620f7cfc6dd48d0e679066c
+export KUBEADM_CERTIFICATE_KEY=ff177da4022e7745ab0bc01856266dfa6ccd161e267271106be1180633f4dff5
 
 # Watch Interfaces and Route information
 ./watch-for-interfaces-and-routes.sh
@@ -94,7 +94,7 @@ echo "DISCOVERY_TOKEN_CA_CERT_HASH.: ${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH}" &&
 echo ""
 
 sudo kubeadm join "${CONTROL_PLANE_ENDPOINT}" \
-  --v 5 \
+  --v 3 \
   --control-plane \
   --node-name "${NODE_NAME}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \

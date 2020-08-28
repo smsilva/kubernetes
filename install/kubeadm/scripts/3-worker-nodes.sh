@@ -18,7 +18,7 @@ sudo kubeadm join "${CONTROL_PLANE_ENDPOINT}" \
   --node-name "${NODE_NAME}" \
   --token "${KUBEADM_TOKEN}" \
   --discovery-token-ca-cert-hash "${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH}" \
-  --v 5 | tee "kubeadm-join.log" && \
+  --v 3 | tee "kubeadm-join.log" && \
 printf 'Elapsed time: %02d:%02d\n' $((${SECONDS} % 3600 / 60)) $((${SECONDS} % 60))
 
 ./watch-for-interfaces-and-routes.sh
