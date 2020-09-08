@@ -9,7 +9,6 @@ spec:
   selector:
     matchLabels:
       app: nginx
-  strategy: {}
   template:
     metadata:
       labels:
@@ -22,6 +21,3 @@ spec:
         - name: http
           protocol: TCP
           containerPort: 80
-        - name: http-debug
-          protocol: TCP
-          containerPort: 8080

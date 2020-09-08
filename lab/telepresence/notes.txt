@@ -1,6 +1,11 @@
 k run -it --image=yauritux/busybox-curl busybox
 
-docker run -d -p 80:80 nginx:1.19
+telepresence \
+  --swap-deployment nginx \
+  --expose 80 \
+  --docker-run -i -t nginx:1.19
 
-telepresence --swap-deployment nginx --expose 80 --run-shell
-
+telepresence \
+  --swap-deployment app \
+  --expose 8080 \
+  --docker-run -i -t demo-health:1.0

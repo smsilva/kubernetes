@@ -5,14 +5,10 @@ metadata:
     app: nginx
   name: nginx
 spec:
+  selector:
+    app: nginx
   ports:
-  - name: port-1
+  - name: http
     port: 80
     protocol: TCP
     targetPort: 80
-  - name: port-2
-    port: 8080
-    protocol: TCP
-    targetPort: 8080
-  selector:
-    app: nginx

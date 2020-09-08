@@ -5,6 +5,7 @@ metadata:
     app: hello
   name: hello
 spec:
+  type: NodePort
   ports:
   - port: 80
     protocol: TCP
