@@ -15,8 +15,8 @@ spec:
         app: nginx
     spec:
       containers:
-      - image: nginx:1.18
-        name: nginx
+      - name: nginx
+        image: nginx:1.18
         ports:
         - name: http
           protocol: TCP
