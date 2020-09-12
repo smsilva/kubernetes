@@ -140,3 +140,41 @@ metadata:
 spec:
   profile: demo
 EOF
+
+# Update
+kubectl apply -f - <<EOF
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: istio-control-plane
+spec:
+  profile: default
+EOF
+
+# Update
+kubectl apply -f - <<EOF
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: istio-control-plane
+spec:
+  profile: default
+  components:
+    pilot:
+      k8s:
+        resources:
+          requests:
+            memory: 3072Mi
+    egressGateways:
+    - name: istio-egressgateway
+      enabled: true
+EOF
+
+# Uninstall
+kubectl delete ns istio-operator --grace-period=0 --force
+
+istioctl manifest generate | kubectl delete -f -
+
+kubectl delete ns istio-system --grace-period=0 --force
