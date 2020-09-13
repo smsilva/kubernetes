@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Check Minikube Install
+# Check if Minikube is Installed
 if ! which minikube > /dev/null; then
   curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
   && chmod +x minikube && \
@@ -56,7 +56,7 @@ fi
 # Access Istio Directory
 cd ${ISTIO_BASE_DIR}
 
-# Check istioctl Install
+# Check if istioctl is installed
 if ! which istioctl > /dev/null; then
   echo "create a symbolic link from $PWD/bin/istioctl for /usr/local/bin/istioctl (you should have a sudo permission)"
   sudo ln --symbolic $PWD/bin/istioctl /usr/local/bin/istioctl
@@ -65,7 +65,7 @@ else
   echo "istioctl ${ISTIOCTL_INSTALLED_VERSION} version currently installed"
 fi
 
-# Check Helm Install
+# Check if Helm is installed
 if ! which helm > /dev/null; then
   echo "install"
   VERSION="3.3.1"
