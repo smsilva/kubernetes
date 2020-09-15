@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: nginx-gateway
+  name: ingress-gateway-demo
 spec:
   selector:
     istio: ingressgateway
@@ -11,4 +11,4 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - "services.example.com"
+    - "*"

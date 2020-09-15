@@ -131,17 +131,7 @@ kubectl -n istio-system wait pod -l app=istiod --for=condition=Ready && \
 kubectl -n istio-system logs -f -l app=istiod
 
 # Create IstioOperator
-kubectl apply -f - <<EOF
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  namespace: istio-system
-  name: istio-control-plane
-spec:
-  profile: demo
-EOF
-
-# Update
+#   https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#IstioComponentSetSpec
 kubectl apply -f - <<EOF
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
@@ -150,6 +140,12 @@ metadata:
   name: istio-control-plane
 spec:
   profile: default
+  components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      enabled: true
+      k8s:
+        replicaCount: 1
 EOF
 
 # Update
@@ -167,9 +163,11 @@ spec:
         resources:
           requests:
             memory: 3072Mi
-    egressGateways:
-    - name: istio-egressgateway
+    ingressGateways:
+    - name: istio-ingressgateway
       enabled: true
+      k8s:
+        replicaCount: 2
 EOF
 
 # Uninstall
@@ -178,3 +176,28 @@ kubectl delete ns istio-operator --grace-period=0 --force
 istioctl manifest generate | kubectl delete -f -
 
 kubectl delete ns istio-system --grace-period=0 --force
+
+# Example
+eval $(minikube -p minikube docker-env)
+
+docker build -t demo-health:1.0 ${HOME}/pessoal/git/kubernetes/lab/demo-health
+
+kubectl create namespace dev
+
+watch 'kubectl -n dev get deploy,pods,svc,gw,vs'
+
+kubectl label namespace dev istio-injection=enabled
+
+NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type == "InternalIP")].address}')
+
+sudo sed -i '/services.example.com/d' /etc/hosts
+
+sudo sed -i "1i${NODE_IP} services.example.com" /etc/hosts
+
+ISTIO_INGRESS_GATEWAY_NODEPORT=$(kubectl -n istio-system get service -l istio=ingressgateway -o jsonpath='{.items[0].spec.ports[?(@.name == "http2")].nodePort}')
+
+GATEWAY_URL="services.example.com:${ISTIO_INGRESS_GATEWAY_NODEPORT}"
+
+curl -is "${GATEWAY_URL}"
+curl -is "${GATEWAY_URL}/info"
+curl -is "${GATEWAY_URL}/health"

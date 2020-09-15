@@ -1,41 +1,43 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: nginx-virtualservice
+  name: virtualservice-demo
 spec:
   hosts:
   - "*"
   gateways:
-  - nginx-gateway
+  - ingress-gateway-demo
   http:
-  - name: rule-3
+  - name: info
     match:
     - uri:
-        prefix: /v18
+        prefix: /info
     rewrite:
-      uri: "/"
+      uri: "/actuator/info"
     route:
     - destination:
-        host: nginx-1-18
+        host: demo
         port:
           number: 80
-  - name: rule-1
+  - name: health
     match:
     - uri:
-        prefix: /api
+        prefix: /health
     rewrite:
-      uri: "/"
+      uri: "/actuator/health"
     route:
     - destination:
-        host: nginx
+        host: demo
         port:
           number: 80
-  - name: rule-2
+  - name: root
     match:
     - uri:
         prefix: /
+    rewrite:
+      uri: "/"
     route:
     - destination:
-        host: nginx
+        host: demo
         port:
           number: 80

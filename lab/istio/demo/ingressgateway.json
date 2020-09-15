@@ -1,0 +1,149 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"app\":\"istio-ingressgateway\",\"install.operator.istio.io/owning-resource\":\"istio-control-plane\",\"install.operator.istio.io/owning-resource-namespace\":\"istio-system\",\"istio\":\"ingressgateway\",\"istio.io/rev\":\"default\",\"operator.istio.io/component\":\"IngressGateways\",\"operator.istio.io/managed\":\"Reconcile\",\"operator.istio.io/version\":\"1.7.1\",\"release\":\"istio\"},\"name\":\"istio-ingressgateway\",\"namespace\":\"istio-system\"},\"spec\":{\"ports\":[{\"name\":\"status-port\",\"port\":15021,\"targetPort\":15021},{\"name\":\"http2\",\"port\":80,\"targetPort\":8080},{\"name\":\"https\",\"port\":443,\"targetPort\":8443},{\"name\":\"tls\",\"port\":15443,\"targetPort\":15443}],\"selector\":{\"app\":\"istio-ingressgateway\",\"istio\":\"ingressgateway\"},\"type\":\"LoadBalancer\"}}\n"
+                },
+                "creationTimestamp": "2020-09-14T22:24:50Z",
+                "labels": {
+                    "app": "istio-ingressgateway",
+                    "install.operator.istio.io/owning-resource": "istio-control-plane",
+                    "install.operator.istio.io/owning-resource-namespace": "istio-system",
+                    "istio": "ingressgateway",
+                    "istio.io/rev": "default",
+                    "operator.istio.io/component": "IngressGateways",
+                    "operator.istio.io/managed": "Reconcile",
+                    "operator.istio.io/version": "1.7.1",
+                    "release": "istio"
+                },
+                "managedFields": [
+                    {
+                        "apiVersion": "v1",
+                        "fieldsType": "FieldsV1",
+                        "fieldsV1": {
+                            "f:metadata": {
+                                "f:annotations": {
+                                    ".": {},
+                                    "f:kubectl.kubernetes.io/last-applied-configuration": {}
+                                },
+                                "f:labels": {
+                                    ".": {},
+                                    "f:app": {},
+                                    "f:install.operator.istio.io/owning-resource": {},
+                                    "f:install.operator.istio.io/owning-resource-namespace": {},
+                                    "f:istio": {},
+                                    "f:istio.io/rev": {},
+                                    "f:operator.istio.io/component": {},
+                                    "f:operator.istio.io/managed": {},
+                                    "f:operator.istio.io/version": {},
+                                    "f:release": {}
+                                }
+                            },
+                            "f:spec": {
+                                "f:externalTrafficPolicy": {},
+                                "f:ports": {
+                                    ".": {},
+                                    "k:{\"port\":15021,\"protocol\":\"TCP\"}": {
+                                        ".": {},
+                                        "f:name": {},
+                                        "f:port": {},
+                                        "f:protocol": {},
+                                        "f:targetPort": {}
+                                    },
+                                    "k:{\"port\":15443,\"protocol\":\"TCP\"}": {
+                                        ".": {},
+                                        "f:name": {},
+                                        "f:port": {},
+                                        "f:protocol": {},
+                                        "f:targetPort": {}
+                                    },
+                                    "k:{\"port\":443,\"protocol\":\"TCP\"}": {
+                                        ".": {},
+                                        "f:name": {},
+                                        "f:port": {},
+                                        "f:protocol": {},
+                                        "f:targetPort": {}
+                                    },
+                                    "k:{\"port\":80,\"protocol\":\"TCP\"}": {
+                                        ".": {},
+                                        "f:name": {},
+                                        "f:port": {},
+                                        "f:protocol": {},
+                                        "f:targetPort": {}
+                                    }
+                                },
+                                "f:selector": {
+                                    ".": {},
+                                    "f:app": {},
+                                    "f:istio": {}
+                                },
+                                "f:sessionAffinity": {},
+                                "f:type": {}
+                            }
+                        },
+                        "manager": "operator",
+                        "operation": "Update",
+                        "time": "2020-09-14T22:25:44Z"
+                    }
+                ],
+                "name": "istio-ingressgateway",
+                "namespace": "istio-system",
+                "resourceVersion": "1110",
+                "selfLink": "/api/v1/namespaces/istio-system/services/istio-ingressgateway",
+                "uid": "5adf45ee-f712-4dc7-8b49-57a14979a562"
+            },
+            "spec": {
+                "clusterIP": "10.102.74.101",
+                "externalTrafficPolicy": "Cluster",
+                "ports": [
+                    {
+                        "name": "status-port",
+                        "nodePort": 31863,
+                        "port": 15021,
+                        "protocol": "TCP",
+                        "targetPort": 15021
+                    },
+                    {
+                        "name": "http2",
+                        "nodePort": 32234,
+                        "port": 80,
+                        "protocol": "TCP",
+                        "targetPort": 8080
+                    },
+                    {
+                        "name": "https",
+                        "nodePort": 30355,
+                        "port": 443,
+                        "protocol": "TCP",
+                        "targetPort": 8443
+                    },
+                    {
+                        "name": "tls",
+                        "nodePort": 31087,
+                        "port": 15443,
+                        "protocol": "TCP",
+                        "targetPort": 15443
+                    }
+                ],
+                "selector": {
+                    "app": "istio-ingressgateway",
+                    "istio": "ingressgateway"
+                },
+                "sessionAffinity": "None",
+                "type": "LoadBalancer"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": "",
+        "selfLink": ""
+    }
+}
