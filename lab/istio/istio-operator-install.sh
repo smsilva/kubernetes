@@ -83,9 +83,6 @@ fi
 # Check for Istio's Custom Resource Definitions (should not yet installed)
 kubectl api-resources | grep -E "NAME|istio"
 
-# Create Istio CRDs
-kubectl apply -f "manifests/charts/istio-operator/crds/"
-
 # Install Istio Operator Components using Helm
 #   namespace..........: istio-operator
 #   serviceaccount.....: istio-operator
@@ -104,10 +101,16 @@ helm template "manifests/charts/istio-operator/" \
 kubectl -n istio-operator wait pod -l name=istio-operator --for=condition=Ready && \
 kubectl -n istio-operator logs -f -l name=istio-operator
 
+# Create Istio CRDs
+kubectl apply -f "manifests/charts/istio-operator/crds/"
+
 # Install Istio Control Plane creating one IstioOperator with demo Profile
 
 # Create istio-system Namespace
 kubectl create namespace istio-system
+
+# Explicitly label the istio-system namespace to not receive sidecar injection
+kubectl label namespace istio-system istio-injection=disabled
 
 # Watch istio-system for Control Plane Components (keep it on a different terminal window or tmux pane)
 watch 'kubectl -n istio-system get iop,deploy,pods,svc'
@@ -163,8 +166,11 @@ spec:
     - name: istio-ingressgateway
       enabled: true
       k8s:
-        replicaCount: 2
+        replicaCount: 3
 EOF
+
+# Cert Manager Integartion
+#   https://istio.io/latest/docs/ops/integrations/certmanager/
 
 # Uninstall
 kubectl delete ns istio-operator --grace-period=0 --force
@@ -176,7 +182,7 @@ kubectl delete ns istio-system --grace-period=0 --force
 # Example
 eval $(minikube -p minikube docker-env)
 
-docker build -t demo-health:1.0 ${HOME}/git/kubernetes/lab/demo-health
+docker build -t demo-health:1.0 ../demo-health
 
 kubectl create namespace dev
 
@@ -194,8 +200,22 @@ ISTIO_INGRESS_GATEWAY_NODEPORT=$(kubectl -n istio-system get service -l istio=in
 
 GATEWAY_URL="services.example.com:${ISTIO_INGRESS_GATEWAY_NODEPORT}"
 
+echo ${GATEWAY_URL}
+
 kubectl -n dev apply -f demo/
 
 curl -is "${GATEWAY_URL}"
 curl -is "${GATEWAY_URL}/health"
 curl -is "${GATEWAY_URL}/info"
+
+# Visualizing Metrics with Grafana
+# https://istio.io/latest/docs/tasks/observability/metrics/using-istio-dashboard/
+
+# Grafana
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/grafana.yaml
+
+# Prometheus
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/prometheus.yaml
+
+# Access Dashboard
+istioctl dashboard grafana
