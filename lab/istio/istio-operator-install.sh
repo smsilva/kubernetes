@@ -180,7 +180,7 @@ kubectl delete ns istio-system --grace-period=0 --force
 # Example
 eval $(minikube -p minikube docker-env)
 
-docker build -t demo-health:1.0 ${HOME}/pessoal/git/kubernetes/lab/demo-health
+docker build -t demo-health:1.0 ${HOME}/git/kubernetes/lab/demo-health
 
 kubectl create namespace dev
 
@@ -197,6 +197,8 @@ sudo sed -i "1i${NODE_IP} services.example.com" /etc/hosts
 ISTIO_INGRESS_GATEWAY_NODEPORT=$(kubectl -n istio-system get service -l istio=ingressgateway -o jsonpath='{.items[0].spec.ports[?(@.name == "http2")].nodePort}')
 
 GATEWAY_URL="services.example.com:${ISTIO_INGRESS_GATEWAY_NODEPORT}"
+
+kubectl -n dev apply -f demo/
 
 curl -is "${GATEWAY_URL}"
 curl -is "${GATEWAY_URL}/info"
