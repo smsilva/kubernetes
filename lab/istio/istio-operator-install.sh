@@ -186,27 +186,28 @@ docker build -t demo-health:1.0 ../demo-health
 
 kubectl create namespace dev
 
-watch 'kubectl -n dev get deploy,pods,svc,gw,vs'
-
 kubectl label namespace dev istio-injection=enabled
 
-NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type == "InternalIP")].address}')
+kubectl get namespaces -L istio-injection
+
+# Generate a Public IP - as we use minikube, use minikube tunnel on another terminal
+minikube tunnel
+
+watch 'kubectl -n dev get deploy,pods,svc,gw,vs'
+
+ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP=$(kubectl -n istio-system get service -l istio=ingressgateway -o jsonpath='{.items[].status.loadBalancer.ingress[0].ip}')
+
+echo ${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP}
 
 sudo sed -i '/services.example.com/d' /etc/hosts
 
-sudo sed -i "1i${NODE_IP} services.example.com" /etc/hosts
-
-ISTIO_INGRESS_GATEWAY_NODEPORT=$(kubectl -n istio-system get service -l istio=ingressgateway -o jsonpath='{.items[0].spec.ports[?(@.name == "http2")].nodePort}')
-
-GATEWAY_URL="services.example.com:${ISTIO_INGRESS_GATEWAY_NODEPORT}"
-
-echo ${GATEWAY_URL}
+sudo sed -i "1i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} services.example.com" /etc/hosts
 
 kubectl -n dev apply -f demo/
 
-curl -is "${GATEWAY_URL}"
-curl -is "${GATEWAY_URL}/health"
-curl -is "${GATEWAY_URL}/info"
+curl -is services.example.com
+curl -is services.example.com/health
+curl -is services.example.com/info
 
 # Visualizing Metrics with Grafana
 # https://istio.io/latest/docs/tasks/observability/metrics/using-istio-dashboard/
