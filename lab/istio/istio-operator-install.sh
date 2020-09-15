@@ -83,6 +83,9 @@ fi
 # Check for Istio's Custom Resource Definitions (should not yet installed)
 kubectl api-resources | grep -E "NAME|istio"
 
+# Create Istio CRDs
+kubectl apply -f "manifests/charts/istio-operator/crds/"
+
 # Install Istio Operator Components using Helm
 #   namespace..........: istio-operator
 #   serviceaccount.....: istio-operator
@@ -98,13 +101,6 @@ helm template "manifests/charts/istio-operator/" \
 
 # At this time, there are no Istio Custom Resource Definitions (CRDs)
 #   istio-operator controller could not find the IstioOperator, and because of that, any objects of IstioOperator type could be create
-kubectl -n istio-operator wait pod -l name=istio-operator --for=condition=Ready && \
-kubectl -n istio-operator logs -f -l name=istio-operator
-
-# Create Istio CRDs
-kubectl apply -f "manifests/charts/istio-operator/crds/"
-
-# Check istio-operator logs again (keep it on a different terminal window or tmux pane)
 kubectl -n istio-operator wait pod -l name=istio-operator --for=condition=Ready && \
 kubectl -n istio-operator logs -f -l name=istio-operator
 
@@ -201,5 +197,5 @@ GATEWAY_URL="services.example.com:${ISTIO_INGRESS_GATEWAY_NODEPORT}"
 kubectl -n dev apply -f demo/
 
 curl -is "${GATEWAY_URL}"
-curl -is "${GATEWAY_URL}/info"
 curl -is "${GATEWAY_URL}/health"
+curl -is "${GATEWAY_URL}/info"
