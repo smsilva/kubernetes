@@ -17,5 +17,5 @@ if ! which helm > /dev/null; then
 else
   HELM_INSTALLED_VERSION=$(helm version --short)
 
-  echo "istioctl ${HELM_INSTALLED_VERSION} version currently installed"
+  echo "helm ${HELM_INSTALLED_VERSION} version currently installed"
 fi

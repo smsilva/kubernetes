@@ -147,5 +147,19 @@ kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/sampl
 # Prometheus
 kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/prometheus.yaml
 
+docker run \
+  -p 9090:9090 \
+  -v $PWD/config/prometheus.yml:/etc/prometheus/prometheus.yml \
+  prom/prometheus
+
+http://localhost:9090/targets
+
+docker run -d -p 3001:3000 grafana/grafana
+
+http://localhost:3001
+
+# Kiali
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/kiali.yaml
+
 # Access Dashboard
 istioctl dashboard grafana

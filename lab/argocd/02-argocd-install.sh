@@ -1,15 +1,6 @@
 #!/bin/bash
 SECONDS=0
 
-. ./01-minikube.sh
-
-echo "KUBERNETES_BASE_VERSION...: ${KUBERNETES_BASE_VERSION}"
-
-for (( i == 0; i <= 10; i++ )); do
-  echo ${i}
-  sleep 5
-done
-
 kubectl create namespace argocd
 
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
