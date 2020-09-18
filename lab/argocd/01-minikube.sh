@@ -1,6 +1,4 @@
 #!/bin/bash
-SECONDS=0
-
 KUBERNETES_BASE_VERSION=$(apt-cache madison kubeadm | head -1 | awk -F '|' '{ print $2 }' | tr -d ' ')
 KUBERNETES_VERSION="${KUBERNETES_BASE_VERSION%-*}"
 
@@ -26,5 +24,3 @@ for deploymentName in $(kubectl -n kube-system get deploy -o name); do
      --timeout=90s \
      ${deploymentName};
 done
-
-elapsed ${SECONDS}
