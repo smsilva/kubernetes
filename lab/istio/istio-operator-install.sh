@@ -141,9 +141,6 @@ curl -is services.example.com/info
 # Visualizing Metrics with Grafana
 # https://istio.io/latest/docs/tasks/observability/metrics/using-istio-dashboard/
 
-# Grafana
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/grafana.yaml
-
 # Prometheus
 kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/prometheus.yaml
 
@@ -154,12 +151,18 @@ docker run \
 
 http://localhost:9090/targets
 
-docker run -d -p 3001:3000 grafana/grafana
+docker run \
+  -d \
+  -p 3001:3000 \
+  grafana/grafana
 
 http://localhost:3001
 
 # Kiali
 kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/kiali.yaml
+
+# Grafana
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/grafana.yaml
 
 # Access Dashboard
 istioctl dashboard grafana
