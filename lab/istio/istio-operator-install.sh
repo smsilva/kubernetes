@@ -63,7 +63,7 @@ apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 metadata:
   namespace: istio-system
-  name: istio-1-7-1
+  name: istio-${ISTIO_VERSION}
 spec:
   profile: default
   components:

@@ -1,25 +1,14 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: nginx-virtualservice
+  name: ntest-virtualservice
 spec:
   hosts:
-  - "*"
+  - "nginx.example.com"
   gateways:
-  - nginx-gateway
+  - ingress-gateway-demo
   http:
-  - name: rule-3
-    match:
-    - uri:
-        prefix: /v18
-    rewrite:
-      uri: "/"
-    route:
-    - destination:
-        host: nginx-1-18
-        port:
-          number: 80
-  - name: rule-1
+  - name: api
     match:
     - uri:
         prefix: /api
@@ -27,15 +16,15 @@ spec:
       uri: "/"
     route:
     - destination:
-        host: nginx
+        host: ntest
         port:
           number: 80
-  - name: rule-2
+  - name: root
     match:
     - uri:
         prefix: /
     route:
     - destination:
-        host: nginx
+        host: ntest
         port:
           number: 80

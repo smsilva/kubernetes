@@ -2,12 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: nginx
-  name: nginx
+    app: ntest
+  name: ntest
 spec:
   ports:
-  - port: 80
+  - name: http
+    port: 80
     protocol: TCP
     targetPort: 80
   selector:
-    app: nginx
+    app: ntest

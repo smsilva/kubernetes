@@ -8,6 +8,8 @@ ISTIO_BASE_DIR="${HOME}/istio-${ISTIO_VERSION}"
 # Download Istio Release
 if ! [ -e ${ISTIO_BASE_DIR} ]; then
   curl -L https://istio.io/downloadIstio | sh -
+
+  mv istio-${ISTIO_VERSION} ${HOME}/
 fi
 
 # Check if istioctl is installed

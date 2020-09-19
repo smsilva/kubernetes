@@ -4,7 +4,7 @@ metadata:
   name: virtualservice-demo
 spec:
   hosts:
-  - "*"
+  - "services.example.com"
   gateways:
   - ingress-gateway-demo
   http:
