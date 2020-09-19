@@ -5,7 +5,7 @@ metadata:
   namespace: dev
 spec:
   hosts:
-  - "nginx.example.com"
+  - "ntest.example.com"
   gateways:
   - ingress-gateway-demo
   http:

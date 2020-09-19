@@ -13,4 +13,4 @@ scrape_configs:
         - '{kubernetes_namespace="dev"}'
 
     static_configs:
-      - targets: ['10.105.58.162']
+      - targets: ['10.103.103.81']

@@ -90,6 +90,15 @@ spec:
         replicaCount: 3
 EOF
 
+# Add Ons
+cd ${ISTIO_BASE_DIR}
+kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml"
+kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/prometheus.yaml"
+kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/grafana.yaml"
+
+# Access Dashboards
+istioctl dashboard --help | grep "Available Commands:" -B 1 -A 8
+
 # Cert Manager Integartion
 #   https://istio.io/latest/docs/ops/integrations/certmanager/
 
