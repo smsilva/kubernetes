@@ -4,6 +4,7 @@ metadata:
   labels:
     app: ntest
   name: ntest
+  namespace: dev
 spec:
   ports:
   - name: http

@@ -2,6 +2,7 @@ apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: ntest-virtualservice
+  namespace: dev
 spec:
   hosts:
   - "nginx.example.com"

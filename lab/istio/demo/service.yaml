@@ -4,6 +4,7 @@ metadata:
   labels:
     app: demo
   name: demo
+  namespace: dev
 spec:
   selector:
     app: demo

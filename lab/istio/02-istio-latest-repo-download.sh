@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Retrieve the latest Istio Version
-ISTIO_VERSION=$(curl -sL https://github.com/istio/istio/releases | grep -o 'releases/[0-9]*.[0-9]*.[0-9]*/' | sort --version-sort | tail -1 | awk -F'/' '{ print $2}')
+export ISTIO_VERSION=$(curl -sL https://github.com/istio/istio/releases | grep -o 'releases/[0-9]*.[0-9]*.[0-9]*/' | sort --version-sort | tail -1 | awk -F'/' '{ print $2}')
 
-ISTIO_BASE_DIR="${HOME}/istio-${ISTIO_VERSION}"
+export ISTIO_BASE_DIR="${HOME}/istio-${ISTIO_VERSION}"
 
 # Download Istio Release
 if ! [ -e ${ISTIO_BASE_DIR} ]; then
@@ -21,6 +21,8 @@ else
   echo "istioctl ${ISTIOCTL_INSTALLED_VERSION} version currently installed"
 fi
 
-sed -i '/ISTIO_BASE_DIR/d' ${HOME}/.bashrc
+sed -i '/export ISTIO_VERSION/d' ${HOME}/.bashrc
+sed -i '/export ISTIO_BASE_DIR/d' ${HOME}/.bashrc
 
-echo "ISTIO_BASE_DIR=\"${HOME}/istio-${ISTIO_VERSION}\"" >> ${HOME}/.bashrc
+echo "export ISTIO_VERSION=${ISTIO_VERSION}" >> ${HOME}/.bashrc
+echo "export ISTIO_BASE_DIR=${ISTIO_BASE_DIR}" >> ${HOME}/.bashrc

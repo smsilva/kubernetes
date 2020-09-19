@@ -1,7 +1,7 @@
 #!/bin/bash
-source ${HOME}/.bashrc
-
-ISTIO_VERSION=$(grep -Eo "istio.*" <<< ${ISTIO_BASE_DIR} | sed 's/istio-//')
+source ${HOME}/.bashrc && \
+echo "ISTIO_VERSION..: ${ISTIO_VERSION}" && \
+echo "ISTIO_BASE_DIR.: ${ISTIO_BASE_DIR}"
 
 # Check for Istio's Custom Resource Definitions (should not yet installed)
 kubectl api-resources | grep -E "NAME|istio"
@@ -46,7 +46,7 @@ watch 'kubectl -n istio-system get iop,deploy,pods,svc'
 while true; do
   PODS=$(kubectl -n istio-system get pods -l app=istiod --ignore-not-found)
   if [ ${#PODS} -eq 0 ]; then
-    echo "istiod doesn't exists"
+    echo "istiod pod doesn't exists on istio-system"
     sleep 2
   else
     echo "istiod created"
@@ -66,12 +66,6 @@ metadata:
   name: istio-${ISTIO_VERSION}
 spec:
   profile: default
-  components:
-    ingressGateways:
-    - name: istio-ingressgateway
-      enabled: true
-      k8s:
-        replicaCount: 1
 EOF
 
 # Update
@@ -105,64 +99,3 @@ kubectl delete ns istio-operator --grace-period=0 --force
 istioctl manifest generate | kubectl delete -f -
 
 kubectl delete ns istio-system --grace-period=0 --force
-
-# Example
-cd "kubernetes/lab/istio"
-
-eval $(minikube -p minikube docker-env)
-
-docker build -t demo-health:1.0 demo/docker/
-
-kubectl create namespace dev
-
-kubectl label namespace dev istio-injection=enabled
-
-kubectl get namespaces -L istio-injection
-
-# Generate a Public IP - as we use minikube, use minikube tunnel on another terminal
-minikube tunnel
-
-watch 'kubectl -n dev get deploy,pods,svc,gw,vs'
-
-ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP=$(kubectl -n istio-system get service -l istio=ingressgateway -o jsonpath='{.items[].status.loadBalancer.ingress[0].ip}')
-
-echo ${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP}
-
-sudo sed -i '/services.example.com/d' /etc/hosts
-
-sudo sed -i "1i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} services.example.com" /etc/hosts
-
-kubectl -n dev apply -f demo/
-
-curl -is services.example.com
-curl -is services.example.com/health
-curl -is services.example.com/info
-
-# Visualizing Metrics with Grafana
-# https://istio.io/latest/docs/tasks/observability/metrics/using-istio-dashboard/
-
-# Prometheus
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/prometheus.yaml
-
-docker run \
-  -p 9090:9090 \
-  -v $PWD/config/prometheus.yml:/etc/prometheus/prometheus.yml \
-  prom/prometheus
-
-http://localhost:9090/targets
-
-docker run \
-  -d \
-  -p 3001:3000 \
-  grafana/grafana
-
-http://localhost:3001
-
-# Kiali
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/kiali.yaml
-
-# Grafana
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/grafana.yaml
-
-# Access Dashboard
-istioctl dashboard grafana
