@@ -25,4 +25,4 @@ sed -i '/export ISTIO_VERSION/d' ${HOME}/.bashrc
 sed -i '/export ISTIO_BASE_DIR/d' ${HOME}/.bashrc
 
 echo "export ISTIO_VERSION=${ISTIO_VERSION}" >> ${HOME}/.bashrc
-echo "export ISTIO_BASE_DIR=${ISTIO_BASE_DIR}" >> ${HOME}/.bashrc
+echo "export ISTIO_BASE_DIR=${HOME}/istio-\${ISTIO_VERSION}" >> ${HOME}/.bashrc

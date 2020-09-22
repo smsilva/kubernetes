@@ -31,6 +31,8 @@ kubectl apply -f "${ISTIO_BASE_DIR}/manifests/charts/istio-operator/crds/"
 kubectl -n istio-operator wait pod -l name=istio-operator --for=condition=Ready && \
 kubectl -n istio-operator logs -f -l name=istio-operator
 
+watch 'kubectl -n istio-operator get deploy,pods,svc -L istio.io/rev'
+
 # Install Istio Control Plane creating one IstioOperator with demo Profile
 
 # Create istio-system Namespace
@@ -40,7 +42,7 @@ kubectl create namespace istio-system
 kubectl label namespace istio-system istio-injection=disabled
 
 # Watch istio-system for Control Plane Components (keep it on a different terminal window or tmux pane)
-watch 'kubectl -n istio-system get iop,deploy,pods,svc'
+watch 'kubectl -n istio-system get iop,deploy,pods,svc -L istio.io/rev'
 
 # Follow istiod logs (keep it on a different terminal window or tmux pane)
 while true; do
@@ -62,8 +64,8 @@ kubectl apply -f - <<EOF
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 metadata:
+  name: istio-operator
   namespace: istio-system
-  name: istio-${ISTIO_VERSION}
 spec:
   profile: default
 EOF
@@ -92,9 +94,9 @@ EOF
 
 # Add Ons
 cd ${ISTIO_BASE_DIR}
-kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/prometheus.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/grafana.yaml"
+kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml"
 
 # Access Dashboards
 istioctl dashboard --help | grep "Available Commands:" -B 1 -A 8
@@ -108,3 +110,19 @@ kubectl delete ns istio-operator --grace-period=0 --force
 istioctl manifest generate | kubectl delete -f -
 
 kubectl delete ns istio-system --grace-period=0 --force
+
+# Update
+#   https://istio.io/latest/docs/setup/upgrade/
+helm template "${ISTIO_BASE_DIR}/manifests/charts/istio-operator/" \
+  --set hub="docker.io/istio" \
+  --set tag="${ISTIO_VERSION}" \
+  --set revision="1-7-2" \
+  --set operatorNamespace="istio-operator" \
+  --set watchedNamespaces="istio-system" | kubectl apply -f -
+
+kubectl label namespace dev istio-injection- istio.io/rev=1-7-2 --overwrite
+
+kubectl -n dev rollout restart deployment demo
+kubectl -n dev rollout restart deployment ntest
+
+istioctl operator remove --revision default
