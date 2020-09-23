@@ -43,3 +43,14 @@ curl -is services.example.com/health
 curl -is services.example.com/info
 
 curl -is ntest.example.com
+
+# Configuring X-Forwarded-For Headers
+#  https://istio.io/latest/docs/ops/configuration/traffic-management/network-topologies/#configuring-x-forwarded-for-headers
+curl -H 'X-Forwarded-For: 56.5.6.7, 72.9.5.6, 98.1.2.3' http://httpbin.example.com/get?show_env=true
+
+# Authentication Policy
+# - Auto mutual TLS
+# - Globally enabling Istio mutual TLS in STRICT mode
+# - Enable mutual TLS per namespace or workload
+# - End-user authentication
+#  https://istio.io/latest/docs/tasks/security/authentication/authn-policy/

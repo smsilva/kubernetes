@@ -68,6 +68,10 @@ metadata:
   namespace: istio-system
 spec:
   profile: default
+  meshConfig:
+    defaultConfig:
+      gatewayTopology:
+        numTrustedProxies: 2
 EOF
 
 # Update
