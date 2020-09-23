@@ -31,9 +31,11 @@ echo ${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP}
 
 sudo sed -i '/services.example.com/d' /etc/hosts
 sudo sed -i '/ntest.example.com/d' /etc/hosts
+sudo sed -i '/httpbin.example.com/d' /etc/hosts
 
 sudo sed -i "1i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} services.example.com" /etc/hosts
 sudo sed -i "2i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} ntest.example.com" /etc/hosts
+sudo sed -i "3i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} httpbin.example.com" /etc/hosts
 
 kubectl -n dev apply -f demo/
 kubectl -n dev apply -f ntest/
@@ -54,3 +56,16 @@ curl -H 'X-Forwarded-For: 56.5.6.7, 72.9.5.6, 98.1.2.3' http://httpbin.example.c
 # - Enable mutual TLS per namespace or workload
 # - End-user authentication
 #  https://istio.io/latest/docs/tasks/security/authentication/authn-policy/
+
+# Globally enabling Istio mutual TLS in STRICT mode
+#   https://istio.io/latest/docs/tasks/security/authentication/authn-policy/#globally-enabling-istio-mutual-tls-in-strict-mode
+kubectl apply -f - <<EOF
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: "default"
+  namespace: "istio-system"
+spec:
+  mtls:
+    mode: STRICT
+EOF
