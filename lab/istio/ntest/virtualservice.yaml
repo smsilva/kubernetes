@@ -9,6 +9,20 @@ spec:
   gateways:
   - ingress-gateway-demo
   http:
+  # - name: fault-delay
+  #   fault:
+  #     abort:
+  #       httpStatus: 505
+  #       percentage:
+  #         value: 25
+  #   match:
+  #   - uri:
+  #       prefix: "/"
+  #   route:
+  #   - destination:
+  #       host: ntest
+  #       port:
+  #         number: 80
   - name: api
     match:
     - uri:

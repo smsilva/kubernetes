@@ -40,11 +40,16 @@ sudo sed -i "3i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} httpbin.example.com" /et
 kubectl -n dev apply -f demo/
 kubectl -n dev apply -f ntest/
 
+while true; do
+curl -is services.example.com
+curl -is services.example.com
 curl -is services.example.com
 curl -is services.example.com/health
 curl -is services.example.com/info
-
 curl -is ntest.example.com
+curl -is services.example.com/wrong
+sleep 2
+done
 
 # Configuring X-Forwarded-For Headers
 #  https://istio.io/latest/docs/ops/configuration/traffic-management/network-topologies/#configuring-x-forwarded-for-headers
