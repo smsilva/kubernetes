@@ -10,21 +10,7 @@ echo "ISTIO_BASE_DIR.: ${ISTIO_BASE_DIR}"
 # Generate a Public IP - as we use minikube, use minikube tunnel on another terminal
 minikube tunnel
 
-# Example
-cd "kubernetes/lab/istio"
-
-eval $(minikube -p minikube docker-env)
-
-docker build -t demo-health:1.0 demo/docker/
-
-kubectl create namespace dev
-
-kubectl label namespace dev istio-injection=enabled
-
-kubectl get namespaces -L istio-injection
-
-watch 'kubectl -n dev get deploy,pods,svc,gw,vs -L istio.io/rev'
-
+# Change /etc/hosts to use a local fake domain
 ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP=$(kubectl -n istio-system get service -l istio=ingressgateway -o jsonpath='{.items[].status.loadBalancer.ingress[0].ip}')
 
 echo ${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP}
@@ -37,9 +23,27 @@ sudo sed -i "1i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} services.example.com" /e
 sudo sed -i "2i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} ntest.example.com" /etc/hosts
 sudo sed -i "3i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} httpbin.example.com" /etc/hosts
 
+# Prepare a Namespace
+kubectl create namespace dev
+
+kubectl label namespace dev istio-injection=enabled
+
+kubectl get namespaces -L istio-injection
+
+watch 'kubectl -n dev get deploy,pods,svc,gw,vs -L istio.io/rev'
+
+# Sprin Boot Application Example
+cd "kubernetes/lab/istio"
+
+eval $(minikube -p minikube docker-env)
+
+docker build -t demo-health:1.0 demo/docker/
+
 kubectl -n dev apply -f demo/
 kubectl -n dev apply -f ntest/
+kubectl -n dev apply -f httpbin/
 
+# Generate traffic
 while true; do
 curl -is services.example.com
 curl -is services.example.com
@@ -48,6 +52,7 @@ curl -is services.example.com/health
 curl -is services.example.com/info
 curl -is ntest.example.com
 curl -is services.example.com/wrong
+curl -is -X POST -d '{ id: 1}' httpbin.example.com/post
 sleep 2
 done
 
