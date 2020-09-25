@@ -102,6 +102,13 @@ kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/prometheus.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/grafana.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml"
 
+# Kiali Using Token
+sed 's/strategy: .*/strategy: token/' "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml" | kubectl apply -f -
+
+KIALI_SECRET_NAME=$(kubectl get secret | grep kiali | awk '{ print $1 }')
+
+kubectl -n istio-system get secret ${KIALI_SECRET_NAME} -o jsonpath='{.data.token}' | base64 -d | clip
+
 # Access Dashboards
 istioctl dashboard --help | grep "Available Commands:" -B 1 -A 8
 
