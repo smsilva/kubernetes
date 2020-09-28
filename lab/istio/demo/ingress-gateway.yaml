@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: ingress-gateway-demo
+  name: ingress-gateway
   namespace: dev
 spec:
   selector:

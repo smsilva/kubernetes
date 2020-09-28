@@ -7,7 +7,7 @@ spec:
   hosts:
   - "ntest.example.com"
   gateways:
-  - ingress-gateway-demo
+  - ingress-gateway
   http:
   # - name: fault-delay
   #   fault:

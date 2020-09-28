@@ -36,10 +36,17 @@ watch 'kubectl -n istio-operator get deploy,pods,svc -L istio.io/rev'
 # Install Istio Control Plane creating one IstioOperator with demo Profile
 
 # Create istio-system Namespace
-kubectl create namespace istio-system
-
-# Explicitly label the istio-system namespace to not receive sidecar injection
-kubectl label namespace istio-system istio-injection=disabled
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    istio-injection: disabled
+  name: istio-system
+spec:
+  finalizers:
+  - kubernetes
+EOF
 
 # Watch istio-system for Control Plane Components (keep it on a different terminal window or tmux pane)
 watch 'kubectl -n istio-system get iop,deploy,pods,svc -L istio.io/rev'
@@ -59,6 +66,7 @@ kubectl -n istio-system wait pod -l app=istiod --for=condition=Ready && \
 kubectl -n istio-system logs -f -l app=istiod
 
 # Create IstioOperator
+#   https://istio.io/latest/docs/setup/install/operator/
 #   https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#IstioComponentSetSpec
 kubectl apply -f - <<EOF
 apiVersion: install.istio.io/v1alpha1

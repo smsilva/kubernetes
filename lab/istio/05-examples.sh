@@ -1,8 +1,4 @@
 #!/bin/bash
-grep -E "^export ISTIO_VERSION" ~/.bashrc
-
-sed -i '/^export ISTIO_VERSION/ s/1.7.1/1.7.2/' ~/.bashrc
-
 source ${HOME}/.bashrc && \
 echo "ISTIO_VERSION..: ${ISTIO_VERSION}" && \
 echo "ISTIO_BASE_DIR.: ${ISTIO_BASE_DIR}"
@@ -23,17 +19,25 @@ sudo sed -i "1i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} services.example.com" /e
 sudo sed -i "2i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} ntest.example.com" /etc/hosts
 sudo sed -i "3i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} httpbin.example.com" /etc/hosts
 
+cat /etc/hosts
+
 # Prepare a Namespace
-kubectl create namespace dev
-
-kubectl label namespace dev istio-injection=enabled
-
-kubectl get namespaces -L istio-injection
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    istio-injection: enabled
+  name: dev
+spec:
+  finalizers:
+  - kubernetes
+EOF
 
 watch 'kubectl -n dev get deploy,pods,svc,gw,vs -L istio.io/rev'
 
 # Sprin Boot Application Example
-cd "kubernetes/lab/istio"
+cd "${HOME}/pessoal/git/kubernetes/lab/istio"
 
 eval $(minikube -p minikube docker-env)
 

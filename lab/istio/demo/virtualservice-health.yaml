@@ -7,7 +7,7 @@ spec:
   hosts:
   - "services.example.com"
   gateways:
-  - ingress-gateway-demo
+  - ingress-gateway
   http:
   - name: info
     match:
