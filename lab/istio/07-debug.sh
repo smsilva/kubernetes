@@ -24,3 +24,21 @@ istio-ingressgateway-56b8d79bfc-kmdxg.istio-system     SYNCED     SYNCED     SYN
 #   https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/rds#route-discovery-service-rds
 
 istioctl proxy-config bootstrap demo-57d496c7dd-bwj89.dev | yq r -P -
+
+istioctl profile dump demo
+
+kubectl get cm istio-sidecar-injector -o yaml | kubectl neat | grep policy:
+
+kubectl apply -f - <<EOF
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istio-operator
+  namespace: istio-system
+spec:
+  profile: default
+  values:
+    global:
+      proxy:
+        autoInject: disabled
+EOF

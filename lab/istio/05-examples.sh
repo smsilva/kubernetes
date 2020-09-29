@@ -83,3 +83,17 @@ spec:
   mtls:
     mode: STRICT
 EOF
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+  labels:
+    istio-injection: enabled
+spec:
+  finalizers:
+  - kubernetes
+EOF
+
+kubectl get ns default --show-labels

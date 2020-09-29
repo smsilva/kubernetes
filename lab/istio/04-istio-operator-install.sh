@@ -63,23 +63,14 @@ while true; do
   fi
 done;
 kubectl -n istio-system wait pod -l app=istiod --for=condition=Ready && \
-kubectl -n istio-system logs -f -l app=istiod
-
-# Create IstioOperator
-#   https://istio.io/latest/docs/setup/install/operator/
-#   https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#IstioComponentSetSpec
-kubectl apply -f - <<EOF
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  name: istio-operator
+kubectl -n istio-system logs -f -l app=iskubectl apply -f "${ISTIO_BASE_DIR}/manifests/charts/istio-operator/crds/"
   namespace: istio-system
 spec:
   profile: default
-  meshConfig:
-    defaultConfig:
-      gatewayTopology:
-        numTrustedProxies: 2
+  values:
+    global:
+      proxy:
+        autoInject: disabled
 EOF
 
 # Update
@@ -145,3 +136,17 @@ kubectl -n dev rollout restart deployment demo
 kubectl -n dev rollout restart deployment ntest
 
 istioctl operator remove --revision default
+
+kubectl apply -f - <<EOF
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istio-operator
+  namespace: istio-system
+spec:
+  profile: default
+  values:
+    global:
+      proxy:
+        autoInject: disabled
+EOF
