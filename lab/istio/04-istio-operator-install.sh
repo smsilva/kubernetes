@@ -64,6 +64,12 @@ while true; do
 done;
 kubectl -n istio-system wait pod -l app=istiod --for=condition=Ready && \
 kubectl -n istio-system logs -f -l app=iskubectl apply -f "${ISTIO_BASE_DIR}/manifests/charts/istio-operator/crds/"
+
+kubectl apply -f - <<EOF
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istio-operator
   namespace: istio-system
 spec:
   profile: default
