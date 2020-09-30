@@ -21,7 +21,7 @@ sudo sed -i "3i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} httpbin.example.com" /et
 
 cat /etc/hosts
 
-# Prepare a Namespace
+# Create a Namespace
 kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Namespace
@@ -34,6 +34,7 @@ spec:
   - kubernetes
 EOF
 
+# Monitor dev namespace
 watch 'kubectl -n dev get deploy,pods,svc,gw,vs -L istio.io/rev'
 
 # Sprin Boot Application Example
@@ -57,6 +58,9 @@ curl -is services.example.com/info
 curl -is ntest.example.com
 curl -is services.example.com/wrong
 curl -is -X POST -d '{ id: 1}' httpbin.example.com/post
+curl -is httpbin.example.com/get
+curl -is httpbin.example.com/get
+curl -is httpbin.example.com/wrong
 sleep 2
 done
 
