@@ -1,6 +1,3 @@
-# Kiali Using Token
-sed 's/strategy: .*/strategy: token/' "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml" | kubectl apply -f -
-
 # Kiali Operator
 bash <(curl -L https://raw.githubusercontent.com/kiali/kiali-operator/master/deploy/deploy-kiali-operator.sh)
 
@@ -9,8 +6,8 @@ KIALI_OPERATOR_POD=$(
     get pods \
       -l app=kiali-operator \
       -o jsonpath='{.items[0].metadata.name}') && \
-  kubectl -n kiali-operator wait --for condition=Ready pod ${KIALI_OPERATOR_POD} && \
-  kubectl -n kiali-operator logs -f ${KIALI_OPERATOR_POD} | tee ${KIALI_OPERATOR_POD}.log
+  kubectl -n kiali-operator wait --for condition=Ready pod "${KIALI_OPERATOR_POD}" && \
+  kubectl -n kiali-operator logs -f "${KIALI_OPERATOR_POD}" | tee "${KIALI_OPERATOR_POD}".log
 
 # Kiali Secret
 CLIENT_SECRET='' && \
