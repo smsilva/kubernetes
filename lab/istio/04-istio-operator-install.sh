@@ -13,13 +13,6 @@ helm template "${ISTIO_BASE_DIR}/manifests/charts/istio-operator/" \
   --set operatorNamespace="istio-operator" \
   --set watchedNamespaces="istio-system" | kubectl apply -f -
 
-# Monitor Istio Operator Controller Execution
-kubectl -n istio-operator wait pod -l name=istio-operator --for=condition=Ready && \
-kubectl -n istio-operator logs -f -l name=istio-operator
-
-# Monitor istio-operator namespace
-watch 'kubectl -n istio-operator get deploy,pods,svc -L istio.io/rev'
-
 # Create istio-system Namespace
 kubectl apply -f - <<EOF
 apiVersion: v1
@@ -32,6 +25,28 @@ spec:
   finalizers:
   - kubernetes
 EOF
+
+# Create IstioOperator Resource
+kubectl apply -f - <<EOF
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istio-operator
+  namespace: istio-system
+spec:
+  profile: default
+  values:
+    global:
+      proxy:
+        autoInject: enabled
+EOF
+
+# Monitor Istio Operator Controller Execution
+kubectl -n istio-operator wait pod -l name=istio-operator --for=condition=Ready && \
+kubectl -n istio-operator logs -f -l name=istio-operator
+
+# Monitor istio-operator namespace
+watch 'kubectl -n istio-operator get deploy,pods,svc -L istio.io/rev'
 
 # Watch istio-system for Control Plane Components (keep it on a different terminal window or tmux pane)
 watch 'kubectl -n istio-system get iop,deploy,pods,svc -L istio.io/rev'
@@ -50,59 +65,10 @@ done && \
 kubectl -n istio-system wait pod -l app=istiod --for=condition=Ready && \
 kubectl -n istio-system logs -f -l app=istiod
 
-# Create IstioOperator Resource
-kubectl apply -f - <<EOF
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  name: istio-operator
-  namespace: istio-system
-spec:
-  profile: default
-  values:
-    global:
-      proxy:
-        autoInject: enabled
-EOF
-
-# Update
-kubectl apply -f - <<EOF
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  namespace: istio-system
-  name: istio-control-plane
-spec:
-  profile: default
-  values:
-    global:
-      proxy:
-        autoInject: enabled
-  components:
-    pilot:
-      k8s:
-        resources:
-          requests:
-            memory: 3072Mi
-    ingressGateways:
-    - name: istio-ingressgateway
-      enabled: true
-      k8s:
-        replicaCount: 3
-EOF
-
 # Add Ons
-cd ${ISTIO_BASE_DIR}
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/prometheus.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/grafana.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml"
-
-# Kiali Using Token
-sed 's/strategy: .*/strategy: token/' "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml" | kubectl apply -f -
-
-KIALI_SECRET_NAME=$(kubectl get secret | grep kiali | awk '{ print $1 }')
-
-kubectl -n istio-system get secret ${KIALI_SECRET_NAME} -o jsonpath='{.data.token}' | base64 -d | clip
 
 # Access Dashboards
 istioctl dashboard --help | grep "Available Commands:" -B 1 -A 8
@@ -132,17 +98,3 @@ kubectl -n dev rollout restart deployment demo
 kubectl -n dev rollout restart deployment ntest
 
 istioctl operator remove --revision default
-
-kubectl apply -f - <<EOF
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  name: istio-operator
-  namespace: istio-system
-spec:
-  profile: default
-  values:
-    global:
-      proxy:
-        autoInject: disabled
-EOF

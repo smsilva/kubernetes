@@ -45,8 +45,8 @@ eval $(minikube -p minikube docker-env)
 docker build -t demo-health:1.0 demo/docker/
 
 kubectl -n dev apply -f demo/
-kubectl -n dev apply -f ntest/
 kubectl -n dev apply -f httpbin/
+kubectl -n dev apply -f ntest/
 
 # Generate traffic
 while true; do
@@ -55,7 +55,7 @@ curl -is services.example.com
 curl -is services.example.com
 curl -is services.example.com/health
 curl -is services.example.com/info
-curl -is ntest.example.com
+# curl -is ntest.example.com
 curl -is services.example.com/wrong
 curl -is -X POST -d '{ id: 1}' httpbin.example.com/post
 curl -is httpbin.example.com/get
