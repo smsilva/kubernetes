@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      nodeSelector:
+        disktype: ssd
+      initContainers:
+      - name: sleep
+        image: busybox
+        command:
+        - sh
+        - -c
+        - sleep 10
+      containers:
+      - image: nginx:1.19
+        name: nginx
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: nginx
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: nginx

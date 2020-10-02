@@ -2,13 +2,7 @@
 CLUSTER_NAME=$1
 
 if [ -e ${CLUSTER_NAME} ]; then
-  echo ""
-  echo "try to run:"
-  echo ""
-  echo "  ./run.sh cluster-name-you-wish"
-  echo ""
-
-  exit 1
+  CLUSTER_NAME="demo"
 fi
 
 SECONDS=0
