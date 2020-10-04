@@ -14,9 +14,17 @@ First, we neeed to Deploy the Application
 
 ### Files
 
+#### Kubernetes
+
 - [serviceaccount.yaml](default-deployment/serviceaccount.yaml)
 - [deployment.yaml](default-deployment/deployment.yaml)
 - [service.yaml](default-deployment/service.yaml)
+
+#### Istio
+
+- [ingress-gateway.yaml](istio-objects/ingress-gateway.yaml)
+- [virtualservice-503-error.yaml](istio-objects/virtualservice-503-error.yaml)
+- [virtualservice-delay.yaml](istio-objects/virtualservice-delay.yaml)
 
 ### Deploy
 
@@ -32,15 +40,27 @@ kubectl -n demo apply -f istio-objects/
 
 ## Testing
 
+### Normal
+
 ```bash
 while true; do
   curl -is http://demo.example.com/get | head -1 && sleep 0.5; 
 done
 ```
 
+### 503 Error
+
 ```bash
 while true; do
-  curl -is -H "fault: true" http://demo.example.com/get | head -1 && sleep 0.5; 
+  curl -is -H "fault: 503" http://demo.example.com/get | head -1 && sleep 0.5; 
+done
+```
+
+### Delay
+
+```bash
+while true; do
+  curl -is -H "fault: delay" http://demo.example.com/get | head -1 && sleep 0.5; 
 done
 ```
 
