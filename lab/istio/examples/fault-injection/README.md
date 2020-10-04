@@ -8,19 +8,17 @@ Run the ```setup.sh``` script:
 ../setup.sh
 ```
 
-## Deploy the HTTPBIN Application
-
-First, we neeed to Deploy the Application
+## Deploy
 
 ### Files
 
-#### Kubernetes
+#### **Kubernetes**
 
 - [serviceaccount.yaml](default-deployment/serviceaccount.yaml)
 - [deployment.yaml](default-deployment/deployment.yaml)
 - [service.yaml](default-deployment/service.yaml)
 
-#### Istio
+#### **Istio**
 
 - [ingress-gateway.yaml](istio-objects/ingress-gateway.yaml)
 - [virtualservice-503-error.yaml](istio-objects/virtualservice-503-error.yaml)

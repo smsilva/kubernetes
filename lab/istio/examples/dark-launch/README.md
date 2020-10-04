@@ -8,19 +8,20 @@ Run the ```setup.sh``` script:
 ../setup.sh
 ```
 
-## Deploy the HTTPBIN Application
+## Files
 
-First, we neeed to Deploy the Application
-
-### Files
+### **Kubernetes**
 
 - [serviceaccount.yaml](default-deployment/serviceaccount.yaml)
 - [deployment-v1.yaml](default-deployment/deployment-v1.yaml) - httpbin
 - [deployment-v2.yaml](default-deployment/deployment-v2.yaml) - nginx
 - [service.yaml](default-deployment/service.yaml)
+
+### **Istio**
+
 - [ingress-gateway.yaml](istio-objects/ingress-gateway.yaml)
-- [virtualservice.yaml](istio-objects/virtualservice.yaml)
-- [destinationrule.yaml](istio-objects/destinationrule.yaml)
+- [virtualservice.yaml](istio-objects/virtualservice.yaml) - 80/20
+- [destinationrule.yaml](istio-objects/destinationrule.yaml) - v1 and v2 labels
 
 ### Deploy
 
@@ -42,8 +43,11 @@ From inside the Cluster:
 
 ```bash
 kubectl -n demo run --image=tutum/curl curl --command -- sleep 5000
+
 kubectl -n demo wait --for condition=Ready pod curl
-kubectl -n demo exec curl -- curl -is test.demo.svc.cluster.local/get | head -1 
+
+kubectl -n demo exec curl -- curl \
+  -is test.demo.svc.cluster.local/get | head -1 
 ```
 
 ### From outside

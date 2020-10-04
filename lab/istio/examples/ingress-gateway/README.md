@@ -10,15 +10,18 @@ Run the ```setup.sh``` script:
 ../setup.sh
 ```
 
-## Deploy the HTTPBIN Application
+## Files
 
-First, we neeed to Deploy the Application
-
-### Files
+### **Kubernetes**
 
 - [serviceaccount.yaml](default-deployment/serviceaccount.yaml)
 - [deployment.yaml](default-deployment/deployment.yaml)
 - [service.yaml](default-deployment/service.yaml)
+
+#### **Istio**
+
+- [ingress-gateway.yaml](istio-objects/ingress-gateway.yaml)
+- [virtualservice.yaml](istio-objects/virtualservice.yaml)
 
 ### Deploy
 
@@ -26,7 +29,7 @@ First, we neeed to Deploy the Application
 kubectl -n demo apply -f default-deployment/
 ```
 
-## Creating Istio Gateway
+## Creating Istio Objects
 
 Then, we'll create an Ingress Gateway and VirtualService objects
 
@@ -39,9 +42,15 @@ kubectl -n demo apply -f istio-objects/
 From inside the Cluster:
 
 ```bash
-kubectl -n demo run --image=tutum/curl curl --command -- sleep 5000
+kubectl -n demo run --image=tutum/curl curl --command -- sleep infinity
+
 kubectl -n demo wait --for condition=Ready pod curl
-kubectl -n demo exec curl -- curl -is -X POST -H "Content-type: application/json" -d "{ id: 1}" httpbin.demo.svc.cluster.local:8000/post
+
+kubectl -n demo exec curl -- curl \
+  -is \
+  -X POST  httpbin.demo.svc.cluster.local:8000/post \
+  -H "Content-type: application/json" \
+  -d "{ id: 1}"
 ```
 
 From outside:
