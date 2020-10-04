@@ -12,7 +12,7 @@ if ! kubectl config get-contexts minikube &> /dev/null; then
     --kubernetes-version "v${KUBERNETES_VERSION}" \
     --driver=docker \
     --network-plugin=cni \
-    --memory 4096
+    --memory ${MINIKUBE_MEMORY-4096}
 
   # Configure minikube context as default context  
   kubectl config use-context minikube
