@@ -16,6 +16,23 @@ kubectl \
   create secret generic "kiali" \
   --from-literal="oidc-secret=$CLIENT_SECRET"
 
+kubectl create clusterrolebinding john-binding --clusterrole=kiali --serviceaccount=mynamespace:john --dry-run=client -o yaml
+
+kubectl apply -f - <<EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kiali-binding-to-aks-admins
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kiali
+subjects:
+- kind: Group
+  namespace: istio-system
+  name: 149ae9b0-6ea5-454e-96d9-2c91bdfe704e
+EOF
+
 # Kiali Role Binding
 kubectl apply -f - <<EOF
 apiVersion: rbac.authorization.k8s.io/v1
@@ -44,21 +61,47 @@ metadata:
   namespace: istio-system
 spec:
   auth:
+    strategy: token
+  deployment:
+    accessible_namespaces:
+    - '**'
+    namespace: istio-system
+    view_only_mode: false
+    verbose_mode: "5"
+  version: default
+EOF
+
+kubectl describe clusterrole kiali
+
+kubectl describe ClusterRoleBinding kiali-binding-to-aks-admins
+
+kubectl get secret -n istio-system $(kubectl get sa kiali-service-account -n istio-system -o jsonpath={.secrets[0].name}) -o jsonpath={.data.token} | base64 -d
+
+watch -n 3 'kubectl -n istio-system get kiali,pods,Secret,ClusterRole,ClusterRoleBinding,ServiceAccount | grep -E "NAME|kiali"'
+
+kubectl apply -f - <<EOF
+apiVersion: kiali.io/v1alpha1
+kind: Kiali
+metadata:
+  name: kiali
+  namespace: istio-system
+spec:
+  auth:
     strategy: openid
     openid:
       authentication_timeout: 300
-      authorization_endpoint: "https://login.microsoftonline.com/45242aaf-b0d7-4105-b030-293dce770300/oauth2/v2.0/authorize"
-      client_id: "a80694e7-1656-4446-ad00-e566d722add1"
+      authorization_endpoint: "https://login.microsoftonline.com/a267367d-d04d-4a6b-84ef-0cc227ed6e9f/oauth2/v2.0/authorize"
+      client_id: "df77d8cc-3858-4b64-87fe-e40af35de522"
       insecure_skip_verify_tls: true
-      issuer_uri: "https://login.microsoftonline.com/45242aaf-b0d7-4105-b030-293dce770300/v2.0"
+      issuer_uri: "https://login.microsoftonline.com/a267367d-d04d-4a6b-84ef-0cc227ed6e9f/v2.0"
       scopes: ["openid", "profile", "email"]
       username_claim: email
   deployment:
     accessible_namespaces:
     - '**'
     namespace: istio-system
-    view_only_mode: true
-    verbose_mode: "5"
+    view_only_mode: false
+    verbose_mode: "9"
   version: default
 EOF
 
