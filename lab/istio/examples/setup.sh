@@ -16,7 +16,7 @@ for n in {001..100}; do
   fi
 done
 
-for DOMAIN in {services,httpbin,ntest}.example.com; do
+for DOMAIN in {services,httpbin,ntest,demo}.example.com; do
   sudo sed -i "/${DOMAIN}/d" /etc/hosts
   sudo sed -i "1i${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP} ${DOMAIN}" /etc/hosts
 done && \
@@ -42,4 +42,4 @@ spec:
 EOF
 
 # Monitor demo namespace
-watch 'kubectl -n demo get deploy,pods,svc,gw,vs'
+watch 'kubectl -n demo get deploy,pods,svc,gw,vs -o wide'

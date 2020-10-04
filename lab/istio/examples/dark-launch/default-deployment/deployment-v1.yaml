@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test
+    version: v1
+  name: test-v1
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: test
+        version: v1
+    spec:
+      serviceAccountName: test
+      containers:
+      - name: test
+        image: docker.io/kennethreitz/httpbin:latest
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
