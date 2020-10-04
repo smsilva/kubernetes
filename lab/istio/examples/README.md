@@ -1,3 +1,3 @@
 # Examples
 
-- [Ingress Traffic](01-ingress-gateway/README.md) - Gateway and VirtualService
+- [Ingress Traffic](ingress-gateway/README.md) - Gateway and VirtualService
