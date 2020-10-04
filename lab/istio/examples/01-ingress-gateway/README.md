@@ -16,7 +16,9 @@ First, we neeed to Deploy the Application
 
 ### Files
 
+- [serviceaccount.yaml](default-deployment/serviceaccount.yaml)
 - [deployment.yaml](default-deployment/deployment.yaml)
+- [service.yaml](default-deployment/service.yaml)
 
 ### Deploy
 
@@ -45,7 +47,7 @@ kubectl -n demo exec curl -- curl -is -X POST -H "Content-type: application/json
 From outside:
 
 ```bash
-curl -is -X POST -H "Content-type: application/json" -d "{ id: 1}" hhttpbin.example.com/post
+curl -is -X POST -H "Content-type: application/json" -d "{ id: 1}" httpbin.example.com/post
 ```
 
 ## Clean up
