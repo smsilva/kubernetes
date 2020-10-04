@@ -55,3 +55,7 @@ curl -is -X POST -H "Content-type: application/json" -d "{ id: 1}" httpbin.examp
 ```bash
 kubectl delete namespace demo
 ```
+
+## Examples Index
+
+Click [here](../README.md) to go back to Examples Index.
