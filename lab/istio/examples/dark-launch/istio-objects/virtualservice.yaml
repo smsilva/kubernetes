@@ -5,10 +5,10 @@ metadata:
   namespace: demo
 spec:
   hosts:
-  - demo.example.com
-  - test.demo.svc.cluster.local
+    - demo.example.com
+    - test.demo.svc.cluster.local
   gateways:
-  - ingress-gateway
+    - ingress-gateway
   http:
     - match:
         - headers:
@@ -22,9 +22,9 @@ spec:
         - destination:
             host: test.demo.svc.cluster.local
             subset: v1
-          weight: 80
+          weight: 70
         - destination:
             host: test.demo.svc.cluster.local
             subset: v2
-          weight: 20
+          weight: 30
 
