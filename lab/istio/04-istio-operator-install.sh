@@ -44,7 +44,21 @@ EOF
 # Add Ons
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/prometheus.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/grafana.yaml"
+kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml"; sleep 1
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml"
 
-# Watch istio-system for Control Plane Components (keep it on a different terminal window or tmux pane)
-watch 'kubectl -n istio-system get iop,deploy,pods,svc'
+# Wait until all Deployments become Available
+for DEPLOYMENT_NAME in $(kubectl -n istio-system get deploy -o jsonpath='{range .items[*].metadata}{.name}{"\n"}{end}'); do
+  kubectl -n istio-system \
+    wait --for condition=Available deployment ${DEPLOYMENT_NAME} --timeout=60s
+done
+
+for n in {001..100}; do
+  STATUS=$(kubectl -n istio-system get iop istio-operator -o jsonpath='{.status.status}')
+  echo "[${n}] Istio Operator Status: ${STATUS}"
+  if [ "${STATUS}" == "HEALTHY" ]; then
+    break
+  else
+    sleep 10
+  fi
+done
