@@ -19,39 +19,39 @@ kubectl label namespace default istio-injection=enabled
 
 kubectl -n default apply -f ${ISTIO_BASE_DIR}/samples/bookinfo/platform/kube/bookinfo.yaml
 
-for DEPLOYMENT_NAME in $(kubectl -n default get deploy -o jsonpath='{range .items[*].metadata}{.name}{"\n"}{end}'); do
+for DEPLOYMENT_NAME in $(kubectl -n default get deploy -o jsonpath='{.items[*].metadata.name}'); do
   kubectl -n default \
-    wait --for condition=Available deployment ${DEPLOYMENT_NAME} --timeout=60s
+    wait --for condition=Available deployment ${DEPLOYMENT_NAME} --timeout=3600s
 done
 ```
 
-### Bookinfo Application Gateway and VirtualServices
+### Bookinfo Application Gateway, VirtualServices and Destination Rules
 
 ```bash
 kubectl -n default apply -f ${ISTIO_BASE_DIR}/samples/bookinfo/networking/bookinfo-gateway.yaml
+
+kubectl -n default apply -f ${ISTIO_BASE_DIR}/samples/bookinfo/networking/destination-rule-all.yaml
 ```
 
-### Initialize the application version routing by running the following command
+### Check if Bookinfo Application is running
 
 ```bash
-kubectl -n default apply -f ${ISTIO_BASE_DIR}/samples/bookinfo/networking/virtual-service-all-v1.yaml
+  kubectl exec "$(kubectl get pod -l app=ratings -o jsonpath='{.items[0].metadata.name}')" -c ratings -- curl -s productpage:9080/productpage | grep -o "<title>.*</title>"
 ```
-
-## Testing
 
 ### Bookinfo Application Product Page
 
 http://demo.example.com/productpage
 
-### Bookinfo Application is running
+### Configure All Virtual Services to route to only v1
 
 ```bash
-kubectl exec "$(kubectl get pod -l app=ratings -o jsonpath='{.items[0].metadata.name}')" -c ratings -- curl productpage:9080/productpage | grep -o "<title>.*</title>"
+kubectl -n default apply -f ${ISTIO_BASE_DIR}/samples/bookinfo/networking/virtual-service-all-v1.yaml
 ```
 
-### Creating Timeout
+## Creating Request Timeout
 
-1. Route requests to v2 of the reviews service, i.e., a version that calls the ratings service:
+#### 1. Route requests to v2 of the reviews service, i.e., a version that calls the ratings service:
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -70,7 +70,7 @@ spec:
 EOF
 ```
 
-2. Add a 2 second delay to calls to the ratings service:
+#### 2. Add a 2 second delay to calls to the ratings service:
 
 ```yaml
 kubectl apply -f - <<EOF
@@ -93,6 +93,25 @@ spec:
 EOF
 ```
 
+#### 3. Request Timeout
+
+```yaml
+kubectl apply -f - <<EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: reviews
+spec:
+  hosts:
+  - reviews
+  http:
+  - route:
+    - destination:
+        host: reviews
+        subset: v2
+    timeout: 0.5s
+EOF
+```
 ## Clean up
 
 ```bash
