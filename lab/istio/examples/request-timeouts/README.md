@@ -112,12 +112,6 @@ spec:
     timeout: 0.5s
 EOF
 ```
-## Clean up
-
-```bash
-kubectl delete -f ${ISTIO_BASE_DIR}/samples/bookinfo/networking/virtual-service-all-v1.yaml
-
-```
 
 ### Clean up Bookinfo Application
 

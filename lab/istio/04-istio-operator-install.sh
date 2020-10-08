@@ -39,6 +39,7 @@ spec:
     global:
       proxy:
         autoInject: enabled
+        privileged: true
 EOF
 
 # Add Ons
