@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: certificate-ingress-traffic
+spec:
+  hosts:
+    - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
+  gateways:
+    - ingress-gateway-certificate
+  http:
+    - match:
+        - uri:
+            prefix: /.well-known/acme-challenge/
+      route:
+        - destination:
+            host: cert-manager-solver

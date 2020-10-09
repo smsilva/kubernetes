@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+metadata:
+  name: {{ index .Values "issuer" "name" }}
+  namespace: istio-system
+spec:
+  acme:
+    server: {{ index .Values "issuer" "server" }}
+    email: {{ index .Values "issuer" "email" }}
+    privateKeySecretRef:
+      name: {{ index .Values "issuer" "name" }}
+    solvers:
+    - http01:
+        ingress:
+          class: istio
