@@ -15,5 +15,6 @@
 
 ### Authorization
 
-- [Authorization for HTTP traffic](security/authorization/for-http-traffic/README.md) - Gateway and VirtualService
-- [Authorization for TCP traffic](security/authorization/for-tcp-traffic/README.md) - Gateway and VirtualService
+- [Authorization for HTTP traffic](security/authorization/for-http-traffic/README.md) - Using Bookinfo Application
+- [Authorization for TCP traffic](security/authorization/for-tcp-traffic/README.md) - Using httpbin/sleep
+- [Authorization with JWT](security/authorization/with-jwt/README.md) - Using httpbin/sleep
