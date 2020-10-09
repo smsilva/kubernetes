@@ -7,7 +7,7 @@ This Example will show you how to configure Istio Ingress Traffic using Istio Ga
 Run the ```setup.sh``` script:
 
 ```bash
-../setup.sh
+../../setup.sh
 ```
 
 ## Files
@@ -67,4 +67,4 @@ kubectl delete namespace demo
 
 ## Examples Index
 
-Click [here](../README.md) to go back to Examples Index.
+Click [here](../../README.md) to go back to Examples Index.

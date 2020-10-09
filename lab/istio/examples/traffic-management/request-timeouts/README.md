@@ -7,7 +7,7 @@ Reference [here](https://istio.io/latest/docs/tasks/traffic-management/request-t
 Run the ```setup.sh``` script:
 
 ```bash
-../setup.sh
+../../setup.sh
 ```
 
 ## Deploy
@@ -121,4 +121,4 @@ ${ISTIO_BASE_DIR}/samples/bookinfo/platform/kube/cleanup.sh
 
 ## Examples Index
 
-Click [here](../README.md) to go back to Examples Index.
+Click [here](../../README.md) to go back to Examples Index.

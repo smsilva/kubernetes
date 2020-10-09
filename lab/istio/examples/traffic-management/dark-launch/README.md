@@ -5,7 +5,7 @@
 Run the ```setup.sh``` script:
 
 ```bash
-../setup.sh
+../../setup.sh
 ```
 
 ## Files
@@ -78,4 +78,4 @@ kubectl delete namespace demo
 
 ## Examples Index
 
-Click [here](../README.md) to go back to Examples Index.
+Click [here](../../README.md) to go back to Examples Index.

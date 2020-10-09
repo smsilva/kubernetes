@@ -7,7 +7,7 @@ Reference [here](https://istio.io/latest/docs/tasks/security/authentication/mtls
 Run the ```setup.sh``` script:
 
 ```bash
-../setup.sh
+../../setup.sh
 ```
 
 ## Deploy
@@ -57,4 +57,4 @@ kubectl delete ns foo bar legacy
 
 ## Examples Index
 
-Click [here](../README.md) to go back to Examples Index.
+Click [here](../../README.md) to go back to Examples Index.

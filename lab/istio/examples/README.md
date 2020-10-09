@@ -2,16 +2,16 @@
 
 ## Traffic Management
 
-- [Ingress Traffic](ingress-gateway/README.md) - Gateway and VirtualService
-- [Dark Launch](dark-launch/README.md) - Routing Traffic based on Headers Parameters
-- [Fault Injection](fault-injection/README.md) - Delays and HTTP Error Codes
-- [Request Timeouts](request-timeouts/README.md) - Using Bookinfo Application
+- [Ingress Traffic](traffic-management/ingress-gateway/README.md) - Gateway and VirtualService
+- [Dark Launch](traffic-management/dark-launch/README.md) - Routing Traffic based on Headers Parameters
+- [Fault Injection](traffic-management/fault-injection/README.md) - Delays and HTTP Error Codes
+- [Request Timeouts](traffic-management/request-timeouts/README.md) - Using Bookinfo Application
 
 ## Security
 
 ### Authentication
 
-- [Mutual TLS Migration](mtls-strict-mode/README.md) - Using httpbin/sleep
+- [Mutual TLS Migration](security/authentication/mtls-strict-mode/README.md) - Using httpbin/sleep
 
 ### Authorization
 
