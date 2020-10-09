@@ -40,6 +40,10 @@ spec:
       proxy:
         autoInject: enabled
         privileged: true
+    gateways:
+      istio-ingressgateway:
+        serviceAnnotations:
+          service.beta.kubernetes.io/azure-dns-label-name: silvios-dev
 EOF
 
 # Add Ons
@@ -51,7 +55,10 @@ kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml"
 # Wait until all Deployments become Available
 for DEPLOYMENT_NAME in $(kubectl -n istio-system get deploy -o jsonpath='{range .items[*].metadata}{.name}{"\n"}{end}'); do
   kubectl -n istio-system \
-    wait --for condition=Available deployment ${DEPLOYMENT_NAME} --timeout=60s
+    wait 
+      --timeout=3600s \
+      --for condition=Available \
+      deployment ${DEPLOYMENT_NAME}
 done
 
 for n in {001..100}; do
