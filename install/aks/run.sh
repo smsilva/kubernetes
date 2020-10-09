@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USER_EMAIL="smsilva@contoso.com"
+USER_EMAIL="${USER_EMAIL:-smsilva@contoso.com}"
 
 FILTER_EXPRESSION=$(printf "mail eq '%s'" "${USER_EMAIL}")
 USER_ID=$(az ad user list --filter "${FILTER_EXPRESSION}" -o tsv --query='[*].objectId')

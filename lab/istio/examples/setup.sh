@@ -27,19 +27,3 @@ grep "${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP}" /etc/hosts && \
 echo "" && \
 
 sleep 10
-
-# Create a Namespace
-kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    istio-injection: enabled
-  name: demo
-spec:
-  finalizers:
-  - kubernetes
-EOF
-
-# Monitor demo namespace
-watch 'kubectl -n demo get deploy,pods,svc,gw,vs -o wide'
