@@ -16,3 +16,4 @@
 ### Authorization
 
 - [Authorization for HTTP traffic](security/authorization/for-http-traffic/README.md) - Gateway and VirtualService
+- [Authorization for TCP traffic](security/authorization/for-tcp-traffic/README.md) - Gateway and VirtualService
