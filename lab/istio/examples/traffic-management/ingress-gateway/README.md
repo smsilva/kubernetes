@@ -26,7 +26,16 @@ Run the ```setup.sh``` script:
 ### Deploy
 
 ```bash
+kubectl create namespace demo
+
+kubectl label namespace demo istio-injection=enabled
+
 kubectl -n demo apply -f default-deployment/
+
+kubectl -n demo \
+  wait \
+    --for condition=Available \
+    deployment httpbin
 ```
 
 ## Creating Istio Objects

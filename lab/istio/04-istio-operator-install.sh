@@ -35,6 +35,28 @@ metadata:
   namespace: istio-system
 spec:
   profile: default
+  components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      namespace: istio-system
+      enabled: true
+    - name: istio-ingressgateway-demo
+      namespace: demo
+      enabled: true
+      k8s:
+        service:
+          type: ClusterIP
+          ports:
+          - name: status-port
+            port: 15021
+          - name: http2
+            port: 80
+            targetPort: 8080
+          - name: https
+            port: 443
+            targetPort: 8443
+          - name: tls
+            port: 15443
   values:
     global:
       proxy:
@@ -70,3 +92,5 @@ for n in {001..100}; do
     sleep 10
   fi
 done
+
+examples/setup.sh

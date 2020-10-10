@@ -24,6 +24,4 @@ echo "" && \
 echo "file /etc/hosts contents:" && \
 echo "" && \
 grep "${ISTIO_INGRESS_GATEWAY_LOADBALANCER_IP}" /etc/hosts && \
-echo "" && \
-
-sleep 10
+echo ""
