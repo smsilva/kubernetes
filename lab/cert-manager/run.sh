@@ -1,5 +1,7 @@
 #!/bin/bash
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.2/cert-manager.yaml
+kubectl apply \
+  --validate=false \
+  --filename install/cert-manager-v1.0.2.yaml
 
 for DEPLOYMENT_NAME in $(kubectl --namespace cert-manager get deploy -o jsonpath='{.items[*].metadata.name}'); do
   kubectl --namespace cert-manager \
@@ -10,4 +12,4 @@ for DEPLOYMENT_NAME in $(kubectl --namespace cert-manager get deploy -o jsonpath
 done
 
 kubectl --namespace cert-manager \
-  get pods,service
+  get pods,services

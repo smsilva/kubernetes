@@ -2,14 +2,21 @@ apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: httpbin
-  namespace: istio-system
+  namespace: demo
 spec:
   hosts:
   - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
+  - httpbin
   gateways:
-  - ingress-gateway
+  - ingress-gateway.istio-system.svc.cluster.local
+  - mesh
   http:
-  - route:
+  - name: httpbin
+    headers:
+      request:
+        add:
+          X-A1-custom: my-custom-value
+    route:
     - destination:
         host: httpbin.demo.svc.cluster.local
         port:

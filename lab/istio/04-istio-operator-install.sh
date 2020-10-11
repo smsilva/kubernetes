@@ -55,7 +55,7 @@ spec:
       enabled: true
     - name: istio-ingressgateway-demo
       namespace: demo
-      enabled: true
+      enabled: false
       k8s:
         service:
           type: ClusterIP

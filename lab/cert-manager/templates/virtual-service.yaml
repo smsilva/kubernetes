@@ -4,13 +4,13 @@ metadata:
   name: certificate-ingress-traffic
 spec:
   hosts:
-    - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
+  - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
   gateways:
-    - ingress-gateway-certificate
+  - ingress-gateway-certificate.istio-system.svc.cluster.local
   http:
-    - match:
-        - uri:
-            prefix: /.well-known/acme-challenge/
-      route:
-        - destination:
-            host: cert-manager-solver
+  - match:
+      - uri:
+          prefix: /.well-known/acme-challenge/
+    route:
+      - destination:
+          host: cert-manager-solver

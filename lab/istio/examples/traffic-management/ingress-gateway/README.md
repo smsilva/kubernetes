@@ -20,8 +20,8 @@ Run the ```setup.sh``` script:
 
 #### **Istio**
 
-- [ingress-gateway.yaml](istio-objects/ingress-gateway.yaml)
-- [virtualservice.yaml](istio-objects/virtualservice.yaml)
+- [ingress-gateway.yaml](istio-objects/public-ingress-gateway.yaml)
+- [virtualservice.yaml](istio-objects/demo-virtualservice.yaml)
 
 ### Deploy
 
