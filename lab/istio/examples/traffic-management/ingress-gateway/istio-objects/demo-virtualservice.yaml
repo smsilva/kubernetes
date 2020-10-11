@@ -6,11 +6,19 @@ metadata:
 spec:
   hosts:
   - demo.example.com
+  - httpbin.example.com
+  - httpbin
   gateways:
   - public-ingress-gateway.istio-system.svc.cluster.local
+  - mesh
   http:
-  - route:
-    - destination:
-        host: httpbin.demo.svc.cluster.local
-        port:
-          number: 8000
+    - name: httpbin
+      headers:
+        request:
+          add:
+            X-A1-custom: my-custom-value
+      route:
+      - destination:
+          host: httpbin.demo.svc.cluster.local
+          port:
+            number: 8000
