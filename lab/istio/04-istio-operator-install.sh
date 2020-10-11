@@ -26,6 +26,19 @@ spec:
   - kubernetes
 EOF
 
+# Create demo Namespace
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    istio-injection: enabled
+  name: demo
+spec:
+  finalizers:
+  - kubernetes
+EOF
+
 # Create IstioOperator Resource
 kubectl apply -f - <<EOF
 apiVersion: install.istio.io/v1alpha1
@@ -83,14 +96,6 @@ for DEPLOYMENT_NAME in $(kubectl -n istio-system get deploy -o jsonpath='{range 
       deployment ${DEPLOYMENT_NAME}
 done
 
-for n in {001..100}; do
-  STATUS=$(kubectl -n istio-system get iop istio-operator -o jsonpath='{.status.status}')
-  echo "[${n}] Istio Operator Status: ${STATUS}"
-  if [ "${STATUS}" == "HEALTHY" ]; then
-    break
-  else
-    sleep 10
-  fi
-done
+wait-for-operator.sh
 
 examples/setup.sh
