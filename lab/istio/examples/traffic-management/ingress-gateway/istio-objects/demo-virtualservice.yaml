@@ -16,7 +16,7 @@ spec:
       headers:
         request:
           add:
-            X-A1-custom: my-custom-value
+            X-A1-origin: public-ingress-routes
       route:
       - destination:
           host: httpbin.demo.svc.cluster.local
