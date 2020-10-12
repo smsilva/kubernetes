@@ -1,3 +1,4 @@
+---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -7,16 +8,38 @@ spec:
   hosts:
   - demo.example.com
   - httpbin.example.com
-  - httpbin
   gateways:
-  - public-ingress-gateway.istio-system.svc.cluster.local
-  - mesh
+  - istio-system/public-ingress-gateway
   http:
     - name: httpbin
       headers:
         request:
           add:
             X-A1-origin: public-ingress-routes
+      route:
+      - destination:
+          host: httpbin.demo.svc.cluster.local
+          port:
+            number: 8000
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: mesh-ingress-routes
+  namespace: demo
+spec:
+  hosts:
+  - httpbin.demo
+  - httpbin.demo.svc
+  - httpbin.demo.svc.cluster.local
+  gateways:
+  - mesh
+  http:
+    - name: httpbin
+      headers:
+        request:
+          add:
+            X-A1-origin: mesh-ingress-routes
       route:
       - destination:
           host: httpbin.demo.svc.cluster.local
