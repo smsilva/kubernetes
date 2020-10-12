@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: ingress-gateway
+  name: public-ingress-gateway
   namespace: istio-system
 spec:
   selector:
@@ -14,5 +14,6 @@ spec:
     tls:
       mode: SIMPLE
       credentialName: istio-ingress-tls
+      httpsRedirect: false
     hosts:
       - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}

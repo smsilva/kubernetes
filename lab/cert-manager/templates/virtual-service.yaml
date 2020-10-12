@@ -6,7 +6,7 @@ spec:
   hosts:
   - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
   gateways:
-  - ingress-gateway-certificate.istio-system.svc.cluster.local
+  - istio-system/public-insecure-ingress-gateway
   http:
   - match:
       - uri:

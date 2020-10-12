@@ -98,4 +98,4 @@ done
 
 wait-for-operator.sh
 
-examples/setup.sh
+echo "run `minikube tunnel` in another terminal and then run: examples/setup.sh"

@@ -6,16 +6,14 @@ metadata:
 spec:
   hosts:
   - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
-  - httpbin
   gateways:
-  - ingress-gateway.istio-system.svc.cluster.local
-  - mesh
+  - istio-system/public-ingress-gateway
   http:
   - name: httpbin
     headers:
       request:
         add:
-          X-A1-custom: my-custom-value
+          X-A1-origin: public-ingress-gateway
     route:
     - destination:
         host: httpbin.demo.svc.cluster.local
