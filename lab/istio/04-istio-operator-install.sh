@@ -96,6 +96,6 @@ for DEPLOYMENT_NAME in $(kubectl -n istio-system get deploy -o jsonpath='{range 
       deployment ${DEPLOYMENT_NAME}
 done
 
-wait-for-operator.sh
+./wait-for-operator.sh
 
-echo "run `minikube tunnel` in another terminal and then run: examples/setup.sh"
+echo "run minikube tunnel in another terminal and then run: examples/setup.sh"
