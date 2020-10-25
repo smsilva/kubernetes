@@ -1,0 +1,22 @@
+{{- range $service := .Values.external }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service.name }}
+spec:
+  ports:
+    - protocol: TCP
+      port: {{ $service.port }}
+      targetPort: {{ $service.port }}
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: {{ $service.name }}
+subsets:
+  - addresses:
+      - ip: {{ $service.address }}
+    ports:
+      - port: {{ $service.port }}
+{{- end }}

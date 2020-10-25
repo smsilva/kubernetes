@@ -70,6 +70,10 @@ spec:
             targetPort: 8443
           - name: tls
             port: 15443
+    egressGateways:
+    - name: istio-egressgateway
+      namespace: istio-system
+      enabled: true
   values:
     global:
       proxy:
