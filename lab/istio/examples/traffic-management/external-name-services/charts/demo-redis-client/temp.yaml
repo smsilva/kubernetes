@@ -1,0 +1,97 @@
+---
+# Source: demo-redis-client/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: demo-redis
+  labels:
+    helm.sh/chart: demo-redis-client-0.1.0
+    app.kubernetes.io/name: demo-redis
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: demo-redis-client/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-redis
+  labels:
+    helm.sh/chart: demo-redis-client-0.1.0
+    app.kubernetes.io/name: demo-redis
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: demo-redis
+    app.kubernetes.io/instance: RELEASE-NAME
+---
+# Source: demo-redis-client/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-redis
+  labels:
+    helm.sh/chart: demo-redis-client-0.1.0
+    app.kubernetes.io/name: demo-redis
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: demo-redis
+      app.kubernetes.io/instance: RELEASE-NAME
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: demo-redis
+        app.kubernetes.io/instance: RELEASE-NAME
+    spec:
+      serviceAccountName: demo-redis
+      securityContext:
+        {}
+      containers:
+        - name: demo-redis-client
+          securityContext:
+            {}
+          image: "demo-redis:1.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 2048Mi
+            requests:
+              cpu: 500m
+              memory: 1024Mi
+          env:
+            - name: REDIS_HOSTNAME
+              value: my-release-redis-master.demo.svc.cluster.local
+            - name: REDIS_HOSTPORT
+              value: "6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: redis-password
+                  name: my-release-redis
