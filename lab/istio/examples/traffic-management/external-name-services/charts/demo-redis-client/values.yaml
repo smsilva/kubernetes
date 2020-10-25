@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: demo-redis
+  repository: silviosilva/demo-redis
   pullPolicy: IfNotPresent
   tag: "1.0"
 
@@ -50,18 +50,18 @@ resources:
 external:
   - name: redis-01-external
     port: 6379
-    address: 10.0.0.124
+    externalName: golden.redis.cache.windows.net
   - name: redis-02-external
-    port: 6380
-    address: 10.0.0.124
+    port: 6379
+    externalName: silver.redis.cache.windows.net
 
 env:
   - name: REDIS_HOSTNAME
-    value: "redis-01-external.demo.svc.cluster.local"
+    value: "redis-01-external.external.svc.cluster.local"
   - name: REDIS_HOSTPORT
     value: "6379"
   - name: REDIS_PASSWORD
-    value: "GMyIurI2LqvSN/wKsklBUY0KYPUbfiv1maVc6OGhGIikH7Q/7PDlEeF1fZa0fydp+NK0MEuH0oS4mNqx"
+    value: "EXTERNAL_REDIS_PASSWORD"
   # - name: REDIS_HOSTNAME
   #   value: "my-release-redis-master.demo.svc.cluster.local"
   # - name: REDIS_HOSTPORT

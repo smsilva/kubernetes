@@ -1,0 +1,41 @@
+{{- range $service := .Values.external }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service.name }}
+  namespace: external
+spec:
+  type: ExternalName
+  externalName: {{ $service.externalName }}
+  ports:
+    - name: tcp-{{ $service.name }}
+      protocol: TCP
+      port: {{ $service.port }}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: {{ $service.name }}
+spec:
+  hosts:
+  - {{ $service.externalName }}
+  exportTo:
+  - "."
+  location: MESH_EXTERNAL
+  ports:
+  - number: {{ $service.port }}
+    name: tcp-{{ $service.name }}
+    protocol: TCP
+  resolution: STATIC
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ $service.name }}
+spec:
+  host: {{ $service.externalName }}
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+{{- end }}
