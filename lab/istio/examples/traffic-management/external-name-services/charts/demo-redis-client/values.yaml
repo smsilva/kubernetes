@@ -48,29 +48,20 @@ resources:
     memory: 1024Mi
 
 external:
-  - name: redis-01-external
+  - name: redis-01
     port: 6379
-    externalName: golden.redis.cache.windows.net
-  - name: redis-02-external
+    externalName: silvios-01.redis.cache.windows.net
+  - name: redis-02
     port: 6379
-    externalName: silver.redis.cache.windows.net
+    externalName: silvios-02.redis.cache.windows.net
 
 env:
   - name: REDIS_HOSTNAME
-    value: "redis-01-external.external.svc.cluster.local"
+    value: "redis-01.external.svc.cluster.local"
   - name: REDIS_HOSTPORT
     value: "6379"
   - name: REDIS_PASSWORD
-    value: "EXTERNAL_REDIS_PASSWORD"
-  # - name: REDIS_HOSTNAME
-  #   value: "my-release-redis-master.demo.svc.cluster.local"
-  # - name: REDIS_HOSTPORT
-  #   value: "6379"
-  # - name: REDIS_PASSWORD
-  #   valueFrom:
-  #     secretKeyRef:
-  #       name: my-release-redis
-  #       key: redis-password
+    value: ""
 
 autoscaling:
   enabled: false

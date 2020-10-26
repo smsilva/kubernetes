@@ -8,10 +8,10 @@ metadata:
 spec:
   type: ExternalName
   externalName: {{ $service.externalName }}
-  ports:
-    - name: tcp-{{ $service.name }}
-      protocol: TCP
-      port: {{ $service.port }}
+  # ports:
+  #   - name: tcp-{{ $service.name }}
+  #     protocol: TCP
+  #     port: {{ $service.port }}
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: ServiceEntry
@@ -20,14 +20,12 @@ metadata:
 spec:
   hosts:
   - {{ $service.externalName }}
-  exportTo:
-  - "."
   location: MESH_EXTERNAL
-  ports:
-  - number: {{ $service.port }}
-    name: tcp-{{ $service.name }}
-    protocol: TCP
-  resolution: STATIC
+  # ports:
+  # - number: {{ $service.port }}
+  #   name: tcp-{{ $service.name }}
+  #   protocol: TCP
+  resolution: DNS
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
