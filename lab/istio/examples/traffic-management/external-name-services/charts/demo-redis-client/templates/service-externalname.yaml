@@ -8,32 +8,4 @@ metadata:
 spec:
   type: ExternalName
   externalName: {{ $service.externalName }}
-  # ports:
-  #   - name: tcp-{{ $service.name }}
-  #     protocol: TCP
-  #     port: {{ $service.port }}
----
-apiVersion: networking.istio.io/v1beta1
-kind: ServiceEntry
-metadata:
-  name: {{ $service.name }}
-spec:
-  hosts:
-  - {{ $service.externalName }}
-  location: MESH_EXTERNAL
-  # ports:
-  # - number: {{ $service.port }}
-  #   name: tcp-{{ $service.name }}
-  #   protocol: TCP
-  resolution: DNS
----
-apiVersion: networking.istio.io/v1alpha3
-kind: DestinationRule
-metadata:
-  name: {{ $service.name }}
-spec:
-  host: {{ $service.externalName }}
-  trafficPolicy:
-    tls:
-      mode: DISABLE
 {{- end }}
