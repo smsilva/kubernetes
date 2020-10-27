@@ -48,6 +48,10 @@ metadata:
   namespace: istio-system
 spec:
   profile: default
+  meshConfig:
+    outboundTrafficPolicy:
+      mode: ALLOW_ANY
+      # mode: REGISTRY_ONLY
   components:
     ingressGateways:
     - name: istio-ingressgateway
