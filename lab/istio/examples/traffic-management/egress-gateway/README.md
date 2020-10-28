@@ -84,6 +84,34 @@ kubectl exec "$SOURCE_POD" -c sleep -- curl -sL -o /dev/null -D - https://editio
 ```bash
 kubectl -n default delete -f istio-objects/
 kubectl -n default delete -f ${ISTIO_BASE_DIR}/samples/sleep/sleep.yaml
+
+kubectl -n istio-system apply -f - <<EOF
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istio-operator
+  namespace: istio-system
+spec:
+  profile: default
+  meshConfig:
+    accessLogFile: /dev/stdout
+    outboundTrafficPolicy:
+      mode: ALLOW_ANY
+  components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      namespace: istio-system
+      enabled: true
+    egressGateways:
+    - name: istio-egressgateway
+      namespace: istio-system
+      enabled: true
+  values:
+    global:
+      proxy:
+        autoInject: enabled
+        privileged: true
+EOF
 ```
 
 ## Examples Index

@@ -51,8 +51,8 @@ spec:
   meshConfig:
     accessLogFile: /dev/stdout
     outboundTrafficPolicy:
-      # mode: ALLOW_ANY
-      mode: REGISTRY_ONLY
+      mode: ALLOW_ANY
+      # mode: REGISTRY_ONLY
   components:
     ingressGateways:
     - name: istio-ingressgateway
