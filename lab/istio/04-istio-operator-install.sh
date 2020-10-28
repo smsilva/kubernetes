@@ -40,7 +40,7 @@ spec:
 EOF
 
 # Create IstioOperator Resource
-kubectl apply -f - <<EOF
+kubectl -n istio-system apply -f - <<EOF
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 metadata:

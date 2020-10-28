@@ -4,7 +4,7 @@ metadata:
   name: direct-httpbin-through-egress-gateway
 spec:
   hosts:
-  - httpbin-ext
+  - httpbin.silvios.me
   gateways:
   - istio-system/istio-egressgateway
   - mesh
