@@ -1,9 +1,0 @@
-# apiVersion: networking.istio.io/v1beta1
-# kind: WorkloadEntry
-# metadata:
-#   name: httpbin-ext
-# spec:
-#   address: httpbin.org
-#   labels:
-#     app: httpbin-ext-legacy
-#     instance-id: vm1

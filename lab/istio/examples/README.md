@@ -3,6 +3,7 @@
 ## Traffic Management
 
 - [Ingress Traffic](traffic-management/ingress-gateway/README.md) - Gateway and VirtualService
+- [Egress Traffic](traffic-management/egress-gateway/README.md) - Gateway, ServiceEntry, DestinationRule, VirtualService - HTTPS Traffic
 - [Dark Launch](traffic-management/dark-launch/README.md) - Routing Traffic based on Headers Parameters
 - [Fault Injection](traffic-management/fault-injection/README.md) - Delays and HTTP Error Codes
 - [Request Timeouts](traffic-management/request-timeouts/README.md) - Using Bookinfo Application
