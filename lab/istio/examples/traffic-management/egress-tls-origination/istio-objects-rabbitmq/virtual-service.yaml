@@ -1,0 +1,32 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: turkey-rabbit-mq
+spec:
+  hosts:
+  - turkey.rmq.cloudamqp.com
+  http:
+  - match:
+    - port: 443
+    route:
+    - destination:
+        host: turkey.rmq.cloudamqp.com
+        subset: tls-origination
+        port:
+          number: 443
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: turkey-rabbit-mq-local
+spec:
+  hosts:
+  - turkey-rabbitmq.default.svc.cluster.local
+  http:
+  - match:
+    - port: 80
+    route:
+    - destination:
+        host: turkey-rabbitmq.default.svc.cluster.local
+        subset: tls-origination

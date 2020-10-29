@@ -1,0 +1,27 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: turkey-rabbit-mq
+spec:
+  hosts:
+  - turkey.rmq.cloudamqp.com
+  ports:
+  - number: 443
+    name: https-port
+    protocol: HTTPS
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: turkey-rabbit-mq-local
+spec:
+  hosts:
+  - turkey-rabbitmq.default.svc.cluster.local
+  ports:
+  - number: 80
+    name: http-port
+    protocol: HTTP
+  resolution: NONE
+  location: MESH_EXTERNAL
