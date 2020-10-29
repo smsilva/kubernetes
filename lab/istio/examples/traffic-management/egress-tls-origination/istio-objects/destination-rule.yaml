@@ -1,9 +1,9 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: httpbin-org
+  name: edition-cnn-com
 spec:
-  host: httpbin.org
+  host: edition.cnn.com
   subsets:
   - name: tls-origination
     trafficPolicy:

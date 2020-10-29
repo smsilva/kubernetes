@@ -68,6 +68,7 @@ kubectl -n default apply -f istio-objects/
 
 ```bash
 kubectl exec "${SOURCE_POD}" -c sleep -- curl -sL -o /dev/null -D - http://edition.cnn.com/politics
+
 kubectl exec "${SOURCE_POD}" -c sleep -- curl -sL -o /dev/null -D - https://edition.cnn.com/politics
 ```
 
