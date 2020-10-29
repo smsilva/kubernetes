@@ -6,9 +6,6 @@ spec:
   hosts:
   - edition.cnn.com
   ports:
-  - number: 80
-    name: http-port
-    protocol: HTTP
   - number: 443
     name: https-port
     protocol: HTTPS
