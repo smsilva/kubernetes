@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-external
+data:
+  master: turkey.rmq.cloudamqp.com
+  dragon: dragon.rmq.cloudamqp.com

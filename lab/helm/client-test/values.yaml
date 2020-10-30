@@ -1,0 +1,7 @@
+rabbitmq:
+  - name: rabbitmq-external
+    data:
+      - keyName: master
+        variableName: RABBITMQ_HOSTNAME_MASTER
+      - keyName: dragon
+        variableName: RABBITMQ_HOSTNAME_DRAGON
