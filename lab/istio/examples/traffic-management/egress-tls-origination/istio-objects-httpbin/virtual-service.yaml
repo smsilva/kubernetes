@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: httpbin-org-vs
+spec:
+  hosts:
+  - httpbin-alias.default.svc.cluster.local
+  http:
+  - match:
+    - port: 80
+    rewrite:
+      authority: httpbin.org
+    route:
+    - destination:
+        host: httpbin-alias.default.svc.cluster.local
+        subset: tls-origination
+        port:
+          number: 443
