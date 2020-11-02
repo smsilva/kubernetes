@@ -43,10 +43,10 @@ argocd login \
   --password "${ARGOCD_INITIAL_PASSWORD}" \
   --insecure
 
-argocd account update-password \
-  --account admin \
-  --current-password "${ARGOCD_INITIAL_PASSWORD}" \
-  --new-password "anystrongpassword"
+# argocd account update-password \
+#   --account admin \
+#   --current-password "${ARGOCD_INITIAL_PASSWORD}" \
+#   --new-password "anystrongpassword"
 
 kubectl create ns dev
 
