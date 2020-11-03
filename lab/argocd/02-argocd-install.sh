@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 SECONDS=0
 
 kubectl create namespace argocd
@@ -30,10 +32,10 @@ done
 
 kubectl apply -n argocd -f argocd-server-service.yaml
 
-ARGOCD_INITIAL_PASSWORD=$(kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d '/' -f 2)
 ARGOCD_URL=$(minikube service argocd-server -n argocd --url | grep 32443 | sed "s/http:\/\///")
+ARGOCD_INITIAL_PASSWORD=$(kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d '/' -f 2)
 
-clear && \
+echo "" && \
 echo "ARGOCD_URL...............: ${ARGOCD_URL}" && \
 echo "ARGOCD_INITIAL_PASSWORD..: ${ARGOCD_INITIAL_PASSWORD}"
 
