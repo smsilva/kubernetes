@@ -32,6 +32,8 @@ done
 
 kubectl apply -n argocd -f argocd-server-service.yaml
 
+sleep 5
+
 ARGOCD_URL=$(minikube service argocd-server -n argocd --url | grep 32443 | sed "s/http:\/\///")
 ARGOCD_INITIAL_PASSWORD=$(kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d '/' -f 2)
 
