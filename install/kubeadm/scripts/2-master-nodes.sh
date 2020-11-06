@@ -70,9 +70,9 @@ grep '\-\-certificate-key' "${KUBEADM_LOG_FILE}" --before 2 | grep \
     -e 's/^/export KUBEADM_/'
 
 # Execute on master-2 and master-3 and on all workers
-export KUBEADM_TOKEN=fixbrh.x812k3tqj0h9x7pa
-export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:f32c97bade150d7ee4053de0b921698907565f242620f7cfc6dd48d0e679066c
-export KUBEADM_CERTIFICATE_KEY=ff177da4022e7745ab0bc01856266dfa6ccd161e267271106be1180633f4dff5
+export KUBEADM_TOKEN=yrayct.x97hbmbd559pk40z
+export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:f648b7944a2a329e833735720b554a2a4fcce0480956b08f55dfda5d74ac9e53
+export KUBEADM_CERTIFICATE_KEY=f26cdacfc7d8dd419b6f924dc917ac0028df2d8a0b09fed2888fd18df196fe2d
 
 # Watch Interfaces and Route information
 ./watch-for-interfaces-and-routes.sh
