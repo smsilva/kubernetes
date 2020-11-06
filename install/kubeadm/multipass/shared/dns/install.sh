@@ -13,6 +13,6 @@ systemctl enable bind9 -q
 
 ufw allow 53 > /dev/null
 
-# named-checkconf /etc/bind/named.conf.local
-# named-checkzone "${DOMAIN}" /etc/bind/"${FORWARD_FILE}"
-# named-checkzone "${DOMAIN}" /etc/bind/"${REVERSE_FILE}"
+named-checkconf /etc/bind/named.conf.local
+named-checkzone "${DOMAIN}" /etc/bind/"${FORWARD_FILE}"
+named-checkzone "${DOMAIN}" /etc/bind/"${REVERSE_FILE}"
