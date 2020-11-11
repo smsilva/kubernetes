@@ -58,17 +58,27 @@ argocd app create nginx \
   --repo https://github.com/smsilva/argocd.git \
   --path nginx \
   --dest-server https://kubernetes.default.svc \
-  --dest-namespace dev
+  --dest-namespace dev \
+  --sync-policy automated \
+  --auto-prune \
+  --self-heal
 
 argocd app list
 
 argocd app get nginx
 
-argocd app sync nginx
+argocd app wait nginx
 
-argocd app set nginx --sync-policy automated
-argocd app set nginx --auto-prune
-argocd app set nginx --self-heal
+argocd app create httpbin \
+  --repo https://github.com/smsilva/argocd.git \
+  --path httpbin \
+  --dest-server https://kubernetes.default.svc \
+  --dest-namespace dev \
+  --sync-policy automated \
+  --auto-prune \
+  --self-heal
+
+argocd app wait httpbin
 
 for deploymentName in $(kubectl -n dev get deploy -o name); do
    echo "Waiting for: ${deploymentName}"
