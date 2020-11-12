@@ -34,6 +34,6 @@ kubectl \
   apply \
   -f ingress.yaml
 
-sleep 3
+  sleep 3
 
-curl localhost/get
+  curl localhost/get
