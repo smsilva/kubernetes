@@ -9,3 +9,6 @@ kind create cluster \
   --config kind-example-config.yaml \
   --name ${CLUSTER_NAME}
 
+for NODE in $(kubectl get nodes -o name); do
+  kubectl wait $NODE --for condition=Ready --timeout=180s
+done
