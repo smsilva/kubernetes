@@ -19,12 +19,6 @@ fi
 
 # az ad user get-member-groups --id ${USER_ID} -o table
 
-# az account list -o table
-
-# az account set -s "<A_SUBSCRIPTION_DESCRIPTION_HERE>"
-
-# az account list-locations -o table
-
 ENVIRONMENT="dev" && \
 AZ_REGION="eastus2" && \
 AZ_RESOURCE_GROUP_NAME="aks-${ENVIRONMENT}" && \
