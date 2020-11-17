@@ -20,38 +20,29 @@ fi
 # az ad user get-member-groups --id ${USER_ID} -o table
 
 ENVIRONMENT="dev" && \
-AZ_REGION="eastus2" && \
-AZ_RESOURCE_GROUP_NAME="aks-${ENVIRONMENT}" && \
-AKS_ADMIN_GROUP_NAME="myAKSAdminGroup" && \
-AKS_CLUSTER_NAME="${ENVIRONMENT}-${AZ_REGION}" && \
-AKS_CLUSTER_VERSION="$(az aks get-versions --location "${AZ_REGION}" --output table | awk '{ print $1}' | grep -v preview | sed 1,2d | head -1)" && \
-AKS_ADMIN_GROUP_IP="$(az ad group show -g ${AKS_ADMIN_GROUP_NAME} --query objectId -o tsv)" && \
-echo "USER_ID................: ${USER_ID}" && \
-echo "USER_EMAIL.............: ${USER_EMAIL}" && \
-echo "AZ_REGION..............: ${AZ_REGION}" && \
-echo "AZ_RESOURCE_GROUP_NAME.: ${AZ_RESOURCE_GROUP_NAME}" && \
-echo "AKS_CLUSTER_NAME.......: ${AKS_CLUSTER_NAME}" && \
-echo "AKS_CLUSTER_VERSION....: ${AKS_CLUSTER_VERSION}" && \
-echo "AKS_ADMIN_GROUP_IP.....: ${AKS_ADMIN_GROUP_IP}" && \
+AZ_AKS_REGION="eastus2" && \
+AZ_AKS_RESOURCE_GROUP_NAME="aks-${ENVIRONMENT}" && \
+AZ_AKS_ADMIN_GROUP_NAME="myAKSAdminGroup" && \
+AZ_AKS_CLUSTER_NAME="${ENVIRONMENT}-${AZ_AKS_REGION}" && \
+AZ_AKS_CLUSTER_VERSION="$(az aks get-versions --location "${AZ_AKS_REGION}" --output table | awk '{ print $1}' | grep -v preview | sed 1,2d | head -1)" && \
+AZ_AKS_ADMIN_GROUP_IP="$(az ad group show -g ${AZ_AKS_ADMIN_GROUP_NAME} --query objectId -o tsv)" && \
+echo "USER_ID....................: ${USER_ID}" && \
+echo "USER_EMAIL.................: ${USER_EMAIL}" && \
+echo "AZ_AKS_REGION..............: ${AZ_AKS_REGION}" && \
+echo "AZ_AKS_RESOURCE_GROUP_NAME.: ${AZ_AKS_RESOURCE_GROUP_NAME}" && \
+echo "AZ_AKS_CLUSTER_NAME........: ${AZ_AKS_CLUSTER_NAME}" && \
+echo "AZ_AKS_CLUSTER_VERSION.....: ${AZ_AKS_CLUSTER_VERSION}" && \
+echo "AZ_AKS_ADMIN_GROUP_IP......: ${AZ_AKS_ADMIN_GROUP_IP}" && \
 echo ""
 
-az aks get-versions \
-  --location "${AZ_REGION}" \
-  --output table
-
 az group create \
-  --location "${AZ_REGION}" \
-  --resource-group "${AZ_RESOURCE_GROUP_NAME}"
+  --location "${AZ_AKS_REGION}" \
+  --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}"
 
 az aks create \
-  --resource-group "${AZ_RESOURCE_GROUP_NAME}" \
-  --name "${AKS_CLUSTER_NAME}" \
-  --kubernetes-version "${AKS_CLUSTER_VERSION}" \
+  --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}" \
+  --name "${AZ_AKS_CLUSTER_NAME}" \
+  --kubernetes-version "${AZ_AKS_CLUSTER_VERSION}" \
   --enable-aad \
-  --aad-admin-group-object-ids "${AKS_ADMIN_GROUP_IP}" \
+  --aad-admin-group-object-ids "${AZ_AKS_ADMIN_GROUP_IP}" \
   --node-count 1
-
-# az aks delete \
-#   --resource-group "${AZ_RESOURCE_GROUP_NAME}" \
-#   --name "${AKS_CLUSTER_NAME}" \
-#   --yes

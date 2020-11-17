@@ -1,8 +1,8 @@
 #!/bin/bash
 ENVIRONMENT="dev" && \
-AZ_AKS_CLUSTER="dev-eastus2" && \
-AZ_AKS_RESOURCE_GROUP_NAME="aks-dev" && \
-AZ_ACR_NAME="silviosdev"
+AZ_AKS_CLUSTER="${ENVIRONMENT}-eastus2" && \
+AZ_AKS_RESOURCE_GROUP_NAME="aks-${ENVIRONMENT}" && \
+AZ_ACR_NAME="silvios${ENVIRONMENT}"
 AZ_ACR_REGION="eastus2" && \
 AZ_ACR_RESOURCE_GROUP_NAME="acr-${ENVIRONMENT}" && \
 echo "AZ_AKS_CLUSTER..................: ${AZ_AKS_CLUSTER}" && \
@@ -20,11 +20,6 @@ az acr create \
   --resource-group "${AZ_ACR_RESOURCE_GROUP_NAME}" \
   --name "${AZ_ACR_NAME}" \
   --sku "Premium"
-
-az aks update \
-  --name "${AZ_AKS_CLUSTER}" \
-  --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}" \
-  --attach-acr "${AZ_ACR_NAME}"
 
 az acr login --name "${AZ_ACR_NAME}"
 
@@ -44,3 +39,17 @@ az acr repository show-tags \
   --name "${AZ_ACR_NAME}" \
   --repository utils \
   --output table
+
+kubectl get events -w
+
+kubectl run -it --image=${IMAGE_NAME} utils
+
+az aks update \
+  --name "${AZ_AKS_CLUSTER}" \
+  --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}" \
+  --attach-acr "${AZ_ACR_NAME}"
+
+# az aks update \
+#   --name "${AZ_AKS_CLUSTER}" \
+#   --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}" \
+#   --detach-acr "${AZ_ACR_NAME}"
