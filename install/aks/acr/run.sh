@@ -48,8 +48,3 @@ az aks update \
   --name "${AZ_AKS_CLUSTER}" \
   --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}" \
   --attach-acr "${AZ_ACR_NAME}"
-
-# az aks update \
-#   --name "${AZ_AKS_CLUSTER}" \
-#   --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}" \
-#   --detach-acr "${AZ_ACR_NAME}"
