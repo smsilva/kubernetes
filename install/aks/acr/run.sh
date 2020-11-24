@@ -25,7 +25,7 @@ az acr login --name "${AZ_ACR_NAME}"
 
 docker pull silviosilva/utils
 
-IMAGE_NAME="${AZ_ACR_NAME}".azurecr.io/utils:1.0
+IMAGE_NAME="${AZ_ACR_NAME}.azurecr.io/utils:1.0"
 
 docker tag silviosilva/utils "${IMAGE_NAME}"
 

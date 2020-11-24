@@ -7,6 +7,7 @@ echo "ISTIO_BASE_DIR.: ${ISTIO_BASE_DIR}"
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/kiali.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/prometheus.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/grafana.yaml"
+kubectl apply -f "${ISTIO_BASE_DIR}/samples/addons/jaeger.yaml"
 
 # Access Dashboards
 istioctl dashboard --help | grep "Available Commands:" -B 1 -A 8
