@@ -48,3 +48,15 @@ az aks update \
   --name "${AZ_AKS_CLUSTER}" \
   --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}" \
   --attach-acr "${AZ_ACR_NAME}"
+
+az acr credential show \
+  --name "${AZ_ACR_NAME}" \
+  --resource-group "${AZ_ACR_RESOURCE_GROUP_NAME}"
+
+AZ_DEVOPS_ORGANIZATION_NAME="silvios"
+AZ_DEVOPS_PROJECT_NAME="Dummy_Project"
+
+az repos list \
+  --organization=https://dev.azure.com/${AZ_DEVOPS_ORGANIZATION_NAME}/ \
+  --project=${AZ_DEVOPS_PROJECT_NAME} \
+  --output table
