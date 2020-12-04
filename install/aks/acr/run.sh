@@ -1,9 +1,11 @@
 #!/bin/bash
 ENVIRONMENT="dev" && \
-AZ_AKS_CLUSTER="${ENVIRONMENT}-eastus2" && \
+AZ_SUBSCRIPTION="Azure subscription" && \
+AZ_REGION="eastus2" && \
+AZ_AKS_CLUSTER="${USER}-${ENVIRONMENT}-${AZ_REGION}" && \
 AZ_AKS_RESOURCE_GROUP_NAME="aks-${ENVIRONMENT}" && \
-AZ_ACR_NAME="silvios${ENVIRONMENT}"
-AZ_ACR_REGION="eastus2" && \
+AZ_ACR_NAME="${USER}${ENVIRONMENT}"
+AZ_ACR_REGION="${AZ_REGION}" && \
 AZ_ACR_RESOURCE_GROUP_NAME="acr-${ENVIRONMENT}" && \
 echo "AZ_AKS_CLUSTER..................: ${AZ_AKS_CLUSTER}" && \
 echo "AZ_AKS_RESOURCE_GROUP_NAME......: ${AZ_AKS_RESOURCE_GROUP_NAME}" && \
@@ -48,6 +50,23 @@ az aks update \
   --name "${AZ_AKS_CLUSTER}" \
   --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}" \
   --attach-acr "${AZ_ACR_NAME}"
+
+az role assignment list \
+  --all \
+  --subscription "${AZ_SUBSCRIPTION}" \
+  --query "[?roleDefinitionName=='AcrPush']" \
+  --output jsonc
+
+az role assignment list \
+  --all \
+  --subscription "${AZ_SUBSCRIPTION}" \
+  --query "[?roleDefinitionName=='AcrPull']" \
+  --output jsonc
+
+az aks update \
+  --name "${AZ_AKS_CLUSTER}" \
+  --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}" \
+  --detach-acr "${AZ_ACR_NAME}"
 
 az acr credential show \
   --name "${AZ_ACR_NAME}" \

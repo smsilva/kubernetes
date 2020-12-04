@@ -23,7 +23,7 @@ ENVIRONMENT="dev" && \
 AZ_AKS_REGION="eastus2" && \
 AZ_AKS_RESOURCE_GROUP_NAME="aks-${ENVIRONMENT}" && \
 AZ_AKS_ADMIN_GROUP_NAME="myAKSAdminGroup" && \
-AZ_AKS_CLUSTER_NAME="${ENVIRONMENT}-${AZ_AKS_REGION}" && \
+AZ_AKS_CLUSTER_NAME="${USER}-${ENVIRONMENT}-${AZ_AKS_REGION}" && \
 AZ_AKS_CLUSTER_VERSION="$(az aks get-versions --location "${AZ_AKS_REGION}" --output table | awk '{ print $1}' | grep -v preview | sed 1,2d | head -1)" && \
 AZ_AKS_ADMIN_GROUP_IP="$(az ad group show -g ${AZ_AKS_ADMIN_GROUP_NAME} --query objectId -o tsv)" && \
 echo "USER_ID....................: ${USER_ID}" && \
