@@ -1,4 +1,6 @@
 #!/bin/bash
+. ./01-minikube-cluster-creation.sh
+
 kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/release-3.1/deploy/gatekeeper.yaml
 
 for DEPLOYMENT_NAME in $(kubectl -n gatekeeper-system get deploy -o jsonpath='{range .items[*].metadata}{.name}{"\n"}{end}'); do
@@ -9,4 +11,4 @@ for DEPLOYMENT_NAME in $(kubectl -n gatekeeper-system get deploy -o jsonpath='{r
       deployment ${DEPLOYMENT_NAME}
 done
 
-kubectl apply -f k8srequiredlabels.yaml
+kubectl apply -f k8s-required-labels-constraint-template.yaml
