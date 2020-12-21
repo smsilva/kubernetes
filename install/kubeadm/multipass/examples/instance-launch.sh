@@ -17,9 +17,9 @@ write_files:
 EOF
 
 multipass launch \
-  --cpus "1" \
-  --disk "50G" \
-  --mem "1024M" \
+  --cpus "2" \
+  --disk "100G" \
+  --mem "8192M" \
   --name "${INSTANCE_NAME}" \
   --cloud-init "${CLOUD_INI_FILE}" && \
 multipass mount "./" "${INSTANCE_NAME}":"/shared"
