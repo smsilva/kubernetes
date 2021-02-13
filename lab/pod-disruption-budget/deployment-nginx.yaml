@@ -5,7 +5,7 @@ metadata:
     app: nginx
   name: nginx
 spec:
-  replicas: 5
+  replicas: 6
   selector:
     matchLabels:
       app: nginx
@@ -26,13 +26,3 @@ spec:
       containers:
       - image: nginx:1.19
         name: nginx
----
-apiVersion: policy/v1beta1
-kind: PodDisruptionBudget
-metadata:
-  name: nginx
-spec:
-  minAvailable: 2
-  selector:
-    matchLabels:
-      app: nginx
