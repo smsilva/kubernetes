@@ -9,7 +9,9 @@ kubectl wait \
   --selector=app.kubernetes.io/component=controller \
   --timeout=180s
 
-openssl req -x509 -newkey rsa:4096 -nodes \
+openssl req -x509 \
+  -newkey rsa:4096 \
+  -nodes \
   -keyout cert.key.pem \
   -out cert.pem \
   -days 365 \
