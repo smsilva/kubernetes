@@ -1,2 +1,2 @@
 #!/bin/bash
-kubectl apply -f ingress/nginx/ingress.yaml
+kubectl apply -f ingress/${INGRESS}/ingress.yaml

@@ -7,7 +7,7 @@ spec:
   tls:
     - hosts:
       - app.example.com
-      secretName: secret-tls-app.example.com
+      secretName: secret-tls-app-example-com
   rules:
   - host: app.example.com
     http:

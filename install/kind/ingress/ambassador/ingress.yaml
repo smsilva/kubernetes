@@ -1,17 +1,24 @@
-apiVersion: networking.k8s.io/v1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: minimal-ingress
+  name: httpbin
   annotations:
     kubernetes.io/ingress.class: ambassador
 spec:
+  tls:
+    - hosts:
+      - app.example.com
+      secretName: secret-tls-app-example-com
   rules:
-  - http:
+  - host: app.example.com
+    http:
       paths:
       - path: /
         pathType: Prefix
         backend:
-          service:
-            name: httpbin
-            port:
-              number: 80
+          serviceName: httpbin
+          servicePort: 80
+      - path: /bar
+        backend:
+          serviceName: httpbin
+          servicePort: 80

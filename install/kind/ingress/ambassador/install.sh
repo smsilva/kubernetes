@@ -1,14 +1,12 @@
 #!/bin/bash
 kubectl \
   apply \
-  -f https://github.com/datawire/ambassador-operator/releases/latest/download/ambassador-operator-crds.yaml
+  -f https://github.com/datawire/ambassador-operator/releases/download/v1.2.9/ambassador-operator-crds.yaml
 
 kubectl \
   apply \
   -n ambassador \
-  -f https://github.com/datawire/ambassador-operator/releases/latest/download/ambassador-operator-kind.yaml
-
-kubectl config set-context --current --namespace ambassador
+  -f https://github.com/datawire/ambassador-operator/releases/download/v1.2.9/ambassador-operator-kind.yaml
 
 kubectl \
   -n ambassador \
