@@ -19,3 +19,4 @@ disks/
 **/multipass/shared/loadbalancer/haproxy.cfg
 **/multipass/shared/update-system-config-all.sh
 **/minikube/rbac/dave/
+**/install/kind/*.pem
