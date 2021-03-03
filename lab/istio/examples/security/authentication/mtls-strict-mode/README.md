@@ -45,6 +45,27 @@ spec:
   mtls:
     mode: STRICT
 EOF
+
+kubectl apply -n foo -f - <<EOF
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: "default"
+spec:
+  mtls:
+    mode: PERMISSIVE
+EOF
+
+kubectl apply -n bar -f - <<EOF
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: "default"
+spec:
+  mtls:
+    mode: PERMISSIVE
+EOF
+
 ```
 
 ## Clean up
