@@ -26,7 +26,7 @@ for deploymentName in $(kubectl -n argocd get deploy -o name); do
      -n argocd \
      wait \
      --for condition=available \
-     --timeout=120s \
+     --timeout=240s \
      ${deploymentName};
 done
 
@@ -69,30 +69,30 @@ argocd app get nginx
 
 argocd app wait nginx
 
-argocd app create httpbin \
-  --repo https://github.com/smsilva/argocd.git \
-  --path httpbin \
-  --dest-server https://kubernetes.default.svc \
-  --dest-namespace dev \
-  --sync-policy automated \
-  --auto-prune \
-  --self-heal
+# argocd app create httpbin \
+#   --repo https://github.com/smsilva/argocd.git \
+#   --path httpbin \
+#   --dest-server https://kubernetes.default.svc \
+#   --dest-namespace dev \
+#   --sync-policy automated \
+#   --auto-prune \
+#   --self-heal
 
-argocd app wait httpbin
+# argocd app wait httpbin
 
-for deploymentName in $(kubectl -n dev get deploy -o name); do
-   echo "Waiting for: ${deploymentName}"
+# for deploymentName in $(kubectl -n dev get deploy -o name); do
+#    echo "Waiting for: ${deploymentName}"
 
-   kubectl \
-     -n dev \
-     wait --for condition=available \
-     --timeout=90s \
-     ${deploymentName};
-done
+#    kubectl \
+#      -n dev \
+#      wait --for condition=available \
+#      --timeout=90s \
+#      ${deploymentName};
+# done
 
-curl $(minikube service nginx -n dev --url) -Is | head -2
+# curl $(minikube service nginx -n dev --url) -Is | head -2
 
-elapsed ${SECONDS}
+# elapsed ${SECONDS}
 
 # Access ArgoCD UI
 # minikube service argocd-server -n argocd
