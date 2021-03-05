@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sh ./argocd-logon.sh
+sh ../argocd-logon.sh
 
 kubectl create ns dev
 
@@ -18,8 +18,3 @@ argocd app list
 argocd app get nginx
 
 argocd app wait nginx
-
-# curl $(minikube service nginx -n dev --url) -Is | head -2
-
-# Access ArgoCD UI
-# minikube service argocd-server -n argocd
