@@ -43,7 +43,7 @@ kubectl -n demo \
 Then, we'll create an Ingress Gateway and VirtualService objects
 
 ```bash
-kubectl -n demo apply -f istio-objects/
+kubectl apply -f istio-objects/
 ```
 
 ## Testing

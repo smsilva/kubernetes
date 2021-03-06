@@ -15,7 +15,7 @@ spec:
       headers:
         request:
           add:
-            X-A1-origin: public-ingress-routes
+            X-A1-origin-1: public-ingress-routes
       route:
       - destination:
           host: httpbin.demo.svc.cluster.local
@@ -29,8 +29,6 @@ metadata:
   namespace: demo
 spec:
   hosts:
-  - httpbin.demo
-  - httpbin.demo.svc
   - httpbin.demo.svc.cluster.local
   gateways:
   - mesh
@@ -39,7 +37,7 @@ spec:
       headers:
         request:
           add:
-            X-A1-origin: mesh-ingress-routes
+            X-A1-origin-2: mesh-ingress-routes
       route:
       - destination:
           host: httpbin.demo.svc.cluster.local

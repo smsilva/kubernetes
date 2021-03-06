@@ -13,4 +13,3 @@ spec:
       protocol: HTTP
     hosts:
     - "demo/*.example.com"
-    
