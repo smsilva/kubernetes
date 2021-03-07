@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client-httpbin-alias
+  labels:
+    purpose: client
+spec:
+  containers:
+  - name: curl
+    image: silviosilva/utils
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do curl -is http://httpbin-alias/get && sleep 5; done"]
+  restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client-httpbin-org
+  labels:
+    purpose: client
+spec:
+  containers:
+  - name: curl
+    image: silviosilva/utils
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do curl -is https://httpbin.org/get && sleep 5; done"]
+  restartPolicy: OnFailure
