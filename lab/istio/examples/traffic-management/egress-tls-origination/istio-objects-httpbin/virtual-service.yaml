@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: httpbin-org-vs
+  name: httpbin-alias-vs
 spec:
   hosts:
   - httpbin-alias.default.svc.cluster.local
