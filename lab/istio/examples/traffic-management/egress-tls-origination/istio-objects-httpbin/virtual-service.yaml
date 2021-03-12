@@ -13,6 +13,5 @@ spec:
     route:
     - destination:
         host: httpbin-alias.default.svc.cluster.local
-        subset: tls-origination
         port:
           number: 443

@@ -4,13 +4,11 @@ metadata:
   name: httpbin-org-dr
 spec:
   host: httpbin-alias.default.svc.cluster.local
-  subsets:
-  - name: tls-origination
-    trafficPolicy:
+  trafficPolicy:
+    portLevelSettings:
+    - port:
+        number: 443
+      tls:
+        mode: SIMPLE
       loadBalancer:
         simple: ROUND_ROBIN
-      portLevelSettings:
-      - port:
-          number: 443
-        tls:
-          mode: SIMPLE
