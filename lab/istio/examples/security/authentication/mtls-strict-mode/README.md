@@ -23,7 +23,11 @@ kubectl apply -f <(istioctl kube-inject -f ${ISTIO_BASE_DIR}/samples/sleep/sleep
 kubectl create ns legacy
 kubectl apply -f ${ISTIO_BASE_DIR}/samples/sleep/sleep.yaml -n legacy
 
-kubectl exec -nfoo "$(kubectl get pod -nfoo -lapp=httpbin -ojsonpath={.items..metadata.name})" -c istio-proxy -- sudo tcpdump dst port 80  -A
+for NAMESPACE_ORIGIN in "foo" "bar" "legacy"; do
+  kubectl -n ${NAMESPACE_ORIGIN} wait pod --for condition=Ready --all;
+done
+
+kubectl exec -n foo "$(kubectl get pod -nfoo -lapp=httpbin -ojsonpath={.items..metadata.name})" -c istio-proxy -- sudo tcpdump dst port 80  -A
 
 for NAMESPACE_ORIGIN in "foo" "bar" "legacy"; do
   for NAMESPACE_TARGET in "foo" "bar"; do
@@ -53,7 +57,7 @@ metadata:
   name: "default"
 spec:
   mtls:
-    mode: PERMISSIVE
+    mode: STRICT
 EOF
 
 kubectl apply -n bar -f - <<EOF
