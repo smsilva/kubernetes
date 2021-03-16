@@ -24,16 +24,3 @@ spec:
     name: https-port
     protocol: HTTPS
   resolution: DNS
----
-apiVersion: networking.istio.io/v1alpha3
-kind: ServiceEntry
-metadata:
-  name: ipinfo-io
-spec:
-  hosts:
-  - ipinfo.io
-  ports:
-  - number: 443
-    name: https-port
-    protocol: HTTPS
-  resolution: DNS

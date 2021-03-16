@@ -1,0 +1,26 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istio-operator
+  namespace: istio-system
+spec:
+  profile: default
+  meshConfig:
+    accessLogFile: /dev/stdout
+    outboundTrafficPolicy:
+      mode: ALLOW_ANY
+  components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      namespace: istio-system
+      enabled: true
+    egressGateways:
+    - name: istio-egressgateway
+      namespace: istio-system
+      enabled: true
+  values:
+    global:
+      proxy:
+        autoInject: enabled
+        privileged: true
+#REGISTRY_ONLY/ALLOW_ANY
