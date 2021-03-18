@@ -44,5 +44,10 @@ az aks create \
   --name "${AZ_AKS_CLUSTER_NAME}" \
   --kubernetes-version "${AZ_AKS_CLUSTER_VERSION}" \
   --enable-aad \
+  --network-plugin azure \
   --aad-admin-group-object-ids "${AZ_AKS_ADMIN_GROUP_IP}" \
   --node-count 1
+
+# az aks delete \
+#   --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME}" \
+#   --name "${AZ_AKS_CLUSTER_NAME}"
