@@ -27,3 +27,9 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "500m"
+        env:
+          - name: EXTERNAL_HOST_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: httpbin-config
+                key: external.host.name
