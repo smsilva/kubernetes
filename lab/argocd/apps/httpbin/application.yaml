@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nginx
+  name: httpbin
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/smsilva/argocd.git
-    path: nginx
+    path: httpbin
   destination:
     namespace: dev
     server: https://kubernetes.default.svc
