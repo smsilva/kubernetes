@@ -8,7 +8,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   capacity:
-    storage: 5Gi
+    storage: 1Gi
   hostPath:
     path: /data/pv0001/
 EOF
@@ -17,7 +17,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: task-pv-claim
+  name: pvc-nginx-data
   labels:
     backup: velero
 spec:
@@ -26,19 +26,19 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 256Mi
+      storage: 512Mi
 EOF
 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
-  name: task-pv-pod
+  name: nginx
 spec:
   volumes:
-    - name: task-pv-storage
+    - name: nginx-storage
       persistentVolumeClaim:
-        claimName: task-pv-claim
+        claimName: pvc-nginx-data
   containers:
     - name: task-pv-container
       image: nginx
@@ -47,9 +47,9 @@ spec:
           name: "http-server"
       volumeMounts:
         - mountPath: "/usr/share/nginx/html"
-          name: task-pv-storage
+          name: nginx-storage
 EOF
 
-velero backup create task-pvc --selector backup=velero
+velero backup create pvc-nginx-data --selector backup=velero
 
-velero restore create --from-backup task-pvc
+velero restore create --from-backup pvc-nginx-data
