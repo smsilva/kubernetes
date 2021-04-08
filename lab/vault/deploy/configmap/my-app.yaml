@@ -10,10 +10,9 @@ kind: Pod
 metadata:
   name: app
   annotations:
-    vault.hashicorp.com/agent-pre-populate-only: "true"
-    vault.hashicorp.com/agent-init-first: "true"
     vault.hashicorp.com/agent-inject: "true"
     vault.hashicorp.com/agent-configmap: "my-app"
+    vault.hashicorp.com/agent-pre-populate-only: "true"
 spec:
   serviceAccountName: my-app
   containers:

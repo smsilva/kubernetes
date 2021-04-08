@@ -4,28 +4,27 @@ metadata:
   name: my-app
 data:
   config-init.hcl: |
-    "auto_auth" = {
-      "method" = {
-        "config" = {
-          "role" = "my-app"
+    auto_auth = {
+      method = {
+        config = {
+          role = "my-app"
         }
-        "type" = "kubernetes"
-        "mount_path" = "auth/kubernetes"
+        type = "kubernetes"      
       }
 
-      "sink" = {
-        "config" = {
-          "path" = "/home/vault/.vault-token"
+      sink = {
+        config = {
+          path = "/home/vault/.vault-token"
         }
 
-        "type" = "file"
+        type = "file"
       }
     }
 
-    "exit_after_auth" = true
-    "pid_file" = "/home/vault/.pid"
+    exit_after_auth = true
+    pid_file = "/home/vault/.pid"
 
-    "template" = {
+    template = {
       destination = "/vault/secrets/credentials.yaml"
       contents = <<EOT
       {{- with secret "secret/data/my-app/config" -}}
@@ -36,6 +35,6 @@ data:
       EOT
     }
 
-    "vault" = {
-      "address" = "http://vault.vault.svc:8200"
+    vault = {
+      address = "http://vault.vault.svc:8200"
     }
