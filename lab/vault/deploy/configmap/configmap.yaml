@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-app
+data:
+  config-init.hcl: |
+    "auto_auth" = {
+      "method" = {
+        "config" = {
+          "role" = "my-app"
+        }
+        "type" = "kubernetes"
+        "mount_path" = "auth/kubernetes"
+      }
+
+      "sink" = {
+        "config" = {
+          "path" = "/home/vault/.vault-token"
+        }
+
+        "type" = "file"
+      }
+    }
+
+    "exit_after_auth" = true
+    "pid_file" = "/home/vault/.pid"
+
+    "template" = {
+      "contents" = "{{- with secret \"secret/data/my-app/config\" -}}\nconnection:\n  username:\"{{ .Data.data.username }}\"\n  password:\"{{ .Data.data.password }}\"\n{{- end -}}\n"
+      "destination" = "/vault/secrets/credentials.yaml"
+    }
+
+    "vault" = {
+      "address" = "http://vault.vault.svc:8200"
+    }

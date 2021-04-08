@@ -5,8 +5,6 @@ helm repo add hashicorp https://helm.releases.hashicorp.com
 
 helm search repo hashicorp/vault -l
 
-kubectl create namespace vault
-
 helm install vault hashicorp/vault \
   --version '0.10.0' \
   --namespace 'vault' \
