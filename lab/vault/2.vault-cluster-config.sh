@@ -7,7 +7,7 @@ kubectl exec vault-0 -- vault operator init \
 
 VAULT_UNSEAL_KEY=$(cat ${VAULT_KEY_FILE} | jq -r ".unseal_keys_b64[]")
 
-kubectl exec -ti vault-0 -- vault operator unseal ${VAULT_UNSEAL_KEY}
+kubectl exec vault-0 -- vault operator unseal ${VAULT_UNSEAL_KEY} && \
 kubectl exec vault-0 -- vault status
 
 kubectl exec -ti vault-1 -- vault operator raft join http://vault-0.vault-internal:8200 && \

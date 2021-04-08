@@ -26,8 +26,14 @@ data:
     "pid_file" = "/home/vault/.pid"
 
     "template" = {
-      "contents" = "{{- with secret \"secret/data/my-app/config\" -}}\nconnection:\n  username:\"{{ .Data.data.username }}\"\n  password:\"{{ .Data.data.password }}\"\n{{- end -}}\n"
-      "destination" = "/vault/secrets/credentials.yaml"
+      destination = "/vault/secrets/credentials.yaml"
+      contents = <<EOT
+      {{- with secret "secret/data/my-app/config" -}}
+      connection:
+        username: "{{ .Data.data.username }}"
+        password: "{{ .Data.data.password }}"
+      {{- end -}}
+      EOT
     }
 
     "vault" = {

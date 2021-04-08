@@ -1,4 +1,6 @@
-kubectl --namespace default apply deploy/annotations/
+kubectl apply \
+  --namespace default \
+  --filename deploy/annotations/
 
 kubectl logs app -c vault-agent-init
 
