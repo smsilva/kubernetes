@@ -26,16 +26,18 @@ cd csi-driver-host-path
 # After the install is complete, add the CSI Hostpath Driver StorageClass and make it the default
 kubectl apply -f ./examples/csi-storageclass.yaml
 kubectl patch storageclass standard \
-    -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
+  -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
 kubectl patch storageclass csi-hostpath-sc \
-    -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+  -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 
 # Installing K10
-helm install k10 kasten/k10 --namespace=kasten-io
+helm install k10 kasten/k10 \
+  --create-namespace \
+  --namespace kasten-io
 
 # Annotate the CSI Hostpath VolumeSnapshotClass for use with K10
 kubectl annotate volumesnapshotclass csi-hostpath-snapclass \
-    k10.kasten.io/is-snapshot-class=true
+  k10.kasten.io/is-snapshot-class=true
 
 kubectl get pods --namespace kasten-io
 
