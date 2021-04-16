@@ -1,5 +1,5 @@
 vault policy write my-app-policy - <<EOF
-path "secret/data/my-app/config" {
+path "secret/data/my-app/database" {
   capabilities = ["read"]
 }
 EOF

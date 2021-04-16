@@ -27,7 +27,7 @@ data:
     template = {
       destination = "/vault/secrets/credentials.yaml"
       contents = <<EOT
-      {{- with secret "secret/data/my-app/config" -}}
+      {{- with secret "secret/data/my-app/database" -}}
       connection:
         username: "{{ .Data.data.username }}"
         password: "{{ .Data.data.password }}"
