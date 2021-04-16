@@ -20,3 +20,4 @@ disks/
 **/multipass/shared/update-system-config-all.sh
 **/minikube/rbac/dave/
 **/install/kind/*.pem
+lab/argocd/kind-cluster.yaml
