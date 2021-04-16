@@ -18,7 +18,7 @@ done
 vault kv get -format=yaml secret/my-app/database
 vault kv get -format=yaml secret/my-app/cache
 
-vault operator raft snapshot save /home/vault/raft.snap
+vault operator raft snapshot save /vault/data/raft/snapshots/primary-raft.snap
 
 vault kv list secret/my-app
 
@@ -29,15 +29,15 @@ exit
 
 kubectl \
   --context kind-vault-primary \
-  cp vault/vault-0:home/vault/raft.snap raft.snap
+  cp vault/vault-0:vault/data/raft/snapshots/primary-raft.snap primary-raft.snap
 
 kubectl \
   --context kind-vault-secondary \
   --namespace vault \
-  cp raft.snap vault/vault-0:home/vault/raft.snap
+  cp primary-raft.snap vault/vault-0:vault/data/raft/snapshots/primary-raft.snap
 
-vault operator raft snapshot restore /home/vault/raft.snap
-vault operator raft snapshot restore -force /home/vault/raft.snap
+vault operator raft snapshot restore /vault/data/raft/snapshots/primary-raft.snap
+vault operator raft snapshot restore -force /vault/data/raft/snapshots/primary-raft.snap
 
 vault kv get -format=json secret/my-app/database
 vault kv get -format=json secret/my-app/cache

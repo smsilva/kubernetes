@@ -20,7 +20,7 @@ fi
 # az ad user get-member-groups --id ${USER_ID} -o table
 
 ENVIRONMENT="dev" && \
-AZ_AKS_REGION="centralus" && \
+AZ_AKS_REGION="eastus2" && \
 AZ_AKS_RESOURCE_GROUP_NAME="${USER?}-${ENVIRONMENT?}-${AZ_AKS_REGION?}" && \
 AZ_AKS_ADMIN_GROUP_NAME="myAKSAdminGroup" && \
 AZ_AKS_CLUSTER_NAME="${USER?}-${ENVIRONMENT?}-${AZ_AKS_REGION?}" && \
