@@ -1,3 +1,5 @@
+kubectl config set-context kind-vault-primary --namespace vault
+
 VAULT_KEY_FILE="vault-cluster-keys.json"
 
 kubectl exec vault-0 -- vault operator init \
