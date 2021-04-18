@@ -1,4 +1,4 @@
-AZURE_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+AZURE_SUBSCRIPTION_ID=$(az account show --query id -o tsv) && \
 AZURE_TENANT_ID=$(az account list --query="[?id=='${AZURE_SUBSCRIPTION_ID?}'].tenantId" -o tsv) && \
 AZURE_TERRAFORM_SERVICE_PRINCIPAL_NAME="terraform" && \
 AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET=$(az ad sp create-for-rbac \
@@ -10,8 +10,7 @@ AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET=$(az ad sp create-for-rbac \
 AZURE_TERRAFORM_SERVICE_PRINCIPAL_ID=$(az ad sp list \
   --display-name "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_NAME?}" \
   --query [0].appId \
-  --output tsv)
-
+  --output tsv) && \
 echo "" && \
 echo "AZURE_SUBSCRIPTION_ID..........................: ${AZURE_SUBSCRIPTION_ID}" && \
 echo "AZURE_TENANT_ID................................: ${AZURE_TENANT_ID}" && \
@@ -30,44 +29,17 @@ export ARM_CLIENT_SECRET="${AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET?}"
 export ARM_SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID?}"
 export ARM_TENANT_ID="${AZURE_TENANT_ID?}"
 
-cat <<EOF > config.hcl
-seal "azurekeyvault" {
-  client_id      = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_ID?}"
-  client_secret  = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET?}"
-  tenant_id      = "${AZURE_TENANT_ID?}"
-  vault_name     = "test-vault-b70c7d3f"
-  key_name       = "generated-key"
-}
-EOF
-
-kubectl create secret generic vault-unseal-config \
-  --from-file config.hcl \
-  --namespace vault
-
 git clone https://github.com/hashicorp/vault-guides.git
 
 cd vault-guides/operations/azure-keyvault-unseal
 
 cat <<EOF > terraform.tfvars
-# Provide your tenant ID (Required)
 tenant_id="${AZURE_TENANT_ID?}"
-
-# Public SSH key (Required)
-public_key = "$(cat cat ~/.ssh/id_rsa.pub)"
-
-# Azure Client ID (Required)
-client_id = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET?}"
-
-# Azure Client secret (Required)
+public_key = "$(cat ~/.ssh/id_rsa.pub)"
+client_id = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_ID?}"
 client_secret = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET?}"
-
-# Azure account subscription ID (Required)
 subscription_id = "${AZURE_SUBSCRIPTION_ID?}"
-
-# To overwrite the default (Optional)
 location="eastus2"
-
-# To overwrite the default (Optional)
 environment = "test"
 EOF
 
@@ -90,3 +62,17 @@ sudo journalctl --no-pager -u vault
 sudo systemctl restart vault
 
 terraform destroy -auto-approve
+
+cat <<EOF > config.hcl
+seal "azurekeyvault" {
+  client_id      = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_ID?}"
+  client_secret  = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET?}"
+  tenant_id      = "${AZURE_TENANT_ID?}"
+  vault_name     = "test-vault-b70c7d3f"
+  key_name       = "generated-key"
+}
+EOF
+
+kubectl create secret generic vault-unseal-config \
+  --from-file config.hcl \
+  --namespace vault
