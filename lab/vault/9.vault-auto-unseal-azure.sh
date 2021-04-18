@@ -44,49 +44,27 @@ kubectl create secret generic vault-unseal-config \
   --from-file config.hcl \
   --namespace vault
 
-git clone https://github.com/hashicorp/vault-guides.git
+az aks show \
+  --name silvios-dev-eastus2 \
+  --resource-group silvios-dev-eastus2 \
+  --query nodeResourceGroup \
+  --output tsv
 
-cd vault-guides/operations/azure-keyvault-unseal
+AZ_AKS_VNET_NAME=$(az network vnet list \
+  --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME?}" \
+  --query [0].name \
+  --output tsv)
 
-cat <<EOF > terraform.tfvars
-# Provide your tenant ID (Required)
-tenant_id="${AZURE_TENANT_ID?}"
+AZ_AKS_VNET_SUBNET_NAME=$(az network vnet list \
+  --resource-group "${AZ_AKS_RESOURCE_GROUP_NAME?}" \
+  --query [0].subnets[0].name \
+  --output tsv)
 
-# Public SSH key (Required)
-public_key = "$(cat cat ~/.ssh/id_rsa.pub)"
-
-# Azure Client ID (Required)
-client_id = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET?}"
-
-# Azure Client secret (Required)
-client_secret = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET?}"
-
-# Azure account subscription ID (Required)
-subscription_id = "${AZURE_SUBSCRIPTION_ID?}"
-
-# To overwrite the default (Optional)
-location="eastus2"
-
-# To overwrite the default (Optional)
-environment = "test"
-EOF
-
-terraform init
-
-terraform plan
-
-terraform apply -auto-approve
-
-terraform output ssh-addr
-
-vault status
-
-vault operator init
-
-vault status
-
-sudo journalctl --no-pager -u vault
-
-sudo systemctl restart vault
-
-terraform destroy -auto-approve
+az keyvault create \
+  --location "eastus2" \
+  --name "MyKeyVault" \
+  --resource-group "MyResourceGroup" \
+  --network-acls-vnets \
+      vnet_name_2/subnet_name_2 \
+      vnet_name_3/subnet_name_3 \
+      /subscriptions/${AZURE_SUBSCRIPTION_ID?}/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/${AZ_AKS_VNET_NAME?}/subnets/${AZ_AKS_VNET_SUBNET_NAME?}

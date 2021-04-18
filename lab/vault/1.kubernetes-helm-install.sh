@@ -10,8 +10,8 @@ helm install vault hashicorp/vault \
   --namespace 'vault' \
   --create-namespace \
   --set='server.extraVolumes[0].type=secret' \
-  --set='server.extraVolumes[0].name=vault-storage-config' \
-  --set='server.extraArgs=-config=/vault/userconfig/vault-storage-config/config.hcl' \
+  --set='server.extraVolumes[0].name=vault-unseal-config' \
+  --set='server.extraArgs=-config=/vault/userconfig/vault-unseal-config/config.hcl' \
   --set='server.ha.enabled=true' \
   --set='server.ha.replicas=3' \
   --set='server.ha.raft.enabled=true' \
