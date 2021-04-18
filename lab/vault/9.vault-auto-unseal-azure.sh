@@ -28,20 +28,20 @@ AZ_AKS_VNET_SUBNET_NAME=$(az network vnet list \
   --output tsv) && \
 AZ_AKS_VNET_SUBNET_FOR_ACL="/subscriptions/${AZURE_SUBSCRIPTION_ID?}/resourceGroups/${AZ_AKS_NODE_RESOURCE_GROUP_NAME?}/providers/Microsoft.Network/virtualNetworks/${AZ_AKS_VNET_NAME?}/subnets/${AZ_AKS_VNET_SUBNET_NAME?}" && \
 echo "" && \
-echo "AZURE_SUBSCRIPTION_ID.........................: ${AZURE_SUBSCRIPTION_ID}" && \
-echo "AZURE_TENANT_ID...............................: ${AZURE_TENANT_ID}" && \
-echo "AZ_AKS_REGION.................................: ${AZ_AKS_REGION}" && \
-echo "AZ_AKS_CLUSTER_NAME...........................: ${AZ_AKS_CLUSTER_NAME}" && \
-echo "AZ_AKS_RESOURCE_GROUP_NAME....................: ${AZ_AKS_RESOURCE_GROUP_NAME}" && \
-echo "AZ_AKS_NODE_RESOURCE_GROUP_NAME...............: ${AZ_AKS_NODE_RESOURCE_GROUP_NAME}" && \
-echo "AZ_AKS_VNET_NAME..............................: ${AZ_AKS_VNET_NAME}" && \
-echo "AZ_AKS_VNET_SUBNET_NAME.......................: ${AZ_AKS_VNET_SUBNET_NAME}" && \
-echo "AZ_AKS_VNET_SUBNET_FOR_ACL....................: ${AZ_AKS_VNET_SUBNET_FOR_ACL}" && \
-echo "AZURE_KEYVAULT_NAME...........................: ${AZURE_KEYVAULT_NAME}" && \
-echo "AZURE_KEYVAULT_KEY............................: ${AZURE_KEYVAULT_KEY}" && \
-echo "AZURE_KEYVAULT_SERVICE_PRINCIPAL_NAME.........: ${AZURE_KEYVAULT_SERVICE_PRINCIPAL_NAME}" && \
-echo "AZURE_KEYVAULT_SERVICE_PRINCIPAL_ID...........: ${AZURE_KEYVAULT_SERVICE_PRINCIPAL_ID}" && \
-echo "AZURE_KEYVAULT_SERVICE_PRINCIPAL_SECRET.......: ${AZURE_KEYVAULT_SERVICE_PRINCIPAL_SECRET}"
+echo "AZURE_SUBSCRIPTION_ID...................: ${AZURE_SUBSCRIPTION_ID}" && \
+echo "AZURE_TENANT_ID.........................: ${AZURE_TENANT_ID}" && \
+echo "AZ_AKS_REGION...........................: ${AZ_AKS_REGION}" && \
+echo "AZ_AKS_CLUSTER_NAME.....................: ${AZ_AKS_CLUSTER_NAME}" && \
+echo "AZ_AKS_RESOURCE_GROUP_NAME..............: ${AZ_AKS_RESOURCE_GROUP_NAME}" && \
+echo "AZ_AKS_NODE_RESOURCE_GROUP_NAME.........: ${AZ_AKS_NODE_RESOURCE_GROUP_NAME}" && \
+echo "AZ_AKS_VNET_NAME........................: ${AZ_AKS_VNET_NAME}" && \
+echo "AZ_AKS_VNET_SUBNET_NAME.................: ${AZ_AKS_VNET_SUBNET_NAME}" && \
+echo "AZ_AKS_VNET_SUBNET_FOR_ACL..............: ${AZ_AKS_VNET_SUBNET_FOR_ACL}" && \
+echo "AZURE_KEYVAULT_NAME.....................: ${AZURE_KEYVAULT_NAME}" && \
+echo "AZURE_KEYVAULT_KEY......................: ${AZURE_KEYVAULT_KEY}" && \
+echo "AZURE_KEYVAULT_SERVICE_PRINCIPAL_NAME...: ${AZURE_KEYVAULT_SERVICE_PRINCIPAL_NAME}" && \
+echo "AZURE_KEYVAULT_SERVICE_PRINCIPAL_ID.....: ${AZURE_KEYVAULT_SERVICE_PRINCIPAL_ID}" && \
+echo "AZURE_KEYVAULT_SERVICE_PRINCIPAL_SECRET.: ${AZURE_KEYVAULT_SERVICE_PRINCIPAL_SECRET}"
 
 AZ_AKS_VNET_SUBNET_ID=$(az network vnet subnet show \
   --resource-group "${AZ_AKS_NODE_RESOURCE_GROUP_NAME}" \
@@ -74,16 +74,17 @@ az role assignment list -o jsonc --query="[?principalName=='http://aks-key-vault
 
 az role assignment create \
   --role "Key Vault Secrets Officer" \
-  --assignee {i.e jalichwa@microsoft.com} \
-  --scope /subscriptions/{subscriptionid}/resourcegroups/{resource-group-name}/providers/Microsoft.KeyVault/vaults/{key-vault-name}
+  --assignee "${AZURE_KEYVAULT_SERVICE_PRINCIPAL_ID?}" \
+  --assignee-principal-type "ServicePrincipal" \
+  --scope "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourcegroups/${AZ_AKS_RESOURCE_GROUP_NAME}/providers/Microsoft.KeyVault/vaults/${AZURE_KEYVAULT_NAME?}"
 
 cat <<EOF > config.hcl
 seal "azurekeyvault" {
   client_id      = "${AZURE_KEYVAULT_SERVICE_PRINCIPAL_ID?}"
   client_secret  = "${AZURE_KEYVAULT_SERVICE_PRINCIPAL_SECRET?}"
   tenant_id      = "${AZURE_TENANT_ID?}"
-  vault_name     = "test-vault-b70c7d3f"
-  key_name       = "generated-key"
+  vault_name     = "${AZURE_KEYVAULT_NAME?}"
+  key_name       = "${AZURE_KEYVAULT_KEY?}"
 }
 EOF
 
