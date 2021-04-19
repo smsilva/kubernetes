@@ -65,11 +65,11 @@ terraform destroy -auto-approve
 
 cat <<EOF > config.hcl
 seal "azurekeyvault" {
-  client_id      = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_ID?}"
-  client_secret  = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET?}"
-  tenant_id      = "${AZURE_TENANT_ID?}"
-  vault_name     = "test-vault-b70c7d3f"
-  key_name       = "generated-key"
+  client_id     = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_ID?}"
+  client_secret = "${AZURE_TERRAFORM_SERVICE_PRINCIPAL_SECRET?}"
+  tenant_id     = "${AZURE_TENANT_ID?}"
+  vault_name    = "test-vault-b70c7d3f"
+  key_name      = "generated-key"
 }
 EOF
 
