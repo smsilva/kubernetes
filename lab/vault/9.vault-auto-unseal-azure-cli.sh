@@ -80,11 +80,11 @@ az role assignment create \
 
 cat <<EOF > config.hcl
 seal "azurekeyvault" {
-  client_id      = "${AZURE_KEYVAULT_SERVICE_PRINCIPAL_ID?}"
-  client_secret  = "${AZURE_KEYVAULT_SERVICE_PRINCIPAL_SECRET?}"
-  tenant_id      = "${AZURE_TENANT_ID?}"
-  vault_name     = "${AZURE_KEYVAULT_NAME?}"
-  key_name       = "${AZURE_KEYVAULT_KEY?}"
+  client_id     = "${AZURE_KEYVAULT_SERVICE_PRINCIPAL_ID?}"
+  client_secret = "${AZURE_KEYVAULT_SERVICE_PRINCIPAL_SECRET?}"
+  tenant_id     = "${AZURE_TENANT_ID?}"
+  vault_name    = "${AZURE_KEYVAULT_NAME?}"
+  key_name      = "${AZURE_KEYVAULT_KEY?}"
 }
 EOF
 
