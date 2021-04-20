@@ -3,7 +3,10 @@ set -e
 
 kubectl create namespace argocd
 
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.0.0/manifests/install.yaml
+kubectl \
+  apply \
+  --namespace argocd \
+  --filename https://raw.githubusercontent.com/argoproj/argo-cd/v2.0.0/manifests/install.yaml
 
 if ! which argocd &> /dev/null; then
   echo "Need to download and install argocd CLI..."

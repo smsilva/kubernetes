@@ -6,8 +6,6 @@ kind: Cluster
 nodes:
 - role: control-plane
 - role: worker
-- role: worker
-- role: worker
 EOF
 
 kind create cluster \
