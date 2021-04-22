@@ -8,4 +8,9 @@ kubectl apply \
   --namespace argo-rollouts \
   --filename https://raw.githubusercontent.com/argoproj/argo-rollouts/stable/manifests/install.yaml
 
+kubectl wait \
+  --namespace argo-rollouts \
+  --for condition=Available \
+  deployment argo-rollouts
+
 kubectl argo rollouts version
