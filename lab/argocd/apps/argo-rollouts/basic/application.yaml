@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/smsilva/argocd.git
-    path: argo-rollouts
+    path: argo-rollouts/basic
   destination:
     namespace: dev
     server: https://kubernetes.default.svc
