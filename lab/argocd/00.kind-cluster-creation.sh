@@ -10,4 +10,4 @@ EOF
 
 kind create cluster \
   --config kind-cluster.yaml \
-  --name vault-primary
+  --name argocd
