@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: argo-rollouts-basic
+  name: argo-rollouts-blue-green
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/smsilva/argocd.git
-    path: argo-rollouts/basic
+    path: argorollouts/blue-green
   destination:
     namespace: dev
     server: https://kubernetes.default.svc
