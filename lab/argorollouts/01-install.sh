@@ -11,6 +11,7 @@ kubectl apply \
 kubectl wait \
   --namespace argo-rollouts \
   --for condition=Available \
+  --timeout 360s \
   deployment argo-rollouts
 
 kubectl argo rollouts version
