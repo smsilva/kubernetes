@@ -11,7 +11,8 @@ spec:
     - silvios-dev.eastus2.cloudapp.azure.com
     secretName: httpbin-tls
   rules:
-  - http:
+  - host: silvios-dev.eastus2.cloudapp.azure.com
+    http:
       paths:
       - backend:
           serviceName: httpbin
