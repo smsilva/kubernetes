@@ -1,10 +1,10 @@
 #!/bin/bash
 
 AZ_APP_GATEWAY_NAME="app-gateway-aks" && \
-AZ_PUBLIC_IP_NAME="app-gateway-public-ip-aks" && \
 AZ_PUBLIC_IP_DNS_PREFIX="silvios-dev" && \
-AZ_APP_GATEWAY_VNET_NAME="app-gateway-vnet" && \
-AZ_APP_GATEWAY_SUBNET_NAME="app-gateway-subnet"
+AZ_PUBLIC_IP_NAME="${AZ_APP_GATEWAY_NAME?}-public-ip" && \
+AZ_APP_GATEWAY_VNET_NAME="${AZ_APP_GATEWAY_NAME?}-vnet" && \
+AZ_APP_GATEWAY_SUBNET_NAME="${AZ_APP_GATEWAY_NAME?}-subnet"
 
 # Deploy a new Application Gateway
 # https://docs.microsoft.com/en-us/azure/application-gateway/tutorial-ingress-controller-add-on-existing#deploy-a-new-application-gateway
