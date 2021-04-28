@@ -6,8 +6,10 @@ metadata:
     app.kubernetes.io/name: argocd-server
     app.kubernetes.io/part-of: argocd
   name: argocd-server
+  annotations:
+    service.beta.kubernetes.io/azure-dns-label-name: silvios-argocd-dev
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
   - name: http
     port: 80

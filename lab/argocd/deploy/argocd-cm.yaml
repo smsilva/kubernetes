@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-cm
+  namespace: argocd
+data:
+  resource.customizations: |
+    admissionregistration.k8s.io/MutatingWebhookConfiguration:
+      ignoreDifferences: |
+        jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+  url: https://silvios-argocd-dev.eastus2.cloudapp.azure.com
+  admin.enabled: 'false'
+  users.anonymous.enabled: 'false'
+  oidc.config: |
+    name: Azure
+    issuer: https://login.microsoftonline.com/a267367d-d04d-4a6b-84ef-0cc227ed6e9f/v2.0
+    clientID: 5b59d3e0-04f4-4be4-aff4-b159a8ed4b46
+    clientSecret: $oidc.azure.clientSecret
+    requestedIDTokenClaims:
+      groups:
+        essential: true
+    requestedScopes:
+      - openid
+      - profile
+      - email
