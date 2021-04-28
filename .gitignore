@@ -21,3 +21,4 @@ disks/
 **/minikube/rbac/dave/
 **/install/kind/*.pem
 lab/argocd/kind-cluster.yaml
+lab/kyverno/kind-cluster.yaml
