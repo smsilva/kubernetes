@@ -5,7 +5,7 @@ metadata:
 spec:
   validationFailureAction: enforce
   rules:
-  - name: check-for-labels
+  - name: app-kubernetes-name-label-must-be-present
     match:
       resources:
         kinds:

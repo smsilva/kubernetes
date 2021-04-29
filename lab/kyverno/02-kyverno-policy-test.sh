@@ -1,5 +1,5 @@
 #!/bin/bash
 
-kubectl apply -f kyverno-cluster-policy.yaml
+kubectl apply -f ./policies/
 
 kubectl create deployment nginx --image=nginx

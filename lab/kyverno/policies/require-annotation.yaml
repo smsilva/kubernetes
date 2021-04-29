@@ -1,0 +1,18 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-annotations
+spec:
+  validationFailureAction: enforce
+  rules:
+  - name: azure-load-balancer-internal-should-be-enabled
+    match:
+      resources:
+        kinds:
+        - Service
+    validate:
+      message: "annotation 'service.beta.kubernetes.io/azure-load-balancer-internal' must be 'true'"
+      pattern:
+        metadata:
+          annotations:
+            service.beta.kubernetes.io/azure-load-balancer-internal: "true"

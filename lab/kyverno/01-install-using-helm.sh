@@ -10,3 +10,14 @@ helm repo update
 helm install kyverno \
   --namespace kyverno kyverno/kyverno \
   --create-namespace
+
+for deploymentName in $(kubectl -n kyverno get deploy -o name); do
+   echo "Waiting for: ${deploymentName}"
+
+   kubectl \
+     -n kyverno \
+     wait \
+     --for condition=available \
+     --timeout=240s \
+     ${deploymentName};
+done
