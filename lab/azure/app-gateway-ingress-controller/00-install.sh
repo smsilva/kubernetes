@@ -86,3 +86,18 @@ az network vnet peering create \
   --vnet-name ${aksVnetName?} \
   --remote-vnet ${appGWVnetId?} \
   --allow-vnet-access
+
+# Role Assignment
+
+AZ_SUBSCRIPTION_ID="ddc30188-075a-470d-a6ca-05a1987c51a3"
+AZ_APP_GATEWAY_MANAGED_IDENTITY_CLIENT_ID="0cbda7c2-e930-4342-9346-a41b211fb0d4"
+
+az role assignment create \
+  --role Reader \
+  --scope /subscriptions/${AZ_SUBSCRIPTION_ID?}/resourceGroups/${AZ_AKS_RESOURCE_GROUP_NAME?} \
+  --assignee ${AZ_APP_GATEWAY_MANAGED_IDENTITY_CLIENT_ID?}
+  
+az role assignment create \
+  --role Contributor \
+  --scope /subscriptions/${AZ_SUBSCRIPTION_ID?}/resourceGroups/${AZ_AKS_RESOURCE_GROUP_NAME?}/providers/Microsoft.Network/applicationGateways/${AZ_APP_GATEWAY_NAME?} \
+  --assignee ${AZ_APP_GATEWAY_MANAGED_IDENTITY_CLIENT_ID?}
