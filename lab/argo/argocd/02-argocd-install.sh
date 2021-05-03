@@ -24,8 +24,7 @@ for deploymentName in $(kubectl -n argocd get deploy -o name); do
      ${deploymentName};
 done
 
-# kubectl apply -n argocd -f argocd-server-service.yaml
-kubectl apply -n argocd -f argocd-configmap.yaml
+# kubectl apply -n argocd -f deploy/kind/argocd-cm.yaml
 kubectl \
   --namespace argocd \
   patch service argocd-server \
