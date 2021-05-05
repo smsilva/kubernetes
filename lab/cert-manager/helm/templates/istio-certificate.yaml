@@ -4,7 +4,7 @@ metadata:
   name: istio-ingress-certificate
   namespace: istio-system
 spec:
-  secretName: istio-ingress-tls
+  secretName: {{ $.Values.istio.ingress.secret.name }}
   dnsNames:
     - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
   commonName: {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}

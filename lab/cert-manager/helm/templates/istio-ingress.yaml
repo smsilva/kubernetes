@@ -1,0 +1,19 @@
+# apiVersion: networking.k8s.io/v1beta1
+# kind: Ingress
+# metadata:
+#   name: ingress
+#   namespace: istio-system
+#   annotations:
+#     kubernetes.io/ingress.class: istio
+# spec:
+#   tls:
+#   - hosts:
+#     - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
+#     secretName: {{ $.Values.istio.ingress.secret.name }}
+#   rules:
+#   - host: {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
+#     http:
+#       paths:
+#       - backend:
+#           serviceName: httpbin
+#           servicePort: 8000
