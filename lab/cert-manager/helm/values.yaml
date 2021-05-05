@@ -3,10 +3,9 @@ dns:
   domain: .eastus2.cloudapp.azure.com
 
 issuer:
-  # name: istio-letsencrypt-staging
-  # server: https://acme-staging-v02.api.letsencrypt.org/directory
-  name: istio-letsencrypt-prod
-  server: "https://acme-v02.api.letsencrypt.org/directory"
+  name: letsencrypt
+  server: https://acme-staging-v02.api.letsencrypt.org/directory
+  # server: https://acme-v02.api.letsencrypt.org/directory
   email: smsilva@gmail.com
 
 istio:
