@@ -1,5 +1,5 @@
 #!/bin/bash
-./00.kind-cluster-creation.sh
+#./00.kind-cluster-creation.sh
 # ./01-minikube-cluster-creation.sh
 ./02-argocd-install.sh
 
