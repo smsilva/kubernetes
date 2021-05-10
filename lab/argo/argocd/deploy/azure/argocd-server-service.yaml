@@ -6,6 +6,7 @@ metadata:
     app.kubernetes.io/name: argocd-server
     app.kubernetes.io/part-of: argocd
   name: argocd-server
+  namespace: argocd
   annotations:
     service.beta.kubernetes.io/azure-dns-label-name: silvios-argocd-dev
 spec:
