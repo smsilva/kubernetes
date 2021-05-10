@@ -6,7 +6,7 @@ kubectl create namespace argocd
 kubectl \
   apply \
   --namespace argocd \
-  --filename https://raw.githubusercontent.com/argoproj/argo-cd/v2.0.1/manifests/install.yaml
+  --filename https://raw.githubusercontent.com/argoproj/argo-cd/v1.8.7/manifests/install.yaml
 
 if ! which argocd &> /dev/null; then
   echo "Need to download and install argocd CLI..."
@@ -17,10 +17,10 @@ for deploymentName in $(kubectl -n argocd get deploy -o name); do
    echo "Waiting for: ${deploymentName}"
 
    kubectl \
-     -n argocd \
+     --namespace argocd \
      wait \
      --for condition=available \
-     --timeout=240s \
+     --timeout=360s \
      ${deploymentName};
 done
 
