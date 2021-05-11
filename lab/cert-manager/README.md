@@ -2,7 +2,7 @@
 
 ## 1. Crie um AKS Cluster
 
-Você pode usar [este](../../install/aks/00-creation.sh) Script que usa o Azure CLI.
+Você pode usar [este](../../install/aks/create-cluster.sh) Script que usa o Azure CLI.
 
 ## 2. Instale o Istio Operator
 
