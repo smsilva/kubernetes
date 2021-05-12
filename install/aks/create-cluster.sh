@@ -81,7 +81,8 @@ az aks create \
   --enable-cluster-autoscaler \
   --node-count 1 \
   --min-count 1 \
-  --max-count 3
+  --max-count 5 \
+  --max-pods 120
 
 az aks get-credentials \
   --name "${AZ_AKS_CLUSTER_NAME?}" \

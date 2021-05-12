@@ -5,7 +5,7 @@
 
 . ../../load-config.sh
 
-SERVICE_ACCOUNT_NAME="silvios"
+SERVICE_ACCOUNT_NAME="anthos-hub"
 SERVICE_ACCOUNT_JSON_FILE="service-account-${SERVICE_ACCOUNT_NAME?}.json"
 
 gcloud iam service-accounts create ${SERVICE_ACCOUNT_NAME?} \
