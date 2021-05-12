@@ -1,12 +1,17 @@
 #!/bin/bash
 set -e
 
+LATEST_GITHUB_RELEASE_VERSION=$(curl -sL https://github.com/argoproj/argo-cd/releases | grep -oP 'releases/tag/\K[^\"]+' | sort --version-sort | tail -1)
+
+echo "ARGOCD_VERSION.: ${LATEST_GITHUB_RELEASE_VERSION?}"
+echo "CLUSTER_TYPE...: ${CLUSTER_TYPE?}"
+
 kubectl create namespace argocd
 
 kubectl \
   apply \
   --namespace argocd \
-  --filename https://raw.githubusercontent.com/argoproj/argo-cd/v2.0.1/manifests/install.yaml
+  --filename https://raw.githubusercontent.com/argoproj/argo-cd/${LATEST_GITHUB_RELEASE_VERSION?}/manifests/install.yaml
 
 if ! which argocd &> /dev/null; then
   echo "Need to download and install argocd CLI..."
@@ -24,10 +29,8 @@ for deploymentName in $(kubectl -n argocd get deploy -o name); do
      ${deploymentName};
 done
 
-# kubectl apply -n argocd -f deploy/kind/argocd-cm.yaml
-kubectl \
+kubectl apply \
   --namespace argocd \
-  patch service argocd-server \
-  --patch '{"spec":{"type":"NodePort","ports":[{"name":"https","port":443,"nodePort":32443}]}}'
+  --filename deploy/${CLUSTER_TYPE?}/
 
-sleep 5
+echo ""

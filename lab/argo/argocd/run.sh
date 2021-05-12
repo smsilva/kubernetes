@@ -1,24 +1,57 @@
 #!/bin/bash
-./00.kind-cluster-creation.sh
-# ./01-minikube-cluster-creation.sh
-./02-argocd-install.sh
 
-ARGOCD_INITIAL_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+set -e
+
+CLUSTER_TYPE=$1
+
+if [[ -z "${CLUSTER_TYPE}" ]]; then
+  echo "You need to inform the Cluster Type: kind, minikube or aks"
+  echo ""
+  echo "  Example:"
+  echo ""
+  echo "  ./run.sh kind"
+  echo ""
+
+  exit 1
+fi
+
+. ./${CLUSTER_TYPE?}-cluster-creation.sh
+. ./argocd-install.sh ${CLUSTER_TYPE?}
+. ./install-ngninx-ingress-controller.sh
+
+ARGOCD_INITIAL_PASSWORD=$(kubectl \
+  --namespace argocd \
+  get secret argocd-initial-admin-secret \
+  --output jsonpath="{.data.password}" | base64 -d)
 
 echo ""
-echo "   kubectl --namespace argocd port-forward svc/argocd-server 8443:443"
+echo "  1. Open a new Terminal and run a port-forward command:"
 echo ""
-echo "   http://localhost:8443"
+echo "    kubectl --namespace argocd port-forward svc/argocd-server 8443:443"
 echo ""
-echo "   User.....: admin"
-echo "   Password.: ${ARGOCD_INITIAL_PASSWORD}"
+echo "  2. Copy the Password for admin user:"
 echo ""
-echo "   kubectl apply -f apps/argo-rollouts"
-echo "   kubectl apply -f apps/httpbin"
-echo "   kubectl apply -f apps/vault"
+echo "    ${ARGOCD_INITIAL_PASSWORD}"
 echo ""
-echo "   sudo sed -i '/app.example.com/d' /etc/hosts"
-echo "   echo '127.0.0.1 app.example.com' | sudo tee -a /etc/hosts"
+echo "  3. Open the addres bellow in a browser:"
 echo ""
-echo "   curl -ks https://app.example.com/get"
+echo "    https://localhost:8443"
+echo ""
+echo "  4. Create a new ArgoCD Application:"
+echo ""
+echo "    kubectl apply -f apps/httpbin"
+echo ""
+echo "  5. Wait for the httpbin POD become Ready and them test:"
+echo ""
+echo "    kubectl \\"
+echo "      --namespace dev \\"
+echo "      wait \\"
+echo "      --for condition=Ready pod \\"
+echo "      --selector app=httpbin && \\"
+echo "    sleep 5 && \\"
+echo "    curl \\"
+echo "      --include \\"
+echo "      --insecure \\"
+echo "      --header \"Host: app.example.com\" \\"
+echo "      https://127.0.0.1/get"
 echo ""

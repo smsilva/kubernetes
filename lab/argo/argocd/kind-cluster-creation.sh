@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Kind Cluster Creation"
+
 cat <<EOF > kind-cluster.yaml
 apiVersion: kind.x-k8s.io/v1alpha4
 kind: Cluster
@@ -24,13 +26,3 @@ EOF
 kind create cluster \
   --config kind-cluster.yaml \
   --name argocd
-
-kubectl \
-  apply \
-  --filename https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
-
-kubectl wait \
-  --namespace ingress-nginx \
-  --for condition=ready pod \
-  --selector app.kubernetes.io/component=controller \
-  --timeout=360s
