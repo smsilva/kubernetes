@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGOCD_URL=$(minikube service argocd-server -n argocd --url | grep 32443 | sed "s/http:\/\///")
+ARGOCD_URL=localhost:8080
 ARGOCD_INITIAL_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
 
 echo "" && \

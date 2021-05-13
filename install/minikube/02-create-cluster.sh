@@ -28,7 +28,7 @@ if ! kubectl config get-contexts minikube &> /dev/null; then
        -n kube-system \
        wait \
        --for condition=available \
-       --timeout=90s \
+       --timeout=360s \
        ${deploymentName};
   done
 fi
