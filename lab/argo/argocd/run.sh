@@ -27,7 +27,7 @@ ARGOCD_INITIAL_PASSWORD=$(kubectl \
 echo ""
 echo "  1. Open a new Terminal and run a port-forward command:"
 echo ""
-echo "    kubectl --namespace argocd port-forward svc/argocd-server 8443:443"
+echo "    kubectl --namespace argocd port-forward svc/argocd-server 8080:443"
 echo ""
 echo "  2. Copy the Password for admin user:"
 echo ""
