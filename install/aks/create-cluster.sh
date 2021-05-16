@@ -23,7 +23,7 @@ if [ -z "${AZ_USER_ID}" ]; then
     --output tsv)
 fi
 
-AZ_AKS_ADMIN_GROUP_NAME="aks-administrator" && \
+AZ_AKS_ADMIN_GROUP_NAME="${AZ_AKS_ADMIN_GROUP_NAME-'aks-administrator'}" && \
 az ad group create \
   --display-name ${AZ_AKS_ADMIN_GROUP_NAME?} \
   --mail-nickname ${AZ_AKS_ADMIN_GROUP_NAME?}
@@ -38,7 +38,7 @@ if [[ ! $(az ad group member check \
     --member-id ${AZ_USER_ID?}
 fi
 
-ENVIRONMENT="dev" && \
+ENVIRONMENT="sandbox" && \
 AZ_AKS_REGION="eastus2" && \
 AZ_AKS_RESOURCE_GROUP_NAME="${USER?}-${ENVIRONMENT?}-${AZ_AKS_REGION?}" && \
 AZ_AKS_CLUSTER_NAME="${USER?}-${ENVIRONMENT?}-${AZ_AKS_REGION?}" && \
@@ -62,8 +62,8 @@ AZ_USER_EMAIL=${AZ_USER_EMAIL?}
 AZ_AKS_ADMIN_GROUP_ID=${AZ_AKS_ADMIN_GROUP_ID?}
 AZ_AKS_ADMIN_GROUP_NAME=${AZ_AKS_ADMIN_GROUP_NAME?}
 AZ_AKS_REGION=${AZ_AKS_REGION?}
-AZ_AKS_CLUSTER_NAME=${AZ_AKS_CLUSTER_NAME?}
 AZ_AKS_CLUSTER_VERSION=${AZ_AKS_CLUSTER_VERSION?}
+AZ_AKS_CLUSTER_NAME=${AZ_AKS_CLUSTER_NAME?}
 AZ_AKS_RESOURCE_GROUP_NAME=${AZ_AKS_RESOURCE_GROUP_NAME?}
 EOF
 

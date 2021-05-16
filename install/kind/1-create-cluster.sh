@@ -6,6 +6,8 @@ kind create cluster \
   --config ${KIND_CLUSTER_CONFIG_FILE} \
   --name ${KIND_CLUSTER_NAME}
 
-for NODE in $(kubectl get nodes -o name); do
-  kubectl wait ${NODE} --for condition=Ready --timeout=180s
+for NODE in $(kubectl get nodes --output name); do
+  kubectl wait ${NODE} \
+    --for condition=Ready \
+    --timeout=360s
 done

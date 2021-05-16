@@ -6,7 +6,7 @@ spec:
   ingressClassName: "nginx"
   tls:
     - hosts:
-      - app.example.com
+        - app.example.com
       secretName: secret-tls-app-example-com
   rules:
   - host: app.example.com
