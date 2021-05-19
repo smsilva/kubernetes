@@ -17,7 +17,7 @@ fi
 
 . ./${CLUSTER_TYPE?}-cluster-creation.sh
 . ./argocd-install.sh ${CLUSTER_TYPE?}
-. ./install-ngninx-ingress-controller.sh
+. ./install-nginx-ingress-controller.sh
 
 ARGOCD_INITIAL_PASSWORD=$(kubectl \
   --namespace argocd \

@@ -58,6 +58,9 @@ spec:
     - name: istio-ingressgateway
       namespace: istio-system
       enabled: true
+      k8s:
+        service:
+          type: LoadBalancer
     - name: istio-ingressgateway-demo
       namespace: demo
       enabled: false

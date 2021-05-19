@@ -7,6 +7,6 @@ helm install rancher rancher-stable/rancher \
   --set hostname=rancher.silvios.me \
   --set ingress.tls.source=secret
 
-kubectl -n cattle-system rollout status deploy/rancher
+kubectl --namespace cattle-system rollout status deploy/rancher
 
-kubectl -n cattle-system get deploy rancher
+kubectl --namespace cattle-system get deploy rancher

@@ -107,7 +107,7 @@ sudo kubeadm join "${CONTROL_PLANE_ENDPOINT}" \
 cat <<EOF > namespace-info.sh
 kubectl get nodes -o wide | sed "s/Ubuntu.*LTS/Ubuntu/g" | awk '{ print \$1,\$2,\$5,\$6,\$10 }' | column -t
 echo ""
-kubectl get ds -o wide | sed 's/NODE SELECTOR/NODE_SELECTOR/' | awk '{ print $1, $2, $3, $4, $5, $6, $7, $8, $9, $11 }' | column -t
+kubectl get ds -o wide | sed 's/NODE SELECTOR/NODE_SELECTOR/' | awk '{ print \$1, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$11 }' | column -t
 echo ""
 kubectl get cm,deploy -o wide
 echo ""
