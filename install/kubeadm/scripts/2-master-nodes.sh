@@ -34,11 +34,11 @@ KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
 NODE_NAME=$(hostname --short) && \
 sudo kubeadm init \
   --v 3 \
-  --node-name "${NODE_NAME}" \
-  --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --kubernetes-version "${KUBERNETES_BASE_VERSION}" \
-  --control-plane-endpoint "${CONTROL_PLANE_ENDPOINT}" \
-  --upload-certs | tee "${KUBEADM_LOG_FILE}" && \
+  --node-name "${NODE_NAME?}" \
+  --apiserver-advertise-address "${LOCAL_IP_ADDRESS?}" \
+  --kubernetes-version "${KUBERNETES_BASE_VERSION?}" \
+  --control-plane-endpoint "${CONTROL_PLANE_ENDPOINT?}" \
+  --upload-certs | tee "${KUBEADM_LOG_FILE?}" && \
 printf 'Elapsed time: %02d:%02d\n' $((${SECONDS} % 3600 / 60)) $((${SECONDS} % 60))
 
 # Config
@@ -58,7 +58,7 @@ kubectl apply -f weave-net-cni-plugin.yaml
 
 # Retrieve token information from log file
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
-grep '\-\-certificate-key' "${KUBEADM_LOG_FILE}" --before 2 | grep \
+grep '\-\-certificate-key' "${KUBEADM_LOG_FILE?}" --before 2 | grep \
   --only-matching \
   --extended-regexp '\-\-.*' | sed \
     -e 's/\-\-control-plane //' \
@@ -93,14 +93,14 @@ echo "TOKEN........................: ${KUBEADM_TOKEN}" && \
 echo "DISCOVERY_TOKEN_CA_CERT_HASH.: ${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH}" && \
 echo ""
 
-sudo kubeadm join "${CONTROL_PLANE_ENDPOINT}" \
+sudo kubeadm join "${CONTROL_PLANE_ENDPOINT?}" \
   --v 3 \
   --control-plane \
-  --node-name "${NODE_NAME}" \
-  --apiserver-advertise-address "${LOCAL_IP_ADDRESS}" \
-  --token "${KUBEADM_TOKEN}" \
-  --discovery-token-ca-cert-hash "${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH}" \
-  --certificate-key "${KUBEADM_CERTIFICATE_KEY}" && \
+  --node-name "${NODE_NAME?}" \
+  --apiserver-advertise-address "${LOCAL_IP_ADDRESS?}" \
+  --token "${KUBEADM_TOKEN?}" \
+  --discovery-token-ca-cert-hash "${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH?}" \
+  --certificate-key "${KUBEADM_CERTIFICATE_KEY?}" && \
 ./watch-for-interfaces-and-routes.sh
 
 # Monitoring during presentation (narrow screen space)
