@@ -3,9 +3,9 @@ SECONDS=0
 
 SERVERS=$(./list.sh | awk '{ print $1 }')
 
-for SERVER in ${SERVERS}; do
-  echo ${SERVER}
-  multipass delete ${SERVER}
+for SERVER in ${SERVERS?}; do
+  echo ${SERVER?}
+  multipass delete ${SERVER?}
 done
 
 multipass purge

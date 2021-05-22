@@ -1,9 +1,6 @@
 # Test Connectivity to Loadbalancer
 nc -d lb 6443 && echo "OK" || echo "FAIL"
 
-# Check if there are a route that will be used by Services
-route -n | grep --quiet "10.96.0.0" && echo "OK" || echo "FAIL"
-
 # Update and Get Google Cloud Apt Key
 sudo apt-get update -qq && \
 sudo curl --silent "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo apt-key add -
