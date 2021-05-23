@@ -54,6 +54,7 @@ watch -n 3 'kubectl get nodes,pods,services -o wide -n kube-system'
 # https://medium.com/google-cloud/understanding-kubernetes-networking-pods-7117dd28727
 # 
 # kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+# kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 kubectl apply -f weave-net-cni-plugin.yaml
 
 # Retrieve token information from log file
