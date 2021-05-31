@@ -9,7 +9,3 @@ kubectl wait pod \
   --selector app=hamster \
   --for condition=Ready \
   --timeout 3600s
-
-kubectl get pods \
-  --selector app=hamster \
-  --output jsonpath='{.items[*].spec.containers[?(@.name == "hamster")].resources}' | jq .
