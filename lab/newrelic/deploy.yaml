@@ -1,0 +1,330 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-test
+  labels:
+    app: app-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-test
+  template:
+    metadata:
+      labels:
+        app: app-test
+      annotations:
+        telemetry.silvios.me/agent-name: "app-agent-test"
+        telemetry.silvios.me/agent-id: "12"
+        telemetry.silvios.me/agent-config: |
+          {{`{{- with secret "kv/data/services/pod-test" -}}
+            export SOME_ADDRESSES="amqps://{{ .Data.data.rabbitmq_username }}:{{ .Data.data.rabbitmq_password }}@rabbitmq.default.svc.cluster.local/{{ .Data.data.rabbitmq_virtual_host }}"
+            export NEW_RELIC_LICENSE_KEY={{ .Data.data.newrelic_licensekey }}
+            export SOME_VALUE_001_HERE="{{ .Data.data.value_001 }}"
+            export SOME_VALUE_002_HERE="{{ .Data.data.value_002 }}"
+            export SOME_VALUE_003_HERE="{{ .Data.data.value_003 }}"
+            export SOME_VALUE_004_HERE="{{ .Data.data.value_004 }}"
+            export SOME_VALUE_005_HERE="{{ .Data.data.value_005 }}"
+            export SOME_VALUE_006_HERE="{{ .Data.data.value_006 }}"
+            export SOME_VALUE_007_HERE="{{ .Data.data.value_007 }}"
+            export SOME_VALUE_008_HERE="{{ .Data.data.value_008 }}"
+            export SOME_VALUE_009_HERE="{{ .Data.data.value_009 }}"
+            export SOME_VALUE_010_HERE="{{ .Data.data.value_010 }}"
+            export SOME_VALUE_011_HERE="{{ .Data.data.value_011 }}"
+            export SOME_VALUE_012_HERE="{{ .Data.data.value_012 }}"
+            export SOME_VALUE_013_HERE="{{ .Data.data.value_013 }}"
+            export SOME_VALUE_014_HERE="{{ .Data.data.value_014 }}"
+            export SOME_VALUE_015_HERE="{{ .Data.data.value_015 }}"
+            export SOME_VALUE_016_HERE="{{ .Data.data.value_016 }}"
+            export SOME_VALUE_017_HERE="{{ .Data.data.value_017 }}"
+            export SOME_VALUE_018_HERE="{{ .Data.data.value_018 }}"
+            export SOME_VALUE_019_HERE="{{ .Data.data.value_019 }}"
+            export SOME_VALUE_020_HERE="{{ .Data.data.value_020 }}"
+            export SOME_VALUE_021_HERE="{{ .Data.data.value_021 }}"
+            export SOME_VALUE_022_HERE="{{ .Data.data.value_022 }}"
+            export SOME_VALUE_023_HERE="{{ .Data.data.value_023 }}"
+            export SOME_VALUE_024_HERE="{{ .Data.data.value_024 }}"
+            export SOME_VALUE_025_HERE="{{ .Data.data.value_025 }}"
+            export SOME_VALUE_026_HERE="{{ .Data.data.value_026 }}"
+            export SOME_VALUE_027_HERE="{{ .Data.data.value_027 }}"
+            export SOME_VALUE_028_HERE="{{ .Data.data.value_028 }}"
+            export SOME_VALUE_029_HERE="{{ .Data.data.value_029 }}"
+            export SOME_VALUE_030_HERE="{{ .Data.data.value_030 }}"
+            export SOME_VALUE_031_HERE="{{ .Data.data.value_031 }}"
+            export SOME_VALUE_032_HERE="{{ .Data.data.value_032 }}"
+            export SOME_VALUE_033_HERE="{{ .Data.data.value_033 }}"
+            export SOME_VALUE_034_HERE="{{ .Data.data.value_034 }}"
+            export SOME_VALUE_035_HERE="{{ .Data.data.value_035 }}"
+            export SOME_VALUE_036_HERE="{{ .Data.data.value_036 }}"
+            export SOME_VALUE_037_HERE="{{ .Data.data.value_037 }}"
+            export SOME_VALUE_038_HERE="{{ .Data.data.value_038 }}"
+            export SOME_VALUE_039_HERE="{{ .Data.data.value_039 }}"
+            export SOME_VALUE_040_HERE="{{ .Data.data.value_040 }}"
+            export SOME_VALUE_041_HERE="{{ .Data.data.value_041 }}"
+            export SOME_VALUE_042_HERE="{{ .Data.data.value_042 }}"
+            export SOME_VALUE_043_HERE="{{ .Data.data.value_043 }}"
+            export SOME_VALUE_044_HERE="{{ .Data.data.value_044 }}"
+            export SOME_VALUE_045_HERE="{{ .Data.data.value_045 }}"
+            export SOME_VALUE_046_HERE="{{ .Data.data.value_046 }}"
+            export SOME_VALUE_047_HERE="{{ .Data.data.value_047 }}"
+            export SOME_VALUE_048_HERE="{{ .Data.data.value_048 }}"
+            export SOME_VALUE_049_HERE="{{ .Data.data.value_049 }}"
+            export SOME_VALUE_050_HERE="{{ .Data.data.value_050 }}"
+            export SOME_VALUE_051_HERE="{{ .Data.data.value_051 }}"
+            export SOME_VALUE_052_HERE="{{ .Data.data.value_052 }}"
+            export SOME_VALUE_053_HERE="{{ .Data.data.value_053 }}"
+            export SOME_VALUE_054_HERE="{{ .Data.data.value_054 }}"
+            export SOME_VALUE_055_HERE="{{ .Data.data.value_055 }}"
+            export SOME_VALUE_056_HERE="{{ .Data.data.value_056 }}"
+            export SOME_VALUE_057_HERE="{{ .Data.data.value_057 }}"
+            export SOME_VALUE_058_HERE="{{ .Data.data.value_058 }}"
+            export SOME_VALUE_059_HERE="{{ .Data.data.value_059 }}"
+            export SOME_VALUE_060_HERE="{{ .Data.data.value_060 }}"
+            export SOME_VALUE_061_HERE="{{ .Data.data.value_061 }}"
+            export SOME_VALUE_062_HERE="{{ .Data.data.value_062 }}"
+            export SOME_VALUE_063_HERE="{{ .Data.data.value_063 }}"
+            export SOME_VALUE_064_HERE="{{ .Data.data.value_064 }}"
+            export SOME_VALUE_065_HERE="{{ .Data.data.value_065 }}"
+            export SOME_VALUE_066_HERE="{{ .Data.data.value_066 }}"
+            export SOME_VALUE_067_HERE="{{ .Data.data.value_067 }}"
+            export SOME_VALUE_068_HERE="{{ .Data.data.value_068 }}"
+            export SOME_VALUE_069_HERE="{{ .Data.data.value_069 }}"
+            export SOME_VALUE_070_HERE="{{ .Data.data.value_070 }}"
+            export SOME_VALUE_071_HERE="{{ .Data.data.value_071 }}"
+            export SOME_VALUE_072_HERE="{{ .Data.data.value_072 }}"
+            export SOME_VALUE_073_HERE="{{ .Data.data.value_073 }}"
+            export SOME_VALUE_074_HERE="{{ .Data.data.value_074 }}"
+            export SOME_VALUE_075_HERE="{{ .Data.data.value_075 }}"
+            export SOME_VALUE_076_HERE="{{ .Data.data.value_076 }}"
+            export SOME_VALUE_077_HERE="{{ .Data.data.value_077 }}"
+            export SOME_VALUE_078_HERE="{{ .Data.data.value_078 }}"
+            export SOME_VALUE_079_HERE="{{ .Data.data.value_079 }}"
+            export SOME_VALUE_080_HERE="{{ .Data.data.value_080 }}"
+            export SOME_VALUE_081_HERE="{{ .Data.data.value_081 }}"
+            export SOME_VALUE_082_HERE="{{ .Data.data.value_082 }}"
+            export SOME_VALUE_083_HERE="{{ .Data.data.value_083 }}"
+            export SOME_VALUE_084_HERE="{{ .Data.data.value_084 }}"
+            export SOME_VALUE_085_HERE="{{ .Data.data.value_085 }}"
+            export SOME_VALUE_086_HERE="{{ .Data.data.value_086 }}"
+            export SOME_VALUE_087_HERE="{{ .Data.data.value_087 }}"
+            export SOME_VALUE_088_HERE="{{ .Data.data.value_088 }}"
+            export SOME_VALUE_089_HERE="{{ .Data.data.value_089 }}"
+            export SOME_VALUE_090_HERE="{{ .Data.data.value_090 }}"
+            export SOME_VALUE_091_HERE="{{ .Data.data.value_091 }}"
+            export SOME_VALUE_092_HERE="{{ .Data.data.value_092 }}"
+            export SOME_VALUE_093_HERE="{{ .Data.data.value_093 }}"
+            export SOME_VALUE_094_HERE="{{ .Data.data.value_094 }}"
+            export SOME_VALUE_095_HERE="{{ .Data.data.value_095 }}"
+            export SOME_VALUE_096_HERE="{{ .Data.data.value_096 }}"
+            export SOME_VALUE_097_HERE="{{ .Data.data.value_097 }}"
+            export SOME_VALUE_098_HERE="{{ .Data.data.value_098 }}"
+            export SOME_VALUE_099_HERE="{{ .Data.data.value_099 }}"
+            export SOME_VALUE_100_HERE="{{ .Data.data.value_100 }}"
+          {{- end }}`}}
+    spec:
+      containers:
+      - name: utils
+        image: silviosilva/utils
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo $(date) && sleep 5; done"]
+        env:
+          - name: SAMPLE_SEQUENCE_VARIABLE_001
+            value: "VALUE_001"
+          - name: SAMPLE_SEQUENCE_VARIABLE_002
+            value: "VALUE_002"
+          - name: SAMPLE_SEQUENCE_VARIABLE_003
+            value: "VALUE_003"
+          - name: SAMPLE_SEQUENCE_VARIABLE_004
+            value: "VALUE_004"
+          - name: SAMPLE_SEQUENCE_VARIABLE_005
+            value: "VALUE_005"
+          - name: SAMPLE_SEQUENCE_VARIABLE_006
+            value: "VALUE_006"
+          - name: SAMPLE_SEQUENCE_VARIABLE_007
+            value: "VALUE_007"
+          - name: SAMPLE_SEQUENCE_VARIABLE_008
+            value: "VALUE_008"
+          - name: SAMPLE_SEQUENCE_VARIABLE_009
+            value: "VALUE_009"
+          - name: SAMPLE_SEQUENCE_VARIABLE_010
+            value: "VALUE_010"
+          - name: SAMPLE_SEQUENCE_VARIABLE_011
+            value: "VALUE_011"
+          - name: SAMPLE_SEQUENCE_VARIABLE_012
+            value: "VALUE_012"
+          - name: SAMPLE_SEQUENCE_VARIABLE_013
+            value: "VALUE_013"
+          - name: SAMPLE_SEQUENCE_VARIABLE_014
+            value: "VALUE_014"
+          - name: SAMPLE_SEQUENCE_VARIABLE_015
+            value: "VALUE_015"
+          - name: SAMPLE_SEQUENCE_VARIABLE_016
+            value: "VALUE_016"
+          - name: SAMPLE_SEQUENCE_VARIABLE_017
+            value: "VALUE_017"
+          - name: SAMPLE_SEQUENCE_VARIABLE_018
+            value: "VALUE_018"
+          - name: SAMPLE_SEQUENCE_VARIABLE_019
+            value: "VALUE_019"
+          - name: SAMPLE_SEQUENCE_VARIABLE_020
+            value: "VALUE_020"
+          - name: SAMPLE_SEQUENCE_VARIABLE_021
+            value: "VALUE_021"
+          - name: SAMPLE_SEQUENCE_VARIABLE_022
+            value: "VALUE_022"
+          - name: SAMPLE_SEQUENCE_VARIABLE_023
+            value: "VALUE_023"
+          - name: SAMPLE_SEQUENCE_VARIABLE_024
+            value: "VALUE_024"
+          - name: SAMPLE_SEQUENCE_VARIABLE_025
+            value: "VALUE_025"
+          - name: SAMPLE_SEQUENCE_VARIABLE_026
+            value: "VALUE_026"
+          - name: SAMPLE_SEQUENCE_VARIABLE_027
+            value: "VALUE_027"
+          - name: SAMPLE_SEQUENCE_VARIABLE_028
+            value: "VALUE_028"
+          - name: SAMPLE_SEQUENCE_VARIABLE_029
+            value: "VALUE_029"
+          - name: SAMPLE_SEQUENCE_VARIABLE_030
+            value: "VALUE_030"
+          - name: SAMPLE_SEQUENCE_VARIABLE_031
+            value: "VALUE_031"
+          - name: SAMPLE_SEQUENCE_VARIABLE_032
+            value: "VALUE_032"
+          - name: SAMPLE_SEQUENCE_VARIABLE_033
+            value: "VALUE_033"
+          - name: SAMPLE_SEQUENCE_VARIABLE_034
+            value: "VALUE_034"
+          - name: SAMPLE_SEQUENCE_VARIABLE_035
+            value: "VALUE_035"
+          - name: SAMPLE_SEQUENCE_VARIABLE_036
+            value: "VALUE_036"
+          - name: SAMPLE_SEQUENCE_VARIABLE_037
+            value: "VALUE_037"
+          - name: SAMPLE_SEQUENCE_VARIABLE_038
+            value: "VALUE_038"
+          - name: SAMPLE_SEQUENCE_VARIABLE_039
+            value: "VALUE_039"
+          - name: SAMPLE_SEQUENCE_VARIABLE_040
+            value: "VALUE_040"
+          - name: SAMPLE_SEQUENCE_VARIABLE_041
+            value: "VALUE_041"
+          - name: SAMPLE_SEQUENCE_VARIABLE_042
+            value: "VALUE_042"
+          - name: SAMPLE_SEQUENCE_VARIABLE_043
+            value: "VALUE_043"
+          - name: SAMPLE_SEQUENCE_VARIABLE_044
+            value: "VALUE_044"
+          - name: SAMPLE_SEQUENCE_VARIABLE_045
+            value: "VALUE_045"
+          - name: SAMPLE_SEQUENCE_VARIABLE_046
+            value: "VALUE_046"
+          - name: SAMPLE_SEQUENCE_VARIABLE_047
+            value: "VALUE_047"
+          - name: SAMPLE_SEQUENCE_VARIABLE_048
+            value: "VALUE_048"
+          - name: SAMPLE_SEQUENCE_VARIABLE_049
+            value: "VALUE_049"
+          - name: SAMPLE_SEQUENCE_VARIABLE_050
+            value: "VALUE_050"
+          - name: SAMPLE_SEQUENCE_VARIABLE_051
+            value: "VALUE_051"
+          - name: SAMPLE_SEQUENCE_VARIABLE_052
+            value: "VALUE_052"
+          - name: SAMPLE_SEQUENCE_VARIABLE_053
+            value: "VALUE_053"
+          - name: SAMPLE_SEQUENCE_VARIABLE_054
+            value: "VALUE_054"
+          - name: SAMPLE_SEQUENCE_VARIABLE_055
+            value: "VALUE_055"
+          - name: SAMPLE_SEQUENCE_VARIABLE_056
+            value: "VALUE_056"
+          - name: SAMPLE_SEQUENCE_VARIABLE_057
+            value: "VALUE_057"
+          - name: SAMPLE_SEQUENCE_VARIABLE_058
+            value: "VALUE_058"
+          - name: SAMPLE_SEQUENCE_VARIABLE_059
+            value: "VALUE_059"
+          - name: SAMPLE_SEQUENCE_VARIABLE_060
+            value: "VALUE_060"
+          - name: SAMPLE_SEQUENCE_VARIABLE_061
+            value: "VALUE_061"
+          - name: SAMPLE_SEQUENCE_VARIABLE_062
+            value: "VALUE_062"
+          - name: SAMPLE_SEQUENCE_VARIABLE_063
+            value: "VALUE_063"
+          - name: SAMPLE_SEQUENCE_VARIABLE_064
+            value: "VALUE_064"
+          - name: SAMPLE_SEQUENCE_VARIABLE_065
+            value: "VALUE_065"
+          - name: SAMPLE_SEQUENCE_VARIABLE_066
+            value: "VALUE_066"
+          - name: SAMPLE_SEQUENCE_VARIABLE_067
+            value: "VALUE_067"
+          - name: SAMPLE_SEQUENCE_VARIABLE_068
+            value: "VALUE_068"
+          - name: SAMPLE_SEQUENCE_VARIABLE_069
+            value: "VALUE_069"
+          - name: SAMPLE_SEQUENCE_VARIABLE_070
+            value: "VALUE_070"
+          - name: SAMPLE_SEQUENCE_VARIABLE_071
+            value: "VALUE_071"
+          - name: SAMPLE_SEQUENCE_VARIABLE_072
+            value: "VALUE_072"
+          - name: SAMPLE_SEQUENCE_VARIABLE_073
+            value: "VALUE_073"
+          - name: SAMPLE_SEQUENCE_VARIABLE_074
+            value: "VALUE_074"
+          - name: SAMPLE_SEQUENCE_VARIABLE_075
+            value: "VALUE_075"
+          - name: SAMPLE_SEQUENCE_VARIABLE_076
+            value: "VALUE_076"
+          - name: SAMPLE_SEQUENCE_VARIABLE_077
+            value: "VALUE_077"
+          - name: SAMPLE_SEQUENCE_VARIABLE_078
+            value: "VALUE_078"
+          - name: SAMPLE_SEQUENCE_VARIABLE_079
+            value: "VALUE_079"
+          - name: SAMPLE_SEQUENCE_VARIABLE_080
+            value: "VALUE_080"
+          - name: SAMPLE_SEQUENCE_VARIABLE_081
+            value: "VALUE_081"
+          - name: SAMPLE_SEQUENCE_VARIABLE_082
+            value: "VALUE_082"
+          - name: SAMPLE_SEQUENCE_VARIABLE_083
+            value: "VALUE_083"
+          - name: SAMPLE_SEQUENCE_VARIABLE_084
+            value: "VALUE_084"
+          - name: SAMPLE_SEQUENCE_VARIABLE_085
+            value: "VALUE_085"
+          - name: SAMPLE_SEQUENCE_VARIABLE_086
+            value: "VALUE_086"
+          - name: SAMPLE_SEQUENCE_VARIABLE_087
+            value: "VALUE_087"
+          - name: SAMPLE_SEQUENCE_VARIABLE_088
+            value: "VALUE_088"
+          - name: SAMPLE_SEQUENCE_VARIABLE_089
+            value: "VALUE_089"
+          - name: SAMPLE_SEQUENCE_VARIABLE_090
+            value: "VALUE_090"
+          - name: SAMPLE_SEQUENCE_VARIABLE_091
+            value: "VALUE_091"
+          - name: SAMPLE_SEQUENCE_VARIABLE_092
+            value: "VALUE_092"
+          - name: SAMPLE_SEQUENCE_VARIABLE_093
+            value: "VALUE_093"
+          - name: SAMPLE_SEQUENCE_VARIABLE_094
+            value: "VALUE_094"
+          - name: SAMPLE_SEQUENCE_VARIABLE_095
+            value: "VALUE_095"
+          - name: SAMPLE_SEQUENCE_VARIABLE_096
+            value: "VALUE_096"
+          - name: SAMPLE_SEQUENCE_VARIABLE_097
+            value: "VALUE_097"
+          - name: SAMPLE_SEQUENCE_VARIABLE_098
+            value: "VALUE_098"
+          - name: SAMPLE_SEQUENCE_VARIABLE_099
+            value: "VALUE_099"
+          - name: SAMPLE_SEQUENCE_VARIABLE_100
+            value: "VALUE_100"
