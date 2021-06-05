@@ -1,0 +1,25 @@
+<configuration>
+    <springProperty name="newRelicAppenderEnabled" source="logging.newRelic.appender.enabled"/>
+    <appender name="DEV" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %3p ${hostName} --- [requestTraceId: %22X{requestTraceId}] --- [requestUri: %X{requestUri}] --- [serviceName: demo-health] --- [%15.15t] %-40.40c{1.}: %m%n%ex</pattern>
+        </encoder>
+    </appender>
+    <appender name="NR" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="com.newrelic.logging.logback.NewRelicEncoder">
+        </encoder>
+    </appender>
+    <appender name="NR_ASYNC" class="com.newrelic.logging.logback.NewRelicAsyncAppender">
+        <appender-ref ref="NR"/>
+    </appender>
+    <root level="INFO">
+        <if condition='property("newRelicAppenderEnabled").equals("true")'>
+            <then>
+                <appender-ref ref="NR_ASYNC" />
+            </then>
+            <else>
+                <appender-ref ref="DEV" />
+            </else>
+        </if>
+    </root>
+</configuration>
