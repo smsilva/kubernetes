@@ -42,7 +42,7 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 60
-      - image: health-check:1.0
+      - image: silviosilva/health-check:1.0
         name: health-check
         env:
         - name: INTERVAL
