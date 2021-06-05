@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: app
   labels:
     app: app
-  name: app
 spec:
   replicas: 1
   selector:
@@ -19,9 +19,15 @@ spec:
         secret:
           secretName: monitor-tool-secret
       containers:
-      - image: demo-health:1.0
+      - image: silviosilva/demo-health:0.0.3
         name: app
-        resources: {}
+        env:
+          - name: NEW_RELIC_APPENDER_ENABLED
+            value: "true"
+          - name: LOG_ROOT_LEVEL
+            value: "INFO"
+          - name: MAX_THREADS
+            value: "500"
         livenessProbe:
           httpGet:
             path: /actuator/health

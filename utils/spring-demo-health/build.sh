@@ -34,4 +34,3 @@ if ! grep -q -E "^dev" <<< $(kubectl get ns); then
 fi
 
 kubectl apply -f deploy/
-
