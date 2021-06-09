@@ -15,6 +15,7 @@ az aks create \
   --enable-aad \
   --network-plugin azure \
   --aad-admin-group-object-ids "${AZ_AKS_ADMIN_GROUP_ID?}" \
+  --enable-managed-identity \
   --enable-cluster-autoscaler \
   --node-count 1 \
   --min-count 1 \

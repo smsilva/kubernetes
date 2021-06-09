@@ -25,7 +25,7 @@ ENVIRONMENT="sandbox"
 AZ_AKS_REGION="eastus2"
 AZ_AKS_RESOURCE_GROUP_NAME="${USER?}-${ENVIRONMENT?}-${AZ_AKS_REGION?}"
 AZ_AKS_CLUSTER_NAME="${USER?}-${ENVIRONMENT?}-${AZ_AKS_REGION?}"
-AZ_AKS_CLUSTER_VERSION_TARGET="1.18.14"
+AZ_AKS_CLUSTER_VERSION_TARGET="1.19.11"
 AZ_AKS_CLUSTER_VERSION="${AZ_AKS_CLUSTER_VERSION_TARGET:-$(az aks get-versions --location "${AZ_AKS_REGION?}" --output table | awk '{ print $1}' | grep -v preview | sed 1,2d | head -1)}"
 
 cat <<EOF > ${CONFIG_FILE_NAME?}
