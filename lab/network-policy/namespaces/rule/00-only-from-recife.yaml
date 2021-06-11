@@ -1,0 +1,7 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mangue-policy
+  namespace: recife
+spec:
+  podSelector: {} # traffice from any pod in the recife namespace

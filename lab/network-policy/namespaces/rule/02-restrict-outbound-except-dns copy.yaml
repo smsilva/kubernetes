@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mangue-policy
+  namespace: recife
+spec:
+  podSelector: {} # traffice from any pod in the recife namespace
+  policyTypes:
+    - Egress
+  ingress:
+    - {} # traffic from any pod from others namespaces
+  egress:
+    - to:
+        - namespaceSelector: {} # Allo egress traffic to any other namespace
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns # Allow egress traffic only to kube-dns on UDP 53 Port
+      ports:
+        - port: 53
+          protocol: UDP
+    - to:
+        - podSelector: {} # Allow egress traffic to pods in the recife namespace

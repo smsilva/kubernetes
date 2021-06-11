@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+  labels:
+    purpose: client
+  namespace: recife
+spec:
+  containers:
+  - name: curl
+    image: silviosilva/utils
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do curl -is http://httpbin.olinda.svc/get && sleep 3 && echo \"\"; done"]
+  restartPolicy: OnFailure

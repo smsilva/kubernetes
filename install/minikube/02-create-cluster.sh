@@ -1,15 +1,19 @@
 #!/bin/bash
+KUBERNETES_TARGET_VERSION=$1
 
 # Check if there isn't a minikube context created
 if ! kubectl config get-contexts minikube &> /dev/null; then
-  # Retrieve lastest Kubernetes Version
-  KUBERNETES_BASE_VERSION=$(apt-cache madison kubeadm | head -1 | awk -F '|' '{ print $2 }' | tr -d ' ')
-  KUBERNETES_VERSION="${KUBERNETES_BASE_VERSION%-*}"
+  KUBERNETES_LATEST_VERSION=$(apt-cache madison kubeadm | head -1 | awk -F '|' '{ print $2 }' | tr -d ' ')
+  KUBERNETES_VERSION=$(grep -oP '(.*)(?=\-)' <<< "${KUBERNETES_TARGET_VERSION:-$KUBERNETES_LATEST_VERSION}")
 
+  echo "KUBERNETES_TARGET_VERSION.: ${KUBERNETES_TARGET_VERSION}"
+  echo "KUBERNETES_LATEST_VERSION.: ${KUBERNETES_LATEST_VERSION}"
+  echo "KUBERNETES_VERSION........: ${KUBERNETES_VERSION}"
+  
   # Start Minikube using Docker Driver
   export MINIKUBE_IN_STYLE=false && \
   minikube start \
-    --kubernetes-version "v${KUBERNETES_VERSION}" \
+    --kubernetes-version "v${KUBERNETES_VERSION?}" \
     --driver=docker \
     --network-plugin=cni \
     --memory ${MINIKUBE_MEMORY-4096}
