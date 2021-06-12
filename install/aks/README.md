@@ -3,17 +3,17 @@
 ## 1. Crie um arquivo de Configuração
 
 ```bash
-./generate-config-file.sh aks.conf
+./generate-config-file.sh aks.properties
 ```
 
 ## 2. Crie um Cluster
 
 ```bash
-./create-cluster.sh aks.conf
+./create-cluster.sh aks.properties
 ```
 
 ## 3. Exclua o Cluster criado
 
 ```bash
-./delete-cluster.sh aks.conf
+./delete-cluster.sh aks.properties
 ```
