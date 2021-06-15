@@ -5,8 +5,8 @@ metadata:
   namespace: recife
 spec:
   podSelector: {} # traffic from any pod in the recife namespace
-  policyTypes:
-    - Egress
   ingress:
     - {} # traffic from any pod from others namespaces
+  policyTypes:
+    - Egress
   egress: []
