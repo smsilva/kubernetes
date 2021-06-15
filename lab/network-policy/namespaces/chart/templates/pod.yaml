@@ -1,0 +1,32 @@
+{{- range $namespace := .Values.namespaces }}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cluster-client
+  labels:
+    app: client
+  namespace: {{ $namespace.name }}
+spec:
+  containers:
+  - name: curl
+    image: silviosilva/utils
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do echo \"httpbin.{{ $namespace.target }}.svc:\" $(curl --connect-timeout 5 -is http://httpbin.{{ $namespace.target }}.svc/get | grep -E ^\"HTTP\") && sleep 4 && echo \"\"; done"]
+  restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-client
+  labels:
+    app: client
+  namespace: {{ $namespace.name }}
+spec:
+  containers:
+  - name: curl
+    image: silviosilva/utils
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do echo \"httpbin.org:\" $(curl --connect-timeout 5 -is http://httpbin.org/get | grep -E ^\"HTTP\") && sleep 4 && echo \"\"; done"]
+  restartPolicy: OnFailure
+{{- end }}

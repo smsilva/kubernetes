@@ -1,0 +1,5 @@
+namespaces:
+- name: olinda
+  target: recife
+- name: recife
+  target: olinda

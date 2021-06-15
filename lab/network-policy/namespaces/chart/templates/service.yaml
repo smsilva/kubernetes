@@ -1,10 +1,12 @@
+{{- range $namespace := .Values.namespaces }}
+---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: httpbin
   name: httpbin
-  namespace: olinda
+  namespace: {{ $namespace.name }}
 spec:
   ports:
   - port: 80
@@ -12,3 +14,4 @@ spec:
     targetPort: 80
   selector:
     app: httpbin
+{{- end }}

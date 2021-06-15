@@ -4,6 +4,9 @@ metadata:
   name: mangue-policy
   namespace: recife
 spec:
-  podSelector: {}
+  podSelector: {} # traffic from any pod in the recife namespace
   policyTypes:
-  - Egress
+    - Egress
+  ingress:
+    - {} # traffic from any pod from others namespaces
+  egress: []

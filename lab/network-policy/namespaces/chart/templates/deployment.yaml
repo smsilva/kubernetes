@@ -1,10 +1,12 @@
+{{- range $namespace := .Values.namespaces }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     app: httpbin
   name: httpbin
-  namespace: olinda
+  namespace: {{ $namespace.name }}
 spec:
   replicas: 1
   selector:
@@ -18,3 +20,4 @@ spec:
       containers:
       - image: docker.io/kennethreitz/httpbin:latest
         name: httpbin
+{{- end }}
