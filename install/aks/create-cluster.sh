@@ -16,12 +16,13 @@ az aks create \
   --network-plugin azure \
   --network-policy azure \
   --aad-admin-group-object-ids "${AZ_AKS_ADMIN_GROUP_ID?}" \
+  --dns-name-prefix "${AZ_AKS_DNS_PREFIX?}" \
   --enable-managed-identity \
   --enable-cluster-autoscaler \
   --node-count 1 \
   --min-count 1 \
   --max-count 5 \
-  --max-pods 120
+  --max-pods 100
 
 az aks get-credentials \
   --name "${AZ_AKS_CLUSTER_NAME?}" \
