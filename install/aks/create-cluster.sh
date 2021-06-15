@@ -14,6 +14,7 @@ az aks create \
   --kubernetes-version "${AZ_AKS_CLUSTER_VERSION?}" \
   --enable-aad \
   --network-plugin azure \
+  --network-policy azure \
   --aad-admin-group-object-ids "${AZ_AKS_ADMIN_GROUP_ID?}" \
   --enable-managed-identity \
   --enable-cluster-autoscaler \
