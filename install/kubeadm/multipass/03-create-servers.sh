@@ -3,6 +3,10 @@ set -e
 
 . ./check-environment-variables.sh
 
+echo ""
+echo "Creating Servers"
+echo ""
+
 for SERVER in ${SERVERS?}; do
   SERVER_PREFIX_KEY_NAME=$(awk -F '-' '{ print $1 }' <<< "${SERVER}")
 
@@ -27,4 +31,6 @@ for SERVER in ${SERVERS?}; do
       multipass start "${SERVER?}"
     fi
   fi
+  
+  echo ""
 done
