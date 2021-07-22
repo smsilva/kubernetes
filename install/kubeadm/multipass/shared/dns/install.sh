@@ -8,8 +8,8 @@ cp /shared/dns/named.conf.local /etc/bind/
 cp /shared/dns/"${FORWARD_FILE}" /etc/bind/
 cp /shared/dns/"${REVERSE_FILE}" /etc/bind/
 
-systemctl restart bind9 -q
-systemctl enable bind9 -q
+systemctl restart named -q
+systemctl enable named -q
 
 ufw allow 53 > /dev/null
 

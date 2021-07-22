@@ -13,4 +13,4 @@ net.bridge.bridge-nf-call-iptables = 1
 EOF
 
 # Enable Configuration
-sysctl --system > /dev/null
+sysctl --system &> /dev/null
