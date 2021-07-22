@@ -1,13 +1,19 @@
 # Test Connectivity to Loadbalancer
 nc -d lb 6443 && echo "OK" || echo "FAIL"
 
-# Update and Get Google Cloud Apt Key
+# Update
 sudo apt-get update -qq && \
-sudo curl --silent "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo apt-key add -
+sudo apt-get install -y \
+  apt-transport-https \
+  ca-certificates \
+  curl
+
+# Get Google Cloud Apt Key
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 
 # Add Kubernetes Repository
 cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
-deb https://apt.kubernetes.io/ kubernetes-xenial main
+deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
 # Update package list
@@ -107,5 +113,5 @@ if grep --quiet "master" <<< $(hostname --short); then
 else
   sudo crictl pull nginx:1.18 && \
   sudo crictl pull nginx:1.19 && \
-  sudo crictl pull yauritux/busybox-curl
+  sudo crictl pull silviosilva/curl
 fi

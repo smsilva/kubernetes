@@ -4,8 +4,6 @@ cat <<EOF | tee --append ~/.bashrc
 source <(kubectl completion bash)
 alias k=kubectl
 complete -F __start_kubectl k
-
-alias cat='bat -p'
 EOF
 source ~/.bashrc
 
@@ -71,9 +69,9 @@ grep '\-\-certificate-key' "${KUBEADM_LOG_FILE?}" --before 2 | grep \
     -e 's/^/export KUBEADM_/'
 
 # Execute on master-2 and master-3 and on all workers
-export KUBEADM_TOKEN=h1yonc.szhd048mn7994tbq
-export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:34d586a0246c0b1ef6b38e8bee757a60ab29c552033f467d2c2bc8ebba14e5ba
-export KUBEADM_CERTIFICATE_KEY=d12629e1a5641a76ffa3bd80735dbae3e3ac825bf2a3dd4e73561e2a73e838bd
+export KUBEADM_TOKEN=o7r9z1.vokk4lh8ff2k7osf
+export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:bde0c0f86d6d8e6935cda2878243ca85923d34e9d64e3ca84cb530a54a770cfb
+export KUBEADM_CERTIFICATE_KEY=db4f9f97c879938a1a1a8eb3081562104dbfa144291fb0ceaf40fce5f0ad214e
 
 # Watch Interfaces and Route information
 ./watch-for-interfaces-and-routes.sh
