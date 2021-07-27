@@ -2,19 +2,20 @@
     "builders": [
         {
             "type": "openstack",
+            "cloud": "openstack",
             "region": "microstack",
-            "image_name": "ubuntu-git",
-            "source_image": "a5be9463-5842-41bb-8448-71bd994d9a1d",
+            "image_name": "ubuntu-custom",
+            "source_image": "ebfbd34c-76ac-49fb-b68e-1ef2ab43c5a1",
             "flavor": "3",
             "ssh_ip_version": "4",
             "ssh_timeout": "15m",
-            "ssh_keypair_name" : "microstack",
-            "ssh_private_key_file" : "/home/silvios/snap/microstack/common/.ssh/id_microstack",
+            "ssh_keypair_name": "silvios",
+            "ssh_private_key_file": "/home/silvios/.ssh/id_rsa",
             "ssh_username": "ubuntu",
-            "ssh_host" : "10.20.20.106",
-            "floating_ip" : "6948e900-712a-45b4-bb00-312bb1bb6aa8",
+            "ssh_host": "10.20.20.79",
+            "floating_ip": "95de5658-5e1e-479f-ac27-acdac9095d2c",
             "networks": [
-                "199b2b26-2465-4b5a-a791-0a93abb442b5"
+                "49b6fe21-09d4-4b36-a17d-f26fe35db301"
             ]
         }
     ],
