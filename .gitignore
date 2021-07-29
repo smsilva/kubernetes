@@ -22,3 +22,8 @@ disks/
 **/install/kind/*.pem
 lab/argocd/kind-cluster.yaml
 lab/kyverno/kind-cluster.yaml
+**/.terraform.*
+**/.terraform/*
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/packer*.json
