@@ -12,7 +12,7 @@ data:
       ignoreDifferences: |
         jsonPointers:
         - /webhooks/0/clientConfig/caBundle
-  url: https://silvios-argocd-dev.eastus2.cloudapp.azure.com
+  url: https://silvios-argocd-dev.centralus.cloudapp.azure.com
   admin.enabled: 'false'
   users.anonymous.enabled: 'false'
   oidc.config: |

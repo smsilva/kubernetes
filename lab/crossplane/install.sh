@@ -1,7 +1,5 @@
 #!/bin/bash
 
-../../install/kind/run.sh
-
 helm repo add crossplane-stable https://charts.crossplane.io/stable
 
 helm repo update
@@ -9,7 +7,7 @@ helm repo update
 helm install crossplane \
   --create-namespace \
   --namespace crossplane-system \
-  --version 1.3.0 \
+  --version 1.4.1 \
   crossplane-stable/crossplane
 
 kubectl \
@@ -21,7 +19,7 @@ kubectl \
 
 curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
 
-kubectl crossplane install configuration registry.upbound.io/xp/getting-started-with-azure:v1.3.0
+kubectl crossplane install configuration registry.upbound.io/xp/getting-started-with-azure:v1.4.1
 
 kubectl get pkg
 
