@@ -1,12 +1,17 @@
 resource "random_string" "storage_bucket_id" {
-  length      = 6
+  keepers = {
+    name = var.name
+  }
+
+  length      = 3
   min_lower   = 1
   min_numeric = 1
+  lower       = true
   special     = false
 }
 
 locals {
-  storage_bucket_name = "silvios${random_string.storage_bucket_id.result}"
+  storage_bucket_name = "${var.name}${random_string.storage_bucket_id.result}"
 }
 
 resource "google_storage_bucket" "default" {
