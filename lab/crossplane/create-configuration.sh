@@ -10,3 +10,9 @@ curl -OL https://raw.githubusercontent.com/crossplane/crossplane/release-1.4/doc
 curl -OL https://raw.githubusercontent.com/crossplane/crossplane/release-1.4/docs/snippets/package/azure/crossplane.yaml
 
 kubectl crossplane build configuration
+
+REG=docker.io/silviosilva
+kubectl crossplane push configuration ${REG}/getting-started-with-azure:master
+
+# Installing
+kubectl crossplane install configuration ${REG}/getting-started-with-azure:master
