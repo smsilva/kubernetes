@@ -1,0 +1,14 @@
+apiVersion: meta.pkg.crossplane.io/v1alpha1
+kind: Configuration
+metadata:
+  name: migrating-from-terraform
+  annotations:
+    provider: terraform
+spec:
+  crossplane:
+    version: ">=v1.2.0"
+  dependsOn:
+    - provider: crossplane/provider-terraform
+      version: "v0.1.2"
+    - provider: crossplane/provider-gcp
+      version: "v0.17.1"

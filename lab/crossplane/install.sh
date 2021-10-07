@@ -1,4 +1,16 @@
 #!/bin/bash
+KIND_CLUSTER_NAME="crossplane"
+KIND_CLUSTER_CONFIG_FILE="kind/kind-config.yaml"
+
+kind create cluster \
+  --config ${KIND_CLUSTER_CONFIG_FILE?} \
+  --name ${KIND_CLUSTER_NAME?}
+
+for NODE in $(kubectl get nodes --output name); do
+  kubectl wait ${NODE} \
+    --for condition=Ready \
+    --timeout=360s
+done
 
 helm repo add crossplane-stable https://charts.crossplane.io/stable
 
@@ -8,8 +20,7 @@ helm install crossplane \
   --create-namespace \
   --namespace crossplane-system \
   --version 1.4.1 \
-  crossplane-stable/crossplane
-
+  crossplane-stable/crossplane && \
 kubectl \
   wait deployment \
   --namespace crossplane-system \

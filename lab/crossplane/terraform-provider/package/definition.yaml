@@ -1,0 +1,38 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: compositebuckets.silvios.me
+spec:
+  group: silvios.me
+  names:
+    kind: CompositeBucket
+    plural: compositebuckets
+  claimNames:
+    kind: Bucket
+    plural: buckets
+  connectionSecretKeys:
+    - address
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              parameters:
+                type: object
+                properties:
+                  location:
+                    type: string
+                    enum:
+                     - USA
+                     - Europe
+                required:
+                  - location
+            required:
+              - parameters

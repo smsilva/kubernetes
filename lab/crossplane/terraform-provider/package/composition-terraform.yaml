@@ -1,0 +1,45 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: tf.compositebuckets.silvios.me
+  labels:
+    provider: terraform
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: silvios.me/v1alpha1
+    kind: CompositeBucket
+  resources:
+    - name: terraform-gcp-bucket
+      base:
+        apiVersion: tf.crossplane.io/v1alpha1
+        kind: Workspace
+        spec:
+          forProvider:
+            source: Remote
+            module: git::http://github.com/smsilva/kubernetes//lab/crossplane/terraform-provider/terraform-bucket-module
+            vars:
+              - key: location
+          writeConnectionSecretToRef:
+            namespace: crossplane-system
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
+          toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.parameters.location"
+          toFieldPath: "spec.forProvider.vars[0].value"
+          transforms:
+            - type: map
+              map:
+                USA: US-CENTRAL1
+                Europe: EU
+        - type: FromCompositeFieldPath
+          fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-bucket"
+      connectionDetails:
+        - fromConnectionSecretKey: address

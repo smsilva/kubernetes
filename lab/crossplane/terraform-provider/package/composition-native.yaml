@@ -1,0 +1,40 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: gcp.compositebuckets.silvios.me
+  labels:
+    provider: gcp
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: silvios.me/v1alpha1
+    kind: CompositeBucket
+  resources:
+    - name: gcp-bucket
+      base:
+        apiVersion: storage.gcp.crossplane.io/v1alpha3
+        kind: Bucket
+        spec:
+          writeConnectionSecretToRef:
+            namespace: crossplane-system
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
+          toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+        - type: FromCompositeFieldPath
+          fromFieldPath: "spec.parameters.location"
+          toFieldPath: "spec.location"
+          transforms:
+            - type: map
+              map:
+                USA: US
+                Europe: EU
+        - type: FromCompositeFieldPath
+          fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-bucket"
+      connectionDetails:
+        - fromConnectionSecretKey: address

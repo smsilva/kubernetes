@@ -11,8 +11,10 @@ curl -OL https://raw.githubusercontent.com/crossplane/crossplane/release-1.4/doc
 
 kubectl crossplane build configuration
 
-REG=docker.io/silviosilva
-kubectl crossplane push configuration ${REG}/getting-started-with-azure:master
+CONTAINER_REGISTRY="docker.io/silviosilva"
 
-# Installing
-kubectl crossplane install configuration ${REG}/getting-started-with-azure:master
+CROSSPLANE_CONFIGURATION_PACKAGE="${CONTAINER_REGISTRY}/getting-started-with-azure:0.1.1"
+
+kubectl crossplane push configuration ${CROSSPLANE_CONFIGURATION_PACKAGE}
+
+kubectl crossplane install configuration ${CROSSPLANE_CONFIGURATION_PACKAGE}

@@ -1,0 +1,15 @@
+---
+apiVersion: silvios.me/v1alpha1
+kind: Bucket
+metadata:
+  name: example-bucket
+  annotations:
+    crossplane.io/external-name: provider-terraform-example
+spec:
+  parameters:
+    location: USA
+  compositionSelector:
+    matchLabels:
+      provider: terraform
+  writeConnectionSecretToRef:
+    name: example-bucket
