@@ -1,8 +1,10 @@
 **/*.log
 **/*.swp
+**/*.xpkg
 **/.terraform.*
 **/.terraform/
 **/.terraform/*
+**/gcp-credentials.json
 **/install/kind/*.pem
 **/minikube/rbac/dave/
 **/multipass/cloud-init/*.yaml
@@ -30,4 +32,3 @@ disks/
 lab/argocd/kind-cluster.yaml
 lab/kyverno/kind-cluster.yaml
 log/
-**/gcp-credentials.json

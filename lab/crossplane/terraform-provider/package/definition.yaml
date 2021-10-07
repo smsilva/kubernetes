@@ -1,4 +1,5 @@
----
+# Define the kind: Bucket (bucket.yaml)
+# The Consumption Format
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:

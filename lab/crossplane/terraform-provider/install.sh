@@ -44,11 +44,8 @@ kubectl crossplane build configuration
 kubectl crossplane push configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?}
 
 # 6. Install Crossplane Configuration into the Kind Cluster
-kubectl crossplane install configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?}
-
-cd ..
-
-# 7. Check Objects
+kubectl crossplane install configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?} && \
+cd .. && \
 watch -n 3 'kubectl get configuration && echo "" && \
 kubectl get provider.pkg && echo "" && \
 kubectl get xrd && echo "" && \
@@ -58,8 +55,7 @@ kubectl get composition'
 kubectl apply -f providerconfig/providerconfig-terraform.yaml
 
 # 9. Request a Bucket Instance Creation
-kubectl apply -f bucket.yaml
-
+kubectl apply -f bucket.yaml && \
 watch -n 3 'kubectl get bucket && echo "" && \
 kubectl describe workspace | tail -20'
 

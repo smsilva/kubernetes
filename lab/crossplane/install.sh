@@ -37,3 +37,15 @@ if ! which kubectl-crossplane &> /dev/null; then
 fi
 
 kubectl crossplane --version
+
+echo ""
+
+kubectl get namespaces
+
+echo ""
+
+kubectl get pods --namespace crossplane-system
+
+echo ""
+
+kubectl api-resources | grep crossplane
