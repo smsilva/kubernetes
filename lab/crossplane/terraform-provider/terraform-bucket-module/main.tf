@@ -1,5 +1,5 @@
 resource "random_string" "storage_bucket_id" {
-  length      = 3
+  length      = 6
   min_lower   = 1
   min_numeric = 1
   special     = false
