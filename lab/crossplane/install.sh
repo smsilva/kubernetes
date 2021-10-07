@@ -23,7 +23,25 @@ kubectl crossplane install configuration registry.upbound.io/xp/getting-started-
 
 kubectl get pkg
 
-az ad sp create-for-rbac --sdk-auth --role Owner > "creds.json"
+az ad sp create-for-rbac \
+  --sdk-auth \
+  --role Owner > "creds.json"
+
+# Example
+cat <<EOF > creds.json
+{
+  "clientId": "${ARM_CLIENT_ID}",
+  "clientSecret": "${ARM_CLIENT_SECRET}",
+  "subscriptionId": "${ARM_SUBSCRIPTION_ID}",
+  "tenantId": "${ARM_TENANT_ID}",
+  "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+  "resourceManagerEndpointUrl": "https://management.azure.com/",
+  "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+  "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+  "galleryEndpointUrl": "https://gallery.azure.com/",
+  "managementEndpointUrl": "https://management.core.windows.net/"
+}
+EOF
 
 if which jq > /dev/null 2>&1; then
   AZURE_CLIENT_ID=$(jq -r ".clientId" < "./creds.json")
