@@ -10,5 +10,3 @@ spec:
   dependsOn:
     - provider: crossplane/provider-terraform
       version: "v0.1.2"
-    - provider: crossplane/provider-gcp
-      version: "v0.17.1"

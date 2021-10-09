@@ -14,6 +14,7 @@ spec:
     plural: buckets
   connectionSecretKeys:
     - url
+    - bucket_id
   versions:
   - name: v1alpha1
     served: true

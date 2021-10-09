@@ -6,7 +6,6 @@ metadata:
   name: example-bucket-01
   annotations:
     crossplane.io/external-name: example-bucket-01
-    stacks.silvios.me/instance-name: wasp-platform-foundation-bucket
 spec:
   parameters:
     location: USA

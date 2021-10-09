@@ -44,3 +44,4 @@ spec:
                 fmt: "%s-bucket"
       connectionDetails:
         - fromConnectionSecretKey: url
+        - fromConnectionSecretKey: bucket_id

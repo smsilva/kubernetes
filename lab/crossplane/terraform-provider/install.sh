@@ -37,7 +37,8 @@ EOF
 
 # 4.2. Build Crossplane Configuration
 export CONTAINER_REGISTRY="docker.io/silviosilva"
-export CROSSPLANE_CONFIGURATION_PACKAGE="${CONTAINER_REGISTRY}/migrating-from-terraform-example:0.1.6"
+export CROSSPLANE_CONFIGURATION_PACKAGE_VERSION="0.1.11"
+export CROSSPLANE_CONFIGURATION_PACKAGE="${CONTAINER_REGISTRY}/migrating-from-terraform-example:${CROSSPLANE_CONFIGURATION_PACKAGE_VERSION}"
 export CROSSPLANE_PACKAGE_DIRECTORY="package"
 
 ./show-environment-variables.sh
@@ -47,7 +48,7 @@ cd "${CROSSPLANE_PACKAGE_DIRECTORY}" || exit 1
 kubectl crossplane build configuration && ls ./*.xpkg
 
 # 5. Push the OCI Image to a Container Registry
-kubectl crossplane push configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?} && cd ..
+kubectl crossplane push configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?} --verbose && rm ./*.xpkg && cd ..
 
 # 6. Install Crossplane Configuration into the Kind Cluster
 
