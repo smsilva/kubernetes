@@ -32,19 +32,19 @@ data:
 EOF
 
 # 4. Create a Crossplane Definition Package (OCI Image)
+
+# 4.1. Make sure you are on "terraform-provider" directory
+
+# 4.2. Build Crossplane Configuration
 export CONTAINER_REGISTRY="docker.io/silviosilva"
-export CROSSPLANE_CONFIGURATION_PACKAGE="${CONTAINER_REGISTRY}/migrating-from-terraform-example:0.1.5"
-CROSSPLANE_PACKAGE_DIRECTORY="$(find . -name "terraform-provider")/package"
-export CROSSPLANE_PACKAGE_DIRECTORY
+export CROSSPLANE_CONFIGURATION_PACKAGE="${CONTAINER_REGISTRY}/migrating-from-terraform-example:0.1.6"
+export CROSSPLANE_PACKAGE_DIRECTORY="package"
 
 ./show-environment-variables.sh
 
-if [ -e "${CROSSPLANE_PACKAGE_DIRECTORY}" ]; then
-  echo "Directory \"${CROSSPLANE_PACKAGE_DIRECTORY}\" doesn't exists."
-  exit 1
-fi
+cd "${CROSSPLANE_PACKAGE_DIRECTORY}" || exit 1
 
-kubectl crossplane build configuration && ls "*.xpkg"
+kubectl crossplane build configuration && ls ./*.xpkg
 
 # 5. Push the OCI Image to a Container Registry
 kubectl crossplane push configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?} && cd ..
