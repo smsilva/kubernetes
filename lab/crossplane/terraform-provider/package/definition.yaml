@@ -15,6 +15,7 @@ spec:
   connectionSecretKeys:
     - url
     - bucket_id
+    - name
   versions:
   - name: v1alpha1
     served: true

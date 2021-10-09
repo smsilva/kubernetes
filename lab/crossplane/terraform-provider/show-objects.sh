@@ -5,4 +5,4 @@ echo "XRDs:                  " && echo "" && kubectl get xrd            | awk '{
 echo "Compositions:          " && echo "" && kubectl get composition    | awk '{ print "  " $0 }' && echo "" && \
 echo "Provider Config:       " && echo "" && kubectl get ProviderConfig | awk '{ print "  " $0 }' && echo "" && \
 echo "Buckets:               " && echo "" && kubectl get bucket         | awk '{ print "  " $0 }' && echo "" && \
-echo "Workspaces (describe): " && echo "" && kubectl describe workspace | tail -20
+echo "Workspaces (describe): " && echo "" && kubectl describe workspace | awk '{ print "  " $0 }' | tail -20
