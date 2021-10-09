@@ -2,7 +2,7 @@ output "bucket_id" {
   value = google_storage_bucket.default.id
 }
 
-output "bucket_url" {
+output "url" {
   value = google_storage_bucket.default.self_link
 }
 
