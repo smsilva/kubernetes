@@ -3,9 +3,11 @@
 # https://github.com/negz/provider-terraform-examples.git
 
 # 1. Create a GCP Service Account
-# 1.1. Set Permissions to a Bucket to Store Terraform State there
-# 1.2. Get Service Account Key
-# 1.3. Set Environment Variables like:
+# 1.1. Create a new Project
+# 1.2. Create a Bucket to Store Terraform State there
+# 1.3. Set Bucket Permissions to the New GCP Service Account
+# 1.4. Get Service Account Key
+# 1.5 Set Environment Variables like:
 
 # GOOGLE_CREDENTIALS_FILE.........: /home/silvios/trash/credentials.json
 # GOOGLE_CREDENTIALS..............: 2319
@@ -15,7 +17,7 @@
 # GOOGLE_TERRAFORM_BACKEND_BUCKET.: silvios
 # GOOGLE_TERRAFORM_BACKEND_PREFIX.: terraform
 
-# 2. Create a Kind Cluster and Install Crossplane (see ../install.sh file)
+# 2. Create a Kind Cluster and Install Crossplane on it (see ../install-crossplane-on-kind.sh file)
 
 # 3. Create a Secret into "crossplane-system" Namespace
 BASE64ENCODED_GCP_PROVIDER_CREDS=$(base64 "${GOOGLE_CREDENTIALS_FILE?}" | tr -d "\n") && \
@@ -36,9 +38,12 @@ EOF
 # 4.1. Make sure you are on "terraform-provider" directory
 
 # 4.2. Build Crossplane Configuration
-export CONTAINER_REGISTRY="docker.io/silviosilva"
-export CROSSPLANE_CONFIGURATION_PACKAGE_VERSION="0.1.12"
-export CROSSPLANE_CONFIGURATION_PACKAGE="${CONTAINER_REGISTRY}/migrating-from-terraform-example:${CROSSPLANE_CONFIGURATION_PACKAGE_VERSION}"
+export DOCKER_HUB_USER="silviosilva"
+export CONTAINER_REGISTRY="docker.io/${DOCKER_HUB_USER?}"
+export CROSSPLANE_CONFIGURATION_PACKAGE_VERSION="0.1.13"
+export CROSSPLANE_CONFIGURATION_PACKAGE_NAME="migrating-from-terraform-example"
+export CROSSPLANE_CONFIGURATION_PACKAGE_FULL_NAME="${DOCKER_HUB_USER}-${CROSSPLANE_CONFIGURATION_PACKAGE_NAME?}"
+export CROSSPLANE_CONFIGURATION_PACKAGE="${CONTAINER_REGISTRY}/${CROSSPLANE_CONFIGURATION_PACKAGE_NAME?}:${CROSSPLANE_CONFIGURATION_PACKAGE_VERSION}"
 export CROSSPLANE_PACKAGE_DIRECTORY="package"
 
 ./show-environment-variables.sh
@@ -56,7 +61,9 @@ kubectl crossplane push configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?} --ver
 watch -n 3 ./show-objects.sh
 
 # 6.2. Install Crossplane Configuration
-kubectl crossplane install configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?}
+kubectl crossplane install configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?} && \
+kubectl wait configuration.pkg ${CROSSPLANE_CONFIGURATION_PACKAGE_FULL_NAME?} \
+  --for condition=Healthy
 
 # 7. Create a ProviderConfig to use GCP Credentials Secret
 kubectl apply -f providerconfig/providerconfig-terraform.yaml
