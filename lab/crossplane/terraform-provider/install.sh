@@ -63,7 +63,8 @@ watch -n 3 ./show-objects.sh
 # 6.2. Install Crossplane Configuration
 kubectl crossplane install configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?} && \
 kubectl wait configuration.pkg ${CROSSPLANE_CONFIGURATION_PACKAGE_FULL_NAME?} \
-  --for condition=Healthy
+  --for condition=Healthy \
+  --timeout=320s
 
 # 7. Create a ProviderConfig to use GCP Credentials Secret
 kubectl apply -f providerconfig/providerconfig-terraform.yaml
