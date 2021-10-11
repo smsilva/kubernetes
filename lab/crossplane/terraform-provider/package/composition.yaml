@@ -1,53 +1,28 @@
-# Composition for Terraform Provider using the kind: CompositeBucket (definition.yaml)
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: job.compositebuckets.silvios.me
-  labels:
-    provider: stackjob
+  name: pod.compositebuckets.silvios.me
 spec:
-  writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
     apiVersion: silvios.me/v1alpha1
     kind: CompositeBucket
   resources:
-    - name: terraform-gcp-bucket
+    - name: terraform-azure-dummy-stack
       base:
-        apiVersion: batch/v1
-        kind: Job
+        apiVersion: v1
+        kind: Pod
         metadata:
           name: azure-dummy-stack
+          namespace: default
         spec:
-          template:
-            spec:
-              initContainers:
-                - name: plan
-                  image: silviosilva/azure-dummy-stack:latest
-                  args: ["plan", "-no-color"]
-                  envFrom:
-                    - secretRef:
-                        name: arm-credentials
-                  env:
-                    - name: DEBUG
-                      value: "0"
-                - name: apply
-                  image: silviosilva/azure-dummy-stack:latest
-                  args: ["apply", "-auto-approve"]
-                  envFrom:
-                    - secretRef:
-                        name: arm-credentials
-                  env:
-                    - name: DEBUG
-                      value: "1"
-              containers:
-                - name: output
-                  image: silviosilva/azure-dummy-stack:latest
-                  args: ["output"]
-                  envFrom:
-                    - secretRef:
-                        name: arm-credentials
-                  env:
-                    - name: DEBUG
-                      value: "0"
-              restartPolicy: Never
-          backoffLimit: 4
+          containers:
+            - name: terraform
+              image: silviosilva/azure-dummy-stack:latest
+              args: ["plan", "-no-color"]
+              env:
+                - name: DEBUG
+                  value: "0"
+              envFrom:
+                - secretRef:
+                    name: arm-credentials
+          restartPolicy: OnFailure

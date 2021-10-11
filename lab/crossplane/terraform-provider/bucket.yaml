@@ -1,16 +1,9 @@
-# A Claim / State Desired
----
 apiVersion: silvios.me/v1alpha1
 kind: Bucket
 metadata:
-  name: example-bucket-01
-  annotations:
-    crossplane.io/external-name: example-bucket-01
+  name: bucket-01
 spec:
   parameters:
     location: USA
-  compositionSelector:
-    matchLabels:
-      provider: stackjob
-  writeConnectionSecretToRef:
-    name: example-bucket-01
+  compositionRef:
+    name: pod.compositebuckets.silvios.me
