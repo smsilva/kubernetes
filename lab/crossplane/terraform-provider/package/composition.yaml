@@ -2,9 +2,9 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: tf.compositebuckets.silvios.me
+  name: job.compositebuckets.silvios.me
   labels:
-    provider: terraform
+    provider: stackjob
 spec:
   writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
@@ -13,35 +13,41 @@ spec:
   resources:
     - name: terraform-gcp-bucket
       base:
-        apiVersion: tf.crossplane.io/v1alpha1
-        kind: Workspace
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: azure-dummy-stack
         spec:
-          forProvider:
-            source: Remote
-            module: git::http://github.com/smsilva/kubernetes//lab/crossplane/terraform-provider/terraform-bucket-module
-            vars:
-              - key: location
-          writeConnectionSecretToRef:
-            namespace: crossplane-system
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
-          toFieldPath: "metadata.annotations[crossplane.io/external-name]"
-        - type: FromCompositeFieldPath
-          fromFieldPath: "spec.parameters.location"
-          toFieldPath: "spec.forProvider.vars[0].value"
-          transforms:
-            - type: map
-              map:
-                USA: US-CENTRAL1
-                Europe: EU
-        - type: FromCompositeFieldPath
-          fromFieldPath: "metadata.uid"
-          toFieldPath: "spec.writeConnectionSecretToRef.name"
-          transforms:
-            - type: string
-              string:
-                fmt: "%s-bucket"
-      connectionDetails:
-        - fromConnectionSecretKey: url
-        - fromConnectionSecretKey: bucket_id
+          template:
+            spec:
+              initContainers:
+                - name: plan
+                  image: silviosilva/azure-dummy-stack:latest
+                  args: ["plan", "-no-color"]
+                  envFrom:
+                    - secretRef:
+                        name: arm-credentials
+                  env:
+                    - name: DEBUG
+                      value: "0"
+                - name: apply
+                  image: silviosilva/azure-dummy-stack:latest
+                  args: ["apply", "-auto-approve"]
+                  envFrom:
+                    - secretRef:
+                        name: arm-credentials
+                  env:
+                    - name: DEBUG
+                      value: "1"
+              containers:
+                - name: output
+                  image: silviosilva/azure-dummy-stack:latest
+                  args: ["output"]
+                  envFrom:
+                    - secretRef:
+                        name: arm-credentials
+                  env:
+                    - name: DEBUG
+                      value: "0"
+              restartPolicy: Never
+          backoffLimit: 4

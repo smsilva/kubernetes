@@ -7,6 +7,3 @@ metadata:
 spec:
   crossplane:
     version: ">=v1.2.0"
-  dependsOn:
-    - provider: crossplane/provider-terraform
-      version: "v0.1.2"

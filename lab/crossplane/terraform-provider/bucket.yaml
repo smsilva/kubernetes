@@ -11,6 +11,6 @@ spec:
     location: USA
   compositionSelector:
     matchLabels:
-      provider: terraform
+      provider: stackjob
   writeConnectionSecretToRef:
     name: example-bucket-01
