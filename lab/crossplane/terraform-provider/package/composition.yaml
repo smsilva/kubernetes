@@ -2,6 +2,8 @@ apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
   name: pod.compositebuckets.silvios.me
+  labels:
+    provider: provider-kubernetes
 spec:
   compositeTypeRef:
     apiVersion: silvios.me/v1alpha1
@@ -9,20 +11,29 @@ spec:
   resources:
     - name: terraform-azure-dummy-stack
       base:
-        apiVersion: v1
-        kind: Pod
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
         metadata:
-          name: azure-dummy-stack
-          namespace: default
+          name: sample-pod
         spec:
-          containers:
-            - name: terraform
-              image: silviosilva/azure-dummy-stack:latest
-              args: ["plan", "-no-color"]
-              env:
-                - name: DEBUG
-                  value: "0"
-              envFrom:
-                - secretRef:
-                    name: arm-credentials
-          restartPolicy: OnFailure
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: azure-dummy-stack
+                namespace: default
+              spec:
+                containers:
+                  - name: terraform
+                    image: silviosilva/azure-dummy-stack:latest
+                    args: ["plan", "-no-color"]
+                    env:
+                      - name: DEBUG
+                        value: "0"
+                    envFrom:
+                      - secretRef:
+                          name: arm-credentials
+                restartPolicy: OnFailure
+          providerConfigRef:
+            name: kubernetes-provider

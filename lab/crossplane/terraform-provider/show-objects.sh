@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "Provider:                    " && echo "" && (kubectl get Provider                    ) 2>&1 | awk '{ print "  " $0 }' && echo "" && \
 echo "CompositeResourceDefinition: " && echo "" && (kubectl get CompositeResourceDefinition ) 2>&1 | awk '{ print "  " $0 }' && echo "" && \
 echo "Compositions:                " && echo "" && (kubectl get Composition                 ) 2>&1 | awk '{ print "  " $0 }' && echo "" && \
 echo "Buckets:                     " && echo "" && (kubectl get Bucket                      ) 2>&1 | awk '{ print "  " $0 }' && echo "" && \
