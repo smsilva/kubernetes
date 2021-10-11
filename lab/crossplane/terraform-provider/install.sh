@@ -40,7 +40,7 @@ EOF
 # 4.2. Build Crossplane Configuration
 export DOCKER_HUB_USER="silviosilva"
 export CONTAINER_REGISTRY="docker.io/${DOCKER_HUB_USER?}"
-export CROSSPLANE_CONFIGURATION_PACKAGE_VERSION="0.1.13"
+export CROSSPLANE_CONFIGURATION_PACKAGE_VERSION="0.1.15"
 export CROSSPLANE_CONFIGURATION_PACKAGE_NAME="migrating-from-terraform-example"
 export CROSSPLANE_CONFIGURATION_PACKAGE_FULL_NAME="${DOCKER_HUB_USER}-${CROSSPLANE_CONFIGURATION_PACKAGE_NAME?}"
 export CROSSPLANE_CONFIGURATION_PACKAGE="${CONTAINER_REGISTRY}/${CROSSPLANE_CONFIGURATION_PACKAGE_NAME?}:${CROSSPLANE_CONFIGURATION_PACKAGE_VERSION}"
@@ -67,6 +67,11 @@ kubectl wait configuration.pkg ${CROSSPLANE_CONFIGURATION_PACKAGE_FULL_NAME?} \
   --timeout=320s
 
 # 7. Create a ProviderConfig to use GCP Credentials Secret
+
+# 7.1. Enable Terraform Provider Debug Mode
+kubectl apply -f providerconfig/provider-terraform-debug.yaml
+
+# 7.2. Create Provider Config
 kubectl apply -f providerconfig/providerconfig-terraform.yaml
 
 # 8. Request a Bucket Instance Creation
@@ -74,3 +79,9 @@ kubectl apply -f bucket.yaml
 
 # 9. Check Cloud Storage List
 gcloud alpha storage ls --project "${GOOGLE_PROJECT?}"
+
+# 10. Delete Resources and Configuration
+kubectl delete Bucket --all
+kubectl delete ProviderConfig default
+kubectl delete Configuration.pkg --all
+kubectl delete Provider.pkg --all
