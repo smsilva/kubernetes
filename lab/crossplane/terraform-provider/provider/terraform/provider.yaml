@@ -1,0 +1,8 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: crossplane-provider-terraform
+spec:
+  package: crossplane/provider-terraform:v0.1.2
+  controllerConfigRef:
+    name: debug-config

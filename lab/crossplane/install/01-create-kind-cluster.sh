@@ -1,6 +1,6 @@
 #!/bin/bash
 KIND_CLUSTER_NAME="crossplane"
-KIND_CLUSTER_CONFIG_FILE="kind-cluster-config.yaml"
+KIND_CLUSTER_CONFIG_FILE="${1}"
 
 kind create cluster \
   --config ${KIND_CLUSTER_CONFIG_FILE?} \
