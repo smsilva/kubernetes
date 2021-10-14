@@ -12,11 +12,11 @@ spec:
   resources:
     - name: terraform-gcp-bucket
       base:
-        apiVersion: tf.crossplane.io/v1alpha1
-        kind: Workspace
+        apiVersion: net.azure.crossplane.io/v1alpha1
+        kind: Network
         spec:
           forProvider:
-            source: Remote
+            cidrs: ""
             module: git::http://github.com/smsilva/kubernetes//lab/crossplane/terraform-provider/terraform-bucket-module
             vars:
               - key: location

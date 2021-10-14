@@ -1,15 +1,13 @@
 ---
-apiVersion: silvios.me/v1alpha1
-kind: Bucket
+apiVersion: cloud.silvios.me/v1alpha1
+kind: Cluster
 metadata:
-  name: bucket-1
-  annotations:
-    crossplane.io/external-name: bucket-1
+  name: global-1
 spec:
-  parameters:
-    location: USA
+  location: centralus
+  provider: azure
   compositionSelector:
     matchLabels:
       provider: terraform
   writeConnectionSecretToRef:
-    name: bucket-1
+    name: global-1
