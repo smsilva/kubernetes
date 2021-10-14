@@ -17,7 +17,7 @@
 # GOOGLE_TERRAFORM_BACKEND_BUCKET.: silvios
 # GOOGLE_TERRAFORM_BACKEND_PREFIX.: terraform
 
-# 2. Create a Kind Cluster and Install Crossplane on it (see ../install-crossplane-on-kind.sh file)
+# 2. Create a Kind Cluster and Install Crossplane on it (see ../02-install-crossplane-with-helm.sh file)
 
 # 3. Create a Secret into "crossplane-system" Namespace
 BASE64ENCODED_GCP_PROVIDER_CREDS=$(base64 "${GOOGLE_CREDENTIALS_FILE?}" | tr -d "\n") && \
