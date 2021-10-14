@@ -1,4 +1,3 @@
-# Composition for Terraform Provider using the kind: CompositeBucket (definition.yaml)
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:

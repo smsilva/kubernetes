@@ -5,7 +5,7 @@ show_crossplane_pods() {
 }
 
 show_custom_resources() {
-  kubectl api-resources | grep -E "NAME|silvios.me"
+  kubectl api-resources | grep -E "NAME|silvios.me|workspace"
 }
 
 echo "Crossplane PODs:             " && echo "" && (show_crossplane_pods                    ) 2>&1 | awk '{ print "  " $0 }' && echo "" && \

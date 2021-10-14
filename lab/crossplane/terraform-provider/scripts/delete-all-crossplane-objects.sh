@@ -5,3 +5,4 @@ kubectl delete CompositeResourceDefinition --all
 kubectl delete ProviderConfig              --all
 kubectl delete Configuration               --all
 kubectl delete Provider                    --all
+kubectl delete ProviderConfig              --all

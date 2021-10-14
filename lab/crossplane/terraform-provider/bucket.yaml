@@ -7,7 +7,7 @@ metadata:
     crossplane.io/external-name: bucket-1
 spec:
   parameters:
-    location: USA
+    location: Europe
   compositionSelector:
     matchLabels:
       provider: terraform
