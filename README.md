@@ -19,6 +19,7 @@ Experimentos com tópicos diversos
 - [Azure Container Registry (ACR)](lab/azure/azure-container-registry) - Criação de um Azure Container Registry.
 - [ETCD](lab/backup/etcd.sh) - Backup ETCD.
 - [cert-manager](lab/cert-manager) - Usando cert-manager com um Cluster AKS e Istio gerando Certificados Let's Encrypt válidos.
+- [Crossplane](lab/crossplane/terraform-provider) - Usando Crossplane para referenciar Módulos Terraform.
 - [Open Policy Agent (Gatekeeper)](lab/gatekeeper) - Exemplo aplicando políticas em um Cluster usando OPA.
 
 - [Kasten](lab/kasten) - Backups com Kasten.
