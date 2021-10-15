@@ -1,13 +1,13 @@
 ---
-apiVersion: cloud.silvios.me/v1alpha1
-kind: Cluster
+apiVersion: silvios.me/v1alpha1
+kind: Bucket
 metadata:
-  name: global-1
+  name: bucket-1
 spec:
-  location: centralus
-  provider: azure
+  parameters:
+    location: USA
   compositionSelector:
     matchLabels:
       provider: terraform
   writeConnectionSecretToRef:
-    name: global-1
+    name: bucket-1

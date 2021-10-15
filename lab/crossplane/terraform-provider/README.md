@@ -45,7 +45,10 @@ Feel free to follow official Crossplane Documentation Install of follow the next
 Create a Secret `gcp-credentials` into `crossplane-system` Namespace.
 
 ```bash
-BASE64ENCODED_GCP_PROVIDER_CREDS=$(base64 "${GOOGLE_CREDENTIALS_FILE?}" | tr -d "\n") && \
+BASE64ENCODED_GCP_PROVIDER_CREDS=$(base64 "${GOOGLE_CREDENTIALS_FILE?}" | tr -d "\n")
+```
+
+```yaml
 kubectl apply -f - <<EOF
 ---
 apiVersion: v1
@@ -61,17 +64,21 @@ EOF
 
 # 4. Create a Crossplane Definition Package (OCI Image)
 
-Build Crossplane Configuration
+## 4.1. Build
+
+```bash
+`scripts/set-path.sh`
+```
 
 ```bash
 export DOCKER_HUB_USER="silviosilva"
 export CONTAINER_REGISTRY="docker.io/${DOCKER_HUB_USER?}"
-export CROSSPLANE_CONFIGURATION_PACKAGE_VERSION="0.1.23"
+export CROSSPLANE_CONFIGURATION_PACKAGE_VERSION="0.1.24"
 export CROSSPLANE_CONFIGURATION_PACKAGE_NAME="terraform-example"
 export CROSSPLANE_CONFIGURATION_PACKAGE_FULL_NAME="${DOCKER_HUB_USER}-${CROSSPLANE_CONFIGURATION_PACKAGE_NAME?}"
 export CROSSPLANE_CONFIGURATION_PACKAGE="${CONTAINER_REGISTRY}/${CROSSPLANE_CONFIGURATION_PACKAGE_NAME?}:${CROSSPLANE_CONFIGURATION_PACKAGE_VERSION}"
 export CROSSPLANE_PACKAGE_DIRECTORY="package"
-clear && ./show-crossplane-build-environment-variables.sh
+clear && show-crossplane-build-environment-variables.sh
 ```
 
 ```bash
@@ -82,21 +89,22 @@ cd "${CROSSPLANE_PACKAGE_DIRECTORY}" || exit 1
 kubectl crossplane build configuration && ls ./*.xpkg
 ```
 
-## 5. Push the OCI Image to a Container Registry
+### 4.2. Push the OCI Image to a Container Registry
 
 ```bash
 kubectl crossplane push configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?} --verbose && rm ./*.xpkg && cd ..
 ```
 
-## 6. Install Crossplane Configuration into the Kind Cluster
+## 5. Install Crossplane Configuration into the Kind Cluster
 
-### 6.1. Let a watch executing on another Terminal
+### 5.1. Let a watch executing on another Terminal
 
 ```bash
-watch -n 3 ./show-configuration-progress.sh
+`scripts/set-path.sh`
+watch -n 3 show-configuration-progress.sh
 ```
 
-## 6.2. Install Crossplane Configuration
+## 5.2. Install Crossplane Configuration
 
 ```bash
 kubectl crossplane install configuration ${CROSSPLANE_CONFIGURATION_PACKAGE?} && \
@@ -105,53 +113,53 @@ kubectl wait configuration.pkg ${CROSSPLANE_CONFIGURATION_PACKAGE_FULL_NAME?} \
   --timeout=320s
 ```
 
-## 7. Create a ProviderConfig to use GCP Credentials Secret
+## 6. Create a ProviderConfig to use GCP Credentials Secret
 
-### 7.1. Create a `ControllerConfig` for Debug
+### 6.1. Create a `ControllerConfig` for Debug
 
 ```bash
 kubectl apply -f provider/controller-config-debug.yaml
 ```
 
-### 7.2. Update Terraform `Provider` to enable `DEBUG` MODE
+### 6.2. Update Terraform `Provider` to enable `DEBUG` MODE
 
 ```bash
 kubectl apply -f provider/terraform/provider.yaml
 ```
 
-### 7.3. Create Terraform `ProviderConfig`
+### 6.3. Create Terraform `ProviderConfig`
 
 ```bash
-kubectl apply -f provider/terraform/provider.yaml
+kubectl apply -f provider/terraform/config/
 ```
 
-### 7.3. Follow Crossplane Terraform Provider Logs
+### 6.4. Follow Crossplane Terraform Provider Logs
 
 ```bash
 CROSSPLANE_TERRAFORM_PRODIVER_POD_NAME="$(kubectl get pods -n crossplane-system -o jsonpath="{range .items[*]}{.metadata.name}{'\n'}{end}" | grep crossplane-provider-terraform)" && \
 kubectl -n crossplane-system logs -f "${CROSSPLANE_TERRAFORM_PRODIVER_POD_NAME?}"
 ```
 
-### 7.4. Follow Provisioning Progress
+### 6.5. Follow Provisioning Progress
 ```bash
-watch -n 3 ./show-provision-progress.sh
+watch -n 3 show-provision-progress.sh
 ```
 
-## 8. Request a Bucket Instance Creation
+## 7. Request a Bucket Instance Creation
 
-### 8.1. Create a Claim for a Bucket
+### 7.1. Create a Claim for a Bucket
 
 ```bash
 kubectl apply -f bucket.yaml
 ```
 
-## 9. Check Cloud Storage List
+## 8. Check Cloud Storage List
 
 ```bash
 gcloud alpha storage ls --project "${GOOGLE_PROJECT?}"
 ```
 
-## 10. Delete Resources and Configuration
+## 9. Delete Resources and Configuration
 
 ```bash
 kubectl delete Bucket --all
