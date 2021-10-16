@@ -12,3 +12,8 @@ terraform-bucket-module
 - Workspace - bucket-1
 - Workspace - bucket-2
 - Terraform Sandox Bucket List
+
+buckets.yaml
+
+Cluster
+- kind cluster create + crossplane install

@@ -1,0 +1,17 @@
+{{- range $bucket := .Values.buckets }}
+---
+apiVersion: storage.gcp.silvios.me/v1
+kind: Bucket
+metadata:
+  name: {{ $bucket.name }}
+  annotations:
+    crossplane.io/external-name: {{ $bucket.name }}
+spec:
+  parameters:
+    location: {{ $bucket.location }}
+  compositionSelector:
+    matchLabels:
+      provider: terraform
+  writeConnectionSecretToRef:
+    name: {{ $bucket.name }}
+{{- end }}

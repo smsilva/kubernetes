@@ -1,9 +1,9 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: compositebuckets.silvios.me
+  name: compositebuckets.storage.gcp.silvios.me
 spec:
-  group: silvios.me
+  group: storage.gcp.silvios.me
   names:
     kind: CompositeBucket
     plural: compositebuckets
@@ -11,10 +11,10 @@ spec:
     kind: Bucket
     plural: buckets
   connectionSecretKeys:
+    - name
     - url
-    - bucket_id
   versions:
-  - name: v1alpha1
+  - name: v1
     served: true
     referenceable: true
     schema:
@@ -32,6 +32,7 @@ spec:
                     enum:
                      - USA
                      - Europe
+                     - Brazil
                 required:
                   - location
             required:

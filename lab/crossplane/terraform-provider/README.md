@@ -17,22 +17,6 @@ watch -n 3 scripts/show-configuration-progress.sh
 
 ../install/install-crossplane-helm-chart.sh
 
-# Terminal [2]: Create Configurations
-
-kubectl apply -f package/bucket/composite-resource-definition.yaml
-
-kubectl apply -f package/bucket/composition.yaml
-
-kubectl apply -f provider/controller-config-debug.yaml
-
-kubectl apply -f provider/terraform/provider.yaml && \
-
-kubectl wait Provider crossplane-provider-terraform \
-  --for=condition=Healthy \
-  --timeout=120s && \
-
-kubectl apply -f provider/terraform/config/
-
 # Terminal [2]: Create Secret with GCP Credentials
 BASE64ENCODED_GCP_PROVIDER_CREDS=$(base64 "${GOOGLE_CREDENTIALS_FILE?}" | tr -d "\n") && \
 kubectl apply -f - <<EOF
@@ -47,27 +31,43 @@ data:
   credentials: ${BASE64ENCODED_GCP_PROVIDER_CREDS?}
 EOF
 
-# New Terminal [3]: Following Crossplane Provider Terraform Logs 
+kubectl -n crossplane-system get secret gcp-credentials -o jsonpath='{.data}' | jq .
+
+# Terminal [2]: Create Configurations
+
+kubectl apply -f package/bucket/composite-resource-definition.yaml
+
+kubectl apply -f package/bucket/composition.yaml
+
+kubectl apply -f provider/controller-config-debug.yaml
+
+kubectl apply -f provider/terraform/provider.yaml && \
+kubectl wait Provider crossplane-provider-terraform \
+  --for=condition=Healthy \
+  --timeout=120s
+
+kubectl apply -f provider/terraform/config/providerconfig.yaml
+
+# New Terminal [2]: Following Crossplane Provider Terraform Logs 
 
 CROSSPLANE_TERRAFORM_PRODIVER_POD_NAME="$(kubectl get pods -n crossplane-system -o jsonpath="{range .items[*]}{.metadata.name}{'\n'}{end}" | grep crossplane-provider-terraform)" && \
 kubectl -n crossplane-system wait pod "${CROSSPLANE_TERRAFORM_PRODIVER_POD_NAME?}" \
   --for=condition=Ready \
   --timeout=120s && \
-
 kubectl -n crossplane-system logs -f "${CROSSPLANE_TERRAFORM_PRODIVER_POD_NAME?}"
 
 # Back to Terminal [1]: CTRL + C / Following Bucket Provision Progress
 
 watch -n 3 scripts/show-provision-progress.sh
 
-# Back to Terminal [2]: Create a New Bucket
+# New Terminal [3]: Create Buckets
 
-kubectl apply -f bucket.yaml && \
-
-kubectl wait bucket bucket-1 \
+helm template helm/buckets | kubectl apply --dry-run=server -f - && \
+echo "OK" && \
+helm template helm/buckets | kubectl apply -f - && \
+kubectl wait bucket generic-storage-1 \
   --for=condition=Ready \
   --timeout=120s && \
-
 gcloud alpha storage ls --project "${GOOGLE_PROJECT?}"
 
 ```
