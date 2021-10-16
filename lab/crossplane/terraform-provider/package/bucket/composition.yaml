@@ -36,8 +36,8 @@ spec:
           transforms:
             - type: map
               map:
-                USA: US-CENTRAL1
-                Europe: EU
+                USA: us-central1
+                Europe: eu
                 Brazil: southamerica-east1
         - type: FromCompositeFieldPath
           fromFieldPath: "metadata.uid"

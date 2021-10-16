@@ -10,6 +10,9 @@ spec:
   claimNames:
     kind: Bucket
     plural: buckets
+    shortNames:
+      - bk
+      - bkts
   connectionSecretKeys:
     - name
     - url

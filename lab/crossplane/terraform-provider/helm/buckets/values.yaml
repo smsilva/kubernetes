@@ -1,7 +1,3 @@
 buckets:
 - name: generic-storage-1
   location: USA
-- name: generic-storage-2
-  location: USA
-- name: generic-storage-3
-  location: USA
