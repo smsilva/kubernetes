@@ -1,9 +1,9 @@
 variable "prefix" {
-  type    = string
-  default = "bucket"
+  type        = string
+  description = "Bucket Name Prefix. If set as 'generic-storage-1' then you should get something like: generic-storage-1-x5f"
 }
 
 variable "location" {
-  type    = string
-  default = "US-CENTRAL1"
+  type        = string
+  description = "Google Cloud Region"
 }
