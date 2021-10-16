@@ -1,0 +1,14 @@
+GCP
+- Account Creation - TODO
+- Local Account Configuration - TODO
+- Show Environment Variables
+- Pessoal - Bucket - Terraform State
+- Sandbox - No Buckets
+
+Github
+- Example's Location
+
+terraform-bucket-module
+- Workspace - bucket-1
+- Workspace - bucket-2
+- Terraform Sandox Bucket List

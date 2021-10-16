@@ -1,4 +1,4 @@
-output "bucket_id" {
+output "name" {
   value = google_storage_bucket.default.id
 }
 
