@@ -19,7 +19,7 @@ spec:
             source: Remote
             module: git::http://github.com/smsilva/kubernetes//lab/crossplane/terraform-provider/terraform-bucket-module
             vars:
-              - key: name
+              - key: prefix
               - key: location
           writeConnectionSecretToRef:
             namespace: crossplane-system
@@ -28,7 +28,7 @@ spec:
           fromFieldPath: "metadata.name"
           toFieldPath: "metadata.annotations[crossplane.io/external-name]"
         - type: FromCompositeFieldPath
-          fromFieldPath: "metadata.name"
+          fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
           toFieldPath: "spec.forProvider.vars[0].value"
         - type: FromCompositeFieldPath
           fromFieldPath: "spec.parameters.location"
