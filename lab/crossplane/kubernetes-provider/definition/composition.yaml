@@ -1,0 +1,96 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: k8s.clusters.platform.silvios.me
+  labels:
+    provider: kubernetes
+spec:
+  compositeTypeRef:
+    apiVersion: platform.silvios.me/v1
+    kind: Cluster
+  resources:
+    - base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                namespace: default
+
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.manifest.metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "cluster-%s"
+
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.ingress.cname
+          toFieldPath: spec.forProvider.manifest.data.cname
+
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.ingress.domain
+          toFieldPath: spec.forProvider.manifest.data.domain
+
+        - type: CombineFromComposite
+          combine:
+            variables:
+              - fromFieldPath: spec.ingress.cname
+              - fromFieldPath: spec.ingress.domain
+            strategy: string
+            string:
+              fmt: "%s.%s"
+          toFieldPath: spec.forProvider.manifest.data.server
+
+    - base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                namespace: default
+                labels:
+                  purpose: demo
+              spec:
+                containers:
+                  - name: debian
+                    image: debian
+                    command: ["printenv"]
+                    args: ["HOSTNAME", "KUBERNETES_PORT"]
+                restartPolicy: OnFailure
+
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.manifest.metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "cluster-%s"
+
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.labels[object-pod-uid]
+          transforms:
+            - type: string
+              string:
+                fmt: "status-01-%s"
+          policy:
+            fromFieldPath: Required
+
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.manifest.status.phase
+          toFieldPath: metadata.labels[object-pod-status]
+          transforms:
+            - type: string
+              string:
+                fmt: "status-02-%s"

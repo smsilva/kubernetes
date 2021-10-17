@@ -1,0 +1,49 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: clusters.platform.silvios.me
+spec:
+  group: platform.silvios.me
+  names:
+    kind: Cluster
+    listKind: ClusterList
+    plural: clusters
+    singular: cluster
+    shortNames:
+      - ptfc
+  connectionSecretKeys:
+    - server
+  versions:
+  - name: v1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              ingress:
+                type: object
+                properties:
+                  cname:
+                    type: string
+                    default: services
+                  domain:
+                    type: string
+                    default: silvios.me
+                    enum:
+                     - silvios.me
+                required:
+                  - cname
+            required:
+              - ingress
+    additionalPrinterColumns:
+      - name: CNAME
+        type: string
+        jsonPath: .spec.ingress.cname
+
+      - name: Domain
+        type: string
+        jsonPath: .spec.ingress.domain
