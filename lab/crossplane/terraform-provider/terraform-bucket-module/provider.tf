@@ -1,6 +1,5 @@
 provider "google" {
   credentials = "gcp-credentials.json"
-  project     = "sandbox-328317"
 }
 
 terraform {
@@ -14,8 +13,8 @@ terraform {
   }
 
   backend "gcs" {
-    bucket      = "silvios"
-    prefix      = "terraform/crossplane"
+    bucket      = "silvios-wasp-dev-foundation"
+    prefix      = "terraform"
     credentials = "gcp-credentials.json"
   }
 }

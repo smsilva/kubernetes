@@ -1,12 +1,43 @@
 GCP
-- Account Creation - TODO
-- Local Account Configuration - TODO
-- Show Environment Variables
-- Pessoal - Bucket - Terraform State
-- Sandbox - No Buckets
 
-Github
-- Example's Location
+- IAM & Admin / Manage Resources
+
+  - project-foundation:
+    - project-name:      wasp-sbx-foundation
+    - project-id:        silvios-wasp-sbx-foundation [ cloud-storage-bucket ]
+
+    - project-name:      wasp-dev-foundation
+    - project-id:        silvios-wasp-dev-foundation [ cloud-storage-bucket ]
+
+  - project:
+    - project-name:      wasp-sbx
+    - project-id:        silvios-wasp-sbx
+      - service-account: administrator@silvios-wasp-sbx.iam.gserviceaccount.com [Storage Admin, Storage Object Admin]
+
+    - project-name:      wasp-dev
+    - project-id:        silvios-wasp-dev
+      - service-account: administrator@silvios-wasp-dev.iam.gserviceaccount.com [Storage Admin, Storage Object Admin]
+
+  - Terraform
+    - cd kubernetes/lab/crossplane/terraform-provider/terraform-bucket-module
+    
+    - symlink: |
+        export CREDENTIALS_FILE="gcp-credentials.json"
+        rm ${CREDENTIALS_FILE?}
+        ln -s ${GOOGLE_CREDENTIALS_FILE?} ${CREDENTIALS_FILE?}
+    
+    - update terraform-bucket-module/provider.tf
+      - backend.gcs.bucket: silvios-wasp-sbx-foundation
+
+    - terraform init
+      - expected error:
+          Error: Failed to get existing workspaces: querying Cloud Storage failed: googleapi: Error 403: administrator@silvios-wasp-sbx.iam.gserviceaccount.com does not have storage.objects.list access to the Google Cloud Storage bucket., forbidden
+
+   - wasp-sbx-foundation
+     - bucket: silvios-wasp-sbx-foundation
+       - roles:
+         - Storage Legacy Bucket Reader -> administrator@silvios-wasp-sbx.iam.gserviceaccount.com
+         - Storage Object Admin         -> administrator@silvios-wasp-sbx.iam.gserviceaccount.com
 
 terraform-bucket-module
 - Quick Overview
