@@ -1,0 +1,11 @@
+{{- range $cluster := .Values.clusters }}
+---
+apiVersion: platform.silvios.me/v1
+kind: Cluster
+metadata:
+  name: {{ $cluster.name }}
+spec:
+  ingress:
+    cname: {{ $cluster.cname }}
+    domain: {{ $cluster.domain }}
+{{- end }}

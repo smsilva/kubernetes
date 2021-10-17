@@ -3,6 +3,6 @@ kind: Provider
 metadata:
   name: provider-kubernetes
 spec:
-  package: "crossplane/provider-kubernetes:main"
+  package: "crossplane/provider-kubernetes:v0.1.0"
   controllerConfigRef:
     name: debug-config
