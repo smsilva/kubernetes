@@ -20,7 +20,6 @@ spec:
               kind: ConfigMap
               metadata:
                 namespace: default
-
       patches:
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
