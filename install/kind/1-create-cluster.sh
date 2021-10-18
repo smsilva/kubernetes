@@ -1,5 +1,5 @@
 #!/bin/bash
-KIND_CLUSTER_NAME="demo"
+KIND_CLUSTER_NAME="silvios"
 KIND_CLUSTER_CONFIG_FILE="kind-example-config.yaml"
 
 kind create cluster \
