@@ -1,9 +1,0 @@
----
-apiVersion: platform.silvios.me/v1
-kind: Cluster
-metadata:
-  name: global-1
-spec:
-  ingress:
-    cname: "wasp-services"
-    domain: "silvios.me"

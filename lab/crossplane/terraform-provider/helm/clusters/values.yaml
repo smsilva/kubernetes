@@ -1,8 +1,0 @@
-clusters:
-- name: "global-1"
-  cname: "wasp-services-1"
-  domain: "silvios.me"
-
-- name: "global-2"
-  cname: "wasp-services-2"
-  domain: "silvios.me"

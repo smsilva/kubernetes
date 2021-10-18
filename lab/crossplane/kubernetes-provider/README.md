@@ -93,4 +93,6 @@ spec:
   backoffLimit: 4
 EOF
 
+kind delete cluster --name crossplane
+
 ```
