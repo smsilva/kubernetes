@@ -1,0 +1,19 @@
+gcp:
+  projects:
+    - name: wasp-sandbox
+      id: silvios-wasp-sandbox-q4y
+      service-account:
+        name: administrator
+        description: Project Storage Administrator
+        roles:
+          - Storage Admin
+        files:
+          - ${HOME}/.credentials/gcloud/current.json
+          - ${HOME}/.credentials/bash_google
+
+    - name: wasp-foundation
+      id: silvios-wasp-foundation-k9z
+      bucket:
+        roles:
+          - Storage Legacy Bucket Reader
+          - Storage Object Admin
