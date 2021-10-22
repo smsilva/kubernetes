@@ -39,6 +39,7 @@ spec:
                   - cname
             required:
               - ingress
+
     additionalPrinterColumns:
       - name: CNAME
         type: string
