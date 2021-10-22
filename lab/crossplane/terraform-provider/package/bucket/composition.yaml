@@ -17,7 +17,7 @@ spec:
         spec:
           forProvider:
             source: Remote
-            module: git::http://github.com/smsilva/kubernetes//lab/crossplane/terraform-provider/terraform-bucket-module
+            module: git::http://github.com/smsilva/kubernetes//lab/crossplane/terraform-provider/gcloud-bucket
             vars:
               - key: prefix
               - key: location

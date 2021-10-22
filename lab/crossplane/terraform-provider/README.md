@@ -41,12 +41,12 @@ kubectl apply -f package/bucket/composition.yaml
 
 kubectl apply -f provider/controller-config-debug.yaml
 
-kubectl apply -f provider/terraform/provider.yaml && \
+kubectl apply -f provider/terraform.yaml && \
 kubectl wait Provider crossplane-provider-terraform \
   --for=condition=Healthy \
   --timeout=120s
 
-kubectl apply -f provider/terraform/config/providerconfig.yaml
+kubectl apply -f provider/config/providerconfig.yaml
 
 # New Terminal [2]: Following Crossplane Provider Terraform Logs 
 
