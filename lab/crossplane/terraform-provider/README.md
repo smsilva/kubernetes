@@ -22,26 +22,22 @@ scripts/create-secret-gcp.sh
 
 # Terminal [2]: Create Configurations
 
-kubectl apply -f provider/controller-config-debug.yaml && \
+kubectl apply -f provider/config-gcp.yaml && \
 kubectl apply -f provider/terraform.yaml && \
 kubectl wait Provider crossplane-provider-terraform \
   --for=condition=Healthy \
   --timeout=120s
 
-kubectl apply -f provider/config/providerconfig.yaml
-
-kubectl apply -f package/bucket/composite-resource-definition.yaml && sleep 3 && \
-kubectl apply -f package/bucket/composition.yaml
+kubectl apply -f definition/bucket/composite-resource-definition.yaml && sleep 3 && \
+kubectl apply -f definition/bucket/composition.yaml
 
 # Back to Terminal [1]: CTRL + C / Following Bucket Provision Progress
 
 watch -n 3 scripts/show-provision-progress.sh
 
-# New Terminal [3]: Create Buckets
+# New Terminal [2]: Create Buckets
 
 scripts/install-bucket-helm-chart.sh
-
-# New Terminal [2]: Following Crossplane Provider Terraform Logs 
 
 scripts/follow-terraform-provider-logs.sh
 ```

@@ -36,6 +36,9 @@ spec:
                      - USA
                      - Europe
                      - Brazil
+                  prefix:
+                    type: string
+                    default: generic-bucket
                 required:
                   - location
             required:
