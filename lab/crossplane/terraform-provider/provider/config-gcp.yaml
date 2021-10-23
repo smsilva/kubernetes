@@ -4,7 +4,7 @@ metadata:
   name: default
 spec:
   credentials:
-  - filename: gcp-credentials.json
+  - filename: credentials.json
     source: Secret
     secretRef:
       namespace: crossplane-system

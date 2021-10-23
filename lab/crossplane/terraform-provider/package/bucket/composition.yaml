@@ -21,15 +21,19 @@ spec:
             vars:
               - key: prefix
               - key: location
+
           writeConnectionSecretToRef:
             namespace: crossplane-system
+
       patches:
         - type: FromCompositeFieldPath
           fromFieldPath: "metadata.name"
           toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+
         - type: FromCompositeFieldPath
           fromFieldPath: "metadata.annotations[crossplane.io/external-name]"
           toFieldPath: "spec.forProvider.vars[0].value"
+
         - type: FromCompositeFieldPath
           fromFieldPath: "spec.parameters.location"
           toFieldPath: "spec.forProvider.vars[1].value"
@@ -39,6 +43,7 @@ spec:
                 USA: us-central1
                 Europe: eu
                 Brazil: southamerica-east1
+
         - type: FromCompositeFieldPath
           fromFieldPath: "metadata.uid"
           toFieldPath: "spec.writeConnectionSecretToRef.name"
@@ -46,6 +51,7 @@ spec:
             - type: string
               string:
                 fmt: "%s-bucket"
+
       connectionDetails:
         - fromConnectionSecretKey: name
         - fromConnectionSecretKey: url

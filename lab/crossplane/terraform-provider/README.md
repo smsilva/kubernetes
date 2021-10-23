@@ -13,34 +13,16 @@ watch -n 3 scripts/show-configuration-progress.sh
 
 # New Terminal [2]: Main Steps - Bootstrap
 
-../install/create-kind-cluster.sh && \
-
+../install/create-kind-cluster.sh
 ../install/install-crossplane-helm-chart.sh
 
 # Terminal [2]: Create Secret with GCP Credentials
-BASE64ENCODED_GCP_PROVIDER_CREDS=$(base64 "${GOOGLE_CREDENTIALS_FILE?}" | tr -d "\n") && \
-kubectl apply -f - <<EOF
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: gcp-credentials
-  namespace: crossplane-system
-type: Opaque
-data:
-  credentials: ${BASE64ENCODED_GCP_PROVIDER_CREDS?}
-EOF
 
-kubectl -n crossplane-system get secret gcp-credentials -o jsonpath='{.data}' | jq .
+scripts/create-secret-gcp.sh
 
 # Terminal [2]: Create Configurations
 
-kubectl apply -f package/bucket/composite-resource-definition.yaml
-
-kubectl apply -f package/bucket/composition.yaml
-
-kubectl apply -f provider/controller-config-debug.yaml
-
+kubectl apply -f provider/controller-config-debug.yaml && \
 kubectl apply -f provider/terraform.yaml && \
 kubectl wait Provider crossplane-provider-terraform \
   --for=condition=Healthy \
@@ -48,13 +30,8 @@ kubectl wait Provider crossplane-provider-terraform \
 
 kubectl apply -f provider/config/providerconfig.yaml
 
-# New Terminal [2]: Following Crossplane Provider Terraform Logs 
-
-CROSSPLANE_TERRAFORM_PRODIVER_POD_NAME="$(kubectl get pods -n crossplane-system -o jsonpath="{range .items[*]}{.metadata.name}{'\n'}{end}" | grep crossplane-provider-terraform)" && \
-kubectl -n crossplane-system wait pod "${CROSSPLANE_TERRAFORM_PRODIVER_POD_NAME?}" \
-  --for=condition=Ready \
-  --timeout=120s && \
-kubectl -n crossplane-system logs -f "${CROSSPLANE_TERRAFORM_PRODIVER_POD_NAME?}"
+kubectl apply -f package/bucket/composite-resource-definition.yaml && sleep 3 && \
+kubectl apply -f package/bucket/composition.yaml
 
 # Back to Terminal [1]: CTRL + C / Following Bucket Provision Progress
 
@@ -62,21 +39,11 @@ watch -n 3 scripts/show-provision-progress.sh
 
 # New Terminal [3]: Create Buckets
 
-helm template helm/buckets | kubectl apply --dry-run=server -f - && \
+scripts/install-bucket-helm-chart.sh
 
-echo "OK" && \
+# New Terminal [2]: Following Crossplane Provider Terraform Logs 
 
-helm template helm/buckets | kubectl apply -f - && \
-
-for BUCKET_NAME in $(kubectl get buckets -o jsonpath='{.items[*].metadata.name}' | xargs -n 1); do
-  kubectl wait bucket ${BUCKET_NAME} \
-    --for=condition=Ready \
-    --timeout=120s && \
-  echo "${BUCKET_NAME}: Ready"
-done
-
-gcloud alpha storage ls --project "${GOOGLE_PROJECT?}"
-
+scripts/follow-terraform-provider-logs.sh
 ```
 
 ## Objective
