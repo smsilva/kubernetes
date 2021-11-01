@@ -1,0 +1,3 @@
+buckets:
+  - name: "generic-bucket-1"
+    location: "southamerica-east1"

@@ -1,0 +1,9 @@
+{{- range $bucket := .Values.buckets }}
+---
+apiVersion: google.storage.silvios.me/v1
+kind: Bucket
+metadata:
+  name: {{ $bucket.name }}
+spec:
+  location: {{ $bucket.location }}
+{{- end }}

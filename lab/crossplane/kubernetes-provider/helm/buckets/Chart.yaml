@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kubernetes-provider-buckets
+description: Kubernetes Provider Example using Stack Instance to create Buckets
+
+# This version number should be incremented each time you make changes to the chart and its templates
+version:     0.1.0
