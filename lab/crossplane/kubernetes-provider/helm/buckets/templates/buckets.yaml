@@ -1,6 +1,6 @@
 {{- range $bucket := .Values.buckets }}
 ---
-apiVersion: google.storage.silvios.me/v1
+apiVersion: google.storage.silvios.me/v1alpha1
 kind: Bucket
 metadata:
   name: {{ $bucket.name }}

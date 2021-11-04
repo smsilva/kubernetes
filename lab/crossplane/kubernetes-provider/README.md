@@ -9,7 +9,7 @@ watch -n 3 scripts/show-configuration-progress.sh
 
 # Terminal [2]: Main Steps - Bootstrap
 
-../install/create-kind-cluster.sh && \
+../install/create-kind-cluster.sh
 
 ../install/install-crossplane-helm-chart.sh
 
@@ -42,15 +42,7 @@ subjects:
   namespace: crossplane-system
 EOF
 
-kubectl \
-  get ClusterRoleBinding provider-kubernetes-admin-binding \
-  --output yaml | kubectl neat | yq e -
-
 kubectl apply -f provider/config/provider-config.yaml
-
-kubectl apply -f definition/crd.yaml
-
-kubectl apply -f definition/composition.yaml
 
 # Terminal [2]: Following Crossplane Provider Logs 
 

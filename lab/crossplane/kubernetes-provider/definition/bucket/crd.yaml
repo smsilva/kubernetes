@@ -14,7 +14,7 @@ spec:
   connectionSecretKeys:
     - server
   versions:
-  - name: v1
+  - name: v1alpha1
     served: true
     referenceable: true
     schema:
