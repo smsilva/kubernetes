@@ -15,8 +15,8 @@ if [[ -z "${CLUSTER_TYPE}" ]]; then
   exit 1
 fi
 
-. ./${CLUSTER_TYPE?}-cluster-creation.sh
-. ./argocd-install.sh ${CLUSTER_TYPE?}
+. "./${CLUSTER_TYPE?}-cluster-creation.sh"
+. ./argocd-install.sh "${CLUSTER_TYPE?}"
 . ./install-nginx-ingress-controller.sh
 
 ARGOCD_INITIAL_PASSWORD=$(kubectl \

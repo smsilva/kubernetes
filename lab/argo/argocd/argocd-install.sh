@@ -24,13 +24,13 @@ for deploymentName in $(kubectl -n argocd get deploy -o name); do
    kubectl \
      --namespace argocd \
      wait \
-     --for condition=available \
+     --for condition=Available \
      --timeout=360s \
-     ${deploymentName};
+     "${deploymentName}";
 done
 
 kubectl apply \
   --namespace argocd \
-  --filename deploy/${CLUSTER_TYPE?}/
+  --filename "deploy/${CLUSTER_TYPE?}/"
 
 echo ""
