@@ -1,0 +1,49 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: buckets.google.storage.silvios.me
+  labels:
+    provider: kubernetes
+spec:
+  compositeTypeRef:
+    apiVersion: google.storage.silvios.me/v1alpha1
+    kind: Bucket
+  resources:
+    - base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: terraform.silvios.me/v1alpha1
+              kind: StackInstance
+              metadata:
+                namespace: default
+              spec:
+                stack:
+                  provider: google
+                  registry: docker.io
+                  image: silviosilva/google-bucket
+                  version: 0.4.0
+                vars:
+                  name: generic-bucket-name
+                  location: generic-bucket-location
+                outputs:
+                  - bucket_id
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.manifest.metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "google-bucket-%s"
+
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.manifest.spec.vars.name
+
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.location
+          toFieldPath: spec.forProvider.manifest.spec.vars.location

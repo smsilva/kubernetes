@@ -9,8 +9,7 @@ spec:
     listKind: BucketList
     plural: buckets
     singular: bucket
-    shortNames:
-      - bkt
+    shortNames: []
   connectionSecretKeys:
     - server
   versions:

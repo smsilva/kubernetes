@@ -1,0 +1,35 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: buckets.azure.storage.silvios.me
+spec:
+  group: azure.storage.silvios.me
+  names:
+    kind: Bucket
+    listKind: BucketList
+    plural: buckets
+    singular: bucket
+    shortNames: []
+  connectionSecretKeys:
+    - server
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              location:
+                type: string
+                default: centralus
+                enum:
+                 - centralus
+                 - eastus2
+    additionalPrinterColumns:
+      - name: Location
+        type: string
+        jsonPath: .spec.location

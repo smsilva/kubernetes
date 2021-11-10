@@ -2,12 +2,12 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: buckets.google.storage.silvios.me
+  name: buckets.azure.storage.silvios.me
   labels:
     provider: kubernetes
 spec:
   compositeTypeRef:
-    apiVersion: google.storage.silvios.me/v1alpha1
+    apiVersion: azure.storage.silvios.me/v1alpha1
     kind: Bucket
   resources:
     - base:
@@ -22,15 +22,16 @@ spec:
                 namespace: default
               spec:
                 stack:
-                  provider: google
+                  provider: azurerm
+                  backend: azurerm
                   registry: docker.io
-                  image: silviosilva/google-bucket
+                  image: silviosilva/azure-bucket
                   version: 0.4.0
                 vars:
                   name: generic-bucket-name
                   location: generic-bucket-location
                 outputs:
-                  - bucket_id
+                  - storage_account_id
       patches:
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
@@ -38,7 +39,7 @@ spec:
           transforms:
             - type: string
               string:
-                fmt: "bucket-%s"
+                fmt: "azure-bucket-%s"
 
         - type: FromCompositeFieldPath
           fromFieldPath: metadata.name
