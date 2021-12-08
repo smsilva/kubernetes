@@ -1,0 +1,40 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: certificate-ingress-traffic
+  namespace: {{ $.Values.istio.namespace }}
+spec:
+  hosts:
+  - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
+  gateways:
+  - public-ingress-gateway-insecure
+  http:
+  - match:
+      - uri:
+          prefix: /.well-known/acme-challenge/
+    route:
+      - destination:
+          host: cert-manager-solver
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: httpbin
+  namespace: default
+spec:
+  hosts:
+  - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
+  gateways:
+  - {{ $.Values.istio.namespace }}/public-ingress-gateway
+  http:
+  - name: httpbin
+    headers:
+      request:
+        add:
+          X-A1-origin: public-ingress-gateway
+    route:
+    - destination:
+        host: httpbin.default.svc.cluster.local
+        port:
+          number: 80
