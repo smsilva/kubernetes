@@ -17,7 +17,7 @@ spec:
       credentialName: {{ $.Values.istio.ingress.secret.name }}
       httpsRedirect: false
     hosts:
-      - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
+      - {{ $.Values.dns.prefix }}{{ $.Values.dns.domain }}
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
@@ -33,6 +33,6 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-      - {{ index .Values "dns" "prefix" }}{{ index .Values "dns" "domain" }}
+      - {{ $.Values.dns.prefix }}{{ $.Values.dns.domain }}
     tls:
       httpsRedirect: false
