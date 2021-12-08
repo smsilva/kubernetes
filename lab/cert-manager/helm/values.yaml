@@ -1,11 +1,14 @@
 dns:
-  prefix: silvios-wasp-sandbox
-  domain: .eastus2.cloudapp.azure.com
+  prefix: apps
+  domain: .sandbox.silvios.me
+
+hosts:
+  - apps.sandbox.silvios.me
 
 issuer:
   name: letsencrypt
-  server: https://acme-staging-v02.api.letsencrypt.org/directory
-  # server: https://acme-v02.api.letsencrypt.org/directory
+  # server: https://acme-staging-v02.api.letsencrypt.org/directory
+  server: https://acme-v02.api.letsencrypt.org/directory
   email: smsilva@gmail.com
 
 istio:

@@ -6,7 +6,9 @@ metadata:
 spec:
   secretName: {{ $.Values.istio.ingress.secret.name }}
   dnsNames:
-    - {{ $.Values.dns.prefix }}{{ $.Values.dns.domain }}
+    {{- range $host := $.Values.hosts }}
+    - {{ . | quote }}
+    {{- end }}
   commonName: {{ $.Values.dns.prefix }}{{ $.Values.dns.domain }}
   issuerRef:
     name: {{ $.Values.issuer.name }}

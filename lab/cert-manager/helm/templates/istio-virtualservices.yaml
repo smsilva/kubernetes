@@ -6,7 +6,9 @@ metadata:
   namespace: {{ $.Values.istio.namespace }}
 spec:
   hosts:
-  - {{ $.Values.dns.prefix }}{{ $.Values.dns.domain }}
+  {{- range $host := $.Values.hosts }}
+  - {{ . | quote }}
+  {{- end }}
   gateways:
   - public-ingress-gateway-insecure
   http:
@@ -24,7 +26,9 @@ metadata:
   namespace: default
 spec:
   hosts:
-  - {{ $.Values.dns.prefix }}{{ $.Values.dns.domain }}
+  {{- range $host := $.Values.hosts }}
+  - {{ . | quote }}
+  {{- end }}
   gateways:
   - {{ $.Values.istio.namespace }}/public-ingress-gateway
   http:
