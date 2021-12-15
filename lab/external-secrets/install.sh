@@ -17,6 +17,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: azurerm-service-principal
+  namespace: external-secrets
 type: Opaque
 data:
   ARM_CLIENT_ID: ${ARM_CLIENT_ID_BASE64}
@@ -28,7 +29,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: external-secrets.io/v1alpha1
 kind: ClusterSecretStore
 metadata:
-  name: wasp-foundation
+  name: example-secret-store
 spec:
   provider:
     azurekv:
@@ -41,10 +42,36 @@ spec:
         clientId:
           key: ARM_CLIENT_ID
           name: azurerm-service-principal
-          namespace: default
+          namespace: external-secrets
 
         clientSecret:
-          key: ARM_CLIENT_SECRET
           name: azurerm-service-principal
-          namespace: default
+          key: ARM_CLIENT_SECRET
+          namespace: external-secrets
+EOF
+
+# Secret
+cat <<EOF | kubectl apply -f -
+apiVersion: external-secrets.io/v1alpha1
+kind: ExternalSecret
+metadata:
+  name: docker-hub
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: SecretStore
+    name: azure-${ARM_KEYVAULT_NAME}
+
+  target:
+    name: docker-hub
+    creationPolicy: Owner
+
+  data:
+  - secretKey: username
+    remoteRef:
+      key: secret/docker-hub-username
+
+  - secretKey: password
+    remoteRef:
+      key: secret/docker-hub-password
 EOF
