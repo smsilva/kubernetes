@@ -12,7 +12,8 @@ helm install redis bitnami/redis --wait
 export REDIS_PASSWORD=$(kubectl get secret --namespace default redis -o jsonpath="{.data.redis-password}" | base64 --decode)
 
 kubectl run \
-  --namespace default redis-client \
+  redis-client \
+  --namespace default \
   --restart='Never' \
   --env REDIS_PASSWORD=${REDIS_PASSWORD?} \
   --image docker.io/bitnami/redis:6.2.3-debian-10-r22 \
