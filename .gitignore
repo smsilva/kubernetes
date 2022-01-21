@@ -26,6 +26,7 @@
 **/multipass/shared/network/*.yaml
 **/multipass/shared/update-system-config-all.sh
 **/packer*.json
+**/password.conf
 **/terraform.*
 **/terraform.tfstate
 **/terraform.tfstate.backup
