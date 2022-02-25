@@ -1,0 +1,12 @@
+controller:
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
+  service:
+    externalTrafficPolicy: "Local"
+    annotations:
+      service.beta.kubernetes.io/azure-dns-label-name: wasp-argocd-sbx-01
+  config:
+    whitelist-source-range: "199.83.128.0/21,198.143.32.0/19,149.126.72.0/21,103.28.248.0/22,185.11.124.0/22,192.230.64.0/18,45.64.64.0/22,107.154.0.0/16,45.60.0.0/16,45.223.0.0/16,2a02:e980::/29"
+    proxy-buffer-size: "128k"
+defaultBackend:
+  enabled: false
