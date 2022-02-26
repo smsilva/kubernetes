@@ -1,6 +1,7 @@
 #!/bin/bash
+SCRIPT_PATH="$(dirname $0)"
 
-kubectl apply --kustomize base
+kubectl apply --kustomize ${SCRIPT_PATH}/base
 
 for DEPLOYMENT_NAME in $(kubectl -n argocd get deploy -o name); do
   kubectl \

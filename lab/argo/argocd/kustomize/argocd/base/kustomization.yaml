@@ -8,3 +8,4 @@ bases:
 
 resources:
   - namespace.yaml
+  - cluster-credentials.yaml

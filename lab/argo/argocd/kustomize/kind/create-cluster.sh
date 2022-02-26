@@ -1,6 +1,8 @@
 #!/bin/bash
-KIND_CLUSTER_NAME="silvios"
-KIND_CLUSTER_CONFIG_FILE="kind-example-config.yaml"
+SCRIPT_PATH="$(dirname $0)"
+
+KIND_CLUSTER_NAME="argocd"
+KIND_CLUSTER_CONFIG_FILE="${SCRIPT_PATH}/kind-example-config.yaml"
 
 kind create cluster \
   --config ${KIND_CLUSTER_CONFIG_FILE} \
