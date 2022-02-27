@@ -4,7 +4,7 @@ metadata:
   name: guestbook
 spec:
   destination:
-    name: wasp-4-67l
+    name: {{ .Values.cluster.name }}
     namespace: guestbook
     server: ''
   source:
