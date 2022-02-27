@@ -1,10 +1,23 @@
 #!/bin/bash
 
-# aks-cluster/create.sh wasp-na-sbx-a
+export CLUSTER_NAME="wasp-na-sbx-a"
 
-# kind/create-cluster.sh
+aks-cluster/create.sh ${CLUSTER_NAME}
 
-# external-secrets/install.sh
+kind/create-cluster.sh
+
+external-secrets/install.sh
 
 argocd/install.sh
 
+helm install \
+  --wait \
+  --set "cluster.name=${CLUSTER_NAME}" \
+  argocd-secrets \
+  ./argocd-secrets
+
+helm install \
+  --wait \
+  --set "cluster.name=${CLUSTER_NAME}" \
+  argocd-applications \
+  ./argocd-applications

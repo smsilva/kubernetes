@@ -1,0 +1,5 @@
+secret:
+  prefix: argocd-cluster-credentials
+
+cluster:
+  name: wasp-na-sbx-a
