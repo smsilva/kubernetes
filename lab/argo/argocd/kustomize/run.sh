@@ -1,9 +1,10 @@
 #!/bin/bash
 
-. aks-cluster/create.sh wasp-na-sbx-a
+# aks-cluster/create.sh wasp-na-sbx-a
 
-kind/create-cluster.sh
+# kind/create-cluster.sh
 
-external-secrets/install.sh
+# external-secrets/install.sh
 
 argocd/install.sh
+

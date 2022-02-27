@@ -1,10 +1,11 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: guestbook
+  name: wasp-na-sbx-a-guestbook
+  namespace: argocd
 spec:
   destination:
-    name: {{ .Values.cluster.name }}
+    name: wasp-na-sbx-a
     namespace: guestbook
     server: ''
   source:

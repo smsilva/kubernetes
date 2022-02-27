@@ -29,7 +29,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: external-secrets.io/v1alpha1
 kind: ClusterSecretStore
 metadata:
-  name: wasp-foundation
+  name: cluster
 spec:
   provider:
     azurekv:
