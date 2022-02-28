@@ -1,0 +1,9 @@
+environments:
+  -  id: wasp-sbx-sa
+     regions:
+       - id: a
+         location: eastus2
+
+       - id: b
+         location: centralus
+ 

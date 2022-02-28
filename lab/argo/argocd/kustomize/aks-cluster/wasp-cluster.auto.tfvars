@@ -1,9 +1,3 @@
-# environment:
-#   id: wasp-na-sbx
-#   clusters:
-#     - id: wasp-na-sbx-a
-#     - id: wasp-na-sbx-b
-
 cluster_location = "eastus2"
 cluster_version  = "1.21.7"
 keyvault_name    = "waspfoundation636a465c"

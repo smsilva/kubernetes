@@ -1,6 +1,8 @@
 #!/bin/bash
 
-export CLUSTER_NAME="wasp-na-sbx-a"
+export CLUSTER_NAME="wasp-dev-sa"
+
+stackrun silviosilva/azure-wasp-foundation:0.1.0 plan -var="name=${CLUSTER_NAME}"
 
 aks-cluster/create.sh ${CLUSTER_NAME}
 

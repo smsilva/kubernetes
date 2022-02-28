@@ -8,6 +8,6 @@ export STACK_INSTANCE_NAME=${CLUSTER_NAME}
 
 env \
   DEBUG=1 \
-  stackrun silviosilva/azure-kubernetes-cluster:3.4.0 destroy -auto-approve \
+  stackrun silviosilva/azure-kubernetes-cluster:3.5.0 destroy -auto-approve \
     -var-file=/opt/variables/wasp-cluster.auto.tfvars  \
     -var-file=/opt/variables/${CLUSTER_NAME}.auto.tfvars

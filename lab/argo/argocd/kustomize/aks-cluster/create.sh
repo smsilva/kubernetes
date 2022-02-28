@@ -8,7 +8,7 @@ export STACK_INSTANCE_NAME=${CLUSTER_NAME}
 
 env \
   DEBUG=2 \
-  stackrun silviosilva/azure-kubernetes-cluster:3.4.0 apply -auto-approve \
+  stackrun silviosilva/azure-kubernetes-cluster:3.5.0 apply -auto-approve \
     -var-file=/opt/variables/wasp-cluster.auto.tfvars \
     -var-file=/opt/variables/${CLUSTER_NAME}.auto.tfvars
 
@@ -19,4 +19,4 @@ echo "${OUTPUT_JSON_FILE}"
 env \
   DEBUG=0 \
   LOCAL_TERRAFORM_VARIABLES_DIRECTORY="${PWD}/${SCRIPT_DIRECTORY}" \
-  stackrun silviosilva/azure-kubernetes-cluster:3.4.0 output -json > "${OUTPUT_JSON_FILE}"
+  stackrun silviosilva/azure-kubernetes-cluster:3.5.0 output -json > "${OUTPUT_JSON_FILE}"
