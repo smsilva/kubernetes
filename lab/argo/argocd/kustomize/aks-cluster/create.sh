@@ -1,14 +1,16 @@
 #!/bin/bash
 SCRIPT_DIRECTORY="$(dirname $0)"
 
-CLUSTER_NAME="${1-wasp-na-sbx-a}"
+CLUSTER_NAME="${1-wasp-sbx-temp}"
 
 export LOCAL_TERRAFORM_VARIABLES_DIRECTORY="${PWD}/${SCRIPT_DIRECTORY}"
 export STACK_INSTANCE_NAME=${CLUSTER_NAME}
 
+source ${LOCAL_TERRAFORM_VARIABLES_DIRECTORY}/image.conf
+
 env \
   DEBUG=2 \
-  stackrun silviosilva/azure-kubernetes-cluster:3.5.0 apply -auto-approve \
+  stackrun ${AZURE_KUBERNETES_CLUSTER_IMAGE?} apply -auto-approve \
     -var-file=/opt/variables/wasp-cluster.auto.tfvars \
     -var-file=/opt/variables/${CLUSTER_NAME}.auto.tfvars
 
@@ -19,4 +21,4 @@ echo "${OUTPUT_JSON_FILE}"
 env \
   DEBUG=0 \
   LOCAL_TERRAFORM_VARIABLES_DIRECTORY="${PWD}/${SCRIPT_DIRECTORY}" \
-  stackrun silviosilva/azure-kubernetes-cluster:3.5.0 output -json > "${OUTPUT_JSON_FILE}"
+  stackrun ${AZURE_KUBERNETES_CLUSTER_IMAGE?} output -json > "${OUTPUT_JSON_FILE}"

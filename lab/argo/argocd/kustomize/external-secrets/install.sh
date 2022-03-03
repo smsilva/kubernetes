@@ -9,6 +9,8 @@ helm install external-secrets external-secrets/external-secrets \
   --create-namespace \
   --wait
 
+KEYVAULT_NAME=$1
+
 # Service Principal
 ARM_CLIENT_ID_BASE64=$(     echo ${ARM_CLIENT_ID}     | base64 )
 ARM_CLIENT_SECRET_BASE64=$( echo ${ARM_CLIENT_SECRET} | base64 )
@@ -36,7 +38,7 @@ spec:
       authType: ServicePrincipal
 
       tenantId: ${ARM_TENANT_ID}
-      vaultUrl: https://${ARM_KEYVAULT_NAME}.vault.azure.net
+      vaultUrl: https://${KEYVAULT_NAME}.vault.azure.net
 
       authSecretRef:
         clientId:
