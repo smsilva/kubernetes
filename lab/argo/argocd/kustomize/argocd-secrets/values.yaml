@@ -1,9 +1,14 @@
 secret:
   prefix: argocd-cluster
 
-clusters:
-  - name: wasp-sbx-na-eus2-aks-a
-    clusterSecretStore: wasp-sbx-na-eus2
+azurerm:
+  tenantId: a267367d-d04d-4a6b-84ef-0cc227ed6e9f
 
-  - name: wasp-sbx-na-ceus-aks-a
+clusters:
+  - id: eus2-a
+    name: wasp-sbx-na-eus2-aks-a
+    clusterSecretStore: wasp-sbx-na-eus2
+    
+  - id: ceus-a
+    name: wasp-sbx-na-ceus-aks-a
     clusterSecretStore: wasp-sbx-na-ceus
