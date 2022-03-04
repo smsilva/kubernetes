@@ -1,0 +1,19 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ceus-a-guestbook
+  namespace: argocd
+spec:
+  destination:
+    name: wasp-sbx-na-ceus-aks-a
+    namespace: guestbook
+    server: ''
+  source:
+    path: helm-guestbook
+    repoURL: 'https://github.com/argoproj/argocd-example-apps'
+    targetRevision: HEAD
+  project: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

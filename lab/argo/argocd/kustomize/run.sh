@@ -1,6 +1,6 @@
 #!/bin/bash
 
-create-environment.sh "wasp-sbx-na"
+environment/create.sh "wasp-sbx-na"
 aks-cluster/create.sh "wasp-sbx-na-eus2-aks-a"
 aks-cluster/create.sh "wasp-sbx-na-ceus-aks-a"
 
@@ -21,8 +21,10 @@ helm upgrade \
   ./argocd-secrets
 
 # ArgoCD Applications
-helm upgrade \
-  --install \
-  --wait \
-  argocd-applications \
-  ./argocd-applications
+kubectl apply -f argocd-applications/ --context kind-argocd
+
+# Cleanup
+aks-cluster/destroy.sh "wasp-sbx-na-eus2-aks-a"
+aks-cluster/destroy.sh "wasp-sbx-na-ceus-aks-a"
+environment/destroy.sh "wasp-sbx-na"
+kind delete cluster --name argocd
