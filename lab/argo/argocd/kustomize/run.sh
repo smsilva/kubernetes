@@ -1,28 +1,28 @@
 #!/bin/bash
 
-export ENVIRONMENT_NAME="wasp-sbx-na"
-export STACK_INSTANCE_NAME=${ENVIRONMENT_NAME}
-export CLUSTER_NAME="${ENVIRONMENT_NAME}-eus2-aks-a"
-export KEYVAULT_NAME="${ENVIRONMENT_NAME}-eus2"
+create-environment.sh "wasp-sbx-na"
+aks-cluster/create.sh "wasp-sbx-na-eus2-aks-a"
+aks-cluster/create.sh "wasp-sbx-na-ceus-aks-a"
 
-stackrun silviosilva/azure-wasp-foundation:0.1.0 apply -auto-approve -var="name=${ENVIRONMENT_NAME}"
-
-aks-cluster/create.sh "${CLUSTER_NAME}"
-
+# ArgoCD Cluster
 kind/create-cluster.sh
 
-external-secrets/install.sh "${KEYVAULT_NAME}"
+# External Secrets Install / Secret azurerm-service-principal / ClusterSecretStores: ["wasp-sbx-na-eus2","wasp-sbx-na-ceus"] 
+external-secrets/install.sh
 
+# ArgoCD Install using Kustomize
 argocd/install.sh
 
-helm install \
+# ArgoCD Cluster Credentials
+helm upgrade \
+  --install \
   --wait \
-  --set "cluster.name=eus2-aks-a" \
   argocd-secrets \
   ./argocd-secrets
 
-helm install \
+# ArgoCD Applications
+helm upgrade \
+  --install \
   --wait \
-  --set "cluster.name=eus2-aks-a" \
   argocd-applications \
   ./argocd-applications

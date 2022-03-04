@@ -1,5 +1,9 @@
 secret:
-  prefix: argocd-cluster-credentials
+  prefix: argocd-cluster
 
-cluster:
-  name: wasp-na-sbx-a
+clusters:
+  - name: wasp-sbx-na-eus2-aks-a
+    clusterSecretStore: wasp-sbx-na-eus2
+
+  - name: wasp-sbx-na-ceus-aks-a
+    clusterSecretStore: wasp-sbx-na-ceus

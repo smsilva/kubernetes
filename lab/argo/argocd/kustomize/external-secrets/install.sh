@@ -28,17 +28,41 @@ EOF
 
 # Secret Store
 cat <<EOF | kubectl apply -f -
+---
 apiVersion: external-secrets.io/v1alpha1
 kind: ClusterSecretStore
 metadata:
-  name: cluster
+  name: wasp-sbx-na-eus2
 spec:
   provider:
     azurekv:
       authType: ServicePrincipal
 
       tenantId: ${ARM_TENANT_ID}
-      vaultUrl: https://${KEYVAULT_NAME}.vault.azure.net
+      vaultUrl: https://wasp-sbx-na-eus2.vault.azure.net
+
+      authSecretRef:
+        clientId:
+          key: ARM_CLIENT_ID
+          name: azurerm-service-principal
+          namespace: default
+
+        clientSecret:
+          key: ARM_CLIENT_SECRET
+          name: azurerm-service-principal
+          namespace: default
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: ClusterSecretStore
+metadata:
+  name: wasp-sbx-na-ceus
+spec:
+  provider:
+    azurekv:
+      authType: ServicePrincipal
+
+      tenantId: ${ARM_TENANT_ID}
+      vaultUrl: https://wasp-sbx-na-ceus.vault.azure.net
 
       authSecretRef:
         clientId:
