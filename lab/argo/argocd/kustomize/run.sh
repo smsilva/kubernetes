@@ -29,7 +29,7 @@ helm upgrade \
   ./argocd-secrets
 
 # ArgoCD Applications
-kubectl apply -f argocd-applications/ --context kind-argocd
+kubectl apply -f argocd-applications/httpbin --context kind-argocd
 
 # Cleanup
 aks-cluster/destroy.sh "wasp-sbx-na-eus2-aks-a"
