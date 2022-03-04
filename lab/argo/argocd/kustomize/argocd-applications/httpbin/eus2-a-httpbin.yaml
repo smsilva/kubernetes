@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eus2-a-httpbin
+  namespace: argocd
+spec:
+  destination:
+    name: wasp-sbx-na-eus2-aks-a
+    namespace: default
+  project: eus2-a
+  source:
+    path: charts/httpbin
+    repoURL: https://github.com/smsilva/argocd
+    targetRevision: HEAD
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true

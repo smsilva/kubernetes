@@ -1,0 +1,11 @@
+name: httpbin
+project: ceus-a
+
+destination:
+  name: wasp-sbx-na-ceus-aks-a
+  namespace: default
+
+source:
+  path: charts
+  repoURL: https://github.com/smsilva/argocd
+  targetRevision: HEAD
