@@ -25,13 +25,6 @@ spec:
       http:
         paths:
           - pathType: Prefix
-            path: /test
-            backend:
-              service:
-                name: nginx
-                port:
-                  number: 80
-          - pathType: Prefix
             path: /
             backend:
               service:
@@ -44,7 +37,9 @@ EOF
 
 # kubectl describe ingress nginx
 
-# curl -ik --header "Host: app.example.com" https://127.0.0.1/get
+sleep 5
+
+curl -ik --header "Host: app.example.com" https://127.0.0.1/get
 
 # curl -ik https://app.example.com/get
 
