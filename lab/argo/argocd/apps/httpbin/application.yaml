@@ -9,9 +9,9 @@ spec:
   project: default
   source:
     repoURL: https://github.com/smsilva/argocd.git
-    path: httpbin
+    path: charts/httpbin
   destination:
-    namespace: dev
+    namespace: default
     server: https://kubernetes.default.svc
   syncPolicy:
     automated:
