@@ -1,0 +1,18 @@
+[
+    {
+        "eventType": "StackInstanceTestRun",
+        "executionId": "${StackInstanceTestRun_EXECUTION_ID}",
+        "stack": "azure-cluster",
+        "instance": "default",
+        "scenario": "as-admin-member-get-credentials",
+        "result": "0"
+    },
+    {
+        "eventType": "StackInstanceTestRun",
+        "executionId": "${StackInstanceTestRun_EXECUTION_ID}",
+        "stack": "azure-cluster",
+        "instance": "default",
+        "scenario": "as-admin-member-rbac",
+        "result": "1"
+    }
+]
