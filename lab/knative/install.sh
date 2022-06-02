@@ -22,3 +22,15 @@ else
   chmod +x ${KN_QUICKSTART_PLUGIN_BINARY}
   kn-quickstart version
 fi
+
+kn quickstart kind
+
+kn service create hello \
+  --image gcr.io/knative-samples/helloworld-go \
+  --port 8080 \
+  --env TARGET=World
+
+while true; do
+  curl -s http://hello.default.127.0.0.1.sslip.io
+  sleep 3
+done
