@@ -34,3 +34,17 @@ while true; do
   curl -s http://hello.default.127.0.0.1.sslip.io
   sleep 3
 done
+
+kn service list
+
+# Traffice Split
+kn service update hello \
+  --env TARGET=Knative
+
+kn revisions list
+
+kn service update hello \
+  --traffic hello-00001=40 \
+  --traffic @latest=60
+
+# Knative Eventing examples
