@@ -20,7 +20,7 @@ EOF
 sudo apt-get update -q
 
 # Set Kubernetes Version
-KUBERNETES_DESIRED_VERSION='1.19' && \
+KUBERNETES_DESIRED_VERSION='1.21' && \
 KUBERNETES_VERSION="$(apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }')" && \
 KUBERNETES_IMAGE_VERSION="${KUBERNETES_VERSION%-*}" && \
 clear && \
