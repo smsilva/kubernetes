@@ -1,0 +1,7 @@
+---
+apiVersion: database.silvios.me/v1
+kind: PostgreSQL
+metadata:
+  name: items
+spec:
+  size: 100G
