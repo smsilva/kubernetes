@@ -1,0 +1,78 @@
+server:
+  config:
+    resource.customizations: |
+      admissionregistration.k8s.io/MutatingWebhookConfiguration:
+        ignoreDifferences: |
+          jsonPointers:
+            - /webhooks/0/clientConfig/caBundle
+            - /webhooks/0/namespaceSelector/matchExpressions
+            - /webhooks/1/clientConfig/caBundle
+            - /webhooks/1/namespaceSelector/matchExpressions
+            - /webhooks/2/clientConfig/caBundle
+            - /webhooks/2/namespaceSelector/matchExpressions
+            - /webhooks/3/clientConfig/caBundle
+            - /webhooks/3/namespaceSelector/matchExpressions
+      admissionregistration.k8s.io/ValidatingWebhookConfiguration:
+        ignoreDifferences: |
+          jsonPointers:
+            - /webhooks/0/clientConfig/caBundle
+            - /webhooks/0/failurePolicy
+    resource.customizations.health.terraform.silvios.me_StackInstance: |
+        hs = {}
+        hs.status = "Progressing"
+        hs.message = ""
+        if obj.status ~= nil then
+          if obj.status.message == "HEALTHY" then
+            hs.status = "Healthy"
+          end
+          hs.message = obj.status.message
+        end
+        return hs
+    resource.customizations.health.helm.crossplane.io_Release: |
+      hs = {}
+      hs.status = "Progressing"
+      hs.message = ""
+      if obj.status ~= nil then
+        if obj.status.atProvider.state == "deployed" then
+          hs.status = "Healthy"
+        end
+        hs.message = obj.status.atProvider.releaseDescription
+      end
+      return hs
+    resource.customizations.health.kubernetes.crossplane.io_Object: |
+      hs = {}
+      hs.status = "Progressing"
+      hs.message = "Waiting for resources to become available"
+      if obj.status ~= nil and obj.status.atProvider ~= nil then
+        kind = obj.spec.forProvider.manifest.kind
+        res = obj.status.atProvider.manifest
+        if res ~= nil then
+          if kind == "StackInstance" then
+            if res.status ~= nil and res.status.message ~= nil then
+              if res.status.message == "HEALTHY" then
+                hs.status = "Healthy"
+                hs.message = ""
+                return hs
+              end
+            end
+          elseif kind ~= "StackInstance" then
+            if obj.status.conditions ~= nil and obj.status.atProvider.manifest.kind ~= "StackInstance" then
+              for i, condition in ipairs(obj.status.conditions) do
+                if condition.type == "Ready" and condition.status == "False" then
+                  hs.status = "Progressing"
+                  hs.message = condition.message
+                  return hs
+                end
+                if condition.type == "Ready" and condition.status == "True" then
+                  hs.status = "Healthy"
+                  hs.message = condition.message
+                  return hs
+                end
+              end
+            end
+          end
+        end
+      end
+      hs.status = "Progressing"
+      hs.message = "Waiting for resources to become available"
+      return hs

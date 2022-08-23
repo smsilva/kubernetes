@@ -1,0 +1,20 @@
+server:
+  additionalProjects:
+    - name: infra
+      description: Infrastructure
+
+      sourceRepos:
+        - '*'
+
+      destinations:
+        - name: in-cluster
+          namespace: '*'
+          server: '*'
+
+      namespaceResourceWhitelist:
+        - group: '*'
+          kind: '*'
+
+      clusterResourceWhitelist:
+        - group: '*'
+          kind: '*'

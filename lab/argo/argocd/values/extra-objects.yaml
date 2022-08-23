@@ -1,0 +1,16 @@
+extraObjects:
+    # This is based on https://argo-cd.readthedocs.io/en/latest/operator-manual/upgrading/2.3-2.4/#workaround
+    # This is for git provider(s) using SSH authentication that does not support algorithms newer than rsa-ssh
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: rsa-workaround-config-cm
+    data:
+      config: |
+        HOST vs-ssh.visualstudio.com
+          HostkeyAlgorithms +ssh-rsa
+          PubkeyAcceptedAlgorithms +ssh-rsa
+        
+        Host ssh.dev.azure.com 
+          HostkeyAlgorithms +ssh-rsa 
+          PubkeyAcceptedAlgorithms +ssh-rsa

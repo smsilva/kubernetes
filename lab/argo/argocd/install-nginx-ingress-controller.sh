@@ -37,7 +37,7 @@ EOF
 
 # kubectl describe ingress nginx
 
-sleep 5
+sleep 10
 
 curl -ik --header "Host: app.example.com" https://127.0.0.1/get
 

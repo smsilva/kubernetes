@@ -1,0 +1,17 @@
+server:
+  service:
+    annotations: {}
+    labels: {}
+    type: NodePort
+    nodePortHttp: 30080
+    nodePortHttps: 32443
+    servicePortHttp: 80
+    servicePortHttps: 443
+    servicePortHttpName: http
+    servicePortHttpsName: https
+    namedTargetPort: true
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    externalIPs: []
+    externalTrafficPolicy: ""
+    sessionAffinity: ""
