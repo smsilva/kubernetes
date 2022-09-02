@@ -1,0 +1,11 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+
+  maxUnavailable: 1

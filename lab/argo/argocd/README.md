@@ -3,7 +3,7 @@
 ## Instalação usando Kind
 
 ```bash
-./run-kind.sh
+./run
 ```
 
 ## Instalação usando AKS

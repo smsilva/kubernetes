@@ -9,7 +9,7 @@ if [[ -z "${CLUSTER_TYPE}" ]]; then
   echo ""
   echo "  Example:"
   echo ""
-  echo "  ./run.sh kind"
+  echo "  ./run"
   echo ""
 
   exit 1
