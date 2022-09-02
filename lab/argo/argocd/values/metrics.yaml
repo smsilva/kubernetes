@@ -1,0 +1,32 @@
+controller:
+  metrics:
+    enabled: true
+    service:
+      labels:
+        prometheus.io/scrape: "true"
+
+redis:
+  metrics:
+    enabled: false
+
+server:
+  metrics:
+    enabled: true
+    service:
+      labels:
+        prometheus.io/scrape: "true"
+
+repoServer:
+  metrics:
+    enabled: true
+    service:
+      labels:
+        prometheus.io/scrape: "true"
+
+applicationSet:
+  metrics:
+    enabled: false
+
+notifications:
+  metrics:
+    enabled: false

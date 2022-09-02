@@ -7,7 +7,8 @@ helm repo update argo
 
 helm search repo argo/argo-cd
 
-helm install \
+helm upgrade \
+  --install \
   --namespace argocd \
   --create-namespace \
   argocd argo/argo-cd \
@@ -15,6 +16,7 @@ helm install \
   --values values/configs-known-hosts.yaml \
   --values values/extra-objects.yaml \
   --values values/extra-volumes.yaml \
+  --values values/metrics.yaml \
   --values values/resource-customizations.yaml \
   --values values/service.yaml \
   --wait

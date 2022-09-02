@@ -16,5 +16,5 @@ if [[ -z "${CLUSTER_TYPE}" ]]; then
 fi
 
 . "./${CLUSTER_TYPE?}-cluster-creation.sh"
-. ./argocd-install.sh "${CLUSTER_TYPE?}"
+. ./argocd-install.sh
 . ./argocd-get-initial-password.sh
