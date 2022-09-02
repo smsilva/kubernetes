@@ -3,30 +3,40 @@ controller:
     enabled: true
     service:
       labels:
-        prometheus.io/scrape: "true"
+        prometheus.io/scrape: "true" # argocd-metrics
+        prometheus.io/name: "argocd-controller-metrics-x"
 
 redis:
   metrics:
-    enabled: true
+    enabled: false
 
 server:
   metrics:
     enabled: true
     service:
       labels:
-        prometheus.io/scrape: "true"
+        prometheus.io/scrape: "true" # argocd-server-metrics
+        prometheus.io/name: "argocd-server-metrics-x"
 
 repoServer:
   metrics:
     enabled: true
     service:
       labels:
-        prometheus.io/scrape: "true"
+        prometheus.io/scrape: "true" # argocd-repo-server-metrics
+        prometheus.io/name: "argocd-repo-server-metrics-x"
 
 applicationSet:
   metrics:
     enabled: true
+    service:
+      labels:
+        prometheus.io/scrape: "true" # argocd-applicationset-controller-metrics
+        prometheus.io/name: "argocd-applicationset-controller-metrics-x"
 
 notifications:
   metrics:
-    enabled: true
+    enabled: false
+
+# New Relic NRQL Query:
+# SELECT latest(go_memstats_alloc_bytes) FROM Metric FACET `label.prometheus.io/name` SINCE 10 MINUTES AGO TIMESERIES

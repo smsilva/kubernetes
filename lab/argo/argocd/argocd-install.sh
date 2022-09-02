@@ -9,6 +9,10 @@ helm repo \
 
 helm search repo argo/argo-cd
 
+echo ""
+echo "Helm upgrade..."
+echo ""
+
 helm upgrade \
   --install \
   --namespace argocd \
