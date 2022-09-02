@@ -7,7 +7,7 @@ controller:
 
 redis:
   metrics:
-    enabled: false
+    enabled: true
 
 server:
   metrics:
@@ -25,8 +25,8 @@ repoServer:
 
 applicationSet:
   metrics:
-    enabled: false
+    enabled: true
 
 notifications:
   metrics:
-    enabled: false
+    enabled: true

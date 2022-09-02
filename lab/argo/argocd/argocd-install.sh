@@ -1,9 +1,11 @@
 #!/bin/bash
 set -e
 
-helm repo add argo https://argoproj.github.io/argo-helm &> /dev/null
+helm repo \
+  add argo https://argoproj.github.io/argo-helm &> /dev/null
 
-helm repo update argo &> /dev/null
+helm repo \
+  update argo &> /dev/null
 
 helm search repo argo/argo-cd
 
