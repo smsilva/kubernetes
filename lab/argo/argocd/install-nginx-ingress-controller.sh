@@ -11,15 +11,37 @@ kubectl wait \
   --selector app.kubernetes.io/component=controller \
   --timeout=360s
 
+# Example using httpbin
+kubectl create namespace httpbin
+
+kubectl \
+  --namespace httpbin \
+  create deployment \
+  --image=kennethreitz/httpbin \
+  httpbin
+
+kubectl wait \
+  --namespace httpbin \
+  --for condition=Available deploy \
+  --timeout=360s \
+  httpbin
+
+kubectl \
+  --namespace httpbin \
+  expose deploy httpbin \
+  --port 80
+
 cat <<EOF | kubectl apply -f -
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: nginx
+  name: httpbin
+  namespace: httpbin
   annotations:
     ingress.kubernetes.io/rewrite-target: "/"
 spec:
   ingressClassName: nginx
+
   rules:
     - host: app.example.com
       http:
@@ -33,14 +55,8 @@ spec:
                   number: 80
 EOF
 
-# kubectl get ingress nginx
-
-# kubectl describe ingress nginx
-
 sleep 10
 
-curl -ik --header "Host: app.example.com" https://127.0.0.1/get
-
-# curl -ik https://app.example.com/get
-
-# curl -ik https://app.example.com/test
+curl \
+  -ik \
+  --header "Host: app.example.com" https://127.0.0.1/get

@@ -10,7 +10,7 @@ helm repo \
 helm search repo argo/argo-cd
 
 echo ""
-echo "Helm upgrade..."
+echo "Helm install/upgrade..."
 echo ""
 
 helm upgrade \
