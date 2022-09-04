@@ -8,7 +8,7 @@ EOF
 source ~/.bashrc
 
 # WARNING: We should run these commands ONLY on master-1
-KUBERNETES_DESIRED_VERSION='1.24' && \
+KUBERNETES_DESIRED_VERSION='1.25' && \
 KUBERNETES_VERSION="$(apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }')" && \
 KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}" && \
 LOCAL_IP_ADDRESS=$(grep $(hostname --short) /etc/hosts | awk '{ print $1 }') && \
