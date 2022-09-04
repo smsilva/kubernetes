@@ -8,7 +8,7 @@ EOF
 source ~/.bashrc
 
 # WARNING: We should run these commands ONLY on master-1
-KUBERNETES_DESIRED_VERSION='1.19' && \
+KUBERNETES_DESIRED_VERSION='1.24' && \
 KUBERNETES_VERSION="$(apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }')" && \
 KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}" && \
 LOCAL_IP_ADDRESS=$(grep $(hostname --short) /etc/hosts | awk '{ print $1 }') && \
@@ -68,13 +68,10 @@ grep '\-\-certificate-key' "${KUBEADM_LOG_FILE?}" --before 2 | grep \
     -e 's/ /=/' \
     -e 's/^/export KUBEADM_/'
 
-# Execute on master-2 and master-3 and on all workers
+# [PASTE HERE] Execute on master-2 and master-3 and on all workers
 export KUBEADM_TOKEN=o7r9z1.vokk4lh8ff2k7osf
 export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:bde0c0f86d6d8e6935cda2878243ca85923d34e9d64e3ca84cb530a54a770cfb
 export KUBEADM_CERTIFICATE_KEY=db4f9f97c879938a1a1a8eb3081562104dbfa144291fb0ceaf40fce5f0ad214e
-
-# Watch Interfaces and Route information
-./watch-for-interfaces-and-routes.sh
 
 # Join Command
 NODE_NAME=$(hostname --short) && \

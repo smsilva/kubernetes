@@ -20,7 +20,7 @@ EOF
 sudo apt-get update -q
 
 # Set Kubernetes Version
-KUBERNETES_DESIRED_VERSION='1.21' && \
+KUBERNETES_DESIRED_VERSION='1.24' && \
 KUBERNETES_VERSION="$(apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }')" && \
 KUBERNETES_IMAGE_VERSION="${KUBERNETES_VERSION%-*}" && \
 clear && \
@@ -33,22 +33,23 @@ echo ""
 # Install Kubelet, Kubeadm and Kubectl
 #   all =~ 1 minute 30 seconds
 SECONDS=0 && \
+sudo apt-get install --yes -qq \
+  kubeadm="${KUBERNETES_VERSION?}" \
+  kubelet="${KUBERNETES_VERSION?}" \
+| grep \
+    --invert-match \
+    --extended-regexp "^Hit|^Get|^Selecting|^Preparing|^Unpacking" && \
+sudo apt-mark hold \
+  kubelet \
+  kubeadm && \
 if grep --quiet "master" <<< $(hostname --short); then
   sudo apt-get install --yes -qq \
-    kubeadm="${KUBERNETES_VERSION?}" \
-    kubelet="${KUBERNETES_VERSION?}" \
-    kubectl="${KUBERNETES_VERSION?}" | grep --invert-match --extended-regexp "^Hit|^Get|^Selecting|^Preparing|^Unpacking" && \
+    kubectl="${KUBERNETES_VERSION?}" \
+  | grep \
+      --invert-match \
+      --extended-regexp "^Hit|^Get|^Selecting|^Preparing|^Unpacking" && \
   sudo apt-mark hold \
-    kubelet \
-    kubeadm \
     kubectl
-else
-  sudo apt-get install --yes -qq \
-    kubeadm="${KUBERNETES_VERSION?}" \
-    kubelet="${KUBERNETES_VERSION?}" | grep --invert-match --extended-regexp "^Hit|^Get|^Selecting|^Preparing|^Unpacking" && \
-  sudo apt-mark hold \
-    kubelet \
-    kubeadm
 fi && \
 clear && \
 printf 'Elapsed time: %02d:%02d\n' $((${SECONDS} % 3600 / 60)) $((${SECONDS} % 60))

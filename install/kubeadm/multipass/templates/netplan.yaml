@@ -2,7 +2,7 @@ network:
   version: 2
   renderer: networkd
   ethernets:
-    ens4:
+    ens3:
       dhcp4-overrides:
         route-metric: 10
       nameservers:

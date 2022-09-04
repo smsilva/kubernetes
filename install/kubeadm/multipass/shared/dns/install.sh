@@ -3,6 +3,8 @@ DOMAIN=$1
 FORWARD_FILE="forward.${DOMAIN}"
 REVERSE_FILE="reverse.${DOMAIN}"
 
+sed -i 's|^OPTIONS.*|OPTIONS="-u bind -4"|g' /etc/default/named
+
 cp /shared/dns/named.conf.options /etc/bind/
 cp /shared/dns/named.conf.local /etc/bind/
 cp /shared/dns/"${FORWARD_FILE}" /etc/bind/
