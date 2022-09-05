@@ -4,8 +4,8 @@
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
 
 # Servers Count
-MASTER_NODES_COUNT = 3
-WORKER_NODES_COUNT = 3
+MASTER_NODES_COUNT = 2
+WORKER_NODES_COUNT = 2
 GLUSTERFS_NODES_COUNT = 0
 
 # Memory
@@ -17,7 +17,7 @@ GLUSTER_NODE_MEMORY_SIZE="#{2 * 1024}"
 
 # Network
 DOMAIN_NAME="example.com"
-IP_NETWORK = "192.168.10."
+IP_NETWORK = "192.168.56."
 MASTER_IP_START = 10
 NODE_IP_START = 20
 GLUSTERFS_IP_START = 30
@@ -26,7 +26,7 @@ IP_LOADBALANCER = "#{IP_NETWORK}" + "#{MASTER_IP_START}"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
-  config.vm.box_version = "20200930.0.0"
+  config.vm.box_version = "20220902.0.0"
   config.vm.box_check_update = false
 
   # DNS

@@ -14,8 +14,8 @@ EOF
 # Load settings from all system configuration files
 sysctl --system
 
-CRIO_BRANCH="release-1.18"
-COMMIT_HASH=$(git ls-remote https://github.com/cri-o/cri-o release-1.18 | cut -c1-9)
+CRIO_BRANCH="release-1.25"
+COMMIT_HASH=$(git ls-remote https://github.com/cri-o/cri-o ${CRIO_BRANCH} | cut -c1-9)
 
 curl \
   -f https://storage.googleapis.com/k8s-conform-cri-o/artifacts/crio-${COMMIT_HASH}.tar.gz \

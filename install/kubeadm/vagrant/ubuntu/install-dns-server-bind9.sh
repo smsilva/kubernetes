@@ -16,7 +16,7 @@ apt-get install -y -qqq \
   bind9-doc \
   dnsutils  &> /dev/null
 
-sed -i 's|^OPTIONS.*|OPTIONS="-u bind -4"|g' /etc/default/named
+#sed -i 's|^OPTIONS.*|OPTIONS="-u bind -4"|g' /etc/default/named
 
 mkdir bind && cd bind
 
