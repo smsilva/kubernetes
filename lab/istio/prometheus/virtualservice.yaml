@@ -5,29 +5,36 @@ metadata:
   namespace: istio-system
 spec:
   hosts:
-  - "*"
+    - "*"
+
   gateways:
-  - prometheus
+    - prometheus
+
   http:
-  - name: prometheus-scrape-url
-    match:
-    - uri:
-        prefix: /prometheus/metrics
-    rewrite:
-      uri: "/metrics"
-    route:
-    - destination:
-        host: prometheus
-        port:
-          number: 9090
-  - name: prometheus-federate-url
-    match:
-    - uri:
-        prefix: /prometheus/federate
-    rewrite:
-      uri: "/federate"
-    route:
-    - destination:
-        host: prometheus
-        port:
-          number: 9090
+    - name: prometheus-scrape-url
+      match:
+        - uri:
+            prefix: /prometheus/metrics
+
+      rewrite:
+        uri: "/metrics"
+
+      route:
+        - destination:
+            host: prometheus
+            port:
+              number: 9090
+
+    - name: prometheus-federate-url
+      match:
+        - uri:
+            prefix: /prometheus/federate
+
+      rewrite:
+        uri: "/federate"
+
+      route:
+        - destination:
+            host: prometheus
+            port:
+              number: 9090
