@@ -3,7 +3,7 @@ server:
     annotations: {}
     labels: {}
     type: NodePort
-    nodePortHttp: 30080
+    nodePortHttp: 32080
     nodePortHttps: 32443
     servicePortHttp: 80
     servicePortHttps: 443
