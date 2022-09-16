@@ -26,13 +26,13 @@ Run the ```setup.sh``` script:
 ### Deploy
 
 ```bash
-kubectl create namespace demo
+kubectl create namespace httpbin
 
-kubectl label namespace demo istio-injection=enabled
+kubectl label namespace httpbin istio-injection=enabled
 
-kubectl -n demo apply -f default-deployment/
+kubectl -n httpbin apply -f default-deployment/
 
-kubectl -n demo \
+kubectl -n httpbin \
   wait \
     --for condition=Available \
     deployment httpbin
@@ -51,11 +51,11 @@ kubectl apply -f istio-objects/
 From inside the Cluster:
 
 ```bash
-kubectl -n demo run --image=tutum/curl curl --command -- sleep infinity
+kubectl -n httpbin run --image=tutum/curl curl --command -- sleep infinity
 
-kubectl -n demo wait --for condition=Ready pod curl
+kubectl -n httpbin wait --for condition=Ready pod curl
 
-kubectl -n demo exec curl -- curl \
+kubectl -n httpbin exec curl -- curl \
   -is \
   -X POST  httpbin.demo.svc.cluster.local:8000/post \
   -H "Content-type: application/json" \
@@ -71,7 +71,7 @@ curl -is -X POST -H "Content-type: application/json" -d "{ id: 1}" httpbin.examp
 ## Clean up
 
 ```bash
-kubectl delete namespace demo
+kubectl delete namespace httpbin
 ```
 
 ## Examples Index

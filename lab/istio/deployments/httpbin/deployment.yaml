@@ -20,6 +20,7 @@ spec:
       containers:
         - name: httpbin
           image: docker.io/kennethreitz/httpbin:latest
+          
           ports:
             - name: http-web
               protocol: TCP
@@ -29,6 +30,7 @@ spec:
             requests:
               memory: "128Mi"
               cpu: "250m"
+
             limits:
               memory: "256Mi"
               cpu: "500m"
