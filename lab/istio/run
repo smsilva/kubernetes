@@ -37,19 +37,3 @@ helm upgrade \
   --namespace istio-ingress \
   istio-ingress istio/gateway \
   --values ./helm/istio-ingress/service.yaml > /dev/null
-
-# Deploy httpbin
-echo "Deploying httpbin..."
-kubectl apply -f ./deployments/httpbin/namespace.yaml > /dev/null
-
-kubectl \
-  --namespace httpbin \
-  apply -f deployments/httpbin/ > /dev/null && \
-kubectl \
-  --namespace httpbin \
-  wait deployment httpbin \
-  --for=condition=Available \
-  --timeout=360s > /dev/null
-
-# Print instructions
-cat instructions.txt
