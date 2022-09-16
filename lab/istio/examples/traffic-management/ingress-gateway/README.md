@@ -4,10 +4,10 @@ This Example will show you how to configure Istio Ingress Traffic using Istio Ga
 
 ## Setup
 
-Run the ```setup.sh``` script:
+Run the [setup](../../../setup-istio-with-kind-and-helm) script:
 
 ```bash
-../../setup.sh
+../../../setup-istio-with-kind-and-helm
 ```
 
 ## Files

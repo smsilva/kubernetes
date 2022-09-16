@@ -2,10 +2,10 @@
 
 ## Setup using Helm
 
-Run the ```run``` script:
+Run the script:
 
 ```bash
-./run
+./setup-istio-with-kind-and-helm
 ```
 
 ## Deploy httpbin
