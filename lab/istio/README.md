@@ -11,7 +11,7 @@ Run the script:
 ## Deploy httpbin
 
 ```bash
-kubectl apply -f ./deployments/httpbin/namespace.yaml > /dev/null
+kubectl apply -f ./deployments/httpbin/namespace.yaml
 
 kubectl \
   --namespace httpbin \
@@ -20,7 +20,7 @@ kubectl \
   --namespace httpbin \
   wait deployment httpbin \
   --for=condition=Available \
-  --timeout=360s > /dev/null
+  --timeout=360s
 ```
 
 ### In-cluster Test
@@ -30,24 +30,54 @@ kubectl \
 ```bash
 kubectl \
   --namespace default \
-  run utils \
-  -it \
-  --rm \
-  --image=silviosilva/utils
+  run curl \
+  --image=silviosilva/utils \
+  --command -- sleep infinity
 
-curl -i http://httpbin.httpbin.svc:8000/get
+kubectl \
+  --namespace default \
+  wait pod curl \
+  --for condition=Ready \
+  --timeout 360s
+
+kubectl \
+  --namespace default \
+  exec curl -- curl \
+    --include \
+    --silent \
+    --request GET http://httpbin.httpbin.svc:8000/get
+
+kubectl \
+  --namespace default \
+  exec curl -- curl \
+    --include \
+    --silent \
+    --request POST http://httpbin.httpbin.svc:8000/post \
+    --header "Content-type: application/json" \
+    --data "{ id: 1}"
 ```
 
 #### From httpbin namespace
+
 ```bash
 kubectl \
   --namespace httpbin \
-  run utils \
-  -it \
-  --rm \
-  --image=silviosilva/utils
+  run curl \
+  --image=silviosilva/utils \
+  --command -- sleep infinity
 
-curl -i http://httpbin:8000/get
+kubectl \
+  --namespace httpbin \
+  wait pod curl \
+  --for condition=Ready \
+  --timeout 360s
+
+kubectl \
+  --namespace httpbin \
+  exec curl -- curl \
+    --include \
+    --silent \
+    --request GET http://httpbin:8000/get
 ```
 
 ### Outside Kind cluster Test

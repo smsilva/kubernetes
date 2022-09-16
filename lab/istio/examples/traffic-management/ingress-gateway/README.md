@@ -52,15 +52,26 @@ kubectl apply -f istio-objects/
 From inside the Cluster:
 
 ```bash
-kubectl -n httpbin run --image=tutum/curl curl --command -- sleep infinity
+kubectl \
+  --namespace httpbin \
+  run curl \
+  --image=silviosilva/utils \
+  --command -- sleep infinity
 
-kubectl -n httpbin wait --for condition=Ready pod curl
+kubectl \
+  --namespace httpbin \
+  wait pod curl \
+  --for condition=Ready \
+  --timeout 360s
 
-kubectl -n httpbin exec curl -- curl \
-  -is \
-  -X POST  httpbin.demo.svc.cluster.local:8000/post \
-  -H "Content-type: application/json" \
-  -d "{ id: 1}"
+kubectl \
+  --namespace httpbin \
+  exec curl -- curl \
+    --include \
+    --silent \
+    --request POST httpbin.httpbin.svc.cluster.local:8000/post \
+    --header "Content-type: application/json" \
+    --data "{ id: 1}"
 ```
 
 From outside:
