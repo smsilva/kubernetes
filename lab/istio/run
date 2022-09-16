@@ -1,31 +1,26 @@
 #!/bin/bash
 kubectl config get-contexts kind-istio &> /dev/null || \
-./kind-cluster-creation.sh
-
-echo ""
+./kind/cluster-creation.sh
 
 helm repo add istio https://istio-release.storage.googleapis.com/charts &> /dev/null
 helm repo update istio &> /dev/null
 helm search repo istio/
 
-echo ""
-
 helm upgrade \
   --install \
   --namespace istio-system \
   --create-namespace \
-  istio-base istio/base
-
-echo ""
+  istio-base istio/base > /dev/null
 
 helm upgrade \
   --install \
   --namespace istio-system \
   --create-namespace \
   istio-discovery istio/istiod \
-  --wait
+  --wait > /dev/null
 
 echo ""
+echo "istio-ingress..."
 
 cat <<EOF | kubectl apply -f -
 ---
@@ -37,15 +32,14 @@ metadata:
     istio-injection: enabled
 EOF
 
-echo ""
-
 helm upgrade \
   --install \
   --namespace istio-ingress \
   istio-ingress istio/gateway \
-  --values helm/service.yaml
+  --values helm/istio-ingress-service.yaml > /dev/null
 
 echo ""
+echo "httpbin deploy..."
 
 cat <<EOF | kubectl apply -f -
 ---
@@ -59,13 +53,26 @@ EOF
 
 kubectl \
   --namespace httpbin \
-  apply -f httpbin/ && \
+  apply -f deployments/httpbin/ && \
 kubectl \
   --namespace httpbin \
   wait deployment httpbin \
   --for=condition=Available \
-  --timeout=360s
+  --timeout=360s > /dev/null
 
-kubectl \
-  --namespace httpbin \
-  get deployment,pods,services
+echo ""
+
+cat <<EOF
+  
+  watch -n 3 'kubectl -n httpbin get deploy,service,pods -o wide'
+
+  kubectl \\
+    --namespace httpbin \\
+    run utils \\
+    -it \\
+    --rm \\
+    --image=silviosilva/utils
+
+  curl httpbin.httpbin.svc:8000/get
+
+EOF
