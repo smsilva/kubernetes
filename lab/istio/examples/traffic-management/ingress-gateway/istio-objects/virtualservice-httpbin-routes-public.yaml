@@ -2,21 +2,24 @@ apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: httpbin-routes-public
-  namespace: demo
+  namespace: httpbin
 spec:
   hosts:
-  - demo.example.com
-  - httpbin.example.com
+    - demo.example.com
+    - httpbin.example.com
+
   gateways:
-  - istio-system/public-ingress-gateway
+    - istio-ingress/public-ingress-gateway
+
   http:
     - name: httpbin
       headers:
         request:
           add:
             X-A1-origin-1: public-ingress-routes
+
       route:
-      - destination:
-          host: httpbin.demo.svc.cluster.local
-          port:
-            number: 8000
+        - destination:
+            host: httpbin.httpbin.svc.cluster.local
+            port:
+              number: 8000

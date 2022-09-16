@@ -1,0 +1,14 @@
+watch -n 3 'kubectl -n httpbin get deploy,service,pods -o wide'
+
+# In-cluster
+kubectl \
+  --namespace default \
+  run utils \
+  -it \
+  --rm \
+  --image=silviosilva/utils
+
+curl -i http://httpbin.httpbin.svc:8000/get
+
+# Outside Kind cluster
+curl -i -H 'host: demo.example.com' http://127.0.0.1:32080/get

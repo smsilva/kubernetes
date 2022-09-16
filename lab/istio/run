@@ -52,17 +52,4 @@ kubectl \
   --timeout=360s > /dev/null
 
 # Print instructions
-cat <<EOF
-  
-  watch -n 3 'kubectl -n httpbin get deploy,service,pods -o wide'
-
-  kubectl \\
-    --namespace httpbin \\
-    run utils \\
-    -it \\
-    --rm \\
-    --image=silviosilva/utils
-
-  curl httpbin.httpbin.svc:8000/get
-
-EOF
+cat instructions.txt
