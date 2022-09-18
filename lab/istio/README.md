@@ -11,11 +11,11 @@ Run the script:
 ## Deploy httpbin
 
 ```bash
-kubectl apply -f ./deployments/httpbin/namespace.yaml
-
+kubectl \
+  apply --filename ./deployments/httpbin/namespace.yaml && \
 kubectl \
   --namespace httpbin \
-  apply -f deployments/httpbin/ && \
+  apply --filename deployments/httpbin/ && \
 kubectl \
   --namespace httpbin \
   wait deployment httpbin \
@@ -79,6 +79,8 @@ kubectl \
 ```
 
 ### Outside Kind cluster Test
+
+In order to enable Ingress Traffic, see the Example [Ingress Traffic](examples/traffic-management/ingress-gateway/README.md).
 
 ```bash
 nc -dv 127.0.0.1 32080
