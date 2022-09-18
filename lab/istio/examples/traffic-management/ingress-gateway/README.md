@@ -41,10 +41,17 @@ kubectl -n httpbin \
 
 ## Creating Istio Objects
 
-Then, we'll create an Ingress Gateway and VirtualService objects
+
+###  **Ingress Gateway** and **VirtualService**
 
 ```bash
-kubectl apply -f istio-objects/
+kubectl apply --filename istio-objects/
+```
+
+### Kubernetes Default **Ingress**
+
+```bash
+kubectl apply --filename kubernetes-ingress-only/
 ```
 
 ## Testing
@@ -56,8 +63,7 @@ kubectl \
   --namespace httpbin \
   run curl \
   --image=silviosilva/utils \
-  --command -- sleep infinity
-
+  --command -- sleep infinity && \
 kubectl \
   --namespace httpbin \
   wait pod curl \
@@ -77,7 +83,12 @@ kubectl \
 From outside:
 
 ```bash
-curl -is -X POST -H "Content-type: application/json" -d "{ id: 1}" httpbin.example.com/post
+curl \
+  --include \
+  --request POST \
+  --header "Content-type: application/json" \
+  --header "host: httpbin.example.com" \
+  --data "{ id: 1}" 127.0.0.1:32080/post
 ```
 
 ## Clean up

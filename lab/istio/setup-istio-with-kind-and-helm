@@ -32,10 +32,14 @@ helm upgrade \
 
 # Install Istio Ingress Gateway
 echo "Installing istio/gateway..."
-kubectl apply -f ./helm/istio-ingress/namespace.yaml > /dev/null
+kubectl apply --filename ./helm/istio-ingress/namespace.yaml > /dev/null
 
 helm upgrade \
   --install \
   --namespace istio-ingress \
   istio-ingress istio/gateway \
   --values ./helm/istio-ingress/service.yaml > /dev/null
+
+# Configure Telemetry
+echo "Configuring Telemetry..."
+kubectl apply --filename ./deployments/telemetry.yaml > /dev/null

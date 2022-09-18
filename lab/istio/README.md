@@ -78,12 +78,18 @@ kubectl \
     --request GET http://httpbin:8000/get
 ```
 
-### Outside Kind cluster Test
-
-In order to enable Ingress Traffic, see the Example [Ingress Traffic](examples/traffic-management/ingress-gateway/README.md).
+### Check if the Kind Cluster NodePort is open
 
 ```bash
 nc -dv 127.0.0.1 32080
-
-curl -i -H 'host: demo.example.com' http://127.0.0.1:32080/get
 ```
+
+Expected output:
+
+```bash
+Connection to 127.0.0.1 32080 port [tcp/*] succeeded!
+```
+
+### Outside Kind cluster Test
+
+In order to enable Ingress Traffic, see the Example [Ingress Traffic](examples/traffic-management/ingress-gateway/README.md).
