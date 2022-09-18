@@ -32,8 +32,7 @@ kubectl \
   --namespace default \
   run curl \
   --image=silviosilva/utils \
-  --command -- sleep infinity
-
+  --command -- sleep infinity && \
 kubectl \
   --namespace default \
   wait pod curl \
@@ -64,8 +63,7 @@ kubectl \
   --namespace httpbin \
   run curl \
   --image=silviosilva/utils \
-  --command -- sleep infinity
-
+  --command -- sleep infinity && \
 kubectl \
   --namespace httpbin \
   wait pod curl \
@@ -83,5 +81,7 @@ kubectl \
 ### Outside Kind cluster Test
 
 ```bash
+nc -dv 127.0.0.1 32080
+
 curl -i -H 'host: demo.example.com' http://127.0.0.1:32080/get
 ```

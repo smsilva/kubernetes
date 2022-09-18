@@ -26,6 +26,8 @@ helm upgrade \
   --namespace istio-system \
   --create-namespace \
   istio-discovery istio/istiod \
+  --set "meshConfig.ingressService=istio-ingress" \
+  --set "meshConfig.ingressSelector=ingress" \
   --wait > /dev/null
 
 # Install Istio Ingress Gateway
