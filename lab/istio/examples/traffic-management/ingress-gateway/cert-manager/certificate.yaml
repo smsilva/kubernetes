@@ -11,7 +11,25 @@ spec:
     kind: ClusterIssuer
     name: letsencrypt-staging-istio
   
-  commonName: ingress.8u6wl.sandbox.wasp.silvios.me
+  commonName: httpbin.7xb9x.sandbox.wasp.silvios.me
   
   dnsNames:
-    - ingress.8u6wl.sandbox.wasp.silvios.me
+    - httpbin.7xb9x.sandbox.wasp.silvios.me
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ingress-gateway
+  namespace: istio-ingress
+spec:
+  secretName: ingress-tls-gateway
+  
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-staging-istio
+  
+  commonName: gateway.7xb9x.sandbox.wasp.silvios.me
+  
+  dnsNames:
+    - gateway.7xb9x.sandbox.wasp.silvios.me

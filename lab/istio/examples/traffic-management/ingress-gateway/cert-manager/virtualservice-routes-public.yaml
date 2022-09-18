@@ -6,7 +6,8 @@ metadata:
   namespace: httpbin
 spec:
   hosts:
-    - ingress.8u6wl.sandbox.wasp.silvios.me
+    - httpbin.7xb9x.sandbox.wasp.silvios.me
+    - gateway.7xb9x.sandbox.wasp.silvios.me
 
   gateways:
     - istio-ingress/public-ingress-gateway

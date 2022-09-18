@@ -6,7 +6,7 @@ metadata:
   namespace: istio-ingress
 spec:
   selector:
-    istio: ingress-istio
+    istio: ingress
 
   servers:
     - port:
