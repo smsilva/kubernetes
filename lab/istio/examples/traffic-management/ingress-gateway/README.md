@@ -31,18 +31,20 @@ kubectl create namespace httpbin
 
 kubectl label namespace httpbin istio-injection=enabled
 
-kubectl -n httpbin apply -f default-deployment/
+kubectl \
+  --namespace httpbin \
+  apply --filename default-deployment/
 
-kubectl -n httpbin \
-  wait \
-    --for condition=Available \
-    deployment httpbin
+kubectl \
+  --namespace httpbin \
+  wait deployment httpbin \
+    --for condition=Available
 ```
 
 ## Creating Istio Objects
 
 
-###  **Ingress Gateway** and **VirtualService**
+### **Ingress Gateway** and **VirtualService**
 
 ```bash
 kubectl apply --filename istio-objects/
