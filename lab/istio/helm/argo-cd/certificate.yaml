@@ -1,0 +1,16 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ingress-argo-cd
+spec:
+  commonName: argocd.example.com
+  
+  dnsNames:
+    - argocd.example.com
+
+  secretName: ingress-tls-argo-cd
+
+  issuerRef:
+    kind: ClusterIssuer
+    name: selfsigned

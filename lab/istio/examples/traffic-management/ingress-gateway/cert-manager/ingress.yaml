@@ -5,12 +5,12 @@ metadata:
   name: ingress
   namespace: httpbin
   annotations:
-    external-dns.alpha.kubernetes.io/target: gateway.7xb9x.sandbox.wasp.silvios.me
+    external-dns.alpha.kubernetes.io/target: gateway.46tnl.sandbox.wasp.silvios.me
 spec:
   ingressClassName: istio
 
   rules:
-    - host: httpbin.7xb9x.sandbox.wasp.silvios.me
+    - host: httpbin.46tnl.sandbox.wasp.silvios.me
       http:
         paths:
           - path: /
@@ -21,7 +21,7 @@ spec:
                 port:
                   number: 8000
 
-    - host: service.7xb9x.sandbox.wasp.silvios.me
+    - host: service.46tnl.sandbox.wasp.silvios.me
       http:
         paths:
           - path: /

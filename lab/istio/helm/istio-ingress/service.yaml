@@ -1,5 +1,6 @@
 service:
   type: NodePort
+
   ports:
     - name: status-port
       port: 15021
@@ -17,9 +18,3 @@ service:
       protocol: TCP
       targetPort: 443
       nodePort: 32443
-
-  annotations: {}
-  loadBalancerIP: ""
-  loadBalancerSourceRanges: []
-  externalTrafficPolicy: ""
-  externalIPs: []

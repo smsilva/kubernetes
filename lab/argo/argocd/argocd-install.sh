@@ -29,14 +29,6 @@ helm upgrade \
 
 echo ""
 
-if ! which argocd &> /dev/null; then
-  echo "Need to download and install argocd CLI..."
-  
-  sh cli/install.sh
-  
-  echo ""
-fi
-
 for DEPLOYMENT in $(kubectl \
   --namespace argocd \
   get deploy \
@@ -52,3 +44,11 @@ for DEPLOYMENT in $(kubectl \
 
   echo ""
 done
+
+if ! which argocd &> /dev/null; then
+  echo "Need to download and install argocd CLI..."
+  
+  sh cli/install.sh
+  
+  echo ""
+fi
