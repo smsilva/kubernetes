@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: httpbin
+  namespace: httpbin
 spec:
   replicas: 1
 
@@ -29,7 +30,7 @@ spec:
           resources:
             requests:
               memory: "128Mi"
-              cpu: "250m"
+              cpu: "100m"
 
             limits:
               memory: "256Mi"

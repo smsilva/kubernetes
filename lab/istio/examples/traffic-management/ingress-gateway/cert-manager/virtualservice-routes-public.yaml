@@ -1,0 +1,25 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: httpbin-routes-public
+  namespace: httpbin
+spec:
+  hosts:
+    - ingress.8u6wl.sandbox.wasp.silvios.me
+
+  gateways:
+    - istio-ingress/public-ingress-gateway
+
+  http:
+    - name: httpbin
+      headers:
+        request:
+          add:
+            X-A1-origin-1: public-ingress-route
+
+      route:
+        - destination:
+            host: httpbin.httpbin.svc.cluster.local
+            port:
+              number: 8000

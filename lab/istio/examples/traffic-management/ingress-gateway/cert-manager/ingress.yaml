@@ -1,0 +1,20 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: httpbin
+spec:
+  ingressClassName: istio
+
+  rules:
+    - host: ingress.8u6wl.sandbox.wasp.silvios.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: 
+                name: httpbin
+                port:
+                  number: 8000
