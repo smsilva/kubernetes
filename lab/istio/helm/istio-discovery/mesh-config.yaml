@@ -1,0 +1,9 @@
+# Certificate Challenges failing with Istio + Istio Gateway when installed via Helm
+# https://github.com/istio/istio/issues/37329
+
+# Kubernetes Ingress not working
+# https://github.com/istio/istio/issues/36444
+
+meshConfig:
+  ingressService: istio-ingress
+  ingressSelector: ingress

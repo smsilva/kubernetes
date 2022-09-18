@@ -85,6 +85,12 @@ From outside:
 ```bash
 curl \
   --include \
+  --request GET \
+  --header "host: httpbin.example.com" \
+  127.0.0.1:32080/get
+
+curl \
+  --include \
   --request POST \
   --header "Content-type: application/json" \
   --header "host: httpbin.example.com" \

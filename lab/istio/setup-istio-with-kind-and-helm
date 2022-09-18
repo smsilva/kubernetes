@@ -15,7 +15,7 @@ echo ""
 echo "Installing istio/base..."
 helm upgrade \
   --install \
-  --namespace istio-system \
+  --namespace "istio-system" \
   --create-namespace \
   istio-base istio/base > /dev/null
 
@@ -23,23 +23,22 @@ helm upgrade \
 echo "Installing istio/istiod..."
 helm upgrade \
   --install \
-  --namespace istio-system \
+  --namespace "istio-system" \
   --create-namespace \
   istio-discovery istio/istiod \
-  --set "meshConfig.ingressService=istio-ingress" \
-  --set "meshConfig.ingressSelector=ingress" \
+  --values "./helm/istio-discovery/mesh-config.yaml" \
   --wait > /dev/null
 
 # Install Istio Ingress Gateway
 echo "Installing istio/gateway..."
-kubectl apply --filename ./helm/istio-ingress/namespace.yaml > /dev/null
+kubectl apply --filename "./helm/istio-ingress/namespace.yaml" > /dev/null
 
 helm upgrade \
   --install \
-  --namespace istio-ingress \
+  --namespace "istio-ingress" \
   istio-ingress istio/gateway \
-  --values ./helm/istio-ingress/service.yaml > /dev/null
+  --values "./helm/istio-ingress/service.yaml" > /dev/null
 
 # Configure Telemetry
 echo "Configuring Telemetry..."
-kubectl apply --filename ./deployments/telemetry.yaml > /dev/null
+kubectl apply --filename "./deployments/telemetry.yaml" > /dev/null
