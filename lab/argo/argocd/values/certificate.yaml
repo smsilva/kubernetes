@@ -1,0 +1,18 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argocd-server-tls
+  namespace: argocd
+spec:
+  commonName: localhost
+  
+  dnsNames:
+    - localhost
+    - httpbin.example.com
+
+  secretName: argocd-server-tls
+
+  issuerRef:
+    kind: ClusterIssuer
+    name: selfsigned
