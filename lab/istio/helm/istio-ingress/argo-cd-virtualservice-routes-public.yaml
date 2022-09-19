@@ -1,0 +1,24 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: argo-cd-public-ingress-routes
+spec:
+  hosts:
+    - argocd.example.com
+
+  gateways:
+    - istio-ingress/public-ingress-gateway-argocd
+
+  http:
+    - name: argocd
+      headers:
+        request:
+          add:
+            X-A1-origin-1: public-ingress-gateway-argocd
+
+      route:
+        - destination:
+            host: argocd-server.argocd.svc.cluster.local
+            port:
+              number: 80

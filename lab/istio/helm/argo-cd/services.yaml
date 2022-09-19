@@ -1,10 +1,10 @@
 server:
   service:
     type: NodePort
-    nodePortHttp: 32080
-    nodePortHttps: 32443
     servicePortHttp: 80
     servicePortHttps: 443
     servicePortHttpName: http
     servicePortHttpsName: https
     namedTargetPort: true
+    nodePortHttp: 32080
+    nodePortHttps: 32443

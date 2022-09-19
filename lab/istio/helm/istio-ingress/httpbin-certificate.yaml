@@ -2,14 +2,14 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: ingress-argo-cd
+  name: ingress-httpbin
 spec:
-  commonName: argocd.example.com
+  commonName: httpbin.example.com
   
   dnsNames:
-    - argocd.example.com
+    - httpbin.example.com
 
-  secretName: ingress-tls-argo-cd
+  secretName: ingress-httpbin-tls
 
   issuerRef:
     kind: ClusterIssuer

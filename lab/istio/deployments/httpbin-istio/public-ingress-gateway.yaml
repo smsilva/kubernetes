@@ -1,0 +1,27 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: httpbin
+  namespace: istio-ingress
+spec:
+  selector:
+    istio: ingress
+
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "httpbin.example.com"
+
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: ingress-httpbin-tls
+      hosts:
+        - "httpbin.example.com"
