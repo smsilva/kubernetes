@@ -1,0 +1,25 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: outbound-traffic-demo
+  name: outbound-traffic-demo
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: outbound-traffic-demo
+
+  template:
+    metadata:
+      labels:
+        app: outbound-traffic-demo
+
+    spec:
+      containers:
+        - name: curl
+          image: silviosilva/utils
+          command: ["/bin/sh"]
+          args: ["-c", "while true; do echo \"httpbin.org:\" $(curl --connect-timeout 5 -is http://httpbin.org/get | grep -E ^\"HTTP\") && sleep 5 && echo \"\"; done"]
