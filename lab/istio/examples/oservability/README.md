@@ -37,6 +37,8 @@ https://istio.io/latest/docs/ops/integrations/prometheus/
 
 ```bash
 kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml"
+
+kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
 ```
 
 ### 1. Setup Bookinfo to use MongoDB.
@@ -55,4 +57,6 @@ kubectl apply -f "${ISTIO_BASE_DIR?}/samples/bookinfo/networking/virtual-service
 watch -n 5 'curl -s "http://${GATEWAY_URL}/productpage"'
 
 istioctl dashboard prometheus
+
+istioctl dashboard kiali
 ```

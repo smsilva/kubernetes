@@ -1,0 +1,18 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: cluster0-sk4rh-mongodb-net
+  namespace: wasp
+spec:
+  hosts:
+    - cluster0.sk4rh.mongodb.net
+
+  location: MESH_EXTERNAL
+
+  ports:
+    - name: mongo
+      number: 27017
+      protocol: MONGO
+
+  resolution: NONE
