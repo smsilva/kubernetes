@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: wasp-item-consumer
+  name: wasp-item-consumer
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: wasp-item-consumer
+
+  template:
+    metadata:
+      labels:
+        app: wasp-item-consumer
+
+    spec:
+      containers:
+        - image: silviosilva/wasp-item-consumer:latest
+          name: wasp-item-consumer
+
+          envFrom:
+            - secretRef:
+                name: rabbitmq
+
+            - secretRef:
+                name: newrelic
+
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

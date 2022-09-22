@@ -1,0 +1,32 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mongoshell
+  labels:
+    app: mongoshell
+spec:
+  schedule: "*/1 * * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 60
+  concurrencyPolicy: Forbid
+
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+
+      template:
+        metadata:
+          labels:
+            app: mongoshell
+
+        spec:
+          restartPolicy: Never
+
+          containers:
+            - name: mongoshell
+              image: docker.io/silviosilva/mongoshell:latest
+              envFrom:
+                - secretRef:
+                    name: mongoshell

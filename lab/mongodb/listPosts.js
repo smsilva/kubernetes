@@ -1,0 +1,1 @@
+printjson( db.posts.find( {} ) ) ;
