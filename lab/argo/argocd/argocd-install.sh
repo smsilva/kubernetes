@@ -1,6 +1,4 @@
 #!/bin/bash
-set -e
-
 helm repo \
   add argo https://argoproj.github.io/argo-helm &> /dev/null
 

@@ -1,9 +1,5 @@
 #!/bin/bash
 
-set -e
-
-CLUSTER_TYPE=${1-kind}
-
-. "./${CLUSTER_TYPE?}-cluster-creation.sh"
+. ./kind-cluster-creation.sh
 . ./argocd-install.sh
 . ./argocd-get-initial-password.sh
