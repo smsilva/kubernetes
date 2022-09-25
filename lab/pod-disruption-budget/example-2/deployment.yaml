@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,23 +7,28 @@ metadata:
   name: nginx
 spec:
   replicas: 6
+
   selector:
     matchLabels:
       app: nginx
+
   template:
     metadata:
       labels:
         app: nginx
+
     spec:
       nodeSelector:
         disktype: ssd
+
       initContainers:
-      - name: sleep
-        image: busybox
-        command:
-        - sh
-        - -c
-        - sleep 10
+        - name: sleep
+          image: busybox
+          command:
+            - sh
+            - -c
+            - sleep 10
+
       containers:
-      - image: nginx:1.19
-        name: nginx
+        - image: nginx:latest
+          name: nginx

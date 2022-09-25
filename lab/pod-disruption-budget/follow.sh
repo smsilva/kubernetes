@@ -1,5 +1,5 @@
 #!/bin/bash
-kubectl get nodes -o wide
+kubectl get nodes -o wide -L disktype
 
 echo ""
 

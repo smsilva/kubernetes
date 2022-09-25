@@ -18,6 +18,14 @@ spec:
         app: nginx
  
     spec:
+      initContainers:
+        - name: sleep
+          image: busybox
+          command:
+            - sh
+            - -c
+            - sleep 10
+
       containers:
         - name: nginx
           image: nginx
