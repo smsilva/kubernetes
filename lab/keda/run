@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+export THIS_SCRIPT_DIRECTORY=$(dirname $0)
+export PATH=${PATH}:${THIS_SCRIPT_DIRECTORY}
+
+helm repo add kedacore https://kedacore.github.io/charts
+
+helm repo update
+
+helm upgrade \
+  --install \
+  --create-namespace \
+  --namespace keda \
+  keda kedacore/keda

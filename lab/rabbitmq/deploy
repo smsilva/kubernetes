@@ -4,11 +4,12 @@ export PATH=${PATH}:${THIS_SCRIPT_DIRECTORY}
 
 kubectl -n wasp apply -f "${THIS_SCRIPT_DIRECTORY}/namespace.yaml"
 
-BASE64ENCODED_RABBITMQ_HOST=$(         echo -n "${RABBITMQ_HOST?}"         | base64 | tr -d "\n")
-BASE64ENCODED_RABBITMQ_PORT=$(         echo -n "${RABBITMQ_PORT?}"         | base64 | tr -d "\n")
-BASE64ENCODED_RABBITMQ_VIRTUAL_HOST=$( echo -n "${RABBITMQ_VIRTUAL_HOST?}" | base64 | tr -d "\n")
-BASE64ENCODED_RABBITMQ_USERNAME=$(     echo -n "${RABBITMQ_USERNAME?}"     | base64 | tr -d "\n")
-BASE64ENCODED_RABBITMQ_PASSWORD=$(     echo -n "${RABBITMQ_PASSWORD?}"     | base64 | tr -d "\n")
+BASE64ENCODED_RABBITMQ_HOST=$(            echo -n "${RABBITMQ_HOST?}"            | base64 | tr -d "\n")
+BASE64ENCODED_RABBITMQ_PORT=$(            echo -n "${RABBITMQ_PORT?}"            | base64 | tr -d "\n")
+BASE64ENCODED_RABBITMQ_VIRTUAL_HOST=$(    echo -n "${RABBITMQ_VIRTUAL_HOST?}"    | base64 | tr -d "\n")
+BASE64ENCODED_RABBITMQ_USERNAME=$(        echo -n "${RABBITMQ_USERNAME?}"        | base64 | tr -d "\n")
+BASE64ENCODED_RABBITMQ_PASSWORD=$(        echo -n "${RABBITMQ_PASSWORD?}"        | base64 | tr -d "\n")
+BASE64ENCODED_RABBITMQ_QUEUE_NAME_MAIN=$( echo -n "${RABBITMQ_QUEUE_NAME_MAIN?}" | base64 | tr -d "\n")
 
 kubectl -n wasp apply -f - <<EOF
 ---
@@ -18,11 +19,12 @@ metadata:
   name: rabbitmq
 type: Opaque
 data:
-  RABBITMQ_HOST:         ${BASE64ENCODED_RABBITMQ_HOST}
-  RABBITMQ_PORT:         ${BASE64ENCODED_RABBITMQ_PORT}
-  RABBITMQ_VIRTUAL_HOST: ${BASE64ENCODED_RABBITMQ_VIRTUAL_HOST}
-  RABBITMQ_USERNAME:     ${BASE64ENCODED_RABBITMQ_USERNAME}
-  RABBITMQ_PASSWORD:     ${BASE64ENCODED_RABBITMQ_PASSWORD}
+  RABBITMQ_HOST:            ${BASE64ENCODED_RABBITMQ_HOST}
+  RABBITMQ_PORT:            ${BASE64ENCODED_RABBITMQ_PORT}
+  RABBITMQ_VIRTUAL_HOST:    ${BASE64ENCODED_RABBITMQ_VIRTUAL_HOST}
+  RABBITMQ_USERNAME:        ${BASE64ENCODED_RABBITMQ_USERNAME}
+  RABBITMQ_PASSWORD:        ${BASE64ENCODED_RABBITMQ_PASSWORD}
+  RABBITMQ_QUEUE_NAME_MAIN: ${BASE64ENCODED_RABBITMQ_QUEUE_NAME_MAIN}
 EOF
 
 BASE64ENCODED_NEW_RELIC_ACCOUNT_ID=$(       echo -n "${NEW_RELIC_ACCOUNT_ID?}"       | base64 | tr -d "\n")
@@ -48,6 +50,4 @@ EOF
 
 kubectl -n wasp apply -f "${THIS_SCRIPT_DIRECTORY}/deployment.yaml"
 
-kubectl -n wasp apply -f "${THIS_SCRIPT_DIRECTORY}/serviceentry.yaml"
-
-watch -n 3 'kubectl get nodes; echo; kubectl -n wasp get deploy,pods,serviceentry -o wide'
+watch -n 3 'kubectl -n wasp get deploy,pods -o wide'
