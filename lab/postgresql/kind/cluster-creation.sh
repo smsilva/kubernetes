@@ -1,0 +1,9 @@
+#!/bin/bash
+THIS_SCRIPT_DIRECTORY=$(dirname $0)
+
+KIND_CLUSTER_CONFIG="${THIS_SCRIPT_DIRECTORY?}/cluster.yaml"
+
+kind create cluster \
+  --image kindest/node:v1.24.0 \
+  --config "${KIND_CLUSTER_CONFIG?}" \
+  --name postgresql

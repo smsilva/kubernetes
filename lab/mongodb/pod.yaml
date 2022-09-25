@@ -12,6 +12,7 @@ spec:
   containers:
     - name: mongoshell
       image: docker.io/silviosilva/mongoshell:latest
+
       envFrom:
         - secretRef:
             name: mongoshell

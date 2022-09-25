@@ -3,22 +3,18 @@ git clone https://github.com/zalando/postgres-operator.git
 
 cd postgres-operator
 
-git checkout bump-v1.7.1
+# Apply the manifests in the following order
+kubectl create -f manifests/configmap.yaml  # configuration
+kubectl create -f manifests/operator-service-account-rbac.yaml  # identity and permissions
+kubectl create -f manifests/postgres-operator.yaml  # deployment
+kubectl create -f manifests/api-service.yaml  # operator API to be used by UI
 
-helm install \
-  postgres-operator ./charts/postgres-operator \
-  --wait
+sleep 5
 
-# create a Postgres cluster
+# Create a Postgres cluster
 kubectl create -f manifests/minimal-postgres-manifest.yaml
 
 kubectl wait \
-  --for=jsonpath='{.status.PostgresClusterStatus}'=Creating \
+  --for=jsonpath='{.status.PostgresClusterStatus}'=Running \
   postgresql acid-minimal-cluster \
   --timeout=360s
-
-POSTGRESQL_USER_NAME=$(kubectl get secret postgres.acid-minimal-cluster.credentials.postgresql.acid.zalan.do -o jsonpath='{.data.username}' | base64 -d)
-POSTGRESQL_USER_PASSWORD=$(kubectl get secret postgres.acid-minimal-cluster.credentials.postgresql.acid.zalan.do -o jsonpath='{.data.password}' | base64 -d)
-
-echo "POSTGRESQL_USER_NAME.....: ${POSTGRESQL_USER_NAME}" && \
-echo "POSTGRESQL_USER_PASSWORD.: ${POSTGRESQL_USER_PASSWORD}"
