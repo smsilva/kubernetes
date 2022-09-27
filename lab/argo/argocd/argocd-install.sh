@@ -34,6 +34,7 @@ for DEPLOYMENT in $(kubectl \
 done
 
 if ! which argocd &> /dev/null; then
-  echo "Need to download and install argocd CLI..."  
+  echo "Need to download and install argocd CLI..."
+
   sh cli/install.sh
 fi

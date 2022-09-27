@@ -6,41 +6,29 @@ ARGOCD_INITIAL_PASSWORD=$(kubectl \
 
 cat <<EOF
 
-1. Copy the Password for admin user:
+1. Copy ArgoCD Initial Credentials:
 
-  ${ARGOCD_INITIAL_PASSWORD}
+  user:     admin
+  password: ${ARGOCD_INITIAL_PASSWORD}
+  url:      http://localhost:32080
 
-2. Open the address bellow in a browser:
+2. Create a new ArgoCD Application:
 
-  http://localhost:32080
-
-4. Create a new ArgoCD Application:
-
-  kubectl apply -f apps/httpbin
-
-5. Wait for the httpbin POD become Ready and them test:
+  kubectl create --filename apps/httpbin.yaml
 
   kubectl \\
-    --namespace default \\
-    wait \\
-    --for condition=Ready pod \\
-    --selector app=httpbin \\
-    --timeout=360s && \\
-  sleep 5 && \\
-  curl \\
-    --include \\
-    --insecure \\
-    --header "Host: httpbin.example.com" \\
-    https://127.0.0.1/get
+    --namespace httpbin \\
+    get deploy,replicasets,pods,services,endpoints \\
+    --output wide
 
-6. (Optional) Open a new Terminal and run a port-forward command:
+3. (Optional) Open a new Terminal and run a port-forward command:
 
   kubectl \\
     --namespace argocd \\
     port-forward svc/argocd-server 8080:443 \\
     --context=kind-argocd
 
-7. (Optional) Open the address bellow in a browser:
+3.1. Open the address bellow in a browser:
 
   http://localhost:8080
 
