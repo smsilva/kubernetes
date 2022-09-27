@@ -17,8 +17,8 @@ for CONTAINER_NAME in redis-{01,02}; do
   docker run \
     --rm \
     --name "${CONTAINER_NAME?}" \
-    -v ${PWD}/config/redis-example.conf:/usr/local/etc/redis/redis.conf \
-    -p ${REDIS_LOCAL_PORT?}:6379 \
+    --volume ${PWD}/config/redis-example.conf:/usr/local/etc/redis/redis.conf \
+    --publish ${REDIS_LOCAL_PORT?}:6379 \
     --detach \
     redis:6.0.8 redis-server /usr/local/etc/redis/redis.conf
 
