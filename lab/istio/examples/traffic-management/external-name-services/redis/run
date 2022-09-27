@@ -1,0 +1,53 @@
+#!/bin/bash
+for CONTAINER_NAME in redis-{01,02}; do
+  CONTAINER_ID=$(docker ps -f name=${CONTAINER_NAME} \
+    | sed 1d \
+    | awk '{ print $1 }')
+
+  if ! [ -z "${CONTAINER_ID}" ]; then
+    docker kill ${CONTAINER_ID?}
+  fi
+done
+
+docker system prune -f
+
+REDIS_LOCAL_PORT=6379
+
+for CONTAINER_NAME in redis-{01,02}; do
+  docker run \
+    --rm \
+    --name "${CONTAINER_NAME?}" \
+    -v ${PWD}/config/redis-example.conf:/usr/local/etc/redis/redis.conf \
+    -p ${REDIS_LOCAL_PORT?}:6379 \
+    --detach \
+    redis:6.0.8 redis-server /usr/local/etc/redis/redis.conf
+
+  REDIS_LOCAL_PORT=$((REDIS_LOCAL_PORT + 1))
+done
+
+cat <<EOF
+  
+  Try this:
+
+    which redis-cli > /dev/null || \
+    sudo apt update && \\
+    sudo apt install redis-tools --yes
+  
+    redis-cli -h 127.0.0.1 -p 6379 -a foobared
+    redis-cli -h 127.0.0.1 -p 6380 -a foobared
+
+EOF
+
+echo ""
+echo "${REDIS_CONFIG_FILE}"
+echo ""
+
+exit 0
+
+docker run \
+  --name "redis-local-01" \
+  --rm \
+  -v ${PWD}/config/redis-example.conf:/usr/local/etc/redis/redis.conf \
+  -p 6379:6379 \
+  --detach \
+  redis:6.0.8 redis-server /usr/local/etc/redis/redis.conf
