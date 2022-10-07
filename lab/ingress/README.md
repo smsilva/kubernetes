@@ -52,10 +52,10 @@ curl -i http://localhost:8080/get
 docker kill httpbin
 ```
 
-## Watch resouces
+## NGINX Ingress Controller Install
 
 ```bash
-watch -n 3 ./follow
+nginx/install
 ```
 
 ## Create a Kind Cluster
