@@ -1,6 +1,6 @@
 #!/bin/bash
 kubectl \
-  --namespace httpbin \
+  --namespace apps \
   get pods,service,endpoints,ingress \
   --output wide
 
@@ -10,4 +10,4 @@ kubectl \
   --namespace ingress-nginx \
   logs \
   --selector app.kubernetes.io/component=controller \
-  --tail 10
+  --tail 5

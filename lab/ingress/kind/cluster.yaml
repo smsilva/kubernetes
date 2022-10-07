@@ -19,6 +19,10 @@ nodes:
         hostPort: 443
         protocol: tcp
 
+      - containerPort: 32080
+        hostPort: 32080
+        protocol: tcp
+
   - role: worker
   - role: worker
   - role: worker
