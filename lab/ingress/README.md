@@ -1,4 +1,28 @@
-#!/bin/bash
+# Ingress
+
+## Create a Kind Cluster
+
+```bash
+kind/creation
+```
+
+## NGINX Ingress Controller Install
+
+```bash
+nginx/install
+```
+
+## Watch resouces
+
+```bash
+watch -n 3 ./follow
+```
+
+## Deploy httpbin
+
+Execute it from a new terminal window:
+
+```bash
 kubectl create namespace httpbin
 
 kubectl apply \
@@ -14,9 +38,17 @@ kubectl \
   wait deploy httpbin \
   --for=condition=Available \
   --timeout=360s
+```
 
-nginx/install
+## Ingress for httpbin
 
+```bash
 kubectl apply \
   --namespace httpbin \
   --filename httpbin/ingress.yaml
+```
+
+## Cleanup
+```bash
+kind delete cluster
+```
