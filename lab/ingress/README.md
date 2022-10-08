@@ -20,7 +20,7 @@ if [ -e "${HTML_FILE?}" ]; then
   docker run \
     --rm \
     --detach \
-    --volume "${HTML_FILE?}:/usr/share/nginx/html/index.htm:ro" \
+    --volume "${HTML_FILE?}:/usr/share/nginx/html/index.html:ro" \
     --publish 8081:80 \
     --name nginx-customized \
     nginx:1.23.1
