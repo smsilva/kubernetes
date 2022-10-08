@@ -1,6 +1,6 @@
 #!/bin/bash
 kubectl \
-  --namespace apps \
+  --namespace example \
   get pods,service,endpoints,ingress \
   --output wide
 

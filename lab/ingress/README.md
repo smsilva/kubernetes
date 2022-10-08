@@ -52,12 +52,6 @@ curl -i http://localhost:8080/get
 docker kill httpbin
 ```
 
-## NGINX Ingress Controller Install
-
-```bash
-nginx/install
-```
-
 ## Create a Kind Cluster
 
 ```bash
@@ -75,18 +69,18 @@ nginx/install
 Execute it from a new terminal window:
 
 ```bash
-kubectl create namespace apps
+kubectl create namespace example
 
 kubectl apply \
-  --namespace apps \
+  --namespace example \
   --filename httpbin/deployment.yaml
 
 kubectl apply \
-  --namespace apps \
+  --namespace example \
   --filename httpbin/service.yaml
 
 kubectl \
-  --namespace apps \
+  --namespace example \
   wait deploy httpbin \
   --for=condition=Available \
   --timeout=360s
@@ -96,7 +90,7 @@ kubectl \
 
 ```bash
 kubectl apply \
-  --namespace apps \
+  --namespace example \
   --filename httpbin/ingress.yaml
 ```
 
@@ -104,7 +98,6 @@ kubectl apply \
 
 ```bash
 nc -dv 127.0.0.1 80
-nc -dv 127.0.0.1 32080
 
 ip -4 a
 
@@ -116,11 +109,6 @@ curl \
   --include \
   --header 'host: xpto.example.com' \
   http://127.0.0.1:80/get
-
-curl \
-  --include \
-  --header 'host: xpto.example.com' \
-  http://127.0.0.1:32080/get
 ```
 
 ## Cleanup
