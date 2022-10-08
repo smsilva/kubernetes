@@ -1,15 +1,55 @@
 # Ingress
 
-## Docker run nginx
+## Docker run NGINX
 
 ```bash
 docker run \
   --rm \
-  --tty \
-  --interactive \
-  --volume "${PWD}/site/index.html:/usr/share/nginx/html/index.html" \
+  --detach \
   --publish 8080:80 \
+  --name nginx \
   nginx
+
+docker ps | egrep "CONTAINER|nginx"
+
+curl -i http://localhost:8080
+
+HTML_FILE="${PWD}/site/index.html"
+
+if [ -e "${HTML_FILE?}" ]; then
+  docker run \
+    --rm \
+    --detach \
+    --volume "${HTML_FILE?}:/usr/share/nginx/html/index.html" \
+    --publish 8081:80 \
+    --name nginx-customized \
+    nginx
+else
+  echo "File \"${HTML_FILE}\" doesn't exists."
+fi
+
+docker ps | egrep "CONTAINER|nginx"
+
+curl -i http://localhost:8081
+
+docker kill nginx nginx-customized
+```
+
+## Docker run HTTPBIN
+
+```bash
+docker run \
+  --rm \
+  --detach \
+  --publish 8080:80 \
+  --name httpbin \
+  kennethreitz/httpbin
+
+docker ps | egrep "CONTAINER|httpbin"
+
+curl -i http://localhost:8080/get
+
+docker kill httpbin
 ```
 
 ## Watch resouces

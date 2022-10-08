@@ -1,6 +1,6 @@
 # Instalação
 
-## Diferentes maneira de Instalar o Kubernetes
+## Diferentes maneiras de Instalar o Kubernetes
 
 - [Azure Kubernetes Service (AKS)](install/aks/create-cluster.sh): Cluster na Azure com RBAC e Auto Scaling ativado.
 - [Kubeadm](install/kubeadm/): Usando Máquinas Virtuais Vagrant ou Multipass.
