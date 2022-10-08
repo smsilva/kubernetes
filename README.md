@@ -29,3 +29,4 @@ Experimentos com tópicos diversos
 - [POD Disruption Budget](lab/pod-disruption-budget) - Impedindo que PODs sejam terminadas de uma só vez quando um Node está sendo drenado.
 - [Telepresence](lab/telepresence) - Exemplo de uso do Telepresence.
 - [Velero](lab/velero) - Backup de Objetos Kubernetes usando Azure Storage.
+- [Ingress](lab/ingress) - NGINX Ingress Controller em um Cluster Kind.
