@@ -8,7 +8,7 @@ docker run \
   --detach \
   --publish 8080:80 \
   --name nginx \
-  nginx
+  nginx:1.23.1
 
 docker ps | egrep "CONTAINER|nginx"
 
@@ -20,10 +20,10 @@ if [ -e "${HTML_FILE?}" ]; then
   docker run \
     --rm \
     --detach \
-    --volume "${HTML_FILE?}:/usr/share/nginx/html/index.html" \
+    --volume "${HTML_FILE?}:/usr/share/nginx/html/index.htm:ro" \
     --publish 8081:80 \
     --name nginx-customized \
-    nginx
+    nginx:1.23.1
 else
   echo "File \"${HTML_FILE}\" doesn't exists."
 fi
@@ -43,7 +43,7 @@ docker run \
   --detach \
   --publish 8080:80 \
   --name httpbin \
-  kennethreitz/httpbin
+  kennethreitz/httpbin:latest
 
 docker ps | egrep "CONTAINER|httpbin"
 
