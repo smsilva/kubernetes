@@ -14,7 +14,7 @@ docker ps | egrep "CONTAINER|nginx"
 
 curl -i http://localhost:8080
 
-HTML_FILE="${PWD}/site/index.html"
+HTML_FILE="${PWD}/static/index.html"
 
 if [ -e "${HTML_FILE?}" ]; then
   docker run \

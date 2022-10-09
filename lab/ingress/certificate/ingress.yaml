@@ -7,7 +7,7 @@ spec:
   ingressClassName: "nginx"
   
   rules:
-    - host: 'insecure.httpbin.sandbox.wasp.silvios.me'
+    - host: 'httpbin-insecure.sandbox.wasp.silvios.me'
       http:
         paths:
           - path: /

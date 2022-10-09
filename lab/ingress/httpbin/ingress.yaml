@@ -17,14 +17,3 @@ spec:
                 name: httpbin
                 port:
                   number: 8000
-
-    - host: 'apps.example.com'
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: httpbin-node-port
-                port:
-                  number: 8080
