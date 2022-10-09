@@ -1,0 +1,18 @@
+#!/bin/bash
+BASE_DOMAIN="sandbox.wasp.silvios.me"
+
+CERTIFICATE_DIRECTORY="${HOME}/certificates/${BASE_DOMAIN?}/production"
+
+kubectl \
+  --namespace httpbin \
+  create secret tls \
+  tls-wildcard \
+  --key "${CERTIFICATE_DIRECTORY?}/certificate.key.pem" \
+  --cert "${CERTIFICATE_DIRECTORY?}/certificate.pem"
+
+kubectl \
+  --namespace httpbin \
+  create secret tls \
+  tls-wildcard-full-chain \
+  --key "${CERTIFICATE_DIRECTORY?}/certificate.key.pem" \
+  --cert "${CERTIFICATE_DIRECTORY?}/fullchain.pem"

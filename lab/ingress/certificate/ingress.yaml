@@ -1,0 +1,19 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: httpbin
+spec:
+  ingressClassName: "nginx"
+  
+  rules:
+    - host: 'insecure.httpbin.sandbox.wasp.silvios.me'
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: httpbin
+                port:
+                  number: 8000
