@@ -2,17 +2,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: httpbin-tls
+  name: httpbin-tls-wildcard-full-chain
 spec:
   ingressClassName: "nginx"
 
   tls:
     - hosts:
-        - httpbin.sandbox.wasp.silvios.me
-      secretName: wildcard-certificate
+        - echo.sandbox.wasp.silvios.me
+      secretName: tls-wildcard-full-chain
   
   rules:
-    - host: httpbin.sandbox.wasp.silvios.me
+    - host: echo.sandbox.wasp.silvios.me
       http:
         paths:
           - path: /
