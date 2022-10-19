@@ -35,7 +35,7 @@ curl -i http://localhost:8081
 docker kill nginx nginx-customized
 ```
 
-## Docker run HTTPBIN
+## Docker run httpbin
 
 ```bash
 docker run \
@@ -92,6 +92,8 @@ kubectl apply \
 
 ```bash
 BASE_DOMAIN="sandbox.wasp.silvios.me"
+DNS_ZONE_NAME="${BASE_DOMAIN}"
+DNS_ZONE_RESOURCE_GROUP_NAME="wasp-foundation"
 
 # Install certbot
 sudo apt-get install certbot
@@ -110,6 +112,33 @@ certbot certonly \
   --config-dir "${HOME}/certificates/config" \
   --work-dir "${HOME}/certificates/work" \
   --logs-dir "${HOME}/certificates/logs"
+
+# Azure DNS
+az network dns record-set txt \
+  add-record \
+  --zone-name ${DNS_ZONE_NAME?} \
+  --resource-group ${DNS_ZONE_RESOURCE_GROUP_NAME?} \
+  --record-set-name "_acme-challenge.apps" \
+  --value "TXT_VALUE_HERE"
+
+az network dns record-set txt \
+  add-record \
+  --zone-name ${DNS_ZONE_NAME?} \
+  --resource-group ${DNS_ZONE_RESOURCE_GROUP_NAME?} \
+  --record-set-name "_acme-challenge" \
+  --value "TXT_VALUE_HERE"
+
+az network dns record-set txt \
+  add-record \
+  --zone-name ${DNS_ZONE_NAME?} \
+  --resource-group ${DNS_ZONE_RESOURCE_GROUP_NAME?} \
+  --record-set-name "_acme-challenge.services" \
+  --value "TXT_VALUE_HERE"
+
+# Check TXT Records
+dig @8.8.8.8 +short "_acme-challenge.apps.${BASE_DOMAIN?}" TXT
+dig @8.8.8.8 +short "_acme-challenge.${BASE_DOMAIN?}" TXT
+dig @8.8.8.8 +short "_acme-challenge.services.${BASE_DOMAIN?}" TXT
 
 # Create a Secret from the Generated Certificate
 CERTIFICATE_DIRECTORY="${HOME}/certificates/config/live/${BASE_DOMAIN?}"

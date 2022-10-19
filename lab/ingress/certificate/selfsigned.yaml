@@ -1,0 +1,16 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: httpbin-selfsigned
+spec:
+  commonName: test.sandbox.wasp.silvios.me
+  
+  dnsNames:
+    - test.sandbox.wasp.silvios.me
+
+  secretName: httpbin-selfsigned
+
+  issuerRef:
+    kind: ClusterIssuer
+    name: selfsigned
