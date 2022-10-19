@@ -116,24 +116,24 @@ certbot certonly \
 # Azure DNS
 az network dns record-set txt \
   add-record \
-  --zone-name ${DNS_ZONE_NAME?} \
-  --resource-group ${DNS_ZONE_RESOURCE_GROUP_NAME?} \
-  --record-set-name "_acme-challenge.apps" \
-  --value "TXT_VALUE_HERE"
+    --zone-name ${DNS_ZONE_NAME?} \
+    --resource-group ${DNS_ZONE_RESOURCE_GROUP_NAME?} \
+    --record-set-name "_acme-challenge.apps" \
+    --value "TXT_VALUE_HERE"
 
 az network dns record-set txt \
   add-record \
-  --zone-name ${DNS_ZONE_NAME?} \
-  --resource-group ${DNS_ZONE_RESOURCE_GROUP_NAME?} \
-  --record-set-name "_acme-challenge" \
-  --value "TXT_VALUE_HERE"
+    --zone-name ${DNS_ZONE_NAME?} \
+    --resource-group ${DNS_ZONE_RESOURCE_GROUP_NAME?} \
+    --record-set-name "_acme-challenge" \
+    --value "TXT_VALUE_HERE"
 
 az network dns record-set txt \
   add-record \
-  --zone-name ${DNS_ZONE_NAME?} \
-  --resource-group ${DNS_ZONE_RESOURCE_GROUP_NAME?} \
-  --record-set-name "_acme-challenge.services" \
-  --value "TXT_VALUE_HERE"
+    --zone-name ${DNS_ZONE_NAME?} \
+    --resource-group ${DNS_ZONE_RESOURCE_GROUP_NAME?} \
+    --record-set-name "_acme-challenge.services" \
+    --value "TXT_VALUE_HERE"
 
 # Check TXT Records
 dig @8.8.8.8 +short "_acme-challenge.apps.${BASE_DOMAIN?}" TXT

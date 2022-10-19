@@ -4,10 +4,10 @@ kind: Certificate
 metadata:
   name: httpbin-selfsigned
 spec:
-  commonName: test.sandbox.wasp.silvios.me
+  commonName: demo.sandbox.wasp.silvios.me
   
   dnsNames:
-    - test.sandbox.wasp.silvios.me
+    - demo.sandbox.wasp.silvios.me
 
   secretName: httpbin-selfsigned
 
