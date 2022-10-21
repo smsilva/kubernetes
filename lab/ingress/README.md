@@ -86,6 +86,11 @@ kubectl apply \
 kubectl apply \
   --namespace example \
   --filename httpbin/ingress.yaml
+
+curl \
+  --include \
+  --header 'host: xpto.example.com' \
+  http://127.0.0.1:80/get
 ```
 
 ## Ingress with TLS for httpbin
