@@ -93,12 +93,81 @@ curl \
   http://127.0.0.1:80/get
 ```
 
-## Ingress with TLS for httpbin
+## Ingress with TLS for httpbin with Selfsigned Certificate
+
+```bash
+CERTIFICATE_DIRECTORY="${HOME}/certificates/selfsigned/example.com"
+CERTIFICATE_PRIVATE_KEY="${CERTIFICATE_DIRECTORY?}/certificate.key.pem"
+CERTIFICATE_FILE="${CERTIFICATE_DIRECTORY?}/certificate.pem"
+
+mkdir -p "${CERTIFICATE_DIRECTORY?}"
+
+# Generate a Self Signed Certificate
+openssl req \
+  -x509 \
+  -newkey rsa:4096 \
+  -nodes \
+  -keyout "${CERTIFICATE_PRIVATE_KEY?}" \
+  -out "${CERTIFICATE_FILE?}" \
+  -days 365 \
+  -subj '/CN=echo.example.com'
+
+# Create a Secret with the Selfsigned Certificate
+kubectl \
+  --namespace example \
+  create secret tls \
+  tls-selfsigned \
+  --key "${CERTIFICATE_PRIVATE_KEY?}" \
+  --cert "${CERTIFICATE_FILE?}"
+
+# Create an Ingress Resource
+kubectl apply \
+  --namespace example \
+  --filename httpbin/ingress-tls-selfsigned.yaml
+
+# Add an entry on /etc/hosts if needed
+grep "echo.example.com" /etc/hosts || \
+echo "127.0.0.1 echo.example.com" \
+| sudo tee -a /etc/hosts
+
+# HTTPS Test Request
+curl \
+  --insecure \
+  --include \
+  https://echo.example.com/get
+
+
+```
+
+## Ingress with TLS for httpbin with a Valid Let's Encrypt Wildcard Certificate
 
 ```bash
 BASE_DOMAIN="sandbox.wasp.silvios.me"
 DNS_ZONE_NAME="${BASE_DOMAIN}"
 DNS_ZONE_RESOURCE_GROUP_NAME="wasp-foundation"
+
+# Generate a Self Signed Certificate
+openssl req \
+  -x509 \
+  -newkey rsa:4096 \
+  -nodes \
+  -keyout cert.key.pem \
+  -out cert.pem \
+  -days 365 \
+  -subj '/CN=echo.sandbox.wasp.silvios.me'
+
+# Create a Secret with the Selfsigned Certificate
+kubectl \
+  --namespace example \
+  create secret tls \
+  tls-selfsigned \
+  --key cert.key.pem \
+  --cert cert.pem
+
+# Create an Ingress Resource
+kubectl apply \
+  --namespace example \
+  --filename httpbin/ingress-tls-selfsigned.yaml
 
 # Install certbot
 sudo apt-get install certbot
@@ -171,7 +240,7 @@ kubectl \
 
 kubectl apply \
   --namespace example \
-  --filename httpbin/ingress-tls.yaml
+  --filename httpbin/ingress-tls-widlcard.yaml
 
 # Add an entry on /etc/hosts if needed
 grep echo.${BASE_DOMAIN?} /etc/hosts || \
@@ -182,6 +251,18 @@ echo "127.0.0.1 echo.${BASE_DOMAIN?}" \
 curl \
   --include \
   https://echo.${BASE_DOMAIN?}/get
+
+# Generate PFX Certificate file
+openssl pkcs12 \
+  -export \
+  -inkey "${CERTIFICATE_PRIVATE_KEY?}" \
+  -in    "${CERTIFICATE_FULL_CHAIN?}" \
+  -out   "${CERTIFICATE_DIRECTORY?}/certificate.pfx"
+
+openssl pkcs12 \
+  -in "${CERTIFICATE_DIRECTORY?}/certificate.pfx" \
+  -info \
+  -nokeys
 ```
 
 ## Commands
@@ -204,6 +285,23 @@ curl \
   --include \
   --header 'host: xpto.example.com' \
   http://127.0.0.1:80/get
+
+
+# Certificate Info
+REMOTE_HOST_NAME="echo.example.com"
+
+echo \
+| openssl s_client \
+    -connect "${REMOTE_HOST_NAME?}":443 2>/dev/null \
+| openssl x509 \
+    -noout \
+    -subject \
+    -issuer \
+    -ext subjectAltName \
+    -nameopt lname \
+    -nameopt sep_multiline \
+    -dates
+
 ```
 
 ## Cleanup
