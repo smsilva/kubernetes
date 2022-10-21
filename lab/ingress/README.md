@@ -3,6 +3,7 @@
 ## Docker run NGINX
 
 ```bash
+# NGINX Default Container
 docker run \
   --rm \
   --detach \
@@ -10,10 +11,7 @@ docker run \
   --name nginx \
   nginx:1.23.1
 
-docker ps | egrep "CONTAINER|nginx"
-
-curl -i http://localhost:8080
-
+# NGINX Customized Container
 HTML_FILE="${PWD}/static/index.html"
 
 if [ -e "${HTML_FILE?}" ]; then
@@ -28,10 +26,16 @@ else
   echo "File \"${HTML_FILE}\" doesn't exists."
 fi
 
+# List running NGINX Containers
 docker ps | egrep "CONTAINER|nginx"
 
+# Test 1
+curl -i http://localhost:8080
+
+# Test 2
 curl -i http://localhost:8081
 
+# Cleanup
 docker kill nginx nginx-customized
 ```
 
@@ -80,7 +84,7 @@ kubectl apply \
   --filename httpbin/service.yaml
 ```
 
-## Ingress for httpbin
+## Ingress for httpbin (no TLS)
 
 ```bash
 kubectl apply \
@@ -135,8 +139,6 @@ curl \
   --insecure \
   --include \
   https://echo.example.com/get
-
-
 ```
 
 ## Ingress with TLS for httpbin with a Valid Let's Encrypt Wildcard Certificate
@@ -240,7 +242,7 @@ kubectl \
 
 kubectl apply \
   --namespace example \
-  --filename httpbin/ingress-tls-widlcard.yaml
+  --filename httpbin/ingress-tls-wildcard.yaml
 
 # Add an entry on /etc/hosts if needed
 grep echo.${BASE_DOMAIN?} /etc/hosts || \
@@ -286,7 +288,6 @@ curl \
   --header 'host: xpto.example.com' \
   http://127.0.0.1:80/get
 
-
 # Certificate Info
 REMOTE_HOST_NAME="echo.example.com"
 
@@ -301,7 +302,6 @@ echo \
     -nameopt lname \
     -nameopt sep_multiline \
     -dates
-
 ```
 
 ## Cleanup
