@@ -7,7 +7,7 @@ notifications:
 
   subscriptions:
     - recipients:
-        - telegram:publicchannelname
+        - telegram:silviosargocd
       triggers:
         - on-deployed
         - on-health-degraded
