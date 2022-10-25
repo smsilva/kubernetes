@@ -7,5 +7,6 @@ metadata:
   name: argocd-notifications-secret
 stringData:
   telegram-token: ${TELEGRAM_BOT_TOKEN}
+  space-webhook-url: ${GOOGLE_CHAT_WEBHOOK_URL}
 EOF
 fi

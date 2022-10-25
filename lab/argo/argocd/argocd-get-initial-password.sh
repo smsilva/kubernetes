@@ -32,4 +32,10 @@ cat <<EOF
 
   http://localhost:8080
 
+4. Notifications logs
+
+  kubectl \\
+    --namespace argocd \\
+    logs -f -l app.kubernetes.io/component=notifications-controller
+
 EOF

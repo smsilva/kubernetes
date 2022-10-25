@@ -8,6 +8,7 @@ notifications:
   subscriptions:
     - recipients:
         - telegram:silviosargocd
+        - googlechat:argocdnotifications
       triggers:
         - on-deployed
         - on-health-degraded
@@ -19,15 +20,55 @@ notifications:
     service.telegram: |
       token: $telegram-token
 
+    service.googlechat: |
+      webhooks:
+        argocdnotifications: $space-webhook-url
+
   templates:
     template.app-deployed: |
       message: |
         \[*{{.app.metadata.name}}*] *DEPLOYMENT* was *SUCCEEDED*.
         Revision: {{ .app.status.sync.revision }}
+      googlechat:
+        cards: |
+          - header:
+              title: ArgoCD Bot Notification
+            sections:
+              - widgets:
+                  - textParagraph:
+                      text: The app {{ .app.metadata.name }} has succesfully DEPLOYED.
+              - widgets:
+                  - keyValue:
+                      topLabel: Repository
+                      content: {{ call .repo.RepoURLToHTTPS .app.spec.source.repoURL }}
+                  - keyValue:
+                      topLabel: Revision
+                      content: {{ .app.spec.source.targetRevision }}
+                  - keyValue:
+                      topLabel: Author
+                      content: {{ (call .repo.GetCommitMetadata .app.status.sync.revision).Author }}
 
     template.app-sync-succeeded: |
       message: |
         \[*{{.app.metadata.name}}*] *SYNC* was *SUCCEEDED*.
+      googlechat:
+        cards: |
+          - header:
+              title: ArgoCD Bot Notification
+            sections:
+              - widgets:
+                  - textParagraph:
+                      text: The app {{ .app.metadata.name }} has succesfully SYNCED.
+              - widgets:
+                  - keyValue:
+                      topLabel: Repository
+                      content: {{ call .repo.RepoURLToHTTPS .app.spec.source.repoURL }}
+                  - keyValue:
+                      topLabel: Revision
+                      content: {{ .app.spec.source.targetRevision }}
+                  - keyValue:
+                      topLabel: Author
+                      content: {{ (call .repo.GetCommitMetadata .app.status.sync.revision).Author }}
 
     template.app-sync-failed: |
       message: |
