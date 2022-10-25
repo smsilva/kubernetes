@@ -30,10 +30,12 @@ fi
 docker ps | egrep "CONTAINER|nginx"
 
 # Test 1
-curl -i http://localhost:8080
+curl -is http://localhost:8080 \
+| egrep "200|title.*Welcome to nginx"
 
 # Test 2
-curl -i http://localhost:8081
+curl -is http://localhost:8081 \
+| egrep "200|title.*Static"
 
 # Cleanup
 docker kill nginx nginx-customized
@@ -70,8 +72,6 @@ nginx/install
 
 ## Deploy httpbin
 
-Execute it from a new terminal window:
-
 ```bash
 kubectl create namespace example
 
@@ -87,14 +87,21 @@ kubectl apply \
 ## Ingress for httpbin (no TLS)
 
 ```bash
+# Create Ingress
 kubectl apply \
   --namespace example \
   --filename httpbin/ingress.yaml
 
+# Test
 curl \
   --include \
   --header 'host: xpto.example.com' \
   http://127.0.0.1:80/get
+
+# Delete Ingress
+kubectl delete \
+  --namespace example \
+  --filename httpbin/ingress.yaml
 ```
 
 ## Ingress with TLS for httpbin with Selfsigned Certificate
@@ -139,6 +146,11 @@ curl \
   --insecure \
   --include \
   https://echo.example.com/get
+
+# Delete Ingress
+kubectl delete \
+  --namespace example \
+  --filename httpbin/ingress-tls-selfsigned.yaml
 ```
 
 ## Ingress with TLS for httpbin with a Valid Let's Encrypt Wildcard Certificate
@@ -240,6 +252,7 @@ kubectl \
   --key "${CERTIFICATE_PRIVATE_KEY?}" \
   --cert "${CERTIFICATE_FULL_CHAIN?}"
 
+# Create Ingress
 kubectl apply \
   --namespace example \
   --filename httpbin/ingress-tls-wildcard.yaml
@@ -261,6 +274,7 @@ openssl pkcs12 \
   -in    "${CERTIFICATE_FULL_CHAIN?}" \
   -out   "${CERTIFICATE_DIRECTORY?}/certificate.pfx"
 
+# Retrieve pfx file information
 openssl pkcs12 \
   -in "${CERTIFICATE_DIRECTORY?}/certificate.pfx" \
   -info \
@@ -270,6 +284,9 @@ openssl pkcs12 \
 ## Commands
 
 ```bash
+# Follow Resource Changes
+watch -n 3 'kubectl -n example get deploy,pods,svc,endpoints,ingress -o wide'
+
 # Use netcat to check port 80 availability
 nc -dv 127.0.0.1 80
 
@@ -289,8 +306,7 @@ curl \
   http://127.0.0.1:80/get
 
 # Certificate Info
-REMOTE_HOST_NAME="echo.example.com"
-
+REMOTE_HOST_NAME="echo.example.com" && \
 echo \
 | openssl s_client \
     -connect "${REMOTE_HOST_NAME?}":443 2>/dev/null \
