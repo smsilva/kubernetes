@@ -7,14 +7,18 @@ notifications:
 
   subscriptions:
     - recipients:
+        - googlechat:argocd-notifications-devops-team
         - telegram:silviosargocd
-        - googlechat:argocdnotifications
       triggers:
         - on-deployed
+        - on-sync-succeeded
+
+    - recipients:
+        - googlechat:argocd-notifications-devops-team
+      triggers:
         - on-health-degraded
         - on-sync-failed
         - on-sync-status-unknown
-        - on-sync-succeeded
 
   notifiers:
     service.telegram: |
@@ -22,7 +26,7 @@ notifications:
 
     service.googlechat: |
       webhooks:
-        argocdnotifications: $space-webhook-url
+        argocd-notifications-devops-team: $google-chat-webhook-url-devops-team
 
   templates:
     template.app-deployed: |
