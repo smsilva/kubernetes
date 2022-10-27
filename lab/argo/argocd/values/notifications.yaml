@@ -7,15 +7,14 @@ notifications:
 
   subscriptions:
     - recipients:
-        - googlechat:argocd-notifications-devops-team
+        - googlechat:devops-team
         - telegram:silviosargocd
       triggers:
         - on-deployed
         - on-sync-succeeded
 
     - recipients:
-        - googlechat:argocd-notifications-devops-team
-        - googlechat:argocd-notifications-sre-team
+        - googlechat:sre-team
         - telegram:silviosargocd
       triggers:
         - on-health-degraded
@@ -28,8 +27,8 @@ notifications:
 
     service.googlechat: |
       webhooks:
-        argocd-notifications-devops-team: $google-chat-webhook-url-devops-team
-        argocd-notifications-sre-team: $google-chat-webhook-url-sre-team
+        devops-team: $google-chat-webhook-url-devops-team
+        sre-team: $google-chat-webhook-url-sre-team
 
   templates:
     template.app-deployed: |
@@ -105,6 +104,7 @@ notifications:
 
     trigger.on-sync-failed: |
       - description: Application syncing has failed
+        oncePer: app.status.sync.revision
         send:
           - app-sync-failed
         when: app.status.operationState.phase in ['Error', 'Failed']
