@@ -7,14 +7,14 @@ notifications:
 
   subscriptions:
     - recipients:
-        - googlechat:devops-team
+        - googlechat:sre
         - telegram:silviosargocd
       triggers:
         - on-deployed
         - on-sync-succeeded
 
     - recipients:
-        - googlechat:sre-team
+        - googlechat:operations
         - telegram:silviosargocd
       triggers:
         - on-health-degraded
@@ -27,8 +27,8 @@ notifications:
 
     service.googlechat: |
       webhooks:
-        devops-team: $google-chat-webhook-url-devops-team
-        sre-team: $google-chat-webhook-url-sre-team
+        operations: $google-chat-webhook-url-operations
+        sre: $google-chat-webhook-url-sre
 
   templates:
     template.app-deployed: |
@@ -78,15 +78,75 @@ notifications:
 
     template.app-sync-failed: |
       message: |
-        \[*{{.app.metadata.name}}*] *SYNC* was *FAILED*.
+        \[*{{.app.metadata.name}}*] *SYNC* is *FAILED*.
+      googlechat:
+        cards: |
+          - header:
+              title: ArgoCD Bot Notification
+            sections:
+              - widgets:
+                  - textParagraph:
+                      text: The app {{ .app.metadata.name }} last SYNC is FAILED.
+              - widgets:
+                  - keyValue:
+                      topLabel: Repository
+                      content: {{ call .repo.RepoURLToHTTPS .app.spec.source.repoURL }}
+                  - keyValue:
+                      topLabel: Revision
+                      content: {{ .app.spec.source.targetRevision }}
+                  - keyValue:
+                      topLabel: Author
+                      content: {{ (call .repo.GetCommitMetadata .app.status.sync.revision).Author }}
+                  - keyValue:
+                      topLabel: Sync Status
+                      content: {{ .app.status.sync.status }}
+                  - keyValue:
+                      topLabel: Operation State Phase
+                      content: {{ .app.status.operationState.phase }}
 
     template.app-sync-status-unknown: |
       message: |
         \[*{{.app.metadata.name}}*] *SYNC* was *UNKNOWN*.
+      googlechat:
+        cards: |
+          - header:
+              title: ArgoCD Bot Notification
+            sections:
+              - widgets:
+                  - textParagraph:
+                      text: The app {{ .app.metadata.name }} last SYNC was UNKNOWN.
+              - widgets:
+                  - keyValue:
+                      topLabel: Repository
+                      content: {{ call .repo.RepoURLToHTTPS .app.spec.source.repoURL }}
+                  - keyValue:
+                      topLabel: Revision
+                      content: {{ .app.spec.source.targetRevision }}
+                  - keyValue:
+                      topLabel: Author
+                      content: {{ (call .repo.GetCommitMetadata .app.status.sync.revision).Author }}
 
     template.app-health-degraded: |
       message: |
         \[*{{.app.metadata.name}}*] *HEALTH* is *DEGRADED*.
+      googlechat:
+        cards: |
+          - header:
+              title: ArgoCD Bot Notification
+            sections:
+              - widgets:
+                  - textParagraph:
+                      text: The app {{ .app.metadata.name }} HEALTH status is DEGRADED.
+              - widgets:
+                  - keyValue:
+                      topLabel: Repository
+                      content: {{ call .repo.RepoURLToHTTPS .app.spec.source.repoURL }}
+                  - keyValue:
+                      topLabel: Revision
+                      content: {{ .app.spec.source.targetRevision }}
+                  - keyValue:
+                      topLabel: Author
+                      content: {{ (call .repo.GetCommitMetadata .app.status.sync.revision).Author }}
 
   triggers:
     trigger.on-deployed: |
