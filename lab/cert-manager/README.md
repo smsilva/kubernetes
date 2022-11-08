@@ -6,10 +6,10 @@
 kind/creation
 ```
 
-## NGINX Ingress Controller Install
+## NGINX Ingress Controller Install for Kind
 
 ```bash
-ingress-nginx/install
+ingress-nginx-for-kind/install
 ```
 
 ## Deploy httpbin
@@ -46,25 +46,38 @@ kubectl delete \
 ## Install cert-manager
 
 ```bash
-./install
+helm repo add jetstack https://charts.jetstack.io
+
+helm repo update jetstack
+
+helm search repo jetstack
+
+helm upgrade \
+  --install \
+  --create-namespace \
+  --namespace cert-manager \
+  cert-manager jetstack/cert-manager \
+  --set "installCRDs=true" \
+  --wait
 ```
 
-## Create a ClusterIssuer
+## ClusterIssuers creation
 
 ```bash
 kubectl apply \
-  --filename config/cluster-issuer.yaml
+  --filename config/cluster-issuers.yaml
+
+kubectl get ClusterIssuers
 ```
 
-## Create a Selfsigned Certificate
+## Create and use a Selfsigned Certificate
 
 ```bash
+# Create Certificate
 kubectl apply \
   --namespace example \
-  --filename httpbin/certificate.yaml
-```
+  --filename httpbin/certificate-selfsigned.yaml
 
-```bash
 # Create an Ingress Resource
 kubectl apply \
   --namespace example \
@@ -80,6 +93,25 @@ curl \
   --insecure \
   --include \
   https://echo.example.com/get
+```
+
+## Create cert-manager Let's Encrypt Staging Certificate
+
+```bash
+kubectl apply \
+  --namespace example \
+  --filename "config/certificate-letsencrypt-staging.yaml"
+
+watch -n 5 'kubectl -n example get cert,pods,secret,ing'
+
+kubectl apply \
+  --namespace example \
+  --filename "httpbin/ingress-tls-letsencrypt.yaml"
+
+curl \
+  --insecure \
+  --include \
+  https://echo.eks.sandbox.wasp.silvios.me/get
 ```
 
 ## Cleanup

@@ -1,0 +1,24 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: httpbin-tls
+spec:
+  ingressClassName: "nginx"
+
+  tls:
+    - hosts:
+        - echo.eks.sandbox.wasp.silvios.me
+      secretName: tls-letsencrypt-staging
+  
+  rules:
+    - host: echo.eks.sandbox.wasp.silvios.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: httpbin
+                port:
+                  number: 8000

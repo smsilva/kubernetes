@@ -15,6 +15,7 @@ helm upgrade \
   --namespace ingress-nginx \
   ingress-nginx ingress-nginx/ingress-nginx \
   --set "rbac.create=true" \
+  --set "controller.service.externalTrafficPolicy=Local" \
   --wait
 ```
 
