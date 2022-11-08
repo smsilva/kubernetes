@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+helm repo add kedacore https://kedacore.github.io/charts &> /dev/null
+
+helm repo update kedacore &> /dev/null
+
+helm search repo kedacore/keda
+
+echo ""
+
+helm upgrade \
+  --install \
+  --create-namespace \
+  --namespace keda \
+  keda kedacore/keda \
+  --wait

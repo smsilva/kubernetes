@@ -1,15 +1,5 @@
 ---
 apiVersion: keda.sh/v1alpha1
-kind: TriggerAuthentication
-metadata:
-  name: keda-trigger-auth-rabbitmq-conn
-spec:
-  secretTargetRef:
-    - parameter: host
-      name: keda-rabbitmq-secret
-      key: host
----
-apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
   name: rabbitmq-cluster-events
@@ -28,4 +18,4 @@ spec:
         metricName: custom-cluster-events
 
       authenticationRef:
-        name: keda-trigger-auth-rabbitmq-conn
+        name: rabbitmq-authentication

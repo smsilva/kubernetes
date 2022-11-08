@@ -8,7 +8,7 @@ curl \
   --silent \
   --output /dev/null \
   --write-out "%{http_code}" \
+  --header "Content-Type: application/json" \
+  --header "Api-Key: ${NEW_RELIC_LICENSE_KEY?}" \
   --request POST "https://insights-collector.newrelic.com/v1/accounts/${NEW_RELIC_ACCOUNT_ID?}/events" \
-  --header 'Content-Type: application/json' \
-  --header "x-insert-key: ${NEW_RELIC_API_KEY?}" \
   --data @data.json

@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: wasp-item-consumer
   labels:
     app: wasp-item-consumer
-  name: wasp-item-consumer
 spec:
   replicas: 1
 
