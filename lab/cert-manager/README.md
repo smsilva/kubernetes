@@ -33,7 +33,11 @@ kubectl wait pods \
   --namespace example \
   --for=condition=Ready \
   --selector app=httpbin
+```
 
+## Deploy httpbin non-tls Ingress for Kind
+
+```bash
 curl \
   --include \
   http://localhost/get
@@ -70,7 +74,7 @@ kubectl apply \
 kubectl get ClusterIssuers
 ```
 
-## Create and use a Selfsigned Certificate
+## Create and use a Selfsigned Certificate with Kind
 
 ```bash
 # Create Certificate
@@ -111,7 +115,7 @@ kubectl apply \
 curl \
   --insecure \
   --include \
-  https://echo.eks.sandbox.wasp.silvios.me/get
+  https://echo.sandbox.wasp.silvios.me/get
 ```
 
 ## Cleanup

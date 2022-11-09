@@ -1,0 +1,15 @@
+remote_write:
+  - url: https://metric-api.newrelic.com/prometheus/v1/write?prometheus_server={{ .Values.global.cluster }}
+    authorization:
+      credentials_file: /etc/secrets/newrelic/license
+
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: "^apiserver_flowcontrol_current_inqueue_requests(.*)|^etcd_db_total_size_in_bytes(.*)|^process_resident_memory_bytes(.*)"
+        action: keep
+
+      - source_labels: [__name__]
+        regex: "^apiserver_flowcontrol_current_inqueue_requests(.*)|^etcd_db_total_size_in_bytes(.*)|^process_resident_memory_bytes(.*)"
+        target_label: newrelic_metric_type
+        replacement: "gauge"
+        action: replace

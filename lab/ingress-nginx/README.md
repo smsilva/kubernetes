@@ -38,5 +38,5 @@ kubectl apply \
 
 curl \
   --include \
-  http://eks.sandbox.wasp.silvios.me/get
+  http://echo.sandbox.wasp.silvios.me/get
 ```
