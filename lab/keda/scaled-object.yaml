@@ -4,6 +4,8 @@ kind: ScaledObject
 metadata:
   name: rabbitmq-cluster-events
 spec:
+  cooldownPeriod: 120
+
   scaleTargetRef:
     name: wasp-item-consumer
 

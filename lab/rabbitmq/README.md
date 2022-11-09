@@ -21,5 +21,8 @@ watch -n 3 'kubectl -n wasp get deploy,pods -o wide'
 ## Logs
 
 ```bash
-kubectl -n wasp logs -l app=wasp-item-consumer -f
+kubectl logs \
+  --namespace wasp \
+  --selector app=wasp-item-consumer \
+  --follow
 ```
