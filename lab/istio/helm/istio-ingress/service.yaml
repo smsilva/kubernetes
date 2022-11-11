@@ -1,4 +1,6 @@
 service:
+  # externalTrafficPolicy: Local
+
   type: NodePort
 
   ports:

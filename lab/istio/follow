@@ -1,0 +1,22 @@
+#!/bin/bash
+kubectl get Gateway -A
+
+echo ""
+
+kubectl -n istio-ingress get svc
+
+echo ""
+
+kubectl -n istio-ingress get secret tls-wildcard-full-chain
+
+echo ""
+
+kubectl -n example get VirtualService
+
+echo ""
+
+kubectl get pods -A -o wide | egrep "^NAMESPACE|^default|^example|^istio-ingress.*ingress"
+
+echo ""
+
+kubectl -n example get svc -o wide

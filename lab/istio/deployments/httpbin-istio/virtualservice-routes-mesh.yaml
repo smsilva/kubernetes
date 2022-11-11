@@ -3,10 +3,10 @@ apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: httpbin-routes-mesh
-  namespace: httpbin
+  namespace: example
 spec:
   hosts:
-    - httpbin.httpbin.svc.cluster.local
+    - httpbin.example.svc.cluster.local
 
   gateways:
     - mesh
@@ -16,10 +16,10 @@ spec:
       headers:
         request:
           add:
-            X-A1-origin-2: httpbin-gateway-mesh
+            X-A1-origin-1: httpbin-gateway-mesh
 
       route:
         - destination:
-            host: httpbin.httpbin.svc.cluster.local
+            host: httpbin.example.svc.cluster.local
             port:
               number: 8000

@@ -14,7 +14,7 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - "httpbin.example.com"
+        - "echo.sandbox.wasp.silvios.me"
 
     - port:
         number: 443
@@ -22,6 +22,6 @@ spec:
         protocol: HTTPS
       tls:
         mode: SIMPLE
-        credentialName: ingress-httpbin-tls
+        credentialName: tls-wildcard-full-chain
       hosts:
-        - "httpbin.example.com"
+        - "echo.sandbox.wasp.silvios.me"
