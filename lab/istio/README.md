@@ -15,11 +15,32 @@ kubectl apply \
   --filename ./deployments/httpbin/namespace.yaml && \
 kubectl apply \
   --namespace example \
-  --filename deployments/httpbin/ && \
+  --filename deployments/httpbin/
+
+kubectl run curl \
+  --namespace default \
+  --image=silviosilva/utils \
+  --command -- sleep infinity
+
+kubectl run curl \
+  --namespace example \
+  --image=silviosilva/utils \
+  --command -- sleep infinity
+
 kubectl wait deployment httpbin \
   --namespace example \
   --for=condition=Available \
   --timeout=360s
+
+kubectl wait pod curl \
+  --namespace default \
+  --for condition=Ready \
+  --timeout 360s
+
+kubectl wait pod curl \
+  --namespace example \
+  --for condition=Ready \
+  --timeout 360s
 ```
 
 ### In-cluster Test
@@ -27,44 +48,17 @@ kubectl wait deployment httpbin \
 #### From default namespace
 
 ```bash
-kubectl run curl \
-  --namespace default \
-  --image=silviosilva/utils \
-  --command -- sleep infinity && \
-kubectl wait pod curl \
-  --namespace default \
-  --for condition=Ready \
-  --timeout 360s
-
 kubectl \
   --namespace default \
   exec curl -- curl \
     --include \
     --silent \
     --request GET http://httpbin.example.svc:8000/get
-
-kubectl \
-  --namespace default \
-  exec curl -- curl \
-    --include \
-    --silent \
-    --request POST http://httpbin.example.svc:8000/post \
-    --header "Content-type: application/json" \
-    --data "{ id: 1}"
 ```
 
-#### From httpbin namespace
+#### From example namespace
 
 ```bash
-kubectl run curl \
-  --namespace example \
-  --image=silviosilva/utils \
-  --command -- sleep infinity && \
-kubectl wait pod curl \
-  --namespace example \
-  --for condition=Ready \
-  --timeout 360s
-
 UUID=$(uuidgen)
 
 kubectl \
@@ -80,7 +74,9 @@ kubectl \
   --source-namespace example \
   --source-selector run=curl \
   --target-namespace example \
-  --target-selector app=httpbin
+  --target-selector app=httpbin \
+| tee ${HOME}/trash/${UUID}.json && \
+code ${HOME}/trash/${UUID}.json
 ```
 
 ### From outside
@@ -103,7 +99,9 @@ curl \
   --source-namespace istio-ingress \
   --source-selector app=istio-ingress \
   --target-namespace example \
-  --target-selector app=httpbin
+  --target-selector app=httpbin \
+| tee ${HOME}/trash/${UUID}.json && \
+code ${HOME}/trash/${UUID}.json
 ```
 
 ## Ingress with TLS for httpbin with Selfsigned Certificate
@@ -146,8 +144,8 @@ curl \
   --source-selector app=istio-ingress \
   --target-namespace example \
   --target-selector app=httpbin \
-| tee ${HOME}/trash/istio.json && \
-code ${HOME}/trash/istio.json
+| tee ${HOME}/trash/${UUID}.json && \
+code ${HOME}/trash/${UUID}.json
 ```
 
 ### Check if the Kind Cluster NodePort is open

@@ -7,7 +7,9 @@ kubectl -n istio-ingress get svc
 
 echo ""
 
-kubectl -n istio-ingress get secret tls-wildcard-full-chain
+kubectl \
+  get secret tls-wildcard-full-chain \
+  --namespace istio-ingress 2> /dev/null || echo "istio-ingress/tls-wildcard-full-chain not found"
 
 echo ""
 
