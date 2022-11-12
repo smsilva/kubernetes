@@ -68,7 +68,7 @@ kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
 ```
 
-## Deploy httpbin
+## Deploy httpbin and curl pods
 
 ```bash
 kubectl apply \
@@ -89,7 +89,7 @@ kubectl run curl \
 
 kubectl wait deployment httpbin \
   --namespace example \
-  --for=condition=Available \
+  --for condition=Available \
   --timeout=360s
 
 kubectl wait pod curl \
