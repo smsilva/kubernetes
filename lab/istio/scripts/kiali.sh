@@ -28,9 +28,9 @@ roleRef:
   kind: ClusterRole
   name: kiali
 subjects:
-- kind: Group
-  namespace: istio-system
-  name: 149ae9b0-6ea5-454e-96d9-2c91bdfe704e
+  - kind: Group
+    namespace: istio-system
+    name: 149ae9b0-6ea5-454e-96d9-2c91bdfe704e
 EOF
 
 # Kiali Role Binding
@@ -45,9 +45,9 @@ roleRef:
   kind: ClusterRole
   name: kiali-viewer
 subjects:
-- apiGroup: rbac.authorization.k8s.io
-  kind: User
-  name: smsilva@gmail.com
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: smsilva@gmail.com
 EOF
 
 # OpenID Configuration
@@ -64,7 +64,7 @@ spec:
     strategy: token
   deployment:
     accessible_namespaces:
-    - '**'
+      - '**'
     namespace: istio-system
     view_only_mode: false
     verbose_mode: "5"
@@ -98,7 +98,7 @@ spec:
       username_claim: email
   deployment:
     accessible_namespaces:
-    - '**'
+      - '**'
     namespace: istio-system
     view_only_mode: false
     verbose_mode: "9"

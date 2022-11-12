@@ -53,6 +53,9 @@ helm upgrade \
 kubectl apply \
   --filename "./deployments/telemetry.yaml"
 
+# Download the Latest Istio Repository
+./scripts/istio-latest-repo-download.sh
+
 # Configuring Add-ons
 kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
