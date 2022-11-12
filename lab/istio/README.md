@@ -1,11 +1,61 @@
 # Istio
 
-## Setup using Helm
+## TL/DR Setup
 
 Run the script:
 
 ```bash
 ./setup-istio-with-kind-and-helm
+```
+
+## Step by step Setup
+
+```bash
+# List Kind Clusters
+kind get clusters
+
+# Create Kind Cluster with Extra Ports exposed (32080 and 32443)
+kind create cluster \
+  --image kindest/node:v1.24.0 \
+  --config "./kind/cluster.yaml" \
+  --name istio
+
+# Configure Helm Repo
+helm repo add istio https://istio-release.storage.googleapis.com/charts
+helm repo update istio
+helm search repo --regexp "istio/istiod|istio/base|istio/gateway"
+
+# Install istio-base (CRDs)
+helm install \
+  --namespace "istio-system" \
+  --create-namespace \
+  istio-base istio/base
+
+# Install Istio Discovery (istiod)
+helm upgrade \
+  --install \
+  --namespace "istio-system" \
+  --create-namespace \
+  istio-discovery istio/istiod \
+  --values "./helm/istio-discovery/mesh-config.yaml" \
+  --wait
+
+# Install Istio Ingress Gateway customizing the Service with NodePortss
+kubectl apply \
+  --filename "./helm/istio-ingress/namespace.yaml" && \
+helm upgrade \
+  --install \
+  --namespace "istio-ingress" \
+  istio-ingress istio/gateway \
+  --values "./helm/istio-ingress/service.yaml"
+
+# Configure Telemetry
+kubectl apply \
+  --filename "./deployments/telemetry.yaml"
+
+# Configuring Add-ons
+kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml"
+kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
 ```
 
 ## Deploy httpbin
