@@ -29,7 +29,9 @@ kind create cluster \
 
 # Configure Helm Repo
 helm repo add istio https://istio-release.storage.googleapis.com/charts
+
 helm repo update istio
+
 helm search repo --regexp "istio/istiod|istio/base|istio/gateway"
 
 # Install istio-base (CRDs)
@@ -71,32 +73,38 @@ kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
 ## Deploy httpbin and curl pods
 
 ```bash
+# Example namespace and httpbin Deployment 
 kubectl apply \
   --filename ./deployments/httpbin/namespace.yaml && \
 kubectl apply \
   --namespace example \
   --filename deployments/httpbin/
 
+# curl pod on default namespace
 kubectl run curl \
   --namespace default \
   --image=silviosilva/utils \
   --command -- sleep infinity
 
+# curl pod on example namespace
 kubectl run curl \
   --namespace example \
   --image=silviosilva/utils \
   --command -- sleep infinity
 
+# Wait for httpbin deploy becomes Available
 kubectl wait deployment httpbin \
   --namespace example \
   --for condition=Available \
   --timeout=360s
 
+# Wait for curl pod become Ready
 kubectl wait pod curl \
   --namespace default \
   --for condition=Ready \
   --timeout 360s
 
+# Wait for curl pod become Ready
 kubectl wait pod curl \
   --namespace example \
   --for condition=Ready \
@@ -104,6 +112,14 @@ kubectl wait pod curl \
 ```
 
 ### In-cluster Test
+
+```bash
+# Follow istio-proxy logs
+kubectl logs \
+  --namespace example \
+  --selector app=httpbin \
+  --container istio-proxy
+```
 
 #### From default namespace
 
