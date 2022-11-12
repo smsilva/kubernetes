@@ -2,7 +2,14 @@
 
 ## TL/DR Setup
 
-Run the script:
+Run the script below to:
+
+- Create a Kind Cluster named "istio"
+
+- Install 3 Helm Charts on it:
+  - istio/base
+  - istio/istiod
+  - istio/gateway
 
 ```bash
 ./setup-istio-with-kind-and-helm
