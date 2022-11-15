@@ -16,7 +16,7 @@ spec:
       headers:
         request:
           add:
-            X-A1-origin-1: httpbin-gateway-mesh
+            X-W1-gateway: mesh
 
       route:
         - destination:

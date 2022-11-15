@@ -17,6 +17,8 @@ Run the script below to:
 
 ## Step by step Setup
 
+### Kind Cluster
+
 ```bash
 # List Kind Clusters
 kind get clusters
@@ -26,7 +28,11 @@ kind create cluster \
   --image kindest/node:v1.24.0 \
   --config "./kind/cluster.yaml" \
   --name istio
+```
 
+### Install using Helm Charts
+
+```bash
 # Configure Helm Repo
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 
@@ -40,7 +46,7 @@ helm install \
   --create-namespace \
   istio-base istio/base
 
-# Install Istio Discovery (istiod)
+# Install Istio Discovery (istiod) - Logs in JSON format
 helm upgrade \
   --install \
   --namespace "istio-system" \
@@ -58,12 +64,27 @@ helm upgrade \
   istio-ingress istio/gateway \
   --values "./helm/istio-ingress/service.yaml"
 
+# Show Istio Gateway POD
+kubectl get pods \
+  --namespace istio-ingress \
+  --selector "app=istio-ingress"
+
 # Configure Telemetry
 kubectl apply \
   --filename "./deployments/telemetry.yaml"
+```
 
+### Download Istio Repositories with Examples
+
+```bash
 # Download the Latest Istio Repository
 ./scripts/istio-latest-repo-download.sh
+
+# Add this line to your ${HOME}/.bashrc file
+[ -f ~/.bash_config ] && source ~/.bash_config
+
+# Source your ${HOME}/.bashrc file
+source ${HOME}/.bashrc
 
 # Configuring Add-ons
 kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml"
@@ -72,13 +93,17 @@ kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
 
 ## Deploy httpbin and curl pods
 
+### deploy
+
 ```bash
 # Example namespace and httpbin Deployment 
 kubectl apply \
-  --filename ./deployments/httpbin/namespace.yaml && \
+  --filename "./deployments/httpbin/namespace.yaml" && \
 kubectl apply \
   --namespace example \
-  --filename deployments/httpbin/
+  --filename "deployments/httpbin/" && \
+kubectl apply \
+  --filename "./deployments/httpbin-istio"
 
 # curl pod on default namespace
 kubectl run curl \
@@ -91,7 +116,11 @@ kubectl run curl \
   --namespace example \
   --image=silviosilva/utils \
   --command -- sleep infinity
+```
 
+### Wait
+
+```bash
 # Wait for httpbin deploy becomes Available
 kubectl wait deployment httpbin \
   --namespace example \
@@ -111,17 +140,23 @@ kubectl wait pod curl \
   --timeout 360s
 ```
 
+## Tests
+
 ### In-cluster Test
 
+#### Follow logs from httpbin pods
+
+From another terminal:
+
 ```bash
-# Follow istio-proxy logs
 kubectl logs \
   --namespace example \
-  --selector app=httpbin \
-  --container istio-proxy
+  --selector "app=httpbin" \
+  --container istio-proxy \
+  --follow
 ```
 
-#### From default namespace
+#### Request From default namespace
 
 ```bash
 kubectl \
@@ -129,6 +164,7 @@ kubectl \
   exec curl -- curl \
     --include \
     --silent \
+    --header 'x-wasp-id: ANY_VALUE_HERE' \
     --request GET http://httpbin.example.svc:8000/get
 ```
 
@@ -158,9 +194,6 @@ code ${HOME}/trash/${UUID}.json
 ### From outside
 
 ```bash
-kubectl apply \
-  --filename ./deployments/httpbin-istio
-
 UUID=$(uuidgen)
 
 curl \
@@ -224,6 +257,8 @@ curl \
 code ${HOME}/trash/${UUID}.json
 ```
 
+## Commands
+
 ### Check if the Kind Cluster NodePort is open
 
 ```bash
@@ -240,7 +275,7 @@ Connection to 127.0.0.1 32080 port [tcp/*] succeeded!
 
 In order to enable Ingress Traffic, see the Example [Ingress Traffic](examples/traffic-management/ingress-gateway/README.md).
 
-## Cleanup
+### Cleanup
 
 ```bash
 kind delete cluster --name istio

@@ -23,9 +23,11 @@ meshConfig:
       "downstream_local_address": "%DOWNSTREAM_LOCAL_ADDRESS%",
       "downstream_remote_address": "%DOWNSTREAM_REMOTE_ADDRESS%",
       "duration": "%DURATION%",
+      "host_name": "%HOSTNAME%",
       "method": "%REQ(:METHOD)%",
       "path": "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%",
       "protocol": "%PROTOCOL%",
+      "request_duration": "%REQUEST_DURATION%",
       "request_id": "%REQ(X-REQUEST-ID)%",
       "requested_server_name": "%REQUESTED_SERVER_NAME%",
       "response_code_details": "%RESPONSE_CODE_DETAILS%",
@@ -39,6 +41,6 @@ meshConfig:
       "upstream_service_time": "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%",
       "user_agent": "%REQ(USER-AGENT)%",
       "x_forwarded_for": "%REQ(X-FORWARDED-FOR)%",
-      "x_gateway": "%REQ(X-A1-ORIGIN-1)%",
+      "x_gateway": "%REQ(X-W1-GATEWAY)%",
       "x_wasp_id": "%REQ(X-WASP-ID)%"
     }
