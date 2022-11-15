@@ -159,13 +159,22 @@ kubectl logs \
 #### Request From default namespace
 
 ```bash
+UUID=$(uuidgen)
+
 kubectl \
   --namespace default \
   exec curl -- curl \
     --include \
     --silent \
-    --header 'x-wasp-id: ANY_VALUE_HERE' \
+    --header "x-wasp-id: ${UUID}" \
     --request GET http://httpbin.example.svc:8000/get
+
+./logs-to-json \
+  --request-id ${UUID} \
+  --target-namespace example \
+  --target-selector app=httpbin \
+| tee ${HOME}/trash/${UUID}.json && \
+code ${HOME}/trash/${UUID}.json
 ```
 
 #### From example namespace
