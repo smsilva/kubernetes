@@ -38,19 +38,23 @@ helm repo add istio https://istio-release.storage.googleapis.com/charts
 
 helm repo update istio
 
-helm search repo --regexp "istio/istiod|istio/base|istio/gateway"
+helm search repo \
+  --regexp "istio/istiod|istio/base|istio/gateway" \
+  --version 1.15.3
 
 # Install istio-base (CRDs)
 helm install \
   --namespace "istio-system" \
   --create-namespace \
-  istio-base istio/base
+  istio-base istio/base \
+  --version 1.15.3
 
 # Install Istio Discovery (istiod) - Logs in JSON format
 helm upgrade \
   --install \
   --namespace "istio-system" \
   --create-namespace \
+  --version 1.15.3 \
   istio-discovery istio/istiod \
   --values "./helm/istio-discovery/mesh-config.yaml" \
   --wait
@@ -60,6 +64,7 @@ kubectl apply \
   --filename "./helm/istio-ingress/namespace.yaml" && \
 helm upgrade \
   --install \
+  --version 1.15.3 \
   --namespace "istio-ingress" \
   istio-ingress istio/gateway \
   --values "./helm/istio-ingress/service.yaml"

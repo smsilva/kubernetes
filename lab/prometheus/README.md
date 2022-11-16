@@ -27,7 +27,7 @@ EOF
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
-helm search repo prometheus-community
+helm search repo prometheus-community/prometheus
 
 helm fetch prometheus-community/prometheus --untar
 
