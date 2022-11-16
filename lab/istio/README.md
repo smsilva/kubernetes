@@ -17,7 +17,7 @@ Run the script below to:
 
 ## Step by step Setup
 
-### Kind Cluster
+###   Kind Cluster
 
 ```bash
 # List Kind Clusters
@@ -30,7 +30,7 @@ kind create cluster \
   --name istio
 ```
 
-### Install using Helm Charts
+###   Install using Helm Charts
 
 ```bash
 # Configure Helm Repo
@@ -74,7 +74,7 @@ kubectl apply \
   --filename "./deployments/telemetry.yaml"
 ```
 
-### Download Istio Repositories with Examples
+###   Download Istio Repositories with Examples
 
 ```bash
 # Download the Latest Istio Repository
@@ -93,7 +93,7 @@ kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
 
 ## Deploy httpbin and curl pods
 
-### deploy
+###   deploy
 
 ```bash
 # Example namespace and httpbin Deployment 
@@ -118,7 +118,7 @@ kubectl run curl \
   --command -- sleep infinity
 ```
 
-### Wait
+###   Wait
 
 ```bash
 # Wait for httpbin deploy becomes Available
@@ -142,9 +142,9 @@ kubectl wait pod curl \
 
 ## Tests
 
-### In-cluster Test
+###   In-cluster Test
 
-#### Follow logs from httpbin pods
+####     Follow logs from httpbin pods
 
 From another terminal:
 
@@ -156,7 +156,7 @@ kubectl logs \
   --follow
 ```
 
-#### Request From default namespace
+####     From default namespace
 
 ```bash
 UUID=$(uuidgen)
@@ -177,7 +177,7 @@ kubectl \
 code ${HOME}/trash/${UUID}.json
 ```
 
-#### From example namespace
+####     From example namespace
 
 ```bash
 UUID=$(uuidgen)
@@ -200,7 +200,7 @@ kubectl \
 code ${HOME}/trash/${UUID}.json
 ```
 
-### From outside
+###   From outside
 
 ```bash
 UUID=$(uuidgen)
@@ -268,7 +268,7 @@ code ${HOME}/trash/${UUID}.json
 
 ## Commands
 
-### Check if the Kind Cluster NodePort is open
+###   Check if the Kind Cluster NodePort is open
 
 ```bash
 nc -dv 127.0.0.1 32080
@@ -280,11 +280,11 @@ Expected output:
 Connection to 127.0.0.1 32080 port [tcp/*] succeeded!
 ```
 
-### Outside Kind cluster Test
+###   Outside Kind cluster Test
 
 In order to enable Ingress Traffic, see the Example [Ingress Traffic](examples/traffic-management/ingress-gateway/README.md).
 
-### Cleanup
+###   Cleanup
 
 ```bash
 kind delete cluster --name istio
