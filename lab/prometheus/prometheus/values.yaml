@@ -1,5 +1,5 @@
 global:
-  cluster: kind-8
+  cluster: kind-14
 
 rbac:
   create: true
@@ -1959,23 +1959,6 @@ serverFiles:
           - source_labels: [__meta_kubernetes_pod_phase]
             regex: Pending|Succeeded|Failed|Completed
             action: drop
-
-      - job_name: 'istio-prometheus'
-        honor_labels: true
-        metrics_path: '/federate'
-        kubernetes_sd_configs:
-        - role: pod
-          namespaces:
-            names: ['istio-system']
-        metric_relabel_configs:
-        - source_labels: [__name__]
-          regex: 'workload:(.*)'
-          target_label: __name__
-          action: replace
-        params:
-          'match[]':
-          - '{__name__=~"workload:(.*)"}'
-          - '{__name__=~"pilot(.*)"}'
 
 # adds additional scrape configs to prometheus.yml
 # must be a string so you have to add a | after extraScrapeConfigs:

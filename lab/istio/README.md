@@ -47,7 +47,8 @@ helm install \
   --namespace "istio-system" \
   --create-namespace \
   istio-base istio/base \
-  --version 1.15.3
+  --version 1.15.3 \
+  --wait
 
 # Install Istio Discovery (istiod) - Logs in JSON format
 helm upgrade \

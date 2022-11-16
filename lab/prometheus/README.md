@@ -3,7 +3,9 @@
 ## Create a Kind Cluster
 
 ```bash
-kind/creation
+kind create cluster \
+  --image kindest/node:v1.24.0 \
+  --config "./kind/cluster.yaml"
 ```
 
 ## New Relic Secret
