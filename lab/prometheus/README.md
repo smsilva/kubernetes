@@ -37,6 +37,7 @@ helm upgrade \
   --install \
   --namespace prometheus \
   prometheus prometheus/ \
+  --set 'global.cluster=kind-29' \
   --wait && \
 kubectl wait pod \
   --namespace prometheus \

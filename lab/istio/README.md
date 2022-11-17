@@ -62,7 +62,7 @@ helm upgrade \
   --values "./helm/istio-discovery/mesh-config.yaml" \
   --wait
 
-# Install Istio Ingress Gateway customizing the Service with NodePortss
+# Install Istio Ingress Gateway customizing the Service with NodePorts
 kubectl apply \
   --filename "./helm/istio-ingress/namespace.yaml" && \
 helm upgrade \
