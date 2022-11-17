@@ -6,27 +6,26 @@ remote_write:
     write_relabel_configs:
       - source_labels: [__name__]
         regex: "\
-            apiserver_flowcontrol_current_inqueue_requests|\
-            etcd_db_total_size_in_bytes|\
-            process_resident_memory_bytes|\
-            istio(.*)|\
-            pilot:(.*)|\
-            workload:(.*)"
+          apiserver_flowcontrol_current_inqueue_requests|\
+          etcd_db_total_size_in_bytes|\
+          process_resident_memory_bytes|\
+          istio(.*)|\
+          workload:(.*)"
         action: keep
 
       - source_labels: [__name__]
         regex: "\
-            apiserver_flowcontrol_current_inqueue_requests|\
-            etcd_db_total_size_in_bytes|\
-            process_resident_memory_bytes"
+          apiserver_flowcontrol_current_inqueue_requests|\
+          etcd_db_total_size_in_bytes|\
+          process_resident_memory_bytes"
         target_label: newrelic_metric_type
         replacement: "gauge"
         action: replace
 
       - regex: "\
-            entity(.*)|\
-            instance|\
-            pod_template_hash|\
-            pod(.*)|\
-            last_field"
+          entity(.*)|\
+          instance|\
+          pod_template_hash|\
+          pod(.*)|\
+          last_field"
         action: labeldrop

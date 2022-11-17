@@ -1,5 +1,5 @@
 global:
-  cluster: kind-22
+  cluster: kind-28
 
 rbac:
   create: true
