@@ -150,11 +150,11 @@ kubectl wait pod curl \
 
 ## Tests
 
-###   In-cluster Test
-
 ```bash
 mkdir -p ${HOME}/trash
 ```
+
+###   In-cluster
 
 ####     Follow logs from httpbin pods
 
@@ -212,7 +212,7 @@ kubectl \
 code ${HOME}/trash/${UUID}.json
 ```
 
-###   From outside
+###   Outside
 
 ```bash
 UUID=$(uuidgen)
@@ -232,6 +232,35 @@ curl \
   --target-selector app=httpbin \
 | tee ${HOME}/trash/${UUID}.json && \
 code ${HOME}/trash/${UUID}.json
+```
+
+###   Generate Traffic
+
+```bash
+# Generate Traffic for NGINX Deployment
+watch -n 5 'kubectl \
+  --namespace example \
+  exec curl -- curl \
+    --head \
+    --silent \
+    --header "x-wasp-id: $(uuidgen)" \
+    --request GET http://nginx.example.svc'
+
+# Generate Traffic for httpbin Deployment 200
+watch -n 5 'curl \
+  --include \
+  --silent \
+  --header "x-wasp-id: $(uuidgen)" \
+  --header "Host: echo.sandbox.wasp.silvios.me" \
+  --request GET http://127.0.0.1:32080/get'
+
+# Generate Traffic for httpbin Deployment 503
+watch -n 30 'curl \
+  --include \
+  --silent \
+  --header "x-wasp-id: $(uuidgen)" \
+  --header "Host: echo.sandbox.wasp.silvios.me" \
+  --request GET http://127.0.0.1:32080/status/503'
 ```
 
 ## Ingress with TLS for httpbin with Selfsigned Certificate
