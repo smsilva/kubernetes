@@ -22,3 +22,11 @@ remote_write:
         target_label: newrelic_metric_type
         replacement: "gauge"
         action: replace
+
+      - regex: "\
+            entity(.*)|\
+            instance|\
+            pod_template_hash|\
+            pod(.*)|\
+            last_field"
+        action: labeldrop

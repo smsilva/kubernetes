@@ -34,20 +34,22 @@ kind create cluster \
 
 ```bash
 # Configure Helm Repo
+ISTIO_VERSION="${ISTIO_VERSION-1.16.0}"
+
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 
 helm repo update istio
 
 helm search repo \
   --regexp "istio/istiod|istio/base|istio/gateway" \
-  --version 1.15.3
+  --version ${ISTIO_VERSION?}
 
 # Install istio-base (CRDs)
 helm install \
   --namespace "istio-system" \
   --create-namespace \
   istio-base istio/base \
-  --version 1.15.3 \
+  --version ${ISTIO_VERSION?} \
   --wait
 
 # Install Istio Discovery (istiod) - Logs in JSON format
@@ -55,7 +57,7 @@ helm upgrade \
   --install \
   --namespace "istio-system" \
   --create-namespace \
-  --version 1.15.3 \
+  --version ${ISTIO_VERSION?} \
   istio-discovery istio/istiod \
   --values "./helm/istio-discovery/mesh-config.yaml" \
   --wait
@@ -65,7 +67,7 @@ kubectl apply \
   --filename "./helm/istio-ingress/namespace.yaml" && \
 helm upgrade \
   --install \
-  --version 1.15.3 \
+  --version ${ISTIO_VERSION?} \
   --namespace "istio-ingress" \
   istio-ingress istio/gateway \
   --values "./helm/istio-ingress/service.yaml"
@@ -149,6 +151,10 @@ kubectl wait pod curl \
 ## Tests
 
 ###   In-cluster Test
+
+```bash
+mkdir -p ${HOME}/trash
+```
 
 ####     Follow logs from httpbin pods
 

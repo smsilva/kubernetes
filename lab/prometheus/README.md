@@ -49,12 +49,3 @@ kubectl logs \
   --container prometheus-server \
   --follow
 ```
-
-## Deploy httpbin
-
-```bash
-kubectl create namespace example
-
-kubectl -n example apply -f httpbin/deployment.yaml
-kubectl -n example apply -f httpbin/service.yaml
-```
