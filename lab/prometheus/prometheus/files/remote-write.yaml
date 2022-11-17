@@ -10,7 +10,7 @@ remote_write:
           etcd_db_total_size_in_bytes|\
           process_resident_memory_bytes|\
           istio(.*)|\
-          workload:(.*)"
+          envoy(.*)"
         action: keep
 
       - source_labels: [__name__]
@@ -23,7 +23,7 @@ remote_write:
         action: replace
 
       - regex: "\
-          entity(.*)|\
+          entity.(.*)|\
           instance|\
           pod_template_hash|\
           pod(.*)|\
