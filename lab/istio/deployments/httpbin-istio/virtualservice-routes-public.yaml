@@ -6,7 +6,7 @@ metadata:
   namespace: example
 spec:
   hosts:
-    - echo.sandbox.wasp.silvios.me
+    - app.example.com
 
   gateways:
     - istio-ingress/httpbin

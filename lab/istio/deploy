@@ -1,0 +1,44 @@
+#!/bin/bash
+export THIS_SCRIPT_DIRECTORY=$(dirname $0)
+export PATH=${PATH}:${THIS_SCRIPT_DIRECTORY}
+
+# Example namespace and httpbin Deployment 
+kubectl apply \
+  --filename "${THIS_SCRIPT_DIRECTORY}/deployments/httpbin/namespace.yaml" && \
+kubectl apply \
+  --namespace example \
+  --filename "${THIS_SCRIPT_DIRECTORY}/deployments/httpbin/" && \
+kubectl apply \
+  --filename "${THIS_SCRIPT_DIRECTORY}/deployments/httpbin-istio"
+
+# curl pod on default namespace
+kubectl run curl \
+  --namespace default \
+  --image=silviosilva/utils \
+  --command -- sleep infinity
+
+# curl pod on example namespace
+kubectl run curl \
+  --namespace example \
+  --image=silviosilva/utils \
+  --command -- sleep infinity
+
+# Wait for httpbin deploy becomes Available
+kubectl wait deployment httpbin \
+  --namespace example \
+  --for condition=Available \
+  --timeout=360s
+
+# Wait for curl pod become Ready
+kubectl wait pod curl \
+  --namespace default \
+  --for condition=Ready \
+  --timeout 360s
+
+# Wait for curl pod become Ready
+kubectl wait pod curl \
+  --namespace example \
+  --for condition=Ready \
+  --timeout 360s
+
+mkdir -p ${HOME}/trash

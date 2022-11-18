@@ -221,7 +221,7 @@ curl \
   --include \
   --silent \
   --header "x-wasp-id: ${UUID}" \
-  --header "Host: echo.sandbox.wasp.silvios.me" \
+  --header "Host: app.example.com" \
   --request GET http://127.0.0.1:32080/get
 
 ./logs-to-json \
@@ -242,7 +242,7 @@ watch -n 3 'curl \
   --include \
   --silent \
   --header "x-wasp-id: $(uuidgen)" \
-  --header "Host: echo.sandbox.wasp.silvios.me" \
+  --header "Host: app.example.com" \
   --request GET http://127.0.0.1:32080/get'
 
 # Generate Traffic for httpbin Deployment 503
@@ -250,17 +250,8 @@ watch -n 30 'curl \
   --include \
   --silent \
   --header "x-wasp-id: $(uuidgen)" \
-  --header "Host: echo.sandbox.wasp.silvios.me" \
+  --header "Host: app.example.com" \
   --request GET http://127.0.0.1:32080/status/503'
-
-# Generate Traffic for NGINX Deployment
-watch -n 3 'kubectl \
-  --namespace example \
-  exec curl -- curl \
-    --head \
-    --silent \
-    --header "x-wasp-id: $(uuidgen)" \
-    --request GET http://nginx.example.svc'
 ```
 
 ## Ingress with TLS for httpbin with Selfsigned Certificate
@@ -295,7 +286,7 @@ UUID=$(uuidgen)
 curl \
   --include \
   --header "x-wasp-id: ${UUID}" \
-  --request GET https://echo.sandbox.wasp.silvios.me:32443/get
+  --request GET "https://echo.${BASE_DOMAIN?}:32443/get"
 
 ./logs-to-json \
   --request-id ${UUID} \

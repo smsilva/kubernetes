@@ -14,7 +14,7 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - "echo.sandbox.wasp.silvios.me"
+        - "app.example.com"
 
     - port:
         number: 443
@@ -24,4 +24,4 @@ spec:
         mode: SIMPLE
         credentialName: tls-wildcard-full-chain
       hosts:
-        - "echo.sandbox.wasp.silvios.me"
+        - "app.example.com"
