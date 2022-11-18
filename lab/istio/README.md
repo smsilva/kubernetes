@@ -237,17 +237,8 @@ code ${HOME}/trash/${UUID}.json
 ###   Generate Traffic
 
 ```bash
-# Generate Traffic for NGINX Deployment
-watch -n 5 'kubectl \
-  --namespace example \
-  exec curl -- curl \
-    --head \
-    --silent \
-    --header "x-wasp-id: $(uuidgen)" \
-    --request GET http://nginx.example.svc'
-
 # Generate Traffic for httpbin Deployment 200
-watch -n 5 'curl \
+watch -n 3 'curl \
   --include \
   --silent \
   --header "x-wasp-id: $(uuidgen)" \
@@ -261,6 +252,15 @@ watch -n 30 'curl \
   --header "x-wasp-id: $(uuidgen)" \
   --header "Host: echo.sandbox.wasp.silvios.me" \
   --request GET http://127.0.0.1:32080/status/503'
+
+# Generate Traffic for NGINX Deployment
+watch -n 3 'kubectl \
+  --namespace example \
+  exec curl -- curl \
+    --head \
+    --silent \
+    --header "x-wasp-id: $(uuidgen)" \
+    --request GET http://nginx.example.svc'
 ```
 
 ## Ingress with TLS for httpbin with Selfsigned Certificate

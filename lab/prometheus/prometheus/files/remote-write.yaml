@@ -17,6 +17,8 @@ remote_write:
           istio_tcp_received_bytes_total|\
           istio_tcp_sent_bytes_total|\
           process_resident_memory_bytes|\
+          wasp(.*)|\
+          workload(.*)|\
           last_metric"
         action: keep
 
@@ -34,12 +36,40 @@ remote_write:
         target_label: prometheus_job
 
       - regex: "\
-          entity.(.*)|\
+          connection_security_policy|\
+          destination_canonical_revision|\
+          destination_canonical_service|\
+          destination_cluster|\
+          destination_principal|\
+          destination_service_name|\
+          destination_service_namespace|\
+          destination_service|\
+          destination_version|\
+          destination_workload_namespace|\
+          destination_workload|\
+          endTimestamp|\
+          entity(.*)|\
           instance|\
+          istio_io_rev|\
+          istio_requests_total|\
+          istio|\
           job|\
-          pod_template_hash|\
+          metricName|\
+          namespace|\
           pod(.*)|\
+          prometheus_job|\
+          request_protocol|\
+          response_flags|\
           security_istio_io_tlsMode|\
           service_istio_io_canonical(.*)|\
-          last_field"
+          sidecar_istio_io_inject|\
+          source_canonical_revision|\
+          source_canonical_service|\
+          source_cluster|\
+          source_principal|\
+          source_version|\
+          source_workload_namespace|\
+          source_workload|\
+          timestamp|\
+          version"
         action: labeldrop

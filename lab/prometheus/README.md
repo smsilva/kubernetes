@@ -31,13 +31,14 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 
 helm search repo prometheus-community/prometheus
 
+CLUSTER_NAME="kind-58"
+
 helm upgrade \
   --install \
   --namespace prometheus \
   prometheus prometheus/ \
-  --set 'global.cluster=kind-50' \
-  --wait
-
+  --set "global.cluster=${CLUSTER_NAME}" \
+  --wait && \
 kubectl wait pod \
   --namespace prometheus \
   --selector component=server \

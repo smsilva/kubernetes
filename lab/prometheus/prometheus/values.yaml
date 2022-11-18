@@ -1477,7 +1477,66 @@ serverFiles:
 
   ## Records configuration
   ## Ref: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
-  recording_rules.yml: {}
+  recording_rules.yml:
+    groups:
+      - name: "istio.recording-rules"
+        interval: 5s
+        rules:
+          - record: "wasp_istio_requests_total"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_requests_total)
+
+          - record: "wasp_istio_request_duration_milliseconds_count"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_duration_milliseconds_count)
+
+          - record: "wasp_istio_request_duration_milliseconds_sum"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_duration_milliseconds_sum)
+
+          - record: "wasp_istio_request_duration_milliseconds_bucket"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_duration_milliseconds_bucket)
+
+          - record: "wasp_istio_request_bytes_count"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_bytes_count)
+
+          - record: "wasp_istio_request_bytes_sum"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_bytes_sum)
+
+          - record: "wasp_istio_request_bytes_bucket"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_bytes_bucket)
+
+          - record: "wasp_istio_response_bytes_count"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_response_bytes_count)
+
+          - record: "wasp_istio_response_bytes_sum"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_response_bytes_sum)
+
+          - record: "wasp_istio_response_bytes_bucket"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_response_bytes_bucket)
+
+          - record: "wasp_istio_tcp_sent_bytes_total"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_tcp_sent_bytes_total)
+
+          - record: "wasp_istio_tcp_received_bytes_total"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_tcp_received_bytes_total)
+
+          - record: "wasp_istio_tcp_connections_opened_total"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_tcp_connections_opened_total)
+
+          - record: "wasp_istio_tcp_connections_closed_total"
+            expr: |
+              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_tcp_connections_closed_total)
 
   ## DEPRECATED DEFAULT VALUE, unless explicitly naming your files, please use recording_rules.yml
   rules: {}
