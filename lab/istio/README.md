@@ -153,10 +153,7 @@ kubectl wait pod curl \
 ```bash
 mkdir -p ${HOME}/trash
 ```
-
-###   In-cluster
-
-####     Follow logs from httpbin pods
+###   Follow logs from httpbin pods
 
 From another terminal:
 
@@ -167,6 +164,8 @@ kubectl logs \
   --container istio-proxy \
   --follow
 ```
+
+###   In-cluster
 
 ####     From default namespace
 
