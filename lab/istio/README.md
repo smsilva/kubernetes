@@ -12,7 +12,7 @@ Run the script below to:
   - istio/gateway
 
 ```bash
-./setup-istio-with-kind-and-helm
+./setup-istio-with-kind-and-helm && ./deploy
 ```
 
 ## Step by step Setup
@@ -312,11 +312,7 @@ Expected output:
 Connection to 127.0.0.1 32080 port [tcp/*] succeeded!
 ```
 
-###   Outside Kind cluster Test
-
-In order to enable Ingress Traffic, see the Example [Ingress Traffic](examples/traffic-management/ingress-gateway/README.md).
-
-###   Cleanup
+##   Cleanup
 
 ```bash
 kind delete cluster --name istio
