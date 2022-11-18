@@ -31,7 +31,7 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 
 helm search repo prometheus-community/prometheus
 
-CLUSTER_NAME="kind-58"
+CLUSTER_NAME="kind-59"
 
 helm upgrade \
   --install \
@@ -49,4 +49,12 @@ kubectl logs \
   --selector component=server \
   --container prometheus-server \
   --follow
+```
+
+## Port Forward
+
+```bash
+kubectl \
+  --namespace prometheus \
+  port-forward service/prometheus-server 9090:80
 ```

@@ -1,0 +1,61 @@
+remote_write:
+  - url: https://metric-api.newrelic.com/prometheus/v1/write?prometheus_server={{ .Values.global.cluster }}
+    authorization:
+      credentials_file: /etc/secrets/newrelic/license
+
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: "\
+          apiserver_flowcontrol_current_inqueue_requests|\
+          istio_request_duration_milliseconds(.*)|\
+          istio_requests_total(.*)|\
+          process_resident_memory_bytes|\
+          last_metric"
+        action: keep
+
+      - source_labels: [job]
+        regex: '(.*)'
+        target_label: prometheus_job
+
+      - regex: "\
+          app_kubernetes(.*)|\
+          connection_security_policy|\
+          controller(.*)|\
+          destination_canonical_revision|\
+          destination_canonical_service|\
+          destination_cluster|\
+          destination_principal|\
+          destination_service_name|\
+          destination_service_namespace|\
+          destination_service|\
+          destination_version|\
+          destination_workload_namespace|\
+          destination_workload|\
+          endTimestamp|\
+          entity(.*)|\
+          hpaSelector|\
+          instance|\
+          istio_io_rev|\
+          istio_requests_total|\
+          istio|\
+          job|\
+          le|\
+          metricName|\
+          namespace|\
+          pod(.*)|\
+          request_protocol|\
+          response_flags|\
+          security_istio_io_tlsMode|\
+          service_istio_io_canonical(.*)|\
+          sidecar_istio_io_inject|\
+          source_canonical_revision|\
+          source_canonical_service|\
+          source_cluster|\
+          source_principal|\
+          source_version|\
+          source_workload_namespace|\
+          source_workload|\
+          team|\
+          timestamp|\
+          version"
+        action: labeldrop

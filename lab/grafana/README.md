@@ -1,7 +1,13 @@
-#!/bin/bash
+# Grafana
+
+## Secret
+
+```bash
 kubectl create namespace grafana
 
-kubectl -n grafana apply -f - <<EOF
+kubectl apply \
+  --namespace grafana \
+  --filename - <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
@@ -9,26 +15,14 @@ metadata:
 type: Opaque
 stringData:
   admin-user: "admin"
-  admin-password: "strongpassword"
+  admin-password: "${GRAFANA_ADMIN_PASSWORD}"
 EOF
+```
 
-kubectl wait deploy grafana \
-  --namespace grafana \
-  --for=condition=Available \
-  --timeout=120s
+## Install
 
-echo ""
-echo "Grafana UI"
-echo ""
-echo "  http://localhost:3000"
-echo ""
-echo "    user:     admin"
-echo "    password: strongpassword"
-echo ""
-
+```bash
 helm repo add grafana https://grafana.github.io/helm-charts
-
-helm repo update
 
 helm install \
   --namespace grafana \
@@ -36,7 +30,12 @@ helm install \
   grafana grafana/grafana \
   --set "admin.existingSecret=grafana" \
   --wait
+```
 
+## Port Forward
+
+```bash
 kubectl \
   --namespace grafana \
   port-forward service/grafana 3000:80
+```
