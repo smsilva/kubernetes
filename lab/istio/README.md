@@ -20,6 +20,8 @@ Run the script below to:
     - httpbin-mesh
     - httpbin-public
 
+- Start to follow istio-proxy logs for httbin pods
+
 ```bash
 ./tl-dr-run
 ```
