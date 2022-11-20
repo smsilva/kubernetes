@@ -2,6 +2,9 @@
 export THIS_SCRIPT_DIRECTORY=$(dirname $0)
 export PATH=${PATH}:${THIS_SCRIPT_DIRECTORY}
 
+# Directory for tests
+mkdir -p ${HOME}/trash
+
 # Create Kind Cluser
 echo "Creating Kind Cluster..."
 kubectl config get-contexts kind-istio &> /dev/null || \

@@ -11,8 +11,17 @@ Run the script below to:
   - istio/istiod
   - istio/gateway
 
+- Deploy httpbin
+  - namespace: example
+  - deployment: httpbin
+  - service: httpbin.example.svc:8000
+  - gateway: htpbin
+  - virtual-service:
+    - httpbin-mesh
+    - httpbin-public
+
 ```bash
-./setup-istio-with-kind-and-helm && ./deploy
+./tl-dr-run
 ```
 
 ## Step by step Setup
@@ -150,9 +159,6 @@ kubectl wait pod curl \
 
 ## Tests
 
-```bash
-mkdir -p ${HOME}/trash
-```
 ###   Follow logs from httpbin pods
 
 From another terminal:
