@@ -31,7 +31,7 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 
 helm search repo prometheus-community/prometheus
 
-CLUSTER_NAME="kind-61"
+CLUSTER_NAME="kind-62"
 
 helm upgrade \
   --install \
