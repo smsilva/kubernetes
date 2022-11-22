@@ -14,9 +14,13 @@ echo "NEW_RELIC_API_KEY..........: ${NEW_RELIC_API_KEY:0:3}"
 echo "NEW_RELIC_LOG_LEVEL........: ${NEW_RELIC_LOG_LEVEL}"
 echo "NEW_RELIC_APPENDER_ENABLED.: ${NEW_RELIC_APPENDER_ENABLED}"
 
-kubectl -n wasp apply -f "${THIS_SCRIPT_DIRECTORY}/namespace.yaml"
+kubectl apply \
+  --namespace wasp \
+  --filename "${THIS_SCRIPT_DIRECTORY}/namespace.yaml"
 
-kubectl -n wasp apply -f - <<EOF
+kubectl apply \
+  --namespace wasp \
+  --filename - <<EOF
 ---
 apiVersion: v1
 kind: Secret
@@ -32,7 +36,9 @@ stringData:
   RABBITMQ_QUEUE_NAME_MAIN: "${RABBITMQ_QUEUE_NAME_MAIN}"
 EOF
 
-kubectl -n wasp apply -f - <<EOF
+kubectl apply \
+  --namespace wasp \
+  --filename - <<EOF
 ---
 apiVersion: v1
 kind: Secret
@@ -47,4 +53,6 @@ stringData:
   NEW_RELIC_APPENDER_ENABLED: "${NEW_RELIC_APPENDER_ENABLED}"
 EOF
 
-kubectl -n wasp apply -f "${THIS_SCRIPT_DIRECTORY}/deployment.yaml"
+kubectl apply \
+  --namespace wasp \
+  --filename "${THIS_SCRIPT_DIRECTORY}/deployment.yaml"

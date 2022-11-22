@@ -15,7 +15,9 @@ kind create cluster
 ## Watch for Resources
 
 ```bash
-watch -n 3 'kubectl -n wasp get deploy,pods -o wide'
+watch -n 3 'kubectl get deploy,pods \
+  --namespace wasp \
+  --output wide'
 ```
 
 ## Logs
@@ -25,4 +27,17 @@ kubectl logs \
   --namespace wasp \
   --selector app=wasp-item-consumer \
   --follow
+```
+
+# RabbitMQ Install Helm
+
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+helm search repo bitnami/rabbitmq
+
+helm install rabbitmq bitnami/rabbitmq \
+  --create-namespace \
+  --namespace rabbitmq \
+  --wait
 ```
