@@ -31,9 +31,6 @@ Run the script below to:
 ###   Kind Cluster
 
 ```bash
-# List Kind Clusters
-kind get clusters
-
 # Create Kind Cluster with Extra Ports exposed (32080 and 32443)
 kind create cluster \
   --image kindest/node:v1.24.0 \
@@ -261,7 +258,7 @@ watch -n 30 'curl \
   --request GET http://127.0.0.1:32080/status/503'
 ```
 
-## Ingress with TLS for httpbin with Selfsigned Certificate
+## Ingress
 
 ```bash
 BASE_DOMAIN="sandbox.wasp.silvios.me"
