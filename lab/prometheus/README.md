@@ -1,4 +1,4 @@
-# Ingress
+# Prometheus
 
 ## Create a Kind Cluster
 
@@ -11,8 +11,10 @@ kind create cluster \
 ## New Relic Secret
 
 ```bash
+# Namespace
 kubectl create namespace prometheus
 
+# Secret
 kubectl -n prometheus apply -f - <<EOF
 apiVersion: v1
 kind: Secret
@@ -31,7 +33,9 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 
 helm search repo prometheus-community/prometheus
 
-CLUSTER_NAME="kind-62"
+# helm fetch prometheus-community/prometheus --untar
+
+CLUSTER_NAME="kind-67"
 
 helm upgrade \
   --install \

@@ -6,26 +6,37 @@ remote_write:
     write_relabel_configs:
       - source_labels: [__name__]
         regex: "\
-          apiserver_flowcontrol_current_inqueue_requests|\
-          envoy_cluster_upstream_cx_rx_bytes_total|\
-          envoy_cluster_upstream_rq|\
-          etcd_db_total_size_in_bytes|\
-          istio_request_bytes_sum|\
-          istio_request_duration_milliseconds(.*)|\
-          istio_requests_total(.*)|\
-          istio_response_bytes_sum|\
-          istio_tcp_received_bytes_total|\
-          istio_tcp_sent_bytes_total|\
-          process_resident_memory_bytes|\
-          wasp(.*)|\
-          workload(.*)|\
-          last_metric"
+          workload:(.*)"
         action: keep
 
       - source_labels: [job]
         regex: '(.*)'
         target_label: prometheus_job
 
+      - source_labels: [__name__]
+        regex: 'workload:(.*)'
+        target_label: __name__
+        replacement: '$1'
+        action: replace
+
       - regex: "\
           job"
         action: labeldrop
+
+# Example
+# write_relabel_configs:
+#   - source_labels: [__name__]
+#     regex: "\
+#       apiserver_flowcontrol_current_inqueue_requests|\
+#       envoy_cluster_upstream_cx_rx_bytes_total|\
+#       envoy_cluster_upstream_rq|\
+#       etcd_db_total_size_in_bytes|\
+#       istio_request_bytes_sum|\
+#       istio_request_duration_milliseconds(.*)|\
+#       istio_requests_total(.*)|\
+#       istio_response_bytes_sum|\
+#       istio_tcp_received_bytes_total|\
+#       istio_tcp_sent_bytes_total|\
+#       process_resident_memory_bytes|\
+#       workload:(.*)"
+#     action: keep
