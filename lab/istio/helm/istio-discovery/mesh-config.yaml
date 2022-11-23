@@ -10,6 +10,15 @@
 # Envoy Access logging
 # https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage#command-operators
 
+# Customizing Istio Metrics
+# https://istio.io/latest/docs/tasks/observability/metrics/customize-metrics/
+
+# Stats Config (MetricConfig)
+# https://istio.io/latest/docs/reference/config/proxy_extensions/stats/
+
+# Prometheus Rate Example
+# rate(istio_request_duration_milliseconds_sum{reporter="source",destination_workload="httpbin"}[1m])
+
 meshConfig:
   ingressService: istio-ingress
   ingressSelector: ingress
@@ -44,3 +53,91 @@ meshConfig:
       "x_gateway": "%REQ(X-W1-GATEWAY)%",
       "x_wasp_id": "%REQ(X-WASP-ID)%"
     }
+
+telemetry:
+  enabled: true
+
+  v2:
+    enabled: true
+
+    prometheus:
+      enabled: true
+
+      configOverride:
+        gateway:
+          metrics:
+            - tags_to_remove:
+                - connection_security_policy
+                - destination_app
+                - destination_canonical_revision
+                - destination_canonical_service
+                - destination_cluster
+                - destination_principal
+                - destination_service
+                - destination_service_name
+                - destination_service_namespace
+                - destination_version
+                - grpc_response_status
+                - request_protocol
+                - response_flags
+                - security_istio_io_tlsMode
+                - service_istio_io_canonical_name
+                - service_istio_io_canonical_revision
+                - source_app
+                - source_canonical_revision
+                - source_canonical_service
+                - source_cluster
+                - source_principal
+                - source_version
+
+        inboundSidecar:
+          metrics:
+            - tags_to_remove:
+                - connection_security_policy
+                - destination_app
+                - destination_canonical_revision
+                - destination_canonical_service
+                - destination_cluster
+                - destination_principal
+                - destination_service
+                - destination_service_name
+                - destination_service_namespace
+                - destination_version
+                - grpc_response_status
+                - request_protocol
+                - response_flags
+                - security_istio_io_tlsMode
+                - service_istio_io_canonical_name
+                - service_istio_io_canonical_revision
+                - source_app
+                - source_canonical_revision
+                - source_canonical_service
+                - source_cluster
+                - source_principal
+                - source_version
+
+        outboundSidecar:
+          metrics:
+            - tags_to_remove:
+                - connection_security_policy
+                - destination_app
+                - destination_canonical_revision
+                - destination_canonical_service
+                - destination_cluster
+                - destination_principal
+                - destination_service
+                - destination_service_name
+                - destination_service_namespace
+                - destination_version
+                - grpc_response_status
+                - request_protocol
+                - response_flags
+                - security_istio_io_tlsMode
+                - service_istio_io_canonical_name
+                - service_istio_io_canonical_revision
+                - source_app
+                - source_canonical_revision
+                - source_canonical_service
+                - source_cluster
+                - source_principal
+                - source_version

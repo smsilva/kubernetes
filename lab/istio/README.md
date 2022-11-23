@@ -216,6 +216,26 @@ kubectl \
 code ${HOME}/trash/${UUID}.json
 ```
 
+####     Prometheus Metrics
+
+```bash
+watch -n 3 '
+  kubectl \
+    --namespace example \
+    exec curl -- curl \
+      --silent \
+      --request GET http://localhost:15020/stats/prometheus \
+  | egrep "^istio_request_bytes_count|^istio_requests_total|^istio_request_duration_milliseconds_sum"'
+
+watch -n 3 '
+  kubectl \
+    --namespace example \
+    exec curl -- curl \
+      --silent \
+      --request GET http://10.244.3.3:15020/stats/prometheus \
+  | egrep "^istio_request_bytes_count|^istio_requests_total|^istio_request_duration_milliseconds_sum"'
+```
+
 ###   Outside
 
 ```bash
@@ -241,13 +261,22 @@ code ${HOME}/trash/${UUID}.json
 ###   Generate Traffic
 
 ```bash
-# Generate Traffic for httpbin Deployment 200
+# Generate Traffic for httpbin Deployment 200 from outside
 watch -n 3 'curl \
   --include \
   --silent \
   --header "x-wasp-id: $(uuidgen)" \
   --header "Host: app.example.com" \
   --request GET http://127.0.0.1:32080/get'
+
+# Generate Traffic for httpbin Deployment 200 from example namespace
+watch -n 3 'kubectl \
+  --namespace example \
+  exec curl -- curl \
+    --include \
+    --silent \
+    --header "x-wasp-id: $(uuidgen)" \
+    --request GET http://httpbin:8000/get'
 
 # Generate Traffic for httpbin Deployment 503
 watch -n 30 'curl \
