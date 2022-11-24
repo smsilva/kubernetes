@@ -1,6 +1,18 @@
 global:
   cluster: undefined-cluster-name
 
+server:
+  extraVolumeMounts:
+    - name: newrelic
+      mountPath: "/etc/secrets/newrelic"
+      readOnly: true
+
+  extraVolumes:
+    - name: newrelic
+      secret:
+        secretName: newrelic-license
+        optional: false
+
 serverFiles:
   ## Records configuration
   ## https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
