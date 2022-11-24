@@ -1481,8 +1481,32 @@ serverFiles:
     # Istio Observability Best Practices: Workload-level aggregation via recording rules
     # https://istio.io/latest/docs/ops/best-practices/observability/#workload-level-aggregation-via-recording-rules
     groups:
+      - name: "istio.aggregate-rules"
+        interval: 10s
+        rules:
+          - record: "workload:istio_requests:by_destination_service:rate5m"
+            expr: |
+              sum(irate(istio_requests_total{reporter="destination"}[5m]))
+              by (
+                destination_canonical_service,
+                destination_workload_namespace
+              )
+
+          - record: "workload:istio_request_duration_milliseconds_bucket:p95:rate5m"
+            expr: |
+              histogram_quantile(0.95,
+                sum(irate(istio_request_duration_milliseconds_bucket{reporter="source"}[5m]))
+                by (
+                  destination_canonical_service,
+                  destination_workload_namespace,
+                  source_canonical_service,
+                  source_workload_namespace,
+                  le
+                )
+              )
+
       - name: "istio.recording-rules"
-        interval: 5s
+        interval: 10s
         rules:
           - record: "workload:istio_requests_total"
             expr: |

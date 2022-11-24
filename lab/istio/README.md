@@ -216,7 +216,7 @@ kubectl \
 code ${HOME}/trash/${UUID}.json
 ```
 
-####     Prometheus Metrics
+###   Prometheus Metrics
 
 ```bash
 watch -n 3 '
@@ -225,7 +225,7 @@ watch -n 3 '
     exec curl -- curl \
       --silent \
       --request GET http://localhost:15020/stats/prometheus \
-  | egrep "^istio_request_bytes_count|^istio_requests_total|^istio_request_duration_milliseconds_sum"'
+  | egrep "^istio_requests_total"'
 
 watch -n 3 '
   kubectl \

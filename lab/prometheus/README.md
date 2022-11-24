@@ -35,13 +35,14 @@ helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-72"
+CLUSTER_NAME="kind-85"
 
 helm upgrade \
   --install \
   --namespace prometheus \
   prometheus prometheus/ \
   --set "global.cluster=${CLUSTER_NAME}" \
+  --values "prometheus/values-custom.yaml" \
   --wait && \
 kubectl wait pod \
   --namespace prometheus \
