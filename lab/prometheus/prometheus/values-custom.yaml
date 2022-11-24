@@ -117,7 +117,7 @@ serverFiles:
             - localhost:9090
 
       - job_name: 'kubernetes-pods'
-        honor_labels: false
+        honor_labels: true
 
         kubernetes_sd_configs:
           - role: pod
@@ -146,13 +146,6 @@ serverFiles:
             regex: (.+?)(?::\d+)?;(\d+)
             replacement: $1:$2
             target_label: __address__
-
-          - action: labelmap
-            regex: __meta_kubernetes_pod_annotation_prometheus_io_param_(.+)
-            replacement: __param_$1
-
-          - action: labelmap
-            regex: __meta_kubernetes_pod_label_(.+)
 
           - source_labels: [__meta_kubernetes_namespace]
             action: replace
