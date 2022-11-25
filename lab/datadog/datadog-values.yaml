@@ -1,0 +1,4 @@
+datadog:
+  logs:
+    enabled: true
+    containerCollectAll: true

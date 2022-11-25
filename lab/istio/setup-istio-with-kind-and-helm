@@ -42,15 +42,3 @@ helm upgrade \
   --namespace "istio-ingress" \
   istio-ingress istio/gateway \
   --values "./helm/istio-ingress/service.yaml" > /dev/null
-
-# Configure Telemetry
-echo "Configuring Istio Telemetry..."
-kubectl apply \
-  --filename "./deployments/telemetry.yaml" > /dev/null
-
-# Configuring Add-ons
-echo "Installing Prometheus..."
-kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml" > /dev/null
-
-echo "Installing Kiali..."
-kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml" > /dev/null

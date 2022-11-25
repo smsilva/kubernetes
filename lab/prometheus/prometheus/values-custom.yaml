@@ -2,6 +2,13 @@ global:
   cluster: undefined-cluster-name
 
 server:
+  global:
+    scrape_interval: 1m
+    scrape_timeout: 10s
+    evaluation_interval: 1m
+
+  retention: "6h"
+
   extraVolumeMounts:
     - name: newrelic
       mountPath: "/etc/secrets/newrelic"
@@ -13,6 +20,15 @@ server:
         secretName: newrelic-license
         optional: false
 
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
 serverFiles:
   ## Records configuration
   ## https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
@@ -23,11 +39,11 @@ serverFiles:
       - name: "istio.aggregate-rules"
         interval: 10s
         rules:
-          - record: "workload:istio_requests:by_destination_service:rate5m"
+          - record: "workload:istio_requests:by_destination_workload:rate5m"
             expr: |
               sum(irate(istio_requests_total{reporter="destination"}[5m]))
               by (
-                destination_canonical_service,
+                destination_workload,
                 destination_workload_namespace
               )
 
@@ -36,9 +52,9 @@ serverFiles:
               histogram_quantile(0.95,
                 sum(irate(istio_request_duration_milliseconds_bucket{reporter="source"}[5m]))
                 by (
-                  destination_canonical_service,
+                  destination_workload,
                   destination_workload_namespace,
-                  source_canonical_service,
+                  source_workload,
                   source_workload_namespace,
                   le
                 )
@@ -51,18 +67,6 @@ serverFiles:
             expr: |
               sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_requests_total)
 
-          - record: "workload:istio_request_duration_milliseconds_count"
-            expr: |
-              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_duration_milliseconds_count)
-
-          - record: "workload:istio_request_duration_milliseconds_sum"
-            expr: |
-              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_duration_milliseconds_sum)
-
-          - record: "workload:istio_request_duration_milliseconds_bucket"
-            expr: |
-              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_duration_milliseconds_bucket)
-
           - record: "workload:istio_request_bytes_count"
             expr: |
               sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_bytes_count)
@@ -71,10 +75,6 @@ serverFiles:
             expr: |
               sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_bytes_sum)
 
-          - record: "workload:istio_request_bytes_bucket"
-            expr: |
-              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_request_bytes_bucket)
-
           - record: "workload:istio_response_bytes_count"
             expr: |
               sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_response_bytes_count)
@@ -82,10 +82,6 @@ serverFiles:
           - record: "workload:istio_response_bytes_sum"
             expr: |
               sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_response_bytes_sum)
-
-          - record: "workload:istio_response_bytes_bucket"
-            expr: |
-              sum without(instance, kubernetes_namespace, kubernetes_pod_name) (istio_response_bytes_bucket)
 
           - record: "workload:istio_tcp_sent_bytes_total"
             expr: |

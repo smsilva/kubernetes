@@ -39,7 +39,6 @@ remote_write:
           istio_requests_total|\
           istio|\
           job|\
-          le|\
           metricName|\
           namespace|\
           pod(.*)|\

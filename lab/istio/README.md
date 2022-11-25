@@ -345,6 +345,17 @@ Expected output:
 Connection to 127.0.0.1 32080 port [tcp/*] succeeded!
 ```
 
+###   Install Add-ons
+
+```bash
+# Configuring Add-ons
+echo "Installing Prometheus..."
+kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml" > /dev/null
+
+echo "Installing Kiali..."
+kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml" > /dev/null
+```
+
 ##   Cleanup
 
 ```bash
