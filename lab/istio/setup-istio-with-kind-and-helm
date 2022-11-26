@@ -16,20 +16,19 @@ helm repo update istio &> /dev/null
 
 # Install istio-base (CRDs)
 echo "Installing istio/base..."
-helm upgrade \
-  --install \
+helm install \
   --namespace "istio-system" \
   --create-namespace \
   istio-base istio/base > /dev/null
 
 # Install Istio Discovery
 echo "Installing istio/istiod..."
-helm upgrade \
-  --install \
+helm install \
   --namespace "istio-system" \
   --create-namespace \
   istio-discovery istio/istiod \
   --values "./helm/istio-discovery/mesh-config.yaml" \
+  --values "./helm/istio-discovery/telemetry.yaml" \
   --wait > /dev/null
 
 # Install Istio Ingress Gateway
@@ -37,8 +36,7 @@ echo "Installing istio/gateway..."
 kubectl apply \
   --filename "./helm/istio-ingress/namespace.yaml" > /dev/null
 
-helm upgrade \
-  --install \
+helm install \
   --namespace "istio-ingress" \
   istio-ingress istio/gateway \
   --values "./helm/istio-ingress/service.yaml" > /dev/null

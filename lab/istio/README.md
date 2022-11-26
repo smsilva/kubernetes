@@ -15,7 +15,7 @@ Run the script below to:
   - namespace: example
   - deployment: httpbin
   - service: httpbin.example.svc:8000
-  - gateway: htpbin
+  - gateway: httpbin
   - virtual-service:
     - httpbin-mesh
     - httpbin-public
@@ -61,22 +61,20 @@ helm install \
   --wait
 
 # Install Istio Discovery (istiod) - Logs in JSON format
-helm upgrade \
-  --install \
+helm install \
   --namespace "istio-system" \
-  --create-namespace \
   --version ${ISTIO_VERSION?} \
   istio-discovery istio/istiod \
   --values "./helm/istio-discovery/mesh-config.yaml" \
+  --values "./helm/istio-discovery/telemetry.yaml" \
   --wait
 
 # Install Istio Ingress Gateway customizing the Service with NodePorts
 kubectl apply \
   --filename "./helm/istio-ingress/namespace.yaml" && \
-helm upgrade \
-  --install \
-  --version ${ISTIO_VERSION?} \
+helm install \
   --namespace "istio-ingress" \
+  --version ${ISTIO_VERSION?} \
   istio-ingress istio/gateway \
   --values "./helm/istio-ingress/service.yaml"
 
@@ -84,10 +82,6 @@ helm upgrade \
 kubectl get pods \
   --namespace istio-ingress \
   --selector "app=istio-ingress"
-
-# Configure Telemetry
-kubectl apply \
-  --filename "./deployments/telemetry.yaml"
 ```
 
 ###   Download Istio Repositories with Examples
