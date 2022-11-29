@@ -252,6 +252,19 @@ curl \
 code ${HOME}/trash/${UUID}.json
 ```
 
+###   Load Test
+
+```bash
+wrk \
+  --header "User-Agent: wrk" \
+  --header "Host: app.example.com" \
+  --threads 12 \
+  --connections 400 \
+  --duration 60s \
+  --latency \
+  http://127.0.0.1:32080/get
+```
+
 ###   Generate Traffic
 
 ```bash
@@ -339,7 +352,7 @@ Expected output:
 Connection to 127.0.0.1 32080 port [tcp/*] succeeded!
 ```
 
-##   Cleanup
+## Cleanup
 
 ```bash
 kind delete cluster --name istio
