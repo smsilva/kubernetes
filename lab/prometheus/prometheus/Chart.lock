@@ -4,9 +4,12 @@ dependencies:
   version: 4.22.3
 - name: prometheus-node-exporter
   repository: https://prometheus-community.github.io/helm-charts
-  version: 4.5.2
+  version: 4.7.1
 - name: prometheus-pushgateway
   repository: https://prometheus-community.github.io/helm-charts
   version: 1.21.0
-digest: sha256:b08372fe77ff155bd038d2e9f1de0a225afddabffce322f569e7630b6527fef3
-generated: "2022-11-22T12:26:37.098738586Z"
+- name: alertmanager
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 0.22.0
+digest: sha256:9002687aa938ae398409e101ae980c03e79639ea4f73a2858fc17d9e882f0e52
+generated: "2022-11-28T15:05:30.455915882Z"

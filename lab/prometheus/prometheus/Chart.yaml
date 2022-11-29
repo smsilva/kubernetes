@@ -8,11 +8,15 @@ dependencies:
 - condition: prometheus-node-exporter.enabled
   name: prometheus-node-exporter
   repository: https://prometheus-community.github.io/helm-charts
-  version: 4.5.*
+  version: 4.7.*
 - condition: prometheus-pushgateway.enabled
   name: prometheus-pushgateway
   repository: https://prometheus-community.github.io/helm-charts
   version: 1.21.*
+- condition: alertmanager.enabled
+  name: alertmanager
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 0.22.*
 description: Prometheus is a monitoring system and time series database.
 home: https://prometheus.io/
 icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
@@ -33,4 +37,4 @@ sources:
 - https://github.com/prometheus/node_exporter
 - https://github.com/kubernetes/kube-state-metrics
 type: application
-version: 17.0.0
+version: 18.1.0
