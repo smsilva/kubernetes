@@ -20,8 +20,16 @@ nodes:
         hostPort: 32081
         protocol: tcp
 
+      - containerPort: 32082
+        hostPort: 32082
+        protocol: tcp
+
       - containerPort: 32443
         hostPort: 32443
+        protocol: tcp
+
+      - containerPort: 32444
+        hostPort: 32444
         protocol: tcp
 
   - role: worker
