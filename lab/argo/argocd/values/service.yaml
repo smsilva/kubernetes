@@ -2,7 +2,7 @@ server:
   service:
     type: NodePort
     nodePortHttp: 32080
-    nodePortHttps: 32443
+    nodePortHttps: 32444
     servicePortHttp: 80
     servicePortHttps: 443
     servicePortHttpName: http

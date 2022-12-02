@@ -29,6 +29,10 @@ server:
       cpu: 1000m
       memory: 2Gi
 
+  service:
+    type: NodePort
+    nodePort: 32081
+
 serverFiles:
   ## Records configuration
   ## https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/

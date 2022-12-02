@@ -50,11 +50,12 @@ http://prometheus-server.prometheus.svc
 
 ## Dashboards
 
-| Description                                    | URL                                                                                      | ID     |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------- | -------| 
-| Istio Control Plane Dashboard                  | https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard                | `7645` |
-| Istio Mesh Dashboard                           | https://grafana.com/grafana/dashboards/7639-istio-mesh-dashboard                         | `7639` |
-| Istio Service Dashboard                        | https://grafana.com/grafana/dashboards/7636-istio-service-dashboard                      | `7636` |
-| Istio Workload Dashboard                       | https://grafana.com/grafana/dashboards/7630-istio-workload-dashboard                     | `7630` |
-| Kubernetes cluster monitoring (via Prometheus) | https://grafana.com/grafana/dashboards/3119-kubernetes-cluster-monitoring-via-prometheus | `3119` |
-| Prometheus 2.0 Overview                        | https://grafana.com/grafana/dashboards/3662-prometheus-2-0-overview                      | `3662` |
+| Description                                    | URL                                                                                      | ID      |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------- | ------- |
+| ArgoCD                                         | https://grafana.com/grafana/dashboards/14584-argocd                                      | `14584` |
+| Istio Control Plane Dashboard                  | https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard                | `7645`  |
+| Istio Mesh Dashboard                           | https://grafana.com/grafana/dashboards/7639-istio-mesh-dashboard                         | `7639`  |
+| Istio Service Dashboard                        | https://grafana.com/grafana/dashboards/7636-istio-service-dashboard                      | `7636`  |
+| Istio Workload Dashboard                       | https://grafana.com/grafana/dashboards/7630-istio-workload-dashboard                     | `7630`  |
+| Kubernetes cluster monitoring (via Prometheus) | https://grafana.com/grafana/dashboards/3119-kubernetes-cluster-monitoring-via-prometheus | `3119`  |
+| Prometheus 2.0 Overview                        | https://grafana.com/grafana/dashboards/3662-prometheus-2-0-overview                      | `3662`  |

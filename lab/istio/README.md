@@ -240,7 +240,7 @@ curl \
   --silent \
   --header "x-wasp-id: ${UUID}" \
   --header "Host: app.example.com" \
-  --request GET http://127.0.0.1:32080/get
+  --request GET http://127.0.0.1:32082/get
 
 ./logs-to-json \
   --request-id ${UUID} \
@@ -262,7 +262,7 @@ wrk \
   --connections 400 \
   --duration 60s \
   --latency \
-  http://127.0.0.1:32080/get
+  http://127.0.0.1:32082/get
 ```
 
 ###   Generate Traffic
@@ -274,7 +274,7 @@ watch -n 3 'curl \
   --silent \
   --header "x-wasp-id: $(uuidgen)" \
   --header "Host: app.example.com" \
-  --request GET http://127.0.0.1:32080/get'
+  --request GET http://127.0.0.1:32082/get'
 
 # Generate Traffic for httpbin Deployment 200 from example namespace
 watch -n 3 'kubectl \
@@ -291,7 +291,7 @@ watch -n 30 'curl \
   --silent \
   --header "x-wasp-id: $(uuidgen)" \
   --header "Host: app.example.com" \
-  --request GET http://127.0.0.1:32080/status/503'
+  --request GET http://127.0.0.1:32082/status/503'
 ```
 
 ## Ingress
@@ -343,13 +343,13 @@ code ${HOME}/trash/${UUID}.json
 ###   Check if the Kind Cluster NodePort is open
 
 ```bash
-nc -dv 127.0.0.1 32080
+nc -dv 127.0.0.1 32082
 ```
 
 Expected output:
 
 ```bash
-Connection to 127.0.0.1 32080 port [tcp/*] succeeded!
+Connection to 127.0.0.1 32082 port [tcp/*] succeeded!
 ```
 
 ## Cleanup
