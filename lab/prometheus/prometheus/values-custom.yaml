@@ -107,10 +107,18 @@ serverFiles:
       - /etc/config/alerts
 
     scrape_configs:
+      - job_name: argocd
+        static_configs:
+          - targets:
+              - argocd-application-controller-metrics.argocd:8082
+              - argocd-applicationset-controller-metrics.argocd:8085
+              - argocd-repo-server-metrics.argocd:8084
+              - argocd-server-metrics.argocd:8083
+
       - job_name: prometheus
         static_configs:
           - targets:
-            - localhost:9090
+              - localhost:9090
 
       - job_name: 'kubernetes-pods'
         honor_labels: true

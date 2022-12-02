@@ -4,11 +4,11 @@ dependencies:
 - condition: kubeStateMetrics.enabled
   name: kube-state-metrics
   repository: https://prometheus-community.github.io/helm-charts
-  version: 4.22.*
+  version: 4.24.*
 - condition: prometheus-node-exporter.enabled
   name: prometheus-node-exporter
   repository: https://prometheus-community.github.io/helm-charts
-  version: 4.7.*
+  version: 4.8.*
 - condition: prometheus-pushgateway.enabled
   name: prometheus-pushgateway
   repository: https://prometheus-community.github.io/helm-charts
@@ -37,4 +37,4 @@ sources:
 - https://github.com/prometheus/node_exporter
 - https://github.com/kubernetes/kube-state-metrics
 type: application
-version: 18.1.0
+version: 18.4.0

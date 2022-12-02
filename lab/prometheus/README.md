@@ -4,7 +4,7 @@
 
 ```bash
 kind create cluster \
-  --image kindest/node:v1.24.0 \
+  --image kindest/node:v1.24.6 \
   --config "./kind/cluster.yaml"
 ```
 
@@ -35,7 +35,7 @@ helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-96"
+CLUSTER_NAME="kind-111"
 
 helm upgrade \
   --install \

@@ -6,6 +6,7 @@ remote_write:
     write_relabel_configs:
       - source_labels: [__name__]
         regex: "\
+          argocd(.*)|\
           workload:(.*)"
         action: keep
 
