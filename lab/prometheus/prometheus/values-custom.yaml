@@ -107,14 +107,6 @@ serverFiles:
       - /etc/config/alerts
 
     scrape_configs:
-      - job_name: argocd
-        static_configs:
-          - targets:
-              - argocd-application-controller-metrics.argocd:8082
-              - argocd-applicationset-controller-metrics.argocd:8085
-              - argocd-repo-server-metrics.argocd:8084
-              - argocd-server-metrics.argocd:8083
-
       - job_name: prometheus
         static_configs:
           - targets:
@@ -162,3 +154,22 @@ serverFiles:
           - source_labels: [__meta_kubernetes_pod_phase]
             regex: Pending|Succeeded|Failed|Completed
             action: drop
+
+      - job_name: 'kubernetes-services'
+        honor_labels: true
+
+        kubernetes_sd_configs:
+          - role: service
+
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_label_prometheus_io_scrape]
+            action: keep
+            regex: true
+
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: namespace
+
+          - source_labels: [__meta_kubernetes_service_name]
+            action: replace
+            target_label: service
