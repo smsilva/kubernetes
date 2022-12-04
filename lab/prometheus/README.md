@@ -37,7 +37,7 @@ helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-121"
+CLUSTER_NAME="kind-125"
 
 helm upgrade \
   --install \
@@ -64,4 +64,32 @@ kubectl logs \
 kubectl \
   --namespace prometheus \
   port-forward service/prometheus-server 9090:80
+```
+
+## New Relic
+
+### Patch
+
+```bash
+PATCH_FILE=$(mktemp)
+
+cat <<EOF > ${PATCH_FILE?}
+metadata:
+  annotations: {}
+  labels:
+    prometheus.io/port: "9153"
+    prometheus.io/scrape: "true"
+EOF
+
+kubectl patch service kube-dns \
+  --patch-file=${PATCH_FILE?} \
+  --namespace kube-system
+
+kubectl get svc kube-dns --output yaml
+```
+
+### NRQL
+
+```sql
+SELECT histogrampercentile(coredns_dns_request_duration_seconds_bucket, (100 * 0.99), (100 * 0.5)) FROM Metric SINCE 60 MINUTES AGO UNTIL NOW FACET tuple(server, zone) LIMIT 100 TIMESERIES 300000 SLIDE BY 10000
 ```
