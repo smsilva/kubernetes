@@ -1,7 +1,11 @@
 apiVersion: v2
-appVersion: 2.39.1
+appVersion: v2.40.5
 dependencies:
-- condition: kubeStateMetrics.enabled
+- condition: alertmanager.enabled
+  name: alertmanager
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 0.22.*
+- condition: kube-state-metrics.enabled
   name: kube-state-metrics
   repository: https://prometheus-community.github.io/helm-charts
   version: 4.24.*
@@ -12,11 +16,7 @@ dependencies:
 - condition: prometheus-pushgateway.enabled
   name: prometheus-pushgateway
   repository: https://prometheus-community.github.io/helm-charts
-  version: 1.21.*
-- condition: alertmanager.enabled
-  name: alertmanager
-  repository: https://prometheus-community.github.io/helm-charts
-  version: 0.22.*
+  version: 2.0.*
 description: Prometheus is a monitoring system and time series database.
 home: https://prometheus.io/
 icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
@@ -37,4 +37,4 @@ sources:
 - https://github.com/prometheus/node_exporter
 - https://github.com/kubernetes/kube-state-metrics
 type: application
-version: 18.4.0
+version: 19.0.0

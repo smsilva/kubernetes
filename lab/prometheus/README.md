@@ -31,11 +31,13 @@ EOF
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
+helm repo update prometheus-community
+
 helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-120"
+CLUSTER_NAME="kind-121"
 
 helm upgrade \
   --install \
