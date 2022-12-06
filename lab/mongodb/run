@@ -19,14 +19,26 @@ stringData:
   MONGODB_PASSWORD:      ${MONGODB_PASSWORD}
 EOF
 
-# mongodb shell pod
+# Define Node Name
+export NODE_NAME="aks-userpool1-33333333-vmss000001"
+
+# Create POD
+envsubst < "deploy/pod.yaml" | \
 kubectl apply \
   --namespace wasp \
-  --filename "deploy/pod.yaml" && \
+  --filename - && \
 kubectl wait pod mongoshell \
   --for condition=Ready \
   --timeout 120s \
   --namespace wasp
+
+# kubectl debug node
+# https://learn.microsoft.com/en-us/azure/aks/node-access#create-an-interactive-shell-connection-to-a-linux-node
+kubectl debug node/${NODE_NAME?} \
+  -it \
+  --image=mcr.microsoft.com/dotnet/runtime-deps:6.0
+
+chroot /host
 
 # nsenter container
 kubectl exec mongoshell \
@@ -37,7 +49,11 @@ kubectl exec mongoshell \
 
 apt-get update && apt-get install tcpdump --yes
 
-tcpdump --snapshot-length=0 -vvv -w /capture.cap
+# host
+tcpdump --snapshot-length=0 -vvv -w network.pcap
+
+# pod
+tcpdump --interface any -nn dst port 27017 -vvv -w network.pcap
 
 # mongodb shell container
 kubectl exec mongoshell \
@@ -49,7 +65,9 @@ kubectl exec mongoshell \
 /opt/mongodb/entrypoint
 
 # copy file to localhost (stop tcpdump before run this)
-kubectl --namespace wasp cp --container nsenter mongoshell:capture.cap capture.cap
+kubectl --namespace wasp cp --container nsenter mongoshell:network.pcap network.pcap
 
 # read 
-tcpdump -r capture.cap
+tcpdump --number -r network.pcap
+
+kubectl cp node-debugger-aks-userpool1-33137823-vmss000027-5l45p:"/host/network.pcap" network.pcap
