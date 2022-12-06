@@ -113,6 +113,7 @@ kubectl apply \
   --namespace example \
   --filename "deployments/httpbin/" && \
 kubectl apply \
+  --namespace example \
   --filename "./deployments/httpbin-istio"
 
 # curl pod on default namespace
