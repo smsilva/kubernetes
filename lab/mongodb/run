@@ -1,12 +1,65 @@
 #!/bin/bash
+kubectl create namespace wasp
 
-mongosh "mongodb+srv://${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}" \
-  --username ${MONGODB_USERNAME?} \
-  --password ${MONGODB_PASSWORD?} \
-  --eval 'printjson(db.version())' \
-  --eval 'show collections'
+kubectl apply \
+  --namespace wasp \
+  --filename - <<EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongoshell
+type: Opaque
+stringData:
+  MONGODB_HOST:          ${MONGODB_HOST}
+  MONGODB_DATABASE_NAME: ${MONGODB_DATABASE_NAME}
+  MONGODB_USERNAME:      ${MONGODB_USERNAME}
+  MONGODB_PASSWORD:      ${MONGODB_PASSWORD}
+EOF
 
-mongosh "mongodb+srv://${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}" \
-  --username ${MONGODB_USERNAME?} \
-  --password ${MONGODB_PASSWORD?} \
-  --file listPosts.js
+# mongodb shell pod
+kubectl apply \
+  --namespace wasp \
+  --filename "deploy/pod.yaml" && \
+kubectl wait pod mongoshell \
+  --for condition=Ready \
+  --timeout 120s \
+  --namespace wasp
+
+# nsenter container
+kubectl exec mongoshell \
+  --namespace wasp \
+  --container nsenter \
+  --stdin \
+  --tty -- /bin/bash
+
+apt-get update && apt-get install tcpdump
+
+tcpdump --snapshot-length=0 -vvv -w /capture.cap
+
+# mongodb shell container
+kubectl exec mongoshell \
+  --namespace wasp \
+  --container mongoshell \
+  --stdin \
+  --tty -- /bin/bash
+
+/opt/mongodb/entrypoint
+
+# localhost
+kubectl --namespace wasp cp --container nsenter mongoshell:/capture.cap capture.cap
+
+# Upload file
+az storage file upload \
+  --account-name "${ARM_STORAGE_ACCOUNT_NAME}" \
+  --account-key "${ARM_ACCESS_KEY}" \
+  --share-name "troubleshooting" \
+  --path capture.cap \
+  --source capture.cap
+
+az storage blob upload \
+  --account-name "${ARM_STORAGE_ACCOUNT_NAME}" \
+  --account-key "${ARM_ACCESS_KEY}" \
+  --container-name "troubleshooting" \
+  --file "capture.cap" \
+  --overwrite

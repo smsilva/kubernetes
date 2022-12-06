@@ -1,0 +1,12 @@
+#!/bin/bash
+
+mongosh "mongodb+srv://${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}" \
+  --username ${MONGODB_USERNAME?} \
+  --password ${MONGODB_PASSWORD?} \
+  --eval 'printjson(db.version())' \
+  --eval 'show collections'
+
+mongosh "mongodb+srv://${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}" \
+  --username ${MONGODB_USERNAME?} \
+  --password ${MONGODB_PASSWORD?} \
+  --file listPosts.js
