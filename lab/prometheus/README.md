@@ -37,7 +37,7 @@ helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-125"
+CLUSTER_NAME="kind-126"
 
 helm upgrade \
   --install \
@@ -56,6 +56,12 @@ kubectl logs \
   --selector component=server \
   --container prometheus-server \
   --follow
+```
+
+## Local Acess
+
+```bash
+http://localhost:32081
 ```
 
 ## Port Forward
