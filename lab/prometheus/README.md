@@ -37,7 +37,7 @@ helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-126"
+CLUSTER_NAME="kind-128"
 
 helm upgrade \
   --install \

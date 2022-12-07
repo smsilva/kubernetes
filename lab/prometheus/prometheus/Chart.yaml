@@ -1,3 +1,9 @@
+annotations:
+  artifacthub.io/links: |
+    - name: Chart Source
+      url: https://github.com/prometheus-community/helm-charts
+    - name: Upstream Project
+      url: https://github.com/prometheus/prometheus
 apiVersion: v2
 appVersion: v2.40.5
 dependencies:
@@ -20,6 +26,10 @@ dependencies:
 description: Prometheus is a monitoring system and time series database.
 home: https://prometheus.io/
 icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
+keywords:
+- monitoring
+- prometheus
+kubeVersion: '>=1.16.0-0'
 maintainers:
 - email: gianrubio@gmail.com
   name: gianrubio
@@ -37,4 +47,4 @@ sources:
 - https://github.com/prometheus/node_exporter
 - https://github.com/kubernetes/kube-state-metrics
 type: application
-version: 19.0.0
+version: 19.0.1
