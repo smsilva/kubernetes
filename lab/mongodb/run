@@ -32,7 +32,34 @@ kubectl wait pod mongoshell \
   --timeout 120s \
   --namespace wasp
 
-# kubectl debug node
+# mongodb shell container
+kubectl exec mongoshell \
+  --namespace wasp \
+  --container "mongoshell" \
+  --stdin \
+  --tty -- /bin/bash
+
+/opt/mongodb/entrypoint \
+  --command 'printjson(db.accounts.find( { "account_id": 702610 } ))' \
+  --debug 0
+
+# nsenter container
+kubectl exec mongoshell \
+  --namespace wasp \
+  --container "nsenter" \
+  --stdin \
+  --tty -- /bin/bash
+
+tcpdump --version || (apt-get update && apt-get install tcpdump --yes)
+
+# commands
+tcpdump -D
+tcpdump --interface eth0 -w network.pcap
+tcpdump --interface any -w network.pcap
+tcpdump --interface any dst port 27017 -w network.pcap
+tcpdump --interface any -nn -vvv
+
+# AKS Node Debug
 # https://learn.microsoft.com/en-us/azure/aks/node-access#create-an-interactive-shell-connection-to-a-linux-node
 kubectl debug node/${NODE_NAME?} \
   -it \
@@ -40,34 +67,16 @@ kubectl debug node/${NODE_NAME?} \
 
 chroot /host
 
-# nsenter container
-kubectl exec mongoshell \
-  --namespace wasp \
-  --container nsenter \
-  --stdin \
-  --tty -- /bin/bash
-
-apt-get update && apt-get install tcpdump --yes
-
-# host
-tcpdump --snapshot-length=0 -vvv -w network.pcap
-
-# pod
-tcpdump --interface any -nn dst port 27017 -vvv -w network.pcap
-
-# mongodb shell container
-kubectl exec mongoshell \
-  --namespace wasp \
-  --container mongoshell \
-  --stdin \
-  --tty -- /bin/bash
-
-/opt/mongodb/entrypoint
-
 # copy file to localhost (stop tcpdump before run this)
-kubectl --namespace wasp cp --container nsenter mongoshell:network.pcap network.pcap
+kubectl --namespace wasp cp --container nsenter mongoshell:'/data/network.pcap' network.pcap
 
-# read 
-tcpdump --number -r network.pcap
+kubectl cp node-debugger-aks-userpool1-33137823-vmss000027-5l45p:'/host/network.pcap' network.pcap
 
-kubectl cp node-debugger-aks-userpool1-33137823-vmss000027-5l45p:"/host/network.pcap" network.pcap
+# read
+tcpdump -r network.pcap
+
+# wireshark (select yes to run as non super user)
+sudo apt update
+sudo apt install wireshark
+sudo usermod -aG wireshark $(whoami)
+# sudo reboot

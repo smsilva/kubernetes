@@ -3,21 +3,15 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: mongoshell
-  namespace: wasp
   labels:
     app: mongoshell
+    shell: "true"
 spec:
   nodeName: "${NODE_NAME}"
   restartPolicy: Never
   hostPID: true
   hostNetwork: true
   dnsPolicy: Default
-
-  volumes:
-    - name: shared-data
-      hostPath:
-        path: /files
-        type: Directory
  
   containers:
     - name: mongoshell
@@ -26,10 +20,6 @@ spec:
       envFrom:
         - secretRef:
             name: mongoshell
-
-      volumeMounts:
-        - name: shared-data
-          mountPath: /files
 
       command:
         - sleep
@@ -40,10 +30,6 @@ spec:
       stdin: true
       stdinOnce: true
       tty: true
-
-      volumeMounts:
-        - name: shared-data
-          mountPath: /files
 
       securityContext:
         privileged: true
