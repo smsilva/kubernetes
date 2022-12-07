@@ -15,7 +15,9 @@ kind create cluster \
 kubectl create namespace prometheus
 
 # Secret
-kubectl -n prometheus apply -f - <<EOF
+kubectl apply \
+  --namespace prometheus \
+  --filename - <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
@@ -37,7 +39,7 @@ helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-128"
+CLUSTER_NAME="kind-129"
 
 helm upgrade \
   --install \
