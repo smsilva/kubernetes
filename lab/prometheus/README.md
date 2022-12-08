@@ -133,7 +133,23 @@ sum without(job) (process_resident_memory_bytes{job="kubernetes-nodes"})
 sum by(proto,server,type,zone) (rate(coredns_dns_requests_total[10m]))
 ```
 
-### CoreDNS
+### Summary
+
+Calculating Average Size of an Event.
+
+```bash
+  sum without (instance) (rate(coredns_dns_request_duration_seconds_sum[5m]))
+/
+  sum without (instance) (rate(coredns_dns_request_duration_seconds_count[5m]))
+```
+
+```bash
+  sum without (instance) (rate(coredns_dns_request_size_bytes_sum[5m]))
+/
+  sum without (instance) (rate(coredns_dns_request_size_bytes_count[5m]))
+```
+
+### Histogram
 
 ```bash
 # CoreDNS
