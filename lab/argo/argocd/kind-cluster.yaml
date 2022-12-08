@@ -28,7 +28,7 @@ nodes:
         protocol: tcp
 
       - containerPort: 32082
-        hostPort: 32081
+        hostPort: 32082
         protocol: tcp
 
       - containerPort: 32443

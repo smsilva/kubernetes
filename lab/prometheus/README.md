@@ -39,7 +39,7 @@ helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-130"
+CLUSTER_NAME="kind-132"
 
 helm upgrade \
   --install \
@@ -107,6 +107,15 @@ SELECT histogrampercentile(coredns_dns_request_duration_seconds_bucket, (100 * 0
 ### Gauge
 
 ```bash
+# Running Pods
+kubectl get pods -o wide -A | sed 1d | wc -l
+
+# Running Pods per Node by Instance
+sum by (instance) (kubelet_running_pods)
+
+# Running Pods per Node
+sum(kubelet_running_pods)
+
 # Memory Bytes by Nodes
 sum by (instance) (process_resident_memory_bytes{job="kubernetes-nodes"})
 
