@@ -106,7 +106,7 @@ kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
 ###   deploy
 
 ```bash
-# Example namespace and httpbin Deployment 
+# Example namespace and httpbin Deployment
 kubectl apply \
   --filename "./deployments/httpbin/namespace.yaml" && \
 kubectl apply \

@@ -1,5 +1,7 @@
 global:
   cluster: undefined-cluster-name
+  remoteWrite:
+    enabled : false
 
 server:
   global:
@@ -18,7 +20,7 @@ server:
     - name: newrelic
       secret:
         secretName: newrelic-license
-        optional: false
+        optional: true
 
   resources:
     requests:
@@ -116,7 +118,7 @@ serverFiles:
           - targets:
               - localhost:9090
 
-      - job_name: 'pods'
+      - job_name: 'kubernetes-pods'
         honor_labels: true
 
         kubernetes_sd_configs:
@@ -159,7 +161,7 @@ serverFiles:
             regex: Pending|Succeeded|Failed|Completed
             action: drop
 
-      - job_name: 'services'
+      - job_name: 'kubernetes-services'
         honor_labels: true
 
         kubernetes_sd_configs:
@@ -178,7 +180,7 @@ serverFiles:
             action: replace
             target_label: service
 
-      - job_name: 'apiserver'
+      - job_name: 'kubernetes-apiserver'
 
         kubernetes_sd_configs:
           - role: endpoints
@@ -200,7 +202,7 @@ serverFiles:
             regex: default;kubernetes;https
             action: keep
 
-      - job_name: 'kube-dns'
+      - job_name: 'kubernetes-coredns'
         honor_labels: true
 
         kubernetes_sd_configs:
@@ -227,7 +229,7 @@ serverFiles:
           - action: labelmap
             regex: __meta_kubernetes_pod_label_(.+)
 
-      - job_name: 'nodes'
+      - job_name: 'kubernetes-nodes'
 
         scheme: https
 

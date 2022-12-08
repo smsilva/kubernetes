@@ -1,3 +1,4 @@
+{{- if $.Values.global.remoteWrite.enabled }}
 remote_write:
   - url: https://metric-api.newrelic.com/prometheus/v1/write?prometheus_server={{ .Values.global.cluster }}
     authorization:
@@ -58,3 +59,4 @@ remote_write:
           timestamp|\
           version"
         action: labeldrop
+{{- end }}

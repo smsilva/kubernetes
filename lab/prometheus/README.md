@@ -39,7 +39,7 @@ helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-129"
+CLUSTER_NAME="kind-130"
 
 helm upgrade \
   --install \
@@ -93,11 +93,50 @@ kubectl patch service kube-dns \
   --patch-file=${PATCH_FILE?} \
   --namespace kube-system
 
-kubectl get svc kube-dns --output yaml
+kubectl get service kube-dns --output yaml
 ```
 
 ### NRQL
 
 ```sql
 SELECT histogrampercentile(coredns_dns_request_duration_seconds_bucket, (100 * 0.99), (100 * 0.5)) FROM Metric SINCE 60 MINUTES AGO UNTIL NOW FACET tuple(server, zone) LIMIT 100 TIMESERIES 300000 SLIDE BY 10000
+```
+
+## PromQL
+
+### Gauge
+
+```bash
+# Memory Bytes by Nodes
+sum by (instance) (process_resident_memory_bytes{job="kubernetes-nodes"})
+
+  # Result:
+  {instance="kind-control-plane"} 82018304
+  {instance="kind-worker"} 94068736
+  {instance="kind-worker2"} 97607680
+  {instance="kind-worker3"} 95772672
+
+# without
+sum without(job) (process_resident_memory_bytes{job="kubernetes-nodes"})
+
+  # Result:
+  {beta_kubernetes_io_arch="amd64", beta_kubernetes_io_os="linux", instance="kind-control-plane", kubernetes_io_arch="amd64", kubernetes_io_hostname="kind-control-plane", kubernetes_io_os="linux"} 84721664
+  {beta_kubernetes_io_arch="amd64", beta_kubernetes_io_os="linux", instance="kind-worker", kubernetes_io_arch="amd64", kubernetes_io_hostname="kind-worker", kubernetes_io_os="linux"} 95027200
+  {beta_kubernetes_io_arch="amd64", beta_kubernetes_io_os="linux", instance="kind-worker2", kubernetes_io_arch="amd64", kubernetes_io_hostname="kind-worker2", kubernetes_io_os="linux"} 98439168
+  {beta_kubernetes_io_arch="amd64", beta_kubernetes_io_os="linux", instance="kind-worker3", kubernetes_io_arch="amd64", kubernetes_io_hostname="kind-worker3", kubernetes_io_os="linux"} 94777344
+```
+
+### Counter
+
+```bash
+# CoreDNS Requests
+sum by(proto,server,type,zone) (rate(coredns_dns_requests_total[10m]))
+```
+
+### CoreDNS
+
+```bash
+# CoreDNS
+# https://sysdig.com/blog/how-to-monitor-coredns
+histogram_quantile(0.99, sum(rate(coredns_dns_request_duration_seconds_bucket{job="kubernetes-coredns"}[1h])) by(server, zone, le))
 ```
