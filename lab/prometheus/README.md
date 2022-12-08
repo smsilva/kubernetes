@@ -3,8 +3,13 @@
 ## Create a Kind Cluster
 
 ```bash
+KUBERNETES_VERSION="1.24.7"
+KUBERNETES_KIND_NODE_IMAGE="kindest/node:v${KUBERNETES_VERSION?}"
+
+docker pull ${KUBERNETES_KIND_NODE_IMAGE?}
+
 kind create cluster \
-  --image kindest/node:v1.24.7 \
+  --image ${KUBERNETES_KIND_NODE_IMAGE?} \
   --config "./kind/cluster.yaml"
 ```
 
@@ -39,7 +44,7 @@ helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-132"
+CLUSTER_NAME="kind-134"
 
 helm upgrade \
   --install \
@@ -164,4 +169,32 @@ Calculating Average Size of an Event.
 # CoreDNS
 # https://sysdig.com/blog/how-to-monitor-coredns
 histogram_quantile(0.99, sum(rate(coredns_dns_request_duration_seconds_bucket{job="kubernetes-coredns"}[1h])) by(server, zone, le))
+```
+
+## Metrics
+
+### curl pod
+
+```bash
+# curl pod on default namespace
+kubectl run curl \
+  --namespace default \
+  --image=silviosilva/utils \
+  --command -- sleep infinity && \
+kubectl wait pod curl \
+  --namespace default \
+  --for condition=Ready \
+  --timeout 360s
+```
+
+### kube-state-metrics
+
+```bash
+kubectl \
+  --namespace default \
+  exec curl -- curl \
+    --include \
+    --silent \
+    --request GET http://10.244.2.2:8080/metrics \
+| grep "^kube_pod_"
 ```
