@@ -39,7 +39,7 @@ helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
 
-CLUSTER_NAME="kind-134"
+CLUSTER_NAME="kind-140"
 
 helm upgrade \
   --install \
@@ -79,19 +79,19 @@ kubectl \
 ### Patch
 
 ```bash
+# CoreDNS Patch
 PATCH_FILE=$(mktemp)
 
 cat <<EOF > ${PATCH_FILE?}
 metadata:
-  annotations: {}
   labels:
-    prometheus.io/port: "9153"
     prometheus.io/scrape: "true"
+    prometheus.io/port: "9153"
 EOF
 
 kubectl patch service kube-dns \
   --patch-file=${PATCH_FILE?} \
-  --namespace kube-system
+  --namespace "kube-system"
 
 kubectl get service kube-dns --output yaml
 ```

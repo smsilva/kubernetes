@@ -122,6 +122,9 @@ serverFiles:
 
         kubernetes_sd_configs:
           - role: endpoints
+            namespaces:
+              names:
+                - default
 
         scheme: https
 
@@ -145,6 +148,12 @@ serverFiles:
 
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              names:
+                - kube-system
+            selectors:
+              - role: "pod"
+                label: "k8s-app=kube-dns"
 
         relabel_configs:
           - source_labels:
@@ -222,6 +231,13 @@ serverFiles:
 
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              names:
+                - argocd
+                - example
+                - httpbin
+                - istio-system
+                - istio-gateway
 
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
@@ -260,30 +276,14 @@ serverFiles:
             regex: Pending|Succeeded|Failed|Completed
             action: drop
 
-      - job_name: 'kubernetes-services'
-        honor_labels: true
-
-        kubernetes_sd_configs:
-          - role: service
-
-        relabel_configs:
-          - source_labels: [__meta_kubernetes_service_label_prometheus_io_scrape]
-            action: keep
-            regex: true
-
-          - source_labels: [__meta_kubernetes_namespace]
-            action: replace
-            target_label: namespace
-
-          - source_labels: [__meta_kubernetes_service_name]
-            action: replace
-            target_label: service
-
       - job_name: 'kubernetes-state-metrics'
         honor_labels: true
 
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              names:
+                - prometheus
 
         relabel_configs:
           - source_labels:
