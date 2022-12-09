@@ -1,0 +1,43 @@
+#!/bin/bash
+export THIS_SCRIPT_DIRECTORY=$(dirname $0)
+export PATH=${PATH}:${THIS_SCRIPT_DIRECTORY}
+
+kind create cluster \
+  --image "kindest/node:v1.24.7" \
+  --config "./kind/cluster.yaml"
+
+# Namespace
+kubectl create namespace prometheus
+
+# Secret
+kubectl apply \
+  --namespace prometheus \
+  --filename - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: newrelic-license
+type: Opaque
+stringData:
+  license: "${NEW_RELIC_LICENSE_KEY}"
+EOF
+
+CLUSTER_NAME="kind"
+
+helm upgrade \
+  --install \
+  --namespace prometheus \
+  prometheus prometheus/ \
+  --set "global.cluster=${CLUSTER_NAME}" \
+  --values "prometheus/values-custom.yaml" \
+  --wait && \
+kubectl wait pod \
+  --namespace prometheus \
+  --selector component=server \
+  --for=condition=Ready \
+  --timeout=360s && \
+kubectl logs \
+  --namespace prometheus \
+  --selector component=server \
+  --container prometheus-server \
+  --follow
