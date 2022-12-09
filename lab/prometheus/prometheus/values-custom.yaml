@@ -31,9 +31,16 @@ server:
       cpu: 1000m
       memory: 2Gi
 
-  service:
-    type: NodePort
-    nodePort: 32081
+  # service:
+  #   type: NodePort
+  #   nodePort: 32081
+
+prometheus-node-exporter:
+  enabled: true
+
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9100"
 
 serverFiles:
   ## Records configuration
@@ -231,13 +238,6 @@ serverFiles:
 
         kubernetes_sd_configs:
           - role: pod
-            namespaces:
-              names:
-                - argocd
-                - example
-                - httpbin
-                - istio-system
-                - istio-gateway
 
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
