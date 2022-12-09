@@ -3,13 +3,8 @@
 ## Create a Kind Cluster
 
 ```bash
-KUBERNETES_VERSION="1.24.7"
-KUBERNETES_KIND_NODE_IMAGE="kindest/node:v${KUBERNETES_VERSION?}"
-
-docker pull ${KUBERNETES_KIND_NODE_IMAGE?}
-
 kind create cluster \
-  --image ${KUBERNETES_KIND_NODE_IMAGE?} \
+  --image "kindest/node:v1.24.7" \
   --config "./kind/cluster.yaml"
 ```
 
@@ -187,14 +182,15 @@ kubectl wait pod curl \
   --timeout 360s
 ```
 
-### kube-state-metrics
+### argocd server
 
 ```bash
+
 kubectl \
   --namespace default \
   exec curl -- curl \
     --include \
     --silent \
-    --request GET http://10.244.2.2:8080/metrics \
-| grep "^kube_pod_"
+    --request GET http://argocd-server-metrics.argocd:8083/metrics \
+| grep "^argocd"
 ```

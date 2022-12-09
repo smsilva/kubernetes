@@ -13,13 +13,13 @@ helm upgrade \
   --namespace argocd \
   --create-namespace \
   argocd argo/argo-cd \
-  --values values/configs-known-hosts.yaml \
-  --values values/extra-objects.yaml \
-  --values values/extra-volumes.yaml \
-  --values values/metrics.yaml \
-  --values values/notifications.yaml \
-  --values values/resource-customizations.yaml \
-  --values values/service.yaml \
+  --values "values/configs-known-hosts.yaml" \
+  --values "values/extra-objects.yaml" \
+  --values "values/extra-volumes.yaml" \
+  --values "values/metrics.yaml" \
+  --values "values/notifications.yaml" \
+  --values "values/resource-customizations.yaml" \
+  --values "values/service.yaml" \
   --wait &> /dev/null
 
 for DEPLOYMENT in $(kubectl \

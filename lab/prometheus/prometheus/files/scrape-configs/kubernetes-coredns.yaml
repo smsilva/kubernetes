@@ -1,0 +1,26 @@
+- job_name: 'kubernetes-coredns'
+  honor_labels: true
+
+  kubernetes_sd_configs:
+    - role: pod
+
+  relabel_configs:
+    - source_labels:
+        - __meta_kubernetes_namespace
+        - __meta_kubernetes_pod_name
+      separator: '/'
+      regex: 'kube-system/coredns.+'
+      action: keep
+
+    - source_labels:
+        - __meta_kubernetes_pod_container_port_name
+      regex: metrics
+      action: keep
+
+    - source_labels:
+        - __meta_kubernetes_pod_name
+      target_label: instance
+      action: replace
+
+    - action: labelmap
+      regex: __meta_kubernetes_pod_label_(.+)
