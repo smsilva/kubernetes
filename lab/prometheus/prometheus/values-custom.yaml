@@ -31,16 +31,12 @@ server:
       cpu: 1000m
       memory: 2Gi
 
-  # service:
-  #   type: NodePort
-  #   nodePort: 32081
+  service:
+    type: NodePort
+    nodePort: 32081
 
 prometheus-node-exporter:
   enabled: true
-
-  podAnnotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "9100"
 
 serverFiles:
   ## Records configuration
@@ -297,6 +293,35 @@ serverFiles:
               - __meta_kubernetes_pod_name
             target_label: instance
             action: replace
+
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+
+      - job_name: 'kubernetes-node-exporter'
+        honor_labels: true
+
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - prometheus
+
+        relabel_configs:
+          - source_labels:
+              - __meta_kubernetes_namespace
+              - __meta_kubernetes_pod_name
+            separator: '/'
+            regex: 'prometheus/.*node-exporter.*'
+            action: keep
+
+          - source_labels:
+              - __meta_kubernetes_pod_name
+            target_label: instance
+            action: replace
+
+          - source_labels: [__meta_kubernetes_pod_node_name]
+            action: replace
+            target_label: node
 
           - action: labelmap
             regex: __meta_kubernetes_pod_label_(.+)
