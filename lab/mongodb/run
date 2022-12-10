@@ -67,6 +67,8 @@ kubectl debug node/${NODE_NAME?} \
 
 chroot /host
 
+mtr -rTc 50 ${MONGODB_HOST?}
+
 # copy file to localhost (stop tcpdump before run this)
 kubectl --namespace wasp cp --container nsenter mongoshell:'/data/network.pcap' network.pcap
 
