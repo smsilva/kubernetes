@@ -1,0 +1,15 @@
+#!/bin/bash
+
+az storage file upload \
+  --account-name "${ARM_STORAGE_ACCOUNT_NAME}" \
+  --account-key "${ARM_ACCESS_KEY}" \
+  --share-name "troubleshooting" \
+  --path capture.cap \
+  --source capture.cap
+
+az storage blob upload \
+  --account-name "${ARM_STORAGE_ACCOUNT_NAME}" \
+  --account-key "${ARM_ACCESS_KEY}" \
+  --container-name "troubleshooting" \
+  --file "capture.cap" \
+  --overwrite

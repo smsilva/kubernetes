@@ -1,5 +1,33 @@
 #!/bin/bash
 
+# Docker
+docker run \
+  --rm \
+  --env MONGODB_HOST=${MONGODB_HOST?} \
+  --env MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME?} \
+  --env MONGODB_USERNAME=${MONGODB_USERNAME?} \
+  --env MONGODB_PASSWORD=${MONGODB_PASSWORD?} \
+  silviosilva/mongoshell:latest \
+    --debug 1
+
+docker run \
+  --rm \
+  --env MONGODB_HOST=${MONGODB_HOST?} \
+  --env MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME?} \
+  --env MONGODB_USERNAME=${MONGODB_USERNAME?} \
+  --env MONGODB_PASSWORD=${MONGODB_PASSWORD?} \
+  silviosilva/mongoshell:latest \
+    --command 'printjson(db.accounts.find( { "account_id": 702610 } ))'
+
+export MONGODB_PASSWORD_URL_ENCODED=$(printf %s "${MONGODB_PASSWORD?}" | jq -sRr @uri)
+export MONGODB_CONNECTION_STRING="mongodb+srv://${MONGODB_USERNAME?}:${MONGODB_PASSWORD_URL_ENCODED}@${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}?readPreference=secondaryPreferred&readPreferenceTags=workloadType:OPERATIONAL&retryWrites=true&w=majority&maxStalenessSeconds=90&maxIdleTimeMS=1500000&appName=mongoshell&minPoolSize=10"
+
+docker run \
+  --rm \
+  --env MONGODB_CONNECTION_STRING=${MONGODB_CONNECTION_STRING?} \
+  silviosilva/mongoshell:latest
+
+# Executable
 mongosh "mongodb+srv://${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}" \
   --username ${MONGODB_USERNAME?} \
   --password ${MONGODB_PASSWORD?} \
@@ -15,19 +43,3 @@ mongosh "mongodb+srv://${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}" \
   --username ${MONGODB_USERNAME?} \
   --password ${MONGODB_PASSWORD?} \
   --file listPosts.js
-
-
-# Upload file
-az storage file upload \
-  --account-name "${ARM_STORAGE_ACCOUNT_NAME}" \
-  --account-key "${ARM_ACCESS_KEY}" \
-  --share-name "troubleshooting" \
-  --path capture.cap \
-  --source capture.cap
-
-az storage blob upload \
-  --account-name "${ARM_STORAGE_ACCOUNT_NAME}" \
-  --account-key "${ARM_ACCESS_KEY}" \
-  --container-name "troubleshooting" \
-  --file "capture.cap" \
-  --overwrite
