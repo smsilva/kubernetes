@@ -82,3 +82,12 @@ sudo apt update
 sudo apt install wireshark
 sudo usermod -aG wireshark $(whoami)
 # sudo reboot
+
+# DNS Lookup
+dig ${MONGODB_HOST?} SRV
+
+# SRV Lookup DNS Entries
+pip3 install srvlookup
+
+# python3 mongodb_srv_records.py cluster0.qq6tuw6.mongodb.net
+python3 mongodb_srv_records.py ${MONGODB_HOST?}
