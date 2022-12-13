@@ -16,81 +16,81 @@ telemetry:
     prometheus:
       enabled: true
 
-      configOverride:
-        gateway:
-          metrics:
-            - tags_to_remove:
-                - connection_security_policy
-                - destination_app
-                - destination_canonical_revision
-                - destination_canonical_service
-                - destination_cluster
-                - destination_principal
-                - destination_service
-                - destination_service_name
-                - destination_service_namespace
-                - destination_version
-                - grpc_response_status
-                - request_protocol
-                - response_flags
-                - security_istio_io_tlsMode
-                - service_istio_io_canonical_name
-                - service_istio_io_canonical_revision
-                - source_app
-                - source_canonical_revision
-                - source_canonical_service
-                - source_cluster
-                - source_principal
-                - source_version
-
-        inboundSidecar:
-          metrics:
-            - tags_to_remove:
-                - connection_security_policy
-                - destination_app
-                - destination_canonical_revision
-                - destination_canonical_service
-                - destination_cluster
-                - destination_principal
-                - destination_service
-                - destination_service_name
-                - destination_service_namespace
-                - destination_version
-                - grpc_response_status
-                - request_protocol
-                - response_flags
-                - security_istio_io_tlsMode
-                - service_istio_io_canonical_name
-                - service_istio_io_canonical_revision
-                - source_app
-                - source_canonical_revision
-                - source_canonical_service
-                - source_cluster
-                - source_principal
-                - source_version
-
-        outboundSidecar:
-          metrics:
-            - tags_to_remove:
-                - connection_security_policy
-                - destination_app
-                - destination_canonical_revision
-                - destination_canonical_service
-                - destination_cluster
-                - destination_principal
-                - destination_service
-                - destination_service_name
-                - destination_service_namespace
-                - destination_version
-                - grpc_response_status
-                - request_protocol
-                - response_flags
-                - security_istio_io_tlsMode
-                - service_istio_io_canonical_name
-                - service_istio_io_canonical_revision
-                - source_app
-                - source_canonical_revision
-                - source_canonical_service
-                - source_cluster
-                - source_principal
-                - source_version
+#      configOverride:
+#        gateway:
+#          metrics:
+#            - tags_to_remove:
+#                - connection_security_policy
+#                - destination_app
+#                - destination_canonical_revision
+#                - destination_canonical_service
+#                - destination_cluster
+#                - destination_principal
+#                - destination_service
+#                - destination_service_name
+#                - destination_service_namespace
+#                - destination_version
+#                - grpc_response_status
+#                - request_protocol
+#                - response_flags
+#                - security_istio_io_tlsMode
+#                - service_istio_io_canonical_name
+#                - service_istio_io_canonical_revision
+#                - source_app
+#                - source_canonical_revision
+#                - source_canonical_service
+#                - source_cluster
+#                - source_principal
+#                - source_version
+#
+#        inboundSidecar:
+#          metrics:
+#            - tags_to_remove:
+#                - connection_security_policy
+#                - destination_app
+#                - destination_canonical_revision
+#                - destination_canonical_service
+#                - destination_cluster
+#                - destination_principal
+#                - destination_service
+#                - destination_service_name
+#                - destination_service_namespace
+#                - destination_version
+#                - grpc_response_status
+#                - request_protocol
+#                - response_flags
+#                - security_istio_io_tlsMode
+#                - service_istio_io_canonical_name
+#                - service_istio_io_canonical_revision
+#                - source_app
+#                - source_canonical_revision
+#                - source_canonical_service
+#                - source_cluster
+#                - source_principal
+#                - source_version
+#
+#        outboundSidecar:
+#          metrics:
+#            - tags_to_remove:
+#                - connection_security_policy
+#                - destination_app
+#                - destination_canonical_revision
+#                - destination_canonical_service
+#                - destination_cluster
+#                - destination_principal
+#                - destination_service
+#                - destination_service_name
+#                - destination_service_namespace
+#                - destination_version
+#                - grpc_response_status
+#                - request_protocol
+#                - response_flags
+#                - security_istio_io_tlsMode
+#                - service_istio_io_canonical_name
+#                - service_istio_io_canonical_revision
+#                - source_app
+#                - source_canonical_revision
+#                - source_canonical_service
+#                - source_cluster
+#                - source_principal
+#                - source_version

@@ -42,7 +42,7 @@ kind create cluster \
 
 ```bash
 # Configure Helm Repo
-ISTIO_VERSION="${ISTIO_VERSION-1.16.0}"
+ISTIO_VERSION="${ISTIO_VERSION-1.16.1}"
 
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 
@@ -285,6 +285,15 @@ watch -n 3 'kubectl \
     --silent \
     --header "x-wasp-id: $(uuidgen)" \
     --request GET http://httpbin:8000/get'
+
+# Generate Traffic for httpbin Deployment 200 from default namespace
+watch -n 3 'kubectl \
+  --namespace default \
+  exec curl -- curl \
+    --include \
+    --silent \
+    --header "x-wasp-id: $(uuidgen)" \
+    --request GET http://httpbin.example.svc:8000/get'
 
 # Generate Traffic for httpbin Deployment 503
 watch -n 30 'curl \

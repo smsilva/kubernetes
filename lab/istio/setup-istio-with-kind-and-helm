@@ -47,3 +47,9 @@ helm install \
   --namespace "istio-ingress" \
   istio-ingress istio/gateway \
   --values "./helm/istio-ingress/service.yaml" > /dev/null
+
+if [ -n "${ISTIO_BASE_DIR}" ]; then
+  # Configuring Add-ons
+  kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml"
+  kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
+fi
