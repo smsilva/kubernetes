@@ -39,11 +39,7 @@ prometheus-node-exporter:
   enabled: true
 
 serverFiles:
-  ## Records configuration
-  ## https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
   recording_rules.yml:
-    ## Istio Observability Best Practices: Workload-level aggregation via recording rules
-    ## https://istio.io/latest/docs/ops/best-practices/observability/#workload-level-aggregation-via-recording-rules
     groups:
       - name: "istio.aggregate-rules"
         interval: 10s

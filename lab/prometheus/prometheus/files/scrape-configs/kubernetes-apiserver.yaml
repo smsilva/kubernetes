@@ -2,6 +2,9 @@
 
   kubernetes_sd_configs:
     - role: endpoints
+      namespaces:
+        names:
+          - default
 
   scheme: https
 

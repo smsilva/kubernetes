@@ -1,0 +1,18 @@
+# https://istio.io/latest/docs/ops/best-practices/observability/#using-prometheus-for-production-scale-monitoring
+# https://prometheus.io/docs/prometheus/latest/federation/#configuring-federation
+
+- job_name: 'federate'
+  scrape_interval: 15s
+
+  honor_labels: true
+  metrics_path: '/federate'
+
+  params:
+    'match[]':
+      - '{job="prometheus"}'
+      - '{job="kubernetes-pods"}'
+      - '{__name__=~"job:.*"}'
+
+  static_configs:
+    - targets:
+      - 'prometheus.istio-system:9090'

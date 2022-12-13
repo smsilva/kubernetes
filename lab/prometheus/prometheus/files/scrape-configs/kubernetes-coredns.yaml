@@ -3,6 +3,12 @@
 
   kubernetes_sd_configs:
     - role: pod
+      namespaces:
+        names:
+          - kube-system
+      selectors:
+        - role: "pod"
+          label: "k8s-app=kube-dns"
 
   relabel_configs:
     - source_labels:
