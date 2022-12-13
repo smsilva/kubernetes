@@ -33,7 +33,7 @@ Run the script below to:
 ```bash
 # Create Kind Cluster with Extra Ports exposed (32080 and 32443)
 kind create cluster \
-  --image kindest/node:v1.24.0 \
+  --image "kindest/node:v1.24.7" \
   --config "./kind/cluster.yaml" \
   --name istio
 ```
