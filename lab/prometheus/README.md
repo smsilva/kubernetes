@@ -28,7 +28,7 @@ stringData:
 EOF
 ```
 
-## Prometheus Helm Install
+## Prometheus Helm Chart Fetch
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -38,11 +38,16 @@ helm repo update prometheus-community
 helm search repo prometheus-community/prometheus
 
 # helm fetch prometheus-community/prometheus --untar
+```
 
+## Prometheus Helm Install
+
+```bash
 CLUSTER_NAME="kind-141"
 
 helm upgrade \
   --install \
+  --create-namespace \
   --namespace prometheus \
   prometheus prometheus/ \
   --set "global.cluster=${CLUSTER_NAME}" \
