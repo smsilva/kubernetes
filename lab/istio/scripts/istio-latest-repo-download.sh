@@ -25,8 +25,8 @@ else
   echo "istioctl ${ISTIOCTL_INSTALLED_VERSION} version currently installed"
 fi
 
-sed -i '/export ISTIO_VERSION/d' ${HOME}/.bash_config
-sed -i '/export ISTIO_BASE_DIR/d' ${HOME}/.bash_config
+sed --follow-symlinks --in-place '/export ISTIO_VERSION/d' ${HOME}/.bash_config
+sed --follow-symlinks --in-place '/export ISTIO_BASE_DIR/d' ${HOME}/.bash_config
 
 echo "export ISTIO_VERSION=${ISTIO_VERSION}" >> ${HOME}/.bash_config
 echo "export ISTIO_BASE_DIR=\${HOME}/istio-\${ISTIO_VERSION}" >> ${HOME}/.bash_config
