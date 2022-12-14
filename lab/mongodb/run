@@ -20,7 +20,7 @@ stringData:
 EOF
 
 # Define Node Name
-export NODE_NAME="aks-userpool1-33333333-vmss000001"
+export NODE_NAME="aks-userpool1-22222222-vmss00000x"
 
 # Create POD
 envsubst < "deploy/pod.yaml" | \
@@ -68,6 +68,14 @@ kubectl debug node/${NODE_NAME?} \
 chroot /host
 
 mtr -rTc 50 ${MONGODB_HOST?}
+
+# Delete Debug PODs
+kubectl get pods \
+| grep '^node-debugger-' \
+| while read LINE; do
+  POD_NAME="$(awk '{ print $1 }')"
+  kubectl delete pod ${POD_NAME?} --wait=false
+done
 
 # copy file to localhost (stop tcpdump before run this)
 kubectl --namespace wasp cp --container nsenter mongoshell:'/data/network.pcap' network.pcap
