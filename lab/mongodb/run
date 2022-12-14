@@ -20,7 +20,7 @@ stringData:
 EOF
 
 # Define Node Name
-export NODE_NAME="aks-userpool1-22222222-vmss00000x"
+export NODE_NAME="${NODE_NAME-kind-control-plane}"
 
 # Create POD
 envsubst < "deploy/pod.yaml" | \
@@ -39,9 +39,9 @@ kubectl exec mongoshell \
   --stdin \
   --tty -- /bin/bash
 
-/opt/mongodb/entrypoint \
+/opt/scripts/entrypoint \
   --command 'printjson(db.accounts.find( { "account_id": 702610 } ))' \
-  --debug 0
+  --debug 1
 
 # nsenter container
 kubectl exec mongoshell \
@@ -59,6 +59,8 @@ tcpdump --interface any -w network.pcap
 tcpdump --interface any dst port 27017 -w network.pcap
 tcpdump --interface any -nn -vvv
 
+tcpping -x 5 google.com 443
+
 # AKS Node Debug
 # https://learn.microsoft.com/en-us/azure/aks/node-access#create-an-interactive-shell-connection-to-a-linux-node
 kubectl debug node/${NODE_NAME?} \
@@ -66,8 +68,6 @@ kubectl debug node/${NODE_NAME?} \
   --image=mcr.microsoft.com/dotnet/runtime-deps:6.0
 
 chroot /host
-
-mtr -rTc 50 ${MONGODB_HOST?}
 
 # Delete Debug PODs
 kubectl get pods \
@@ -102,6 +102,9 @@ cluster0.qq6tuw6.mongodb.net. 60 IN SRV 0 0 27017 ac-d1qhdi7-shard-00-01.qq6tuw6
 cluster0.qq6tuw6.mongodb.net. 60 IN SRV 0 0 27017 ac-d1qhdi7-shard-00-02.qq6tuw6.mongodb.net. 52.67.169.5
 
 tcpdump -r network.pcap | egrep "54.233.186.89|18.230.161.136|52.67.169.5"
+
+# mtr combines the functionality of the traceroute and ping programs in a single network diagnostic tool
+mtr --report --tcp --report-cycles 50 ac-d1qhdi7-shard-00-00.qq6tuw6.mongodb.net
 
 # SRV Lookup DNS Entries
 pip3 install srvlookup
