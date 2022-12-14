@@ -36,6 +36,14 @@ kubectl wait pod mongoshell \
 kubectl exec mongoshell \
   --namespace wasp \
   --container "mongoshell" \
+  -- /opt/scripts/entrypoint \
+    --command 'printjson(db.accounts.find( { "account_id": 702610 } ))' \
+    --debug 1
+
+# shell
+kubectl exec mongoshell \
+  --namespace wasp \
+  --container "mongoshell" \
   --stdin \
   --tty -- /bin/bash
 
@@ -95,11 +103,19 @@ sudo usermod -aG wireshark $(whoami)
 dig ${MONGODB_HOST?} SRV
 
 # DNS Lookup with dig
-nslookup -debug -type=SRV _mongodb._tcp.${MONGODB_HOST?}
+nslookup -debug -type=SRV _mongodb._tcp.${MONGODB_HOST?} \
+| grep "^_mongodb._tcp" \
+| awk '{ print $7 }' \
+| (
+    while read -r SERVER_NAME; do
+      SERVER_IP_ADDRESS=$(dig +short ${SERVER_NAME} | tail -1)
+      echo "${SERVER_NAME} ${SERVER_IP_ADDRESS}"
+    done
+)
 
-cluster0.qq6tuw6.mongodb.net. 60 IN SRV 0 0 27017 ac-d1qhdi7-shard-00-00.qq6tuw6.mongodb.net. 54.233.186.89
-cluster0.qq6tuw6.mongodb.net. 60 IN SRV 0 0 27017 ac-d1qhdi7-shard-00-01.qq6tuw6.mongodb.net. 18.230.161.136
-cluster0.qq6tuw6.mongodb.net. 60 IN SRV 0 0 27017 ac-d1qhdi7-shard-00-02.qq6tuw6.mongodb.net. 52.67.169.5
+ac-d1qhdi7-shard-00-02.qq6tuw6.mongodb.net. 52.67.169.5
+ac-d1qhdi7-shard-00-00.qq6tuw6.mongodb.net. 54.233.186.89
+ac-d1qhdi7-shard-00-01.qq6tuw6.mongodb.net. 18.230.161.136
 
 tcpdump -r network.pcap | egrep "54.233.186.89|18.230.161.136|52.67.169.5"
 
