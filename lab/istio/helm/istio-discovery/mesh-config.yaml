@@ -44,3 +44,17 @@ meshConfig:
       "x_gateway": "%REQ(X-W1-GATEWAY)%",
       "x_wasp_id": "%REQ(X-WASP-ID)%"
     }
+
+  enableTracing: true
+
+  defaultConfig:
+    tracing:
+      sampling: 10
+
+      zipkin:
+        address: zipkin.istio-system.svc.cluster.local:9411
+
+      custom_tags:
+        host_name:
+          header:
+            name: host
