@@ -41,7 +41,7 @@ prometheus-node-exporter:
 serverFiles:
   recording_rules.yml:
     groups:
-      - name: "istio.aggregate-rules"
+      - name: "istio.sum_by"
         interval: 10s
         rules:
           - record: "workload:istio_requests:by_destination_workload:rate5m"
@@ -65,7 +65,7 @@ serverFiles:
                 )
               )
 
-      - name: "istio.recording-rules"
+      - name: "istio.sum"
         interval: 10s
         rules:
           - record: "workload:istio_requests_total"

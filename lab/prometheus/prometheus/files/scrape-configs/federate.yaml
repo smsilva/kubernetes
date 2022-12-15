@@ -9,10 +9,21 @@
 
   params:
     'match[]':
-      - '{job="prometheus"}'
       - '{job="kubernetes-pods"}'
-      - '{__name__=~"job:.*"}'
 
   static_configs:
     - targets:
       - 'prometheus.istio-system:9090'
+
+  metric_relabel_configs:
+    - source_labels: [__name__]
+      regex: "\
+        ^envoy_(.*)|\
+        ^istio_(.*)"
+      action: keep
+
+    - source_labels: [__name__]
+      regex: '(.*)'
+      replacement: 'federate:$1'
+      target_label: __name__
+      action: replace

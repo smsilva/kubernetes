@@ -3,9 +3,4 @@ export THIS_SCRIPT_DIRECTORY=$(dirname $0)
 export PATH=${PATH}:${THIS_SCRIPT_DIRECTORY}
 
 ./setup-istio-with-kind-and-helm && \
-./deploy && \
-kubectl logs \
-  --namespace example \
-  --selector "app=httpbin" \
-  --container istio-proxy \
-  --follow
+./deploy
