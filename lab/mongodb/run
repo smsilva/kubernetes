@@ -60,14 +60,17 @@ kubectl exec mongoshell \
 
 tcpdump --version || (apt-get update && apt-get install tcpdump --yes)
 
+# https://www.mongodb.com/docs/atlas/troubleshoot-connection/?_ga=2.88583570.886434208.1671014563-1204875619.1663846224&_gac=1.23842760.1670837515.CjwKCAiAv9ucBhBXEiwA6N8nYJEC8rt1rRTloYPfRPgGEW5Woff9lcdcYaFsazXRo3rtHg2duevGdxoCwqcQAvD_BwE#connecting-to-a-database-deployment
+# - Atlas database deployments operate on port 27017. You must be able to reach this port to connect to your database deployments. Additionally, ensure that the appropriate ports are open for the following:
+# - For sharded clusters, grant access to port 27016.
+# - For BI Connector, grant access to port 27015.
+
 # commands
 tcpdump -D
-tcpdump --interface eth0 -w network.pcap
-tcpdump --interface any -w network.pcap
-tcpdump --interface any dst port 27017 -w network.pcap
 tcpdump --interface any -nn -vvv
-
-tcpping -x 5 google.com 443
+tcpdump --interface any -w network.pcap
+tcpdump --interface eth0 -w network.pcap
+tcpdump --interface any dst port 27016 or dst port 27017 -w network.pcap
 
 # AKS Node Debug
 # https://learn.microsoft.com/en-us/azure/aks/node-access#create-an-interactive-shell-connection-to-a-linux-node
@@ -121,6 +124,9 @@ tcpdump -r network.pcap | egrep "54.233.186.89|18.230.161.136|52.67.169.5"
 
 # mtr combines the functionality of the traceroute and ping programs in a single network diagnostic tool
 mtr --report --tcp --report-cycles 50 ac-d1qhdi7-shard-00-00.qq6tuw6.mongodb.net
+
+# traceroute and ping
+tcpping -x 5 ac-d1qhdi7-shard-00-00.qq6tuw6.mongodb.net 27017
 
 # SRV Lookup DNS Entries
 pip3 install srvlookup
