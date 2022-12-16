@@ -50,7 +50,7 @@ helm upgrade \
   --create-namespace \
   --namespace prometheus \
   prometheus prometheus/ \
-  --set "global.cluster=${CLUSTER_NAME}" \
+  --set "global.cluster=${CLUSTER_NAME-undefined}" \
   --values "prometheus/values-custom.yaml" \
   --wait && \
 kubectl wait pod \

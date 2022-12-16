@@ -53,6 +53,7 @@ http://prometheus-server.prometheus.svc
 | Description                                    | URL                                                                                      | ID      |
 | ---------------------------------------------- | ---------------------------------------------------------------------------------------- | ------- |
 | ArgoCD                                         | https://grafana.com/grafana/dashboards/14584-argocd                                      | `14584` |
+| CoreDNS                                        | https://grafana.com/grafana/dashboards/12382-k8s-coredns                                 | `12382` |
 | Istio Control Plane Dashboard                  | https://grafana.com/grafana/dashboards/7645-istio-control-plane-dashboard                | `7645`  |
 | Istio Mesh Dashboard                           | https://grafana.com/grafana/dashboards/7639-istio-mesh-dashboard                         | `7639`  |
 | Istio Service Dashboard                        | https://grafana.com/grafana/dashboards/7636-istio-service-dashboard                      | `7636`  |

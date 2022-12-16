@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ -n "${ISTIO_BASE_DIR}" ]; then
+  # Configuring Add-ons
+  kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml"
+  kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
+  kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/jaeger.yaml"
+  kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/grafana.yaml"
+fi
