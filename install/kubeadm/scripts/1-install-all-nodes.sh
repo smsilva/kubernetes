@@ -33,21 +33,17 @@ echo ""
 # Install Kubelet, Kubeadm and Kubectl
 #   all =~ 1 minute 30 seconds
 SECONDS=0 && \
-sudo apt-get install --yes -qq \
+sudo apt-get install --yes -q \
   kubeadm="${KUBERNETES_VERSION?}" \
   kubelet="${KUBERNETES_VERSION?}" \
-| grep \
-    --invert-match \
-    --extended-regexp "^Hit|^Get|^Selecting|^Preparing|^Unpacking" && \
+| egrep --invert-match "^Hit|^Get|^Selecting|^Preparing|^Unpacking" && \
 sudo apt-mark hold \
   kubelet \
   kubeadm && \
 if grep --quiet "master" <<< $(hostname --short); then
-  sudo apt-get install --yes -qq \
+  sudo apt-get install --yes -q \
     kubectl="${KUBERNETES_VERSION?}" \
-  | grep \
-      --invert-match \
-      --extended-regexp "^Hit|^Get|^Selecting|^Preparing|^Unpacking" && \
+  | egrep --invert-match "^Hit|^Get|^Selecting|^Preparing|^Unpacking" && \
   sudo apt-mark hold \
     kubectl
 fi && \
@@ -63,11 +59,6 @@ clear && \
 sudo crictl images
 
 # CNI Plugin
-#   CIDR.......: 10.32.0.0/16 (https://community.spiceworks.com/tools/subnet-calc/)
-#   Start......: 10.32.0.1
-#   End........: 10.32.255.254
-#   Hosts......: 65.534
-WEAVE_NET_CNI_PLUGIN_IPALLOCRANGE="10.32.0.0/16" && \
 WEAVE_NET_CNI_PLUGIN_FILE="weave-net-cni-plugin.yaml" && \
 WEAVE_NET_CNI_PLUGIN_URL="https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml" && \
 wget "${WEAVE_NET_CNI_PLUGIN_URL}" \
@@ -107,12 +98,3 @@ EOF
 chmod +x watch-for-interfaces-and-routes.sh
 clear
 ./watch-for-interfaces-and-routes.sh
-
-# Optional
-if grep --quiet "master" <<< $(hostname --short); then
-  sudo crictl pull quay.io/jcmoraisjr/haproxy-ingress:latest
-else
-  sudo crictl pull nginx:1.18 && \
-  sudo crictl pull nginx:1.19 && \
-  sudo crictl pull silviosilva/curl
-fi

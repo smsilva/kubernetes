@@ -26,7 +26,7 @@ echo ""
 # Watch Interfaces and Route information
 ./watch-for-interfaces-and-routes.sh
 
-# Initialize master-1 (=~ 1 minute 30 seconds) - check: http://haproxy.example.com/stats
+# Initialize master-1 (=~ 1 minute 30 seconds) - check: http://loadbalancer.example.com/stats
 SECONDS=0 && \
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
 NODE_NAME=$(hostname --short) && \
