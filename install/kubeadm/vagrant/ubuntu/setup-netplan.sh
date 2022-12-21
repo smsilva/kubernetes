@@ -11,8 +11,8 @@ netplan apply &> /dev/null
 
 # check /run/systemd/resolve/resolv.conf or ../run/systemd/resolve/stub-resolv.conf
 echo "/run/systemd/resolve/resolv.conf"
-cat /run/systemd/resolve/resolv.conf
+cat /run/systemd/resolve/resolv.conf | egrep -v "^#|^ "
 
 echo ""
 echo "/run/systemd/resolve/stub-resolv.conf"
-cat /run/systemd/resolve/stub-resolv.conf
+cat /run/systemd/resolve/stub-resolv.conf | egrep -v "^#|^ "

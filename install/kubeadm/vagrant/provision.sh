@@ -2,7 +2,7 @@
 
 SECONDS=0
 
-PARALLEL_EXECUTIONS="8"
+PARALLEL_EXECUTIONS="6"
 
 vagrant status \
 | grep virtualbox \

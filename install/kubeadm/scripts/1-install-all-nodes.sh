@@ -1,5 +1,5 @@
 # Test Connectivity to Loadbalancer
-nc -d lb 6443 && echo "OK" || echo "FAIL"
+nc -d loadbalancer 6443 && echo "OK" || echo "FAIL"
 
 # Update
 sudo apt-get update -qq && \
@@ -34,9 +34,7 @@ echo "KUBERNETES_IMAGE_VERSION...: ${KUBERNETES_IMAGE_VERSION}" && \
 echo ""
 
 # Install and Mark Hold: kubelet, kubeadm and kubectl
-#   all =~ 1 minute 30 seconds
-SECONDS=0 && \
-sudo apt-get install --yes -q \
+sudo apt-get install --yes -qq \
   kubeadm="${KUBERNETES_VERSION?}" \
   kubelet="${KUBERNETES_VERSION?}" \
   kubectl="${KUBERNETES_VERSION?}" \
@@ -44,8 +42,7 @@ sudo apt-get install --yes -q \
 sudo apt-mark hold \
   kubelet \
   kubeadm \
-  kubectl && \
-printf 'Elapsed time: %02d:%02d\n' $((${SECONDS} % 3600 / 60)) $((${SECONDS} % 60))
+  kubectl
 
 # containerd config
 CONTAINERD_SOCK="unix:///var/run/containerd/containerd.sock" && \
@@ -55,44 +52,12 @@ sudo crictl config \
 clear && \
 sudo crictl images
 
-# CNI Plugin
-WEAVE_NET_CNI_PLUGIN_FILE="weave-net-cni-plugin.yaml" && \
-WEAVE_NET_CNI_PLUGIN_URL="https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml" && \
-wget "${WEAVE_NET_CNI_PLUGIN_URL}" \
-  --quiet \
-  --output-document "${WEAVE_NET_CNI_PLUGIN_FILE}"
-clear
-ls -lh
-
 # Preloading Container Images
-#   masters =~ 1 minute 30 seconds
-#   workers < 1 minute
-SECONDS=0 && \
 if grep --quiet "master" <<< $(hostname --short); then
   sudo kubeadm config images pull --kubernetes-version "${KUBERNETES_IMAGE_VERSION}"
 else
   sudo crictl pull "registry.k8s.io/kube-proxy:v${KUBERNETES_IMAGE_VERSION}"
 fi
-grep "image:" "${WEAVE_NET_CNI_PLUGIN_FILE}" \
-| awk -F "'" '{ print "sudo crictl pull " $2 }' \
-| sort -u \
-| sh
-printf 'Elapsed time: %02d:%02d\n' $((${SECONDS} % 3600 / 60)) $((${SECONDS} % 60))
 
 # List Images
-sudo crictl images && echo "" && \
-sudo crictl images | sed 1d | wc -l
-
-# Script to Watch Interfaces and Route information
-cat <<EOF > watch-for-interfaces-and-routes.sh
-while true; do
-  ip -4 a | sed -e '/valid_lft/d' | awk '{ print \$1, \$2 }' | sed 'N;s/\n/ /' | tr -d ":" | awk '{ print \$2, \$4 }' | sort | sed '1iINTERFACE CIDR' | column -t && \
-  echo "" && \
-  ip route | awk '{ print \$1, \$2, \$3, \$4, \$5, \$8 }' | column -t && echo "" && \
-  sleep 3 && \
-  clear
-done
-EOF
-chmod +x watch-for-interfaces-and-routes.sh
-clear
-./watch-for-interfaces-and-routes.sh
+sudo crictl images

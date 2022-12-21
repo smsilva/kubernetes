@@ -26,7 +26,10 @@ apt-get update -qqq && \
     software-properties-common &> /dev/null
 
 ## Add Docker’s official GPG key
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - &> /dev/null
+wget \
+  --quiet \
+  --output-document "/etc/apt/trusted.gpg.d/docker.asc" \
+  "https://download.docker.com/linux/ubuntu/gpg"
 
 ## Add Docker apt repository.
 add-apt-repository \
@@ -41,6 +44,8 @@ apt-get install -y -qqq containerd.io &> /dev/null
 # Configure containerd
 mkdir -p /etc/containerd && \
 containerd config default > /etc/containerd/config.toml
+
+sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
 
 # Restart containerd
 systemctl restart containerd
