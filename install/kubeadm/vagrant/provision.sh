@@ -2,14 +2,11 @@
 
 SECONDS=0
 
-MACHINES=$*
+PARALLEL_EXECUTIONS="8"
 
-if [[ -z "${MACHINES}" ]]; then
-  vagrant up
-else
-  for machine in ${MACHINES}; do
-    vagrant up ${machine}
-  done
-fi
+vagrant status \
+| grep virtualbox \
+| awk '{ print $1 }' \
+| xargs --max-procs ${PARALLEL_EXECUTIONS?} -I {} vagrant up {} 
 
 printf '%d hour %d minute %d seconds\n' $((${SECONDS}/3600)) $((${SECONDS}%3600/60)) $((${SECONDS}%60))

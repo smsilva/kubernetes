@@ -9,7 +9,10 @@ source ~/.bashrc
 
 # WARNING: We should run these commands ONLY on master-1
 KUBERNETES_DESIRED_VERSION='1.25' && \
-KUBERNETES_VERSION="$(apt-cache madison kubeadm | grep ${KUBERNETES_DESIRED_VERSION} | head -1 | awk '{ print $3 }')" && \
+KUBERNETES_VERSION="$(apt-cache madison kubeadm \
+| grep ${KUBERNETES_DESIRED_VERSION} \
+| head -1 \
+| awk '{ print $3 }')" && \
 KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}" && \
 LOCAL_IP_ADDRESS=$(grep $(hostname --short) /etc/hosts | awk '{ print $1 }') && \
 LOAD_BALANCER_PORT='6443' && \
@@ -31,7 +34,7 @@ SECONDS=0 && \
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
 NODE_NAME=$(hostname --short) && \
 sudo kubeadm init \
-  --v 3 \
+  --v 1 \
   --node-name "${NODE_NAME?}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS?}" \
   --kubernetes-version "${KUBERNETES_BASE_VERSION?}" \
@@ -90,7 +93,7 @@ echo "DISCOVERY_TOKEN_CA_CERT_HASH.: ${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH}" &&
 echo ""
 
 sudo kubeadm join "${CONTROL_PLANE_ENDPOINT?}" \
-  --v 3 \
+  --v 1 \
   --control-plane \
   --node-name "${NODE_NAME?}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS?}" \

@@ -5,10 +5,13 @@ network:
   ethernets:
     enp0s8:
       addresses:
-      - ${IP_SERVER}/24
+        - ${IP_SERVER}/24
       nameservers:
-        search: [${DOMAIN_NAME}]
-        addresses: [${IP_DNS}, 8.8.8.8, 8.8.4.4]
+        search: 
+          - ${DOMAIN_NAME}
+        addresses:
+          - ${IP_DNS}
+          - 8.8.8.8
       routes:
-      - to: 10.96.0.0/16
-        via: ${IP_SERVER}
+        - to: 10.96.0.0/16
+          via: ${IP_SERVER}
