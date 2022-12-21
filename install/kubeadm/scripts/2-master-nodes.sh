@@ -75,6 +75,7 @@ EOF
 
 # Join Command Variables
 source kubeadm-tokens
+
 NODE_NAME=$(hostname --short) && \
 LOCAL_IP_ADDRESS=$(grep ${NODE_NAME} /etc/hosts | head -1 | awk '{ print $1 }') && \
 LOAD_BALANCER_PORT='6443' && \

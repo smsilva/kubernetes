@@ -1,4 +1,5 @@
 source kubeadm-tokens
+
 LOCAL_IP_ADDRESS=$(grep $(hostname --short) /etc/hosts | awk '{ print $1 }') && \
 NODE_NAME=$(hostname --short) && \
 LOAD_BALANCER_PORT='6443' && \
@@ -19,5 +20,3 @@ sudo kubeadm join "${CONTROL_PLANE_ENDPOINT?}" \
   --token "${KUBEADM_TOKEN?}" \
   --discovery-token-ca-cert-hash "${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH?}" \
   --v 1 | tee "kubeadm-join.log"
-
-./watch-for-interfaces-and-routes.sh

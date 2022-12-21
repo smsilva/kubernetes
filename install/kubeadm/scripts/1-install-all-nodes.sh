@@ -34,7 +34,7 @@ echo "KUBERNETES_IMAGE_VERSION...: ${KUBERNETES_IMAGE_VERSION}" && \
 echo ""
 
 # Install and Mark Hold: kubelet, kubeadm and kubectl
-sudo apt-get install --yes -qq \
+sudo apt-get install --yes -q \
   kubeadm="${KUBERNETES_VERSION?}" \
   kubelet="${KUBERNETES_VERSION?}" \
   kubectl="${KUBERNETES_VERSION?}" \
