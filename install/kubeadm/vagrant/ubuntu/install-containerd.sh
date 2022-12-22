@@ -9,9 +9,9 @@ modprobe br_netfilter
 
 # Setup required sysctl params, these persist across reboots.
 cat > /etc/sysctl.d/80-kubernetes-cri.conf <<EOF
-net.ipv4.ip_forward = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward = 1
 EOF
 
 sysctl --system > /dev/null
@@ -45,6 +45,7 @@ apt-get install -y -qqq containerd.io &> /dev/null
 mkdir -p /etc/containerd && \
 containerd config default > /etc/containerd/config.toml
 
+# Configuring the systemd cgroup driver
 sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
 
 # Restart containerd

@@ -68,9 +68,9 @@ grep '\-\-certificate-key' "${KUBEADM_LOG_FILE?}" --before 2 | grep \
 
 # [PASTE HERE] Execute on master-2 and master-3 and on all workers
 cat <<EOF > kubeadm-tokens
-export KUBEADM_TOKEN=fn2a44.cs8rkmwtqinnd8te
-export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:f58f31412774491d5a80ac5621d6ef27c29093769872c72100ceca37c9917fbe
-export KUBEADM_CERTIFICATE_KEY=bba0f8e4157ec30acadab3639d5d265140e3875f9920af129f930df450174057
+export KUBEADM_TOKEN=prku4u.kunjtmjdpetovdib
+export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:e779e5e854e37ced47e617493235d65ab982226dccd05cb7aaa439f2f6e2c9fb
+export KUBEADM_CERTIFICATE_KEY=ff359629abf2431c09b6d35fd9cd34ff81de9adce92d5583e8aa836d965d2ebd
 EOF
 
 # Join Command Variables
@@ -100,3 +100,17 @@ sudo kubeadm join "${CONTROL_PLANE_ENDPOINT?}" \
   --discovery-token-ca-cert-hash "${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH?}" \
   --certificate-key "${KUBEADM_CERTIFICATE_KEY?}" && \
 ./watch-for-interfaces-and-routes.sh
+
+# Example
+kubectl create deploy nginx \
+  --image nginx \
+  --replicas 3
+
+kubectl expose deploy nginx \
+  --port 80 \
+  --type NodePort \
+  --dry-run=client \
+  --override-type 'merge' \
+  --overrides '{ "spec": { "ports": [ { "protocol": "TCP", "port": 80, "targetPort": 80, "nodePort": 32080 } ] } }' \
+  --output yaml \
+| kubectl apply -f -
