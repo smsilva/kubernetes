@@ -1,11 +1,23 @@
 #!/bin/bash
-WINDOW_NAME=$(tmux list-windows | grep active | awk '{ print $2 }' | sed 's/^all.*/all/')
-NODE_NAME=$(tmux list-windows | grep active | awk '{ print $2 }' | sed 's/^masters.*/master/;s/^workers.*/worker/')
+WINDOW_NAME=$(tmux list-windows \
+| grep active \
+| awk '{ print $2 }' \
+| sed 's/^all.*/all/')
 
-export NODES=$(cat .running | grep -E "^master|^worker" | awk '{ print $1 }')
+NODE_NAME=$(tmux list-windows \
+| grep active \
+| awk '{ print $2 }' \
+| sed 's/^masters.*/master/;s/^workers.*/worker/')
 
-tmux list-panes | while read line; do
-  VALUES=$(echo $line | awk '{ print $1 " " $7 }' | sed 's/: %/-/')
+export NODES=$(cat .running \
+| grep -E "^master|^worker" \
+| awk '{ print $1 }')
+
+tmux list-panes \
+| while read LINE; do
+  VALUES=$(echo ${LINE} \
+  | awk '{ print $1 " " $7 }' \
+  | sed 's/: %/-/')
   
   LINE_NUMBER=$(echo ${VALUES} | awk -F "-" '{ print $1 }')
   PANE_NUMBER=$(echo ${VALUES} | awk -F "-" '{ print $2 }')
@@ -16,16 +28,18 @@ tmux list-panes | while read line; do
       SERVERS_COUNT=0
       MASTERS_COUNT=0
       WORKERS_COUNT=0
-      for node in ${NODES}; do
+
+      for NODE in ${NODES}; do
         ((SERVERS_COUNT++))
-        if [[ ${node} =~ ^master ]]; then
+
+        if [[ "${NODE}" =~ ^master ]]; then
           ((MASTERS_COUNT++))
           NODE_NAME="master-${MASTERS_COUNT}"
         else
           ((WORKERS_COUNT++))
           NODE_NAME="worker-${WORKERS_COUNT}"
         fi
-        
+
         if [[ ((${SERVERS_COUNT} == $((${LINE_NUMBER}+1)))) ]]; then
           echo "${NODE_NAME}"
         fi

@@ -16,7 +16,22 @@ echo "DISCOVERY_TOKEN_CA_CERT_HASH.: ${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH}" &&
 echo ""
 
 sudo kubeadm join "${CONTROL_PLANE_ENDPOINT?}" \
+  --v 0 \
   --node-name "${NODE_NAME?}" \
   --token "${KUBEADM_TOKEN?}" \
   --discovery-token-ca-cert-hash "${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH?}" \
-  --v 1 | tee "kubeadm-join.log"
+| tee "kubeadm-join.log"
+
+# Example
+kubectl create deploy nginx \
+  --image nginx \
+  --replicas 4
+
+kubectl expose deploy nginx \
+  --port 80 \
+  --type NodePort \
+  --dry-run=client \
+  --override-type 'merge' \
+  --overrides '{ "spec": { "ports": [ { "protocol": "TCP", "port": 80, "targetPort": 80, "nodePort": 32080 } ] } }' \
+  --output yaml \
+| kubectl apply -f -

@@ -3,13 +3,16 @@ nc -d loadbalancer 6443 && echo "OK" || echo "FAIL"
 
 # Update
 sudo apt-get update -qq && \
-sudo apt-get install -y \
+sudo apt-get install --yes \
   apt-transport-https \
   ca-certificates \
   curl
 
 # Get Google Cloud Apt Key
-sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+sudo curl \
+  --location \
+  --output "/usr/share/keyrings/kubernetes-archive-keyring.gpg" \
+  "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
 
 # Add Kubernetes Repository
 cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list

@@ -17,3 +17,8 @@ sed -i "${INSERT_LINE?}r patch.yaml" ${WEAVE_NET_CNI_PLUGIN_FILE}
 grep INIT_CONTAINER -B 2 -A 1 ${WEAVE_NET_CNI_PLUGIN_FILE}
 
 kubectl apply -f ${WEAVE_NET_CNI_PLUGIN_FILE}
+
+# Weave Net Info
+# https://www.tkng.io/cni/weave/
+WEAVEPOD=$(kubectl get pods -n kube-system -l name=weave-net --field-selector spec.nodeName=master-1 -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -it ${WEAVEPOD} -n kube-system -- /home/weave/weave --local report  

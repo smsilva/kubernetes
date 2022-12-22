@@ -30,7 +30,7 @@ echo ""
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
 NODE_NAME=$(hostname --short) && \
 sudo kubeadm init \
-  --v 1 \
+  --v 0 \
   --node-name "${NODE_NAME?}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS?}" \
   --kubernetes-version "${KUBERNETES_BASE_VERSION?}" \
@@ -43,15 +43,14 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Watch Nodes and Pods from kube-system namespace
-watch -n 3 'kubectl get nodes,pods,services -o wide -A'
+watch -n 3 'kubectl get nodes,ds,pods,services -o wide -A'
+
+# (Another Terminal) Watch Interfaces and Route information
+./watch-for-interfaces-and-routes.sh
 
 # Install CNI Plugin
-# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
-# kubectl apply -f "https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml"
-kubectl apply -f "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
-
-# (Another terminal) Watch Interfaces and Route information
-./watch-for-interfaces-and-routes.sh
+# kubectl apply -f "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
+kubectl apply -f "https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml"
 
 # Retrieve token information from log file
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
@@ -92,7 +91,7 @@ echo "DISCOVERY_TOKEN_CA_CERT_HASH.: ${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH}" &&
 echo ""
 
 sudo kubeadm join "${CONTROL_PLANE_ENDPOINT?}" \
-  --v 1 \
+  --v 0 \
   --control-plane \
   --node-name "${NODE_NAME?}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS?}" \
@@ -100,17 +99,3 @@ sudo kubeadm join "${CONTROL_PLANE_ENDPOINT?}" \
   --discovery-token-ca-cert-hash "${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH?}" \
   --certificate-key "${KUBEADM_CERTIFICATE_KEY?}" && \
 ./watch-for-interfaces-and-routes.sh
-
-# Example
-kubectl create deploy nginx \
-  --image nginx \
-  --replicas 3
-
-kubectl expose deploy nginx \
-  --port 80 \
-  --type NodePort \
-  --dry-run=client \
-  --override-type 'merge' \
-  --overrides '{ "spec": { "ports": [ { "protocol": "TCP", "port": 80, "targetPort": 80, "nodePort": 32080 } ] } }' \
-  --output yaml \
-| kubectl apply -f -
