@@ -5,12 +5,12 @@ annotations:
     - name: Upstream Project
       url: https://github.com/prometheus/prometheus
 apiVersion: v2
-appVersion: v2.40.5
+appVersion: v2.41.0
 dependencies:
 - condition: alertmanager.enabled
   name: alertmanager
   repository: https://prometheus-community.github.io/helm-charts
-  version: 0.22.*
+  version: 0.24.*
 - condition: kube-state-metrics.enabled
   name: kube-state-metrics
   repository: https://prometheus-community.github.io/helm-charts
@@ -47,4 +47,4 @@ sources:
 - https://github.com/prometheus/node_exporter
 - https://github.com/kubernetes/kube-state-metrics
 type: application
-version: 19.0.1
+version: 19.1.0
