@@ -1,4 +1,5 @@
 annotations:
+  artifacthub.io/license: Apache-2.0
   artifacthub.io/links: |
     - name: Chart Source
       url: https://github.com/prometheus-community/helm-charts
@@ -47,4 +48,4 @@ sources:
 - https://github.com/prometheus/node_exporter
 - https://github.com/kubernetes/kube-state-metrics
 type: application
-version: 19.1.0
+version: 19.2.2
