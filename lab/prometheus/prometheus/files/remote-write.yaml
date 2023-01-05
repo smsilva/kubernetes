@@ -21,42 +21,4 @@ remote_write:
         target_label: __name__
         replacement: '$1'
         action: replace
-
-      - regex: "\
-          app_kubernetes(.*)|\
-          connection_security_policy|\
-          controller(.*)|\
-          destination_canonical_revision|\
-          destination_canonical_service|\
-          destination_cluster|\
-          destination_principal|\
-          destination_service_name|\
-          destination_service_namespace|\
-          destination_service|\
-          destination_version|\
-          endTimestamp|\
-          entity(.*)|\
-          hpaSelector|\
-          instance|\
-          istio_io_rev|\
-          istio_requests_total|\
-          istio|\
-          job|\
-          metricName|\
-          namespace|\
-          pod(.*)|\
-          request_protocol|\
-          response_flags|\
-          security_istio_io_tlsMode|\
-          service_istio_io_canonical(.*)|\
-          sidecar_istio_io_inject|\
-          source_canonical_revision|\
-          source_canonical_service|\
-          source_cluster|\
-          source_principal|\
-          source_version|\
-          team|\
-          timestamp|\
-          version"
-        action: labeldrop
 {{- end }}
