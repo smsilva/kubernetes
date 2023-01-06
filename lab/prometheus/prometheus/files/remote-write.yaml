@@ -7,6 +7,9 @@ remote_write:
     write_relabel_configs:
       - source_labels: [__name__]
         regex: "\
+          apiserver_flowcontrol_current_inqueue_requests(.*)|\
+          etcd_db_total_size_in_bytes(.*)|\
+          process_resident_memory_bytes(.*)|\
           argocd(.*)|\
           coredns(.*)|\
           workload:(.*)"

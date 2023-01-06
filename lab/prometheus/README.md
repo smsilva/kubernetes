@@ -43,7 +43,7 @@ helm search repo prometheus-community/prometheus
 ## Prometheus Helm Install
 
 ```bash
-CLUSTER_NAME="kind-141"
+CLUSTER_NAME="kind-146"
 
 helm upgrade \
   --install \
