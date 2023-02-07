@@ -1,0 +1,21 @@
+#!/bin/bash
+
+kind create cluster \
+  --image "kindest/node:v1.23.12"
+
+helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+
+helm repo update
+
+helm search repo metrics-server
+
+helm upgrade \
+  --install \
+  --set args={--kubelet-insecure-tls} \
+  metrics-server metrics-server/metrics-server \
+  --namespace kube-system \
+  --wait
+
+kubectl run -it --image=silviosilva/utils utils
+
+while sleep 0.01; do wget -q -O- http://hpa-example-canary; done

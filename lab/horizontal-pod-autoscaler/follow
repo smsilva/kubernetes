@@ -1,0 +1,16 @@
+#!/bin/bash
+
+kubectl get deploy
+
+echo
+
+kubectl top pods -l app=hpa-example
+
+echo
+
+kubectl get hpa
+
+echo 
+
+kubectl describe hpa canary \
+| sed -n '/^Metrics:/,$p'

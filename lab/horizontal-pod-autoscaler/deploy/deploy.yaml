@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hpa-example
+  name: hpa-example-release
+spec:
+  selector:
+    matchLabels:
+      app: hpa-example
+      type: release
+
+  template:
+    metadata:
+      labels:
+        app: hpa-example
+        type: release
+    spec:
+      containers:
+        - image: registry.k8s.io/hpa-example
+          name: hpa-example
+          resources:
+            requests:
+              memory: "15Mi"
+              cpu: 100m
+            limits:
+              memory: "100Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hpa-example
+  name: hpa-example-canary
+spec:
+  selector:
+    matchLabels:
+      app: hpa-example
+      type: canary
+
+  template:
+    metadata:
+      labels:
+        app: hpa-example
+        type: canary
+
+    spec:
+      containers:
+        - image: registry.k8s.io/hpa-example
+          name: hpa-example
+          resources:
+            requests:
+              memory: "15Mi"
+              cpu: 100m
+            limits:
+              memory: "100Mi"
