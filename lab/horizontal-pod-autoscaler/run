@@ -7,7 +7,7 @@ helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
 
 helm repo update
 
-helm search repo metrics-server
+helm search repo metrics-server/metrics-server
 
 helm upgrade \
   --install \
@@ -16,6 +16,20 @@ helm upgrade \
   --namespace kube-system \
   --wait
 
-kubectl run -it --image=silviosilva/utils utils
+kubectl create namespace demo
 
-while sleep 0.01; do wget -q -O- http://hpa-example-canary; done
+kubectl config set-context --current --namespace demo
+
+kubectl apply -f deploy/
+
+kubectl wait pod \
+  --for condition=Ready \
+  --selector=app=hpa-example \
+  --timeout 360s
+
+kubectl run \
+  -i \
+  --tty load-generator \
+  --rm \
+  --image=busybox:1.28 \
+  --restart=Never -- /bin/sh -c "while sleep 2.0; do wget -q -O- http://hpa-example-canary; done"
