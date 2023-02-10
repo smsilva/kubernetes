@@ -7,7 +7,7 @@ spec:
   ingressClassName: "nginx"
   
   rules:
-    - host: "eks.sandbox.wasp.silvios.me"
+    - host: "app.example.com"
       http:
         paths:
           - path: /

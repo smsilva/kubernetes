@@ -95,7 +95,7 @@ kubectl apply \
 # Test
 curl \
   --include \
-  --header 'host: xpto.example.com' \
+  --header 'host: app.example.com' \
   http://127.0.0.1:80/get
 
 # Delete Ingress
