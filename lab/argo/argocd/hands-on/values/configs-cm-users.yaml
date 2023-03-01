@@ -1,0 +1,4 @@
+configs:
+  cm:
+    accounts.alice: apiKey, login
+    accounts.alice.enabled: "true"

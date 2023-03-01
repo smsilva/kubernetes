@@ -1,0 +1,21 @@
+controller:
+  volumes:
+    - name: rsa-workaround-config
+      configMap:
+        name: rsa-workaround-config-cm
+
+  volumeMounts:
+    - name: rsa-workaround-config
+      mountPath: /home/argocd/.ssh/config
+      subPath: config
+
+repoServer:
+  volumes:
+    - name: rsa-workaround-config
+      configMap:
+        name: rsa-workaround-config-cm
+
+  volumeMounts:
+    - name: rsa-workaround-config
+      mountPath: /home/argocd/.ssh/config
+      subPath: config

@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: httpbin
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: demo
+    server: https://kubernetes.default.svc
+
+  project: default
+
+  source:
+    helm:
+      parameters:
+        - name: replicaCount
+          value: "1"
+
+    path: charts/httpbin
+    repoURL: git@github.com:smsilva/wasp-gitops.git
+    targetRevision: development
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+    syncOptions:
+      - CreateNamespace=true

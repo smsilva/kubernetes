@@ -1,0 +1,11 @@
+p, role:common-users, applications, get,      default/*,    allow
+p, role:common-users, applications, sync,     default/*,    allow
+p, role:common-users, applications, action/*, default/*,    allow
+
+p, role:common-users, projects,     get,      *,            allow
+p, role:common-users, logs,         get,      default/*,    allow
+p, role:common-users, exec,         create,   default/*,    allow
+
+g, common-users, role:common-users
+g, common-users, role:readonly
+g, alice,        common-users
