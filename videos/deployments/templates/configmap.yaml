@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+data:
+  color: "green"
+  MAX_THREADS: "7"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: files
+data:
+  configuration.properties: |
+    name=SILVIO
+    surname=SILVA
+
+  configuration.yaml: |
+    configs:
+      name: "SILVIO"
+      surname: "SILVA"
