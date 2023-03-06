@@ -9,7 +9,7 @@ spec:
   tls:
     - hosts:
         - echo.example.com
-      secretName: tls-selfsigned
+      secretName: httpbin-selfsigned
   
   rules:
     - host: echo.example.com

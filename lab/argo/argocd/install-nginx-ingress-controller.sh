@@ -3,7 +3,7 @@
 echo "Installing NGINX Ingress Controller"
 
 kubectl apply \
-  --filename https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
+  --filename https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 
 kubectl wait \
   --namespace ingress-nginx \
