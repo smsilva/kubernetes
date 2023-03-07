@@ -20,7 +20,7 @@ deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.k
 EOF
 
 # Update package list
-sudo apt-get update -q
+sudo apt update -q
 
 # Set Kubernetes Version
 KUBERNETES_DESIRED_VERSION='1.25' && \
@@ -50,16 +50,16 @@ sudo apt-mark hold \
 # containerd config
 CONTAINERD_SOCK="unix:///var/run/containerd/containerd.sock" && \
 sudo crictl config \
-  runtime-endpoint "${CONTAINERD_SOCK}" \
-  image-endpoint "${CONTAINERD_SOCK}" && \
+  runtime-endpoint "${CONTAINERD_SOCK?}" \
+  image-endpoint "${CONTAINERD_SOCK?}" && \
 clear && \
 sudo crictl images
 
 # Preloading Container Images
 if grep --quiet "master" <<< $(hostname --short); then
-  sudo kubeadm config images pull --kubernetes-version "${KUBERNETES_IMAGE_VERSION}"
+  sudo kubeadm config images pull --kubernetes-version "${KUBERNETES_IMAGE_VERSION?}"
 else
-  sudo crictl pull "registry.k8s.io/kube-proxy:v${KUBERNETES_IMAGE_VERSION}"
+  sudo crictl pull "registry.k8s.io/kube-proxy:v${KUBERNETES_IMAGE_VERSION?}"
 fi
 
 # List Images

@@ -4,7 +4,7 @@
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
 
 # Servers Count
-MASTER_NODES_COUNT = 2
+MASTER_NODES_COUNT = 1
 WORKER_NODES_COUNT = 2
 GLUSTERFS_NODES_COUNT = 0
 
@@ -26,7 +26,7 @@ IP_LOADBALANCER = "#{IP_NETWORK}" + "#{MASTER_IP_START}"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/jammy64"
-  config.vm.box_version = "20221219.0.0"
+  config.vm.box_version = "20230302.0.0"
   config.vm.box_check_update = false
 
   # DNS
