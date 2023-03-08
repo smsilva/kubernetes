@@ -35,11 +35,11 @@ spec:
     - http:
         paths:
           - path: /
-              pathType: Prefix
-              backend:
+            pathType: Prefix
+            backend:
               service:
-                  name: nginx
-                  port:
+                name: nginx
+                port:
                   number: 80
 EOF
 
