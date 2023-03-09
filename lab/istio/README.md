@@ -1,8 +1,14 @@
-# Istio
+#     Istio
 
-## TL/DR Setup
+##    TL/DR Setup
 
-Run the script below to:
+Run the script below:
+
+```bash
+./tl-dr-run
+```
+
+It will:
 
 - Create a Kind Cluster named "istio"
 
@@ -12,21 +18,17 @@ Run the script below to:
   - istio/gateway
 
 - Deploy httpbin
-  - namespace: example
-  - deployment: httpbin
-  - service: httpbin.example.svc:8000
-  - gateway: httpbin
+  - namespace: **example**
+  - deployment: **httpbin**
+  - service: **httpbin.example.svc:8000**
+  - gateway: **httpbin**
   - virtual-service:
-    - httpbin-mesh
-    - httpbin-public
+    - **httpbin-mesh**
+    - **httpbin-public**
 
-- Start to follow istio-proxy logs for httbin pods
+- Start to follow `istio-proxy` logs for `httbin` pods
 
-```bash
-./tl-dr-run
-```
-
-## Step by step Setup
+##    Step by step Setup
 
 ###   Kind Cluster
 
@@ -101,7 +103,7 @@ kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
 ```
 
-## Deploy httpbin and curl pods
+##    Deploy httpbin and curl pods
 
 ###   deploy
 
@@ -151,7 +153,7 @@ kubectl wait pod curl \
   --timeout 360s
 ```
 
-## Tests
+##    Tests
 
 ###   Follow logs from httpbin pods
 
@@ -179,6 +181,12 @@ kubectl \
     --silent \
     --header "x-wasp-id: ${UUID}" \
     --request GET http://httpbin.example.svc:8000/get
+
+# Terminology
+# https://www.envoyproxy.io/docs/envoy/v1.25.2/intro/life_of_a_request#terminology
+
+# Envoy High level architecture
+# https://www.envoyproxy.io/docs/envoy/v1.25.2/intro/life_of_a_request#high-level-architecture
 
 ./logs-to-json \
   --request-id ${UUID} \
@@ -304,7 +312,7 @@ watch -n 30 'curl \
   --request GET http://127.0.0.1:32082/status/503'
 ```
 
-## Ingress
+##    Ingress
 
 ```bash
 BASE_DOMAIN="sandbox.wasp.silvios.me"
@@ -348,7 +356,107 @@ curl \
 code ${HOME}/trash/${UUID}.json
 ```
 
-## Commands
+##    Envoy References
+
+- [Terminology](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/intro/terminology)
+
+- [Envoy Configuration Examples](https://www.envoyproxy.io/docs/.../configuration/overview/examples)
+
+- [Cluster Discovery Service (CDS)](https://www.envoyproxy.io/docs/.../configuration/upstream/cluster_manager/cds)
+
+- [Listener Discovery Service (LDS)](https://www.envoyproxy.io/docs/.../configuration/listeners/lds)
+
+- [Endpoint Discovery Service (EDS)](https://www.envoyproxy.io/docs/.../service_discovery#endpoint-discovery-service-eds)
+
+- [Route Discovery Service (RDS)](https://www.envoyproxy.io/docs/.../rds#route-discovery-service-rds)
+
+##    Commands
+
+###   Change envoy proxy log level
+
+```bash
+istioctl proxy-config log <POD_NAME_HERE>.<NAMESPACE_HERE> --level debug
+istioctl proxy-config log <POD_NAME_HERE>.<NAMESPACE_HERE> --level http:debug,redis:debug
+```
+
+###   Change Envoy Proxy Log using Envoy admin port (15000). Reference here.
+
+```bash
+kubectl exec $(kubectl get pod --selector app=<APP_LABEL_HERE> --output jsonpath='{.items[0].metadata.name}') \
+  -c istio-proxy -- curl -X POST http://localhost:15000/logging?level=debug
+```
+
+###   Analyze Config
+
+```bash
+istioctl analyze -n <NAMESPACE_HERE>
+```
+
+###   Follow istiod Logs
+
+```bash
+kubectl -n istio-system logs -f -l app=istiod
+```
+
+###   Show Envoy Proxy Status
+
+```bash
+istioctl proxy-status
+istioctl proxy-status --context <KUBE_CONFIG_CONTEXT_NAME_HERE>
+```
+
+###   Show Envoy Proxy Bootstrap Config
+
+```bash
+istioctl proxy-config bootstrap <POD_NAME_HERE>.<NAMESPACE_HERE>
+```
+
+###   Show Envoy Proxy Cluster Config
+
+```bash
+istioctl proxy-config cluster <POD_NAME_HERE>.<NAMESPACE_HERE>
+```
+
+###   Show Envoy Proxy Listener Config
+
+```bash
+istioctl proxy-config listener <POD_NAME_HERE>.<NAMESPACE_HERE>
+```
+
+###   Show Envoy Proxy EndpointsConfig
+
+```bash
+istioctl proxy-config endpoints <POD_NAME_HERE>.<NAMESPACE_HERE> --port 5556
+istioctl proxy-config endpoints <POD_NAME_HERE>.<NAMESPACE_HERE> --port 5556 -o json
+```
+
+###   Show Envoy Proxy Routes Config
+
+```bash
+istioctl proxy-config routes <POD_NAME_HERE>.<NAMESPACE_HERE>
+istioctl proxy-config routes <POD_NAME_HERE>.<NAMESPACE_HERE> --name 80
+```
+
+###   Dump All Configuration for a Specific Profile on yaml format
+
+```bash
+istioctl profile dump default
+```
+
+###   Dump do istio-proxy sidecar configuration 
+
+```bash
+kubectl port-forward account-relay-service-5f68bdb98c-ggmdz 15000:15000
+
+curl -s http://localhost:15000/config_dump \
+| tee istio-proxy-config.json
+```
+
+###   Inspect Sidecar Injector Policy
+
+```bash
+kubectl -n istio-system get cm istio-sidecar-injector -o yaml | grep "policy:"
+```
 
 ###   Check if the Kind Cluster NodePort is open
 
@@ -362,7 +470,7 @@ Expected output:
 Connection to 127.0.0.1 32082 port [tcp/*] succeeded!
 ```
 
-## Cleanup
+##    Cleanup
 
 ```bash
 kind delete cluster --name istio
