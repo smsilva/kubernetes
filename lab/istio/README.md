@@ -28,6 +28,14 @@ It will:
 
 - Start to follow `istio-proxy` logs for `httbin` pods
 
+##    References
+
+###   Envoy
+
+- [Terminology](https://www.envoyproxy.io/docs/envoy/v1.25.2/intro/life_of_a_request#terminology)
+- [High level architecture](https://www.envoyproxy.io/docs/envoy/v1.25.2/intro/life_of_a_request#high-level-architecture)
+
+
 ##    Step by step Setup
 
 ###   Kind Cluster
@@ -181,12 +189,6 @@ kubectl \
     --silent \
     --header "x-wasp-id: ${UUID}" \
     --request GET http://httpbin.example.svc:8000/get
-
-# Terminology
-# https://www.envoyproxy.io/docs/envoy/v1.25.2/intro/life_of_a_request#terminology
-
-# Envoy High level architecture
-# https://www.envoyproxy.io/docs/envoy/v1.25.2/intro/life_of_a_request#high-level-architecture
 
 ./logs-to-json \
   --request-id ${UUID} \
