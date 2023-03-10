@@ -32,8 +32,8 @@ It will:
 
 ###   Envoy
 
-- [Terminology](https://www.envoyproxy.io/docs/envoy/v1.25.2/intro/life_of_a_request#terminology)
-- [High level architecture](https://www.envoyproxy.io/docs/envoy/v1.25.2/intro/life_of_a_request#high-level-architecture)
+- [Terminology](https://www.envoyproxy.io/docs/envoy/latest/intro/life_of_a_request#terminology)
+- [High level architecture](https://www.envoyproxy.io/docs/envoy/latest/intro/life_of_a_request#high-level-architecture)
 
 
 ##    Step by step Setup
@@ -362,15 +362,15 @@ code ${HOME}/trash/${UUID}.json
 
 - [Terminology](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/intro/terminology)
 
-- [Envoy Configuration Examples](https://www.envoyproxy.io/docs/.../configuration/overview/examples)
+- [Envoy Configuration Examples](https://www.envoyproxy.io/docs/envoy/latest/configuration/overview/examples)
 
-- [Cluster Discovery Service (CDS)](https://www.envoyproxy.io/docs/.../configuration/upstream/cluster_manager/cds)
+- [Cluster Discovery Service (CDS)](https://www.envoyproxy.io/docs/envoy/latest/configuration/upstream/cluster_manager/cds)
 
-- [Listener Discovery Service (LDS)](https://www.envoyproxy.io/docs/.../configuration/listeners/lds)
+- [Listener Discovery Service (LDS)](https://www.envoyproxy.io/docs/envoy/latest/configuration/listeners/lds)
 
-- [Endpoint Discovery Service (EDS)](https://www.envoyproxy.io/docs/.../service_discovery#endpoint-discovery-service-eds)
+- [Endpoint Discovery Service (EDS)](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/service_discovery.html#endpoint-discovery-service-eds)
 
-- [Route Discovery Service (RDS)](https://www.envoyproxy.io/docs/.../rds#route-discovery-service-rds)
+- [Route Discovery Service (RDS)](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/rds.html#route-discovery-service-rds)
 
 ##    Commands
 
