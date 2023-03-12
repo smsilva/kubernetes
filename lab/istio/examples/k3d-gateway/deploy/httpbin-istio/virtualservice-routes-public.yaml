@@ -1,0 +1,25 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: httpbin-public
+  namespace: example
+spec:
+  hosts:
+    - app.example.com
+
+  gateways:
+    - httpbin
+
+  http:
+    - name: httpbin
+      headers:
+        request:
+          add:
+            X-W1-gateway: httpbin
+
+      route:
+        - destination:
+            host: httpbin.example.svc.cluster.local
+            port:
+              number: 8000
