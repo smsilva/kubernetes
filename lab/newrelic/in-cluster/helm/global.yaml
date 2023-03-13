@@ -1,4 +1,0 @@
-global:
-  cluster: "kind"
-  customSecretName: "nri-bundle"
-  customSecretLicenseKey: "license"

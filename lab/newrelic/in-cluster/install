@@ -1,0 +1,33 @@
+#!/bin/bash
+k3d cluster create
+
+kubectl wait node \
+  --selector kubernetes.io/os=linux \
+  --for condition=Ready
+
+kubectl wait deployment metrics-server \
+  --namespace kube-system \
+  --for condition=Available \
+  --timeout=360s
+
+kubectl create namespace newrelic
+
+cat <<EOF | kubectl --namespace newrelic apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nri-bundle
+type: Opaque
+stringData:
+  license: ${NEW_RELIC_LICENSE_KEY?}
+EOF
+
+helm repo add newrelic https://helm-charts.newrelic.com &> /dev/null && \
+helm repo update &> /dev/null && \
+helm search repo newrelic/nri-bundle
+
+helm upgrade --install \
+  --namespace newrelic \
+  newrelic-bundle newrelic/nri-bundle \
+  --values "./helm/values.yaml" \
+  --wait
