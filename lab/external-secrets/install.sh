@@ -1,30 +1,32 @@
 #!/bin/bash
 
+helm repo add external-secrets https://charts.external-secrets.io
+
+helm repo update
+
+helm search repo external-secrets/external-secrets
+
 helm upgrade \
-  --install external-secrets external-secrets \
-  --repo https://charts.external-secrets.io \
-  --version 0.4.4 \
+  --install \
   --namespace external-secrets \
   --create-namespace \
+  external-secrets external-secrets/external-secrets \
+  --repo https://charts.external-secrets.io \
   --wait
 
-# Service Principal
-ARM_CLIENT_ID_BASE64=$(     echo ${ARM_CLIENT_ID}     | base64 )
-ARM_CLIENT_SECRET_BASE64=$( echo ${ARM_CLIENT_SECRET} | base64 )
-
-cat <<EOF | kubectl apply -f -
+# Secret with Service Principal Credentials
+cat <<EOF | kubectl --namespace external-secrets apply -f -
 apiVersion: v1
 kind: Secret
 metadata:
   name: azurerm-service-principal
-  namespace: external-secrets
 type: Opaque
-data:
-  ARM_CLIENT_ID: ${ARM_CLIENT_ID_BASE64}
-  ARM_CLIENT_SECRET: ${ARM_CLIENT_SECRET_BASE64}
+stringData:
+  ARM_CLIENT_ID: ${ARM_CLIENT_ID?}
+  ARM_CLIENT_SECRET: ${ARM_CLIENT_SECRET?}
 EOF
 
-# Secret Store
+# Cluster Secret Store
 cat <<EOF | kubectl apply -f -
 apiVersion: external-secrets.io/v1alpha1
 kind: ClusterSecretStore
@@ -35,8 +37,8 @@ spec:
     azurekv:
       authType: ServicePrincipal
 
-      tenantId: ${ARM_TENANT_ID}
-      vaultUrl: https://${ARM_KEYVAULT_NAME}.vault.azure.net
+      tenantId: ${ARM_TENANT_ID?}
+      vaultUrl: https://${ARM_KEYVAULT_NAME?}.vault.azure.net
 
       authSecretRef:
         clientId:
@@ -50,28 +52,32 @@ spec:
           namespace: external-secrets
 EOF
 
-# Secret
-cat <<EOF | kubectl apply -f -
-apiVersion: external-secrets.io/v1alpha1
+kubectl create namespace example
+
+# External Secret
+cat <<EOF | kubectl --namespace example apply -f -
+apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: docker-hub
+  name: mongodb-atlas
 spec:
   refreshInterval: 1h
   secretStoreRef:
-    kind: SecretStore
-    name: azure-${ARM_KEYVAULT_NAME}
+    kind: ClusterSecretStore
+    name: example-secret-store
 
   target:
-    name: docker-hub
+    name: mongodb-atlas
     creationPolicy: Owner
 
   data:
-  - secretKey: username
-    remoteRef:
-      key: secret/docker-hub-username
+    - secretKey: username
+      remoteRef:
+        key: secret/mongodb-atlas-user
 
-  - secretKey: password
-    remoteRef:
-      key: secret/docker-hub-password
+    - secretKey: password
+      remoteRef:
+        key: secret/mongodb-atlas-password
 EOF
+
+kubectl --namespace example get ExternalSecret,Secret
