@@ -1,5 +1,5 @@
 global:
-  cluster: "kind-103"
+  cluster: "k3d-001"
   customSecretName: "nri-bundle"
   customSecretLicenseKey: "license"
 

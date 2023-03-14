@@ -10,6 +10,12 @@ kubectl wait deployment metrics-server \
   --for condition=Available \
   --timeout=360s
 
+kubectl wait pod \
+  --namespace kube-system \
+  --selector k8s-app=metrics-server \
+  --for condition=Ready \
+  --timeout=360s
+
 kubectl create namespace newrelic
 
 cat <<EOF | kubectl --namespace newrelic apply -f -
@@ -26,7 +32,7 @@ helm repo add newrelic https://helm-charts.newrelic.com &> /dev/null && \
 helm repo update &> /dev/null && \
 helm search repo newrelic/nri-bundle
 
-helm upgrade --install \
+helm install \
   --namespace newrelic \
   newrelic-bundle newrelic/nri-bundle \
   --values "./helm/values.yaml" \
