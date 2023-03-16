@@ -1,0 +1,25 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+  labels:
+    app: httpbin
+spec:
+  replicas: 5
+
+  selector:
+    matchLabels:
+      app: httpbin
+
+  template:
+    metadata:
+      labels:
+        app: httpbin
+
+    spec:
+      runtimeClassName: reserved
+
+      containers:
+        - image: silviosilva/httpbin
+          name: httpbin
