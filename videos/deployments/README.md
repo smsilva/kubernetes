@@ -75,7 +75,7 @@ kubectl \
 # Change Deployment Image
 kubectl \
   --namespace demo \
-  set image deployment/httpbin httpbin=nginx:latest
+  set image deployment/httpbin httpbin=nginx:1.23.3
 
 kubectl rollout undo deployment httpbin
   
