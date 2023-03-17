@@ -5,7 +5,6 @@
 ```bash
 # NGINX Default Container
 docker run \
-  --rm \
   --detach \
   --publish 8080:80 \
   --name nginx \
@@ -16,7 +15,6 @@ HTML_FILE="${PWD}/static/index.html"
 
 if [ -e "${HTML_FILE?}" ]; then
   docker run \
-    --rm \
     --detach \
     --volume "${HTML_FILE?}:/usr/share/nginx/html/index.html:ro" \
     --publish 8081:80 \

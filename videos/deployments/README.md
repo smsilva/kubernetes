@@ -4,17 +4,15 @@
 
 ```bash
 docker run \
-  --rm \
   --detach \
   --publish 8000:80 \
   --name httpbin \
   kennethreitz/httpbin
 
 docker run \
-  --rm \
   --detach \
   --publish 8001:80 \
-  --name nginx \
+  --name nginx:1.23.3 \
   nginx
 
 docker ps
@@ -49,8 +47,7 @@ watch -n 3 'kubectl -n demo get deploy,replicasets,pods,service -o wide'
 # Create Deployment
 kubectl create deployment httpbin \
   --namespace demo \
-  --image kennethreitz/httpbin \
-  --replicas 1
+  --image kennethreitz/httpbin
 
 # Create a POD to test
 kubectl run \
