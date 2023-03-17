@@ -10,8 +10,6 @@ docker run \
   --name httpbin \
   kennethreitz/httpbin
 
-curl -i localhost:8000/get
-
 docker run \
   --rm \
   --detach \
@@ -19,7 +17,12 @@ docker run \
   --name nginx \
   nginx
 
-curl -i localhost:8001 
+docker ps
+
+curl -i localhost:8000/get
+curl -i localhost:8001
+
+docker kill nginx httpbin
 ```
 
 ## k3s Cluster
