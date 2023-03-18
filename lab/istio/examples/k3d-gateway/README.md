@@ -19,6 +19,12 @@ kubectl wait deployment metrics-server \
   --namespace kube-system \
   --for condition=Available \
   --timeout=360s
+
+kubectl wait pods \
+  --namespace kube-system \
+  --selector k8s-app=metrics-server \
+  --for condition=Ready \
+  --timeout=360s
 ```
 
 ## Install Istio
