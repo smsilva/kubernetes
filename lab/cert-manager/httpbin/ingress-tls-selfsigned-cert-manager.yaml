@@ -2,17 +2,19 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: httpbin-tls-selfsigned
+  name: httpbin-tls-selfsigned-cert-manager
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigned
 spec:
   ingressClassName: "nginx"
 
   tls:
     - hosts:
-        - echo.example.com
-      secretName: httpbin-selfsigned-echo-example-com
+        - app.example.com
+      secretName: httpbin-selfsigned-app-example-com
   
   rules:
-    - host: echo.example.com
+    - host: app.example.com
       http:
         paths:
           - path: /

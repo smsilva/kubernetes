@@ -4,13 +4,13 @@ kind: Certificate
 metadata:
   name: httpbin-selfsigned
 spec:
+  issuerRef:
+    kind: ClusterIssuer
+    name: selfsigned
+
   commonName: echo.example.com
   
   dnsNames:
     - echo.example.com
 
-  secretName: httpbin-selfsigned
-
-  issuerRef:
-    kind: ClusterIssuer
-    name: selfsigned
+  secretName: httpbin-selfsigned-echo-example-com
