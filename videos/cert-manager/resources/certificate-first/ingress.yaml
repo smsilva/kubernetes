@@ -1,0 +1,24 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: httpbin
+spec:
+  ingressClassName: "nginx"
+
+  tls:
+    - hosts:
+        - app.example.com
+      secretName: app-example-com-self-signed
+  
+  rules:
+    - host: app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: httpbin
+                port:
+                  number: 8000
