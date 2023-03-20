@@ -26,12 +26,13 @@ BASE_DOMAIN="sandbox.wasp.silvios.me"
 LETS_ENCRYPT_SERVER_STAGING="acme-staging-v02"
 LETS_ENCRYPT_SERVER_PRODUCTION="acme-v02"
 LETS_ENCRYPT_SERVER=${LETS_ENCRYPT_SERVER_STAGING?}
+LETS_ENCRYPT_ALERT_EMAIL="$(git config --get user.email)"
 
 certbot certonly \
   --manual \
   --preferred-challenges dns \
   --agree-tos \
-  --email "smsilva@gmail.com" \
+  --email "${LETS_ENCRYPT_ALERT_EMAIL?}" \
   --no-eff-email \
   --server "https://${LETS_ENCRYPT_SERVER?}.api.letsencrypt.org/directory" \
   -d *.${BASE_DOMAIN?} \
@@ -41,8 +42,8 @@ certbot certonly \
   --logs-dir "${HOME}/certificates/logs"
 
 # Check TXT Records (alternative method: https://dnschecker.org)
-dig @8.8.8.8 +short "_acme-challenge.${BASE_DOMAIN?}" TXT
-dig @8.8.8.8 +short "_acme-challenge.services.${BASE_DOMAIN?}" TXT
+dig @8.8.8.8 +short TXT "_acme-challenge.${BASE_DOMAIN?}"
+dig @8.8.8.8 +short TXT "_acme-challenge.services.${BASE_DOMAIN?}"
 
 # Certificate Files
 CERTIFICATE_DIRECTORY="${HOME}/certificates/config/live/${BASE_DOMAIN?}"
