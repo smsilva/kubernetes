@@ -1,6 +1,8 @@
 # Ingress
 
-## Create AKS Cluster
+## Create an AKS Cluster
+
+[Using Azure CLI](../../azure/aks/README.md)
 
 ## Install NGINX Ingress Controller
 
