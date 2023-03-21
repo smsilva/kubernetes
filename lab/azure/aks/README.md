@@ -19,13 +19,27 @@ az aks get-versions -o table -l eastus2
 ## Creation
 
 ```bash
+cat <<EOF > aks.conf
+AZ_AKS_CLUSTER_ID="$(uuidgen)"
 AZ_AKS_REGION="eastus2"
-AZ_AKS_RESOURCE_GROUP_NAME="wasp-sandbox"
+AZ_AKS_CLUSTER_NAME="wasp-sandbox-\${AZ_AKS_CLUSTER_ID:0:4}"
+AZ_AKS_RESOURCE_GROUP_NAME="\${AZ_AKS_CLUSTER_NAME?}"
 AZ_AKS_CLUSTER_VERSION="1.24.9"
 AZ_AKS_NODE_VM_SIZE="Standard_D2_v2"
-AZ_AKS_CLUSTER_NAME="wasp-sandbox"
 AZ_AKS_ADMIN_GROUP_ID="d5075d0a-3704-4ed9-ad62-dc8068c7d0e1"
-AZ_AKS_DNS_PREFIX="${AZ_AKS_CLUSTER_NAME?}"
+AZ_AKS_DNS_PREFIX="\${AZ_AKS_CLUSTER_NAME?}"
+
+echo "AZ_AKS_CLUSTER_ID..........: \${AZ_AKS_CLUSTER_ID}"
+echo "AZ_AKS_REGION..............: \${AZ_AKS_REGION}"
+echo "AZ_AKS_CLUSTER_NAME........: \${AZ_AKS_CLUSTER_NAME}"
+echo "AZ_AKS_RESOURCE_GROUP_NAME.: \${AZ_AKS_RESOURCE_GROUP_NAME}"
+echo "AZ_AKS_CLUSTER_VERSION.....: \${AZ_AKS_CLUSTER_VERSION}"
+echo "AZ_AKS_NODE_VM_SIZE........: \${AZ_AKS_NODE_VM_SIZE}"
+echo "AZ_AKS_ADMIN_GROUP_ID......: \${AZ_AKS_ADMIN_GROUP_ID}"
+echo "AZ_AKS_DNS_PREFIX..........: \${AZ_AKS_DNS_PREFIX}"
+EOF
+
+source aks.conf
 
 az group create \
   --location "${AZ_AKS_REGION?}" \
@@ -48,6 +62,7 @@ az aks create \
   --max-count 5 \
   --max-pods 100
 ```
+
 ## Get Credentials
 
 ```bash
