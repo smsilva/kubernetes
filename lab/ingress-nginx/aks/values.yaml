@@ -1,0 +1,15 @@
+defaultBackend:
+  enabled: false
+
+controller:
+  service:
+    externalTrafficPolicy: "Local"
+
+    annotations:
+      service.beta.kubernetes.io/azure-dns-label-name: wasp-sandbox-gateway
+
+  config:
+    proxy-buffer-size: "128k"
+
+rbac:
+  create: true

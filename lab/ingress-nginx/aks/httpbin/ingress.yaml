@@ -1,0 +1,28 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: httpbin
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    cert-manager.io/cluster-issuer: letsencrypt-staging-nginx
+spec:
+  ingressClassName: "nginx"
+
+  tls:
+    - hosts:
+        - wasp-sandbox-gateway.eastus2.cloudapp.azure.com
+      secretName: app-example-com-self-signed-ingress
+  
+  rules:
+    - host: wasp-sandbox-gateway.eastus2.cloudapp.azure.com
+      http:
+        paths:
+          - path: /httpbin(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: httpbin
+                port:
+                  number: 8000
