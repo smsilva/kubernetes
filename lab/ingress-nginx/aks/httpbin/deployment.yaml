@@ -24,3 +24,20 @@ spec:
             - containerPort: 80
               name: http
               protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+  labels:
+    app: httpbin
+spec:
+  type: ClusterIP
+
+  selector:
+    app: httpbin
+
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

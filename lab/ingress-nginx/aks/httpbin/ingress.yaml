@@ -6,17 +6,17 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
-    cert-manager.io/cluster-issuer: letsencrypt-staging-nginx
+    cert-manager.io/cluster-issuer: letsencrypt-production-nginx
 spec:
   ingressClassName: "nginx"
 
   tls:
     - hosts:
-        - wasp-sandbox-gateway.eastus2.cloudapp.azure.com
-      secretName: app-example-com-self-signed-ingress
+        - gateway.f2e0.sandbox.wasp.silvios.me
+      secretName: httpbin-letsencrypt-production-nginx
   
   rules:
-    - host: wasp-sandbox-gateway.eastus2.cloudapp.azure.com
+    - host: gateway.f2e0.sandbox.wasp.silvios.me
       http:
         paths:
           - path: /httpbin(/|$)(.*)
