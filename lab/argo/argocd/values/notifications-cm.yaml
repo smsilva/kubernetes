@@ -1,0 +1,169 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/component: notifications-controller
+data:
+  context: |
+    argocdUrl: "https://localhost:32080"
+  service.googlechat: |
+    webhooks:
+      operations: $google-chat-webhook-url-operations
+      sre: $google-chat-webhook-url-sre
+  service.telegram: |
+    token: $telegram-token
+  subscriptions: |
+    - recipients:
+      - googlechat:sre
+      - telegram:silviosargocd
+      triggers:
+      - on-deployed
+      - on-sync-succeeded
+    - recipients:
+      - googlechat:operations
+      - telegram:silviosargocd
+      triggers:
+      - on-health-degraded
+      - on-sync-failed
+      - on-sync-status-unknown
+  template.app-deployed: |
+    message: |
+      \[*{{.app.metadata.name}}*] *DEPLOYMENT* was *SUCCEEDED*.
+      Revision: {{ .app.status.sync.revision }}
+    googlechat:
+      cards: |
+        - header:
+            title: ArgoCD Bot Notification
+          sections:
+            - widgets:
+                - textParagraph:
+                    text: The app {{ .app.metadata.name }} has succesfully DEPLOYED.
+            - widgets:
+                - keyValue:
+                    topLabel: Repository
+                    content: {{ call .repo.RepoURLToHTTPS .app.spec.source.repoURL }}
+                - keyValue:
+                    topLabel: Revision
+                    content: {{ .app.spec.source.targetRevision }}
+                - keyValue:
+                    topLabel: Author
+                    content: {{ (call .repo.GetCommitMetadata .app.status.sync.revision).Author }}
+  template.app-health-degraded: |
+    message: |
+      \[*{{.app.metadata.name}}*] *HEALTH* is *DEGRADED*.
+    googlechat:
+      cards: |
+        - header:
+            title: ArgoCD Bot Notification
+          sections:
+            - widgets:
+                - textParagraph:
+                    text: The app {{ .app.metadata.name }} HEALTH status is DEGRADED.
+            - widgets:
+                - keyValue:
+                    topLabel: Repository
+                    content: {{ call .repo.RepoURLToHTTPS .app.spec.source.repoURL }}
+                - keyValue:
+                    topLabel: Revision
+                    content: {{ .app.spec.source.targetRevision }}
+                - keyValue:
+                    topLabel: Author
+                    content: {{ (call .repo.GetCommitMetadata .app.status.sync.revision).Author }}
+  template.app-sync-failed: |
+    message: |
+      \[*{{.app.metadata.name}}*] *SYNC* is *FAILED*.
+    googlechat:
+      cards: |
+        - header:
+            title: ArgoCD Bot Notification
+          sections:
+            - widgets:
+                - textParagraph:
+                    text: The app {{ .app.metadata.name }} last SYNC is FAILED.
+            - widgets:
+                - keyValue:
+                    topLabel: Repository
+                    content: {{ call .repo.RepoURLToHTTPS .app.spec.source.repoURL }}
+                - keyValue:
+                    topLabel: Revision
+                    content: {{ .app.spec.source.targetRevision }}
+                - keyValue:
+                    topLabel: Author
+                    content: {{ (call .repo.GetCommitMetadata .app.status.sync.revision).Author }}
+                - keyValue:
+                    topLabel: Sync Status
+                    content: {{ .app.status.sync.status }}
+                - keyValue:
+                    topLabel: Operation State Phase
+                    content: {{ .app.status.operationState.phase }}
+  template.app-sync-status-unknown: |
+    message: |
+      \[*{{.app.metadata.name}}*] *SYNC* was *UNKNOWN*.
+    googlechat:
+      cards: |
+        - header:
+            title: ArgoCD Bot Notification
+          sections:
+            - widgets:
+                - textParagraph:
+                    text: The app {{ .app.metadata.name }} last SYNC was UNKNOWN.
+            - widgets:
+                - keyValue:
+                    topLabel: Repository
+                    content: {{ call .repo.RepoURLToHTTPS .app.spec.source.repoURL }}
+                - keyValue:
+                    topLabel: Revision
+                    content: {{ .app.spec.source.targetRevision }}
+                - keyValue:
+                    topLabel: Author
+                    content: {{ (call .repo.GetCommitMetadata .app.status.sync.revision).Author }}
+  template.app-sync-succeeded: |
+    message: |
+      \[*{{.app.metadata.name}}*] *SYNC* was *SUCCEEDED*.
+    googlechat:
+      cards: |
+        - header:
+            title: ArgoCD Bot Notification
+          sections:
+            - widgets:
+                - textParagraph:
+                    text: The app {{ .app.metadata.name }} has succesfully SYNCED.
+            - widgets:
+                - keyValue:
+                    topLabel: Repository
+                    content: {{ call .repo.RepoURLToHTTPS .app.spec.source.repoURL }}
+                - keyValue:
+                    topLabel: Revision
+                    content: {{ .app.spec.source.targetRevision }}
+                - keyValue:
+                    topLabel: Author
+                    content: {{ (call .repo.GetCommitMetadata .app.status.sync.revision).Author }}
+  trigger.on-deployed: |
+    - description: Application is synced and healthy. Triggered once per commit.
+      oncePer: app.status.sync.revision
+      send:
+        - app-deployed
+      when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
+  trigger.on-health-degraded: |
+    - description: Application has degraded
+      send:
+        - app-health-degraded
+      when: app.status.health.status == 'Degraded'
+  trigger.on-sync-failed: |
+    - description: Application syncing has failed
+      oncePer: app.status.sync.revision
+      send:
+        - app-sync-failed
+      when: app.status.operationState.phase in ['Error', 'Failed']
+  trigger.on-sync-status-unknown: |
+    - description: Application status is 'Unknown'
+      send:
+        - app-sync-status-unknown
+      when: app.status.sync.status == 'Unknown'
+  trigger.on-sync-succeeded: |
+    - description: Application syncing has succeeded
+      send:
+        - app-sync-succeeded
+      when: app.status.operationState.phase in ['Succeeded']

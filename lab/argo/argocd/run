@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./kind-cluster-creation.sh
+. ./k3d-cluster-creation.sh
 . ./argocd-install.sh
 . ./argocd-notification.sh
 . ./argocd-get-initial-password.sh
