@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: httpbin-letsencrypt-production-nginx
+spec:
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: letsencrypt-production-nginx
+
+  dnsNames:
+    - api._REPLACE_TEMPORARY_CLUSTER_ID_HERE_.sandbox.wasp.silvios.me
+  
+  secretName: httpbin-letsencrypt-production-nginx

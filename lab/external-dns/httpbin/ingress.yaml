@@ -1,0 +1,27 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: httpbin
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: "nginx"
+
+  tls:
+    - hosts:
+        - api._REPLACE_TEMPORARY_CLUSTER_ID_HERE_.sandbox.wasp.silvios.me
+      secretName: httpbin-letsencrypt-production-nginx
+  
+  rules:
+    - host: api._REPLACE_TEMPORARY_CLUSTER_ID_HERE_.sandbox.wasp.silvios.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: httpbin
+                port:
+                  number: 8000

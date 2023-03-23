@@ -1,0 +1,19 @@
+#!/bin/bash
+source /tmp/aks.conf
+
+echo
+
+az aks list -o table
+
+echo
+
+az aks nodepool list \
+  --cluster-name "${AKS_CLUSTER_NAME?}" \
+  --resource-group "${AKS_RESOURCE_GROUP_NAME?}" \
+  --output table
+
+echo
+
+kubectl config get-contexts \
+| grep --quiet "${AKS_CLUSTER_NAME?}" && \
+kubectl get ns

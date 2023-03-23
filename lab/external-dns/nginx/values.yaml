@@ -1,0 +1,18 @@
+defaultBackend:
+  enabled: false
+
+controller:
+  service:
+    externalTrafficPolicy: "Local"
+
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/healthz"
+      external-dns.alpha.kubernetes.io/hostname: gateway._REPLACE_TEMPORARY_CLUSTER_ID_HERE_.sandbox.wasp.silvios.me.
+      external-dns.alpha.kubernetes.io/ttl: "6m"
+      silvios.me/external-dns: "true"
+
+  config:
+    proxy-buffer-size: "128k"
+
+rbac:
+  create: true

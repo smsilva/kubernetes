@@ -1,0 +1,29 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging-nginx
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+
+    email: alerts@silvios.me
+
+    privateKeySecretRef:
+      name: letsencrypt-staging-nginx-issuer-account-key
+
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+
+            ingressTemplate:
+
+              metadata:
+                labels:
+                  type: "challenge"
+
+                annotations:
+                  silvios.me/external-dns: "true"
+                  external-dns.alpha.kubernetes.io/target: "gateway._REPLACE_TEMPORARY_CLUSTER_ID_HERE_.sandbox.wasp.silvios.me"
+                  external-dns.alpha.kubernetes.io/ttl: "2m"

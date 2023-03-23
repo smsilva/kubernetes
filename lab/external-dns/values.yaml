@@ -1,0 +1,31 @@
+sources:
+  - service
+  - ingress
+
+extraArgs:
+  - --annotation-filter=silvios.me/external-dns=true
+
+policy: upsert-only # sync
+
+registry: txt
+txtOwnerId: "_REPLACE_TEMPORARY_CLUSTER_ID_HERE_"
+txtPrefix: "k8s-"
+txtSuffix: ""
+
+domainFilters:
+  - sandbox.wasp.silvios.me
+
+provider: azure
+
+extraVolumes:
+  - name: azure-config-file
+    secret:
+      secretName: azure-config-file
+      items:
+        - key: azure.json
+          path: azure.json
+
+extraVolumeMounts:
+  - name: azure-config-file
+    mountPath: /etc/kubernetes
+    readOnly: true
