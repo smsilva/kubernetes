@@ -98,9 +98,7 @@ spec:
   provider:
     azurekv:
       authType: ServicePrincipal
-
       tenantId: ${ARM_TENANT_ID?}
-
       vaultUrl: https://${ARM_KEYVAULT_NAME?}.vault.azure.net
 
       authSecretRef:
