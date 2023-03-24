@@ -31,11 +31,6 @@ export ARM_CLIENT_ID=$(    jq -r '.appId'    <<< "${ARM_CLIENT_DATA_JSON?}")
 
 export ARM_CLIENT_SECRET=$(jq -r '.password' <<< "${ARM_CLIENT_DATA_JSON?}")
 
-export ARM_CLIENT_OBJECT_ID=$(az ad sp show \
-  --id ${ARM_CLIENT_ID?} \
-  --output tsv \
-  --query id)
-
 cat <<EOF > /tmp/azure.conf
 export ARM_TENANT_ID="${ARM_TENANT_ID}"
 export ARM_CLIENT_ID="${ARM_CLIENT_ID}"
