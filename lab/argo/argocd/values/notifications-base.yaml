@@ -1,0 +1,6 @@
+notifications:
+  enabled: true
+
+  logLevel: "debug"
+
+  argocdUrl: https://localhost:32080

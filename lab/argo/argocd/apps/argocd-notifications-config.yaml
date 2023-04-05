@@ -1,0 +1,25 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-notifications-config
+  namespace: argocd
+spec:
+  project: default
+
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+
+  source:
+    path: infrastructure/charts/argocd-notifications-config
+    repoURL: https://github.com/smsilva/wasp-gitops.git
+    targetRevision: HEAD
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+    syncOptions:
+      - CreateNamespace=true

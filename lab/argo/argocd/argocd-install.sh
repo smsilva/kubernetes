@@ -13,14 +13,12 @@ helm upgrade \
   --namespace argocd \
   --create-namespace \
   argocd argo/argo-cd \
-  --values "values/configs-known-hosts.yaml" \
-  --values "values/extra-objects.yaml" \
-  --values "values/extra-volumes.yaml" \
-  --values "values/metrics.yaml" \
-  --values "values/notifications.yaml" \
+  --values "values/notifications-base.yaml" \
   --values "values/resource-customizations.yaml" \
   --values "values/service.yaml" \
   --wait &> /dev/null
+
+echo ""
 
 for DEPLOYMENT in $(kubectl \
   --namespace argocd \
@@ -34,8 +32,10 @@ for DEPLOYMENT in $(kubectl \
     "${DEPLOYMENT}" &> /dev/null
 done
 
+echo ""
+
 if ! which argocd &> /dev/null; then
-  echo "Need to download and install argocd CLI..."
+  echo "ArgoCD CLI Install..."
 
   sh cli/install.sh
 fi
