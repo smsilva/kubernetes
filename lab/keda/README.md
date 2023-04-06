@@ -13,18 +13,62 @@ helm install \
   rabbitmq bitnami/rabbitmq \
   --wait
 
-watch -n 3 'kubectl get pvc,statefulset,pods,services,secrets \
-  --namespace rabbitmq'
-
 kubectl port-forward svc/rabbitmq 15672:15672 \
   --namespace rabbitmq
 
-echo "Username.: user"
-echo "Password.: $(kubectl get secret rabbitmq \
+export RABBITMQ_USERNAME="user"
+export RABBITMQ_PASSWORD=$(kubectl get secret rabbitmq \
   --namespace rabbitmq \
   --output jsonpath="{.data.rabbitmq-password}" \
-  | base64 -d)"
+  | base64 -d)
+
+echo "Username.: ${RABBITMQ_USERNAME}"
+echo "Password.: ${RABBITMQ_PASSWORD}"
 echo "URL......: http://127.0.0.1:15672/"
+```
+
+### Create a Queue called 'events'
+
+```bash
+curl \
+  --include \
+  --user ${RABBITMQ_USERNAME?}:${RABBITMQ_PASSWORD?} \
+  --request PUT \
+  http://localhost:15672/api/queues/%2F/events \
+  --header "content-type:application/json" \
+  --data '{"auto_delete":false,"durable":true,"arguments":{}}'
+
+curl \
+  --silent \
+  --user ${RABBITMQ_USERNAME?}:${RABBITMQ_PASSWORD?} \
+  http://localhost:15672/api/queues \
+| jq .
+
+curl \
+  --include \
+  --user ${RABBITMQ_USERNAME?}:${RABBITMQ_PASSWORD?} \
+  --header "content-type:application/json" \
+  --request POST \
+  http://localhost:15672/api/bindings/%2f/e/amq.direct/q/events \
+  --data '{"routing_key":"events", "arguments":{}}'
+```
+
+### Post a Message
+
+```bash
+curl \
+  --silent \
+  --user ${RABBITMQ_USERNAME?}:${RABBITMQ_PASSWORD?} \
+  --header "content-type:application/json" \
+  --request POST \
+  http://localhost:15672/api/exchanges/%2f/amq.direct/publish \
+  --data '{"properties":{"delivery_mode":2},"routing_key":"events","payload":"my body","payload_encoding":"string"}'
+
+curl \
+  --silent \
+  --user ${RABBITMQ_USERNAME?}:${RABBITMQ_PASSWORD?} \
+  http://localhost:15672/api/queues/%2f/events \
+| jq .messages_ready
 ```
 
 ## Deploy Consumer
@@ -34,8 +78,8 @@ cat <<EOF > /tmp/keda.conf
 export RABBITMQ_HOST="rabbitmq.rabbitmq.svc.cluster.local"
 export RABBITMQ_PORT="5672"
 export RABBITMQ_VIRTUAL_HOST="/"
-export RABBITMQ_USERNAME="silvios"
-export RABBITMQ_PASSWORD="A password here"
+export RABBITMQ_USERNAME="${RABBITMQ_USERNAME-silvios}"
+export RABBITMQ_PASSWORD="${RABBITMQ_PASSWORD-A password here}"
 export RABBITMQ_PASSWORD_URL_ENCODED=\$(
   printf %s "\${RABBITMQ_PASSWORD?}" \
   | jq -sRr @uri
