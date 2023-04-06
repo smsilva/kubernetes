@@ -14,7 +14,7 @@ kind: ScaledObject
 metadata:
   name: wasp-item-consumer
 spec:
-  cooldownPeriod: 60
+  cooldownPeriod: 30
 
   scaleTargetRef:
     name: wasp-item-consumer

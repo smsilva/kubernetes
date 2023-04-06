@@ -13,11 +13,18 @@ helm install \
   rabbitmq bitnami/rabbitmq \
   --wait
 
-kubectl get statefulset,pvc,pods,services,secrets \
-  --namespace rabbitmq
+watch -n 3 'kubectl get pvc,statefulset,pods,services,secrets \
+  --namespace rabbitmq'
 
 kubectl port-forward svc/rabbitmq 15672:15672 \
   --namespace rabbitmq
+
+echo "Username.: user"
+echo "Password.: $(kubectl get secret rabbitmq \
+  --namespace rabbitmq \
+  --output jsonpath="{.data.rabbitmq-password}" \
+  | base64 -d)"
+echo "URL......: http://127.0.0.1:15672/"
 ```
 
 ## Deploy Consumer
@@ -28,8 +35,11 @@ export RABBITMQ_HOST="rabbitmq.rabbitmq.svc.cluster.local"
 export RABBITMQ_PORT="5672"
 export RABBITMQ_VIRTUAL_HOST="/"
 export RABBITMQ_USERNAME="silvios"
-export RABBITMQ_PASSWORD="Vaca cremosa 12"
-export RABBITMQ_PASSWORD_URL_ENCODED=\$(printf %s "\${RABBITMQ_PASSWORD?}" | jq -sRr @uri)
+export RABBITMQ_PASSWORD="A password here"
+export RABBITMQ_PASSWORD_URL_ENCODED=\$(
+  printf %s "\${RABBITMQ_PASSWORD?}" \
+  | jq -sRr @uri
+)
 export RABBITMQ_QUEUE_NAME_MAIN="events"
 export RABBITMQ_AMQP_URL="amqp://\${RABBITMQ_USERNAME?}:\${RABBITMQ_PASSWORD_URL_ENCODED?}@\${RABBITMQ_HOST?}:\${RABBITMQ_PORT?}/\${RABBITMQ_VIRTUAL_HOST?}"
 
@@ -80,6 +90,8 @@ kubectl logs \
 kubectl scale deployment wasp-item-consumer \
   --namespace wasp \
   --replicas 0
+
+watch -n 3 'kubectl -n wasp get TriggerAuthentication,ScaledObject,deploy,hpa,pods'
 ```
 
 ## Install Keda
@@ -91,18 +103,17 @@ helm repo update kedacore
 
 helm search repo kedacore/keda
 
-helm upgrade \
-  --install \
+helm install \
   --create-namespace \
   --namespace keda \
   keda kedacore/keda \
   --wait
 ```
 
-## Watch for Resources
+## Logs
 
 ```bash
-watch -n 3 'kubectl -n wasp get TriggerAuthentication,ScaledObject,deploy,hpa,pods'
+watch -n 3 'kubectl -n wasp logs -l app=wasp-item-consumer --tail 3'
 ```
 
 ## Create Keda Resources
@@ -111,10 +122,4 @@ watch -n 3 'kubectl -n wasp get TriggerAuthentication,ScaledObject,deploy,hpa,po
 kubectl apply \
   --namespace wasp \
   --filename "deploy/keda-resources.yaml"
-```
-
-## Logs
-
-```bash
-watch -n 3 'kubectl -n wasp logs -l app=wasp-item-consumer --tail 3'
 ```
