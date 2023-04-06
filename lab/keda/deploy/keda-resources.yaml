@@ -1,0 +1,33 @@
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: wasp-item-consumer-rabbitmq
+spec:
+  secretTargetRef:
+    - parameter: host
+      name: wasp-item-consumer-rabbitmq
+      key: RABBITMQ_AMQP_URL
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: wasp-item-consumer
+spec:
+  cooldownPeriod: 60
+
+  scaleTargetRef:
+    name: wasp-item-consumer
+
+  triggers:
+    - type: rabbitmq
+
+      authenticationRef:
+        name: wasp-item-consumer-rabbitmq
+
+      metadata:
+        protocol: amqp
+        queueName: events
+        mode: QueueLength
+        value: "10"
+        metricName: events
