@@ -5,6 +5,8 @@
 ```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
 
+helm repo update bitnami
+
 helm search repo bitnami/rabbitmq
 
 helm install \
@@ -16,15 +18,23 @@ helm install \
 kubectl port-forward svc/rabbitmq 15672:15672 \
   --namespace rabbitmq
 
+cat <<EOF > /tmp/keda.conf
+export RABBITMQ_HOST="rabbitmq.rabbitmq.svc.cluster.local"
+export RABBITMQ_PORT="5672"
+export RABBITMQ_VIRTUAL_HOST="/"
 export RABBITMQ_USERNAME="user"
+export RABBITMQ_QUEUE_NAME_MAIN="events"
 export RABBITMQ_PASSWORD=$(kubectl get secret rabbitmq \
   --namespace rabbitmq \
   --output jsonpath="{.data.rabbitmq-password}" \
   | base64 -d)
+clear
+echo RABBITMQ_USERNAME.............: \${RABBITMQ_USERNAME}
+echo RABBITMQ_PASSWORD.............: \${RABBITMQ_PASSWORD}
+echo RABBITMQ_URL..................: http://127.0.0.1:15672/
+EOF
 
-echo "Username.: ${RABBITMQ_USERNAME}"
-echo "Password.: ${RABBITMQ_PASSWORD}"
-echo "URL......: http://127.0.0.1:15672/"
+source /tmp/keda.conf
 ```
 
 ### Create a Queue called 'events'
@@ -43,7 +53,11 @@ curl \
   --user ${RABBITMQ_USERNAME?}:${RABBITMQ_PASSWORD?} \
   http://localhost:15672/api/queues \
 | jq .
+```
 
+### Configure a Routing Key
+
+```bash
 curl \
   --include \
   --user ${RABBITMQ_USERNAME?}:${RABBITMQ_PASSWORD?} \
@@ -62,7 +76,7 @@ curl \
   --header "content-type:application/json" \
   --request POST \
   http://localhost:15672/api/exchanges/%2f/amq.direct/publish \
-  --data '{"properties":{"delivery_mode":2},"routing_key":"events","payload":"my body","payload_encoding":"string"}'
+  --data '{"properties":{"delivery_mode":2},"routing_key":"events","payload":"MY FIRST MESSAGE HERE","payload_encoding":"string"}'
 
 curl \
   --silent \
@@ -71,22 +85,31 @@ curl \
 | jq .messages_ready
 ```
 
-## Deploy Consumer
+## CloudAMQP Variables
 
 ```bash
 cat <<EOF > /tmp/keda.conf
-export RABBITMQ_HOST="rabbitmq.rabbitmq.svc.cluster.local"
+export RABBITMQ_HOST="HOST_NAME.rmq.cloudamqp.com"
 export RABBITMQ_PORT="5672"
-export RABBITMQ_VIRTUAL_HOST="/"
-export RABBITMQ_USERNAME="${RABBITMQ_USERNAME-silvios}"
-export RABBITMQ_PASSWORD="${RABBITMQ_PASSWORD-A password here}"
+export RABBITMQ_VIRTUAL_HOST="VIRTUAL_HOST_NAME_HERE"
+export RABBITMQ_USERNAME="USER_NAME_HERE"
+export RABBITMQ_PASSWORD="PASSWORD_HERE"
+export RABBITMQ_QUEUE_NAME_MAIN="events"
+EOF
+
+code /tmp/keda.conf
+```
+
+## Deploy Consumer
+
+```bash
+cat <<EOF >> /tmp/keda.conf
 export RABBITMQ_PASSWORD_URL_ENCODED=\$(
   printf %s "\${RABBITMQ_PASSWORD?}" \
   | jq -sRr @uri
 )
-export RABBITMQ_QUEUE_NAME_MAIN="events"
 export RABBITMQ_AMQP_URL="amqp://\${RABBITMQ_USERNAME?}:\${RABBITMQ_PASSWORD_URL_ENCODED?}@\${RABBITMQ_HOST?}:\${RABBITMQ_PORT?}/\${RABBITMQ_VIRTUAL_HOST?}"
-
+clear
 echo "RABBITMQ_HOST.................: \${RABBITMQ_HOST}"
 echo "RABBITMQ_PORT.................: \${RABBITMQ_PORT}"
 echo "RABBITMQ_VIRTUAL_HOST.........: \${RABBITMQ_VIRTUAL_HOST}"
@@ -119,6 +142,8 @@ stringData:
   RABBITMQ_AMQP_URL:        "${RABBITMQ_AMQP_URL?}"
 EOF
 
+watch -n 3 'kubectl -n wasp get deploy,hpa,pods'
+
 kubectl apply \
   --namespace wasp \
   --filename "./deploy/consumer.yaml" && \
@@ -134,8 +159,6 @@ kubectl logs \
 kubectl scale deployment wasp-item-consumer \
   --namespace wasp \
   --replicas 0
-
-watch -n 3 'kubectl -n wasp get TriggerAuthentication,ScaledObject,deploy,hpa,pods'
 ```
 
 ## Install Keda
@@ -157,6 +180,8 @@ helm install \
 ## Logs
 
 ```bash
+watch -n 3 'kubectl -n wasp get ScaledObject,hpa,deploy,pods'
+
 watch -n 3 'kubectl -n wasp logs -l app=wasp-item-consumer --tail 3'
 ```
 
