@@ -8,8 +8,9 @@ k3d cluster create \
   --port "9080:80@loadbalancer" \
   --port "9443:443@loadbalancer" \
   --port "32080:80@loadbalancer" \
+  --k3s-arg '--disable=traefik@server:*' \
   --servers 1 \
-  --k3s-arg '--disable=traefik@server:*'
+  --wait
 
 kubectl wait node \
   --selector kubernetes.io/os=linux \
