@@ -1,0 +1,4 @@
+server:
+  service:
+    type: LoadBalancer
+    nodePortHttp: 32080
