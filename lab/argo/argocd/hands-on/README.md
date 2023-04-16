@@ -131,9 +131,8 @@ argocd version --short --client
 ### Managing Local Users and RBAC
 
 ```bash
-ARGOCD_ADMIN_PASSWORD=$(kubectl \
+ARGOCD_ADMIN_PASSWORD=$(kubectl get secret argocd-initial-admin-secret \
   --namespace argocd \
-  get secret argocd-initial-admin-secret \
   --output jsonpath="{.data.password}" \
 | base64 -d)
 
