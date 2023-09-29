@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mongoshell
+spec:
+  restartPolicy: Never
+ 
+  containers:
+    - name: mongoshell
+      image: silviosilva/mongoshell:1.10.6
+      imagePullPolicy: Never      
+
+      envFrom:
+        - secretRef:
+            name: mongoshell
+
+      command:
+        - sleep
+        - infinity

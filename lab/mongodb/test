@@ -7,7 +7,7 @@ docker run \
   --env MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME?} \
   --env MONGODB_USERNAME=${MONGODB_USERNAME?} \
   --env MONGODB_PASSWORD=${MONGODB_PASSWORD?} \
-  silviosilva/mongoshell:latest \
+  silviosilva/mongoshell:1.10.6 \
     --debug 1
 
 docker run \
@@ -16,8 +16,18 @@ docker run \
   --env MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME?} \
   --env MONGODB_USERNAME=${MONGODB_USERNAME?} \
   --env MONGODB_PASSWORD=${MONGODB_PASSWORD?} \
-  silviosilva/mongoshell:latest \
+  silviosilva/mongoshell:1.10.6 \
+    --debug 1 \
     --command 'printjson(db.accounts.find( { "account_id": 702610 } ))'
+
+docker run \
+  --rm \
+  --env MONGODB_HOST=${MONGODB_HOST?} \
+  --env MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME?} \
+  --env MONGODB_USERNAME=${MONGODB_USERNAME?} \
+  --env MONGODB_PASSWORD=${MONGODB_PASSWORD?} \
+  silviosilva/mongoshell:1.10.6 \
+    --command 'show collections'
 
 export MONGODB_PASSWORD_URL_ENCODED=$(printf %s "${MONGODB_PASSWORD?}" | jq -sRr @uri)
 export MONGODB_CONNECTION_STRING="mongodb+srv://${MONGODB_USERNAME?}:${MONGODB_PASSWORD_URL_ENCODED}@${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}?readPreference=secondaryPreferred&readPreferenceTags=workloadType:OPERATIONAL&retryWrites=true&w=majority&maxStalenessSeconds=90&maxIdleTimeMS=1500000&appName=mongoshell&minPoolSize=10"
@@ -25,7 +35,7 @@ export MONGODB_CONNECTION_STRING="mongodb+srv://${MONGODB_USERNAME?}:${MONGODB_P
 docker run \
   --rm \
   --env MONGODB_CONNECTION_STRING=${MONGODB_CONNECTION_STRING?} \
-  silviosilva/mongoshell:latest
+  silviosilva/mongoshell:1.10.6
 
 # Executable
 mongosh "mongodb+srv://${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}" \
