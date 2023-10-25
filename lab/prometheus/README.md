@@ -14,7 +14,7 @@ or
 k3d cluster create \
   --api-port 6550 \
   --port "8888:80@loadbalancer" \
-  --agents 5
+  --agents 3
 ```
 
 ## New Relic Secret
@@ -33,7 +33,7 @@ metadata:
   name: newrelic-license
 type: Opaque
 stringData:
-  license: "${NEW_RELIC_LICENSE_KEY}"
+  license: "${NEW_RELIC_LICENSE_KEY?}"
 EOF
 ```
 
@@ -52,7 +52,7 @@ helm search repo prometheus-community/prometheus
 ## Prometheus Helm Install
 
 ```bash
-CLUSTER_NAME="k3d-148"
+export CLUSTER_NAME="k3d-155"
 
 helm upgrade \
   --install \
@@ -64,12 +64,12 @@ helm upgrade \
   --wait && \
 kubectl wait pod \
   --namespace prometheus \
-  --selector component=server \
+  --selector app.kubernetes.io/component=server \
   --for=condition=Ready \
   --timeout=360s && \
 kubectl logs \
   --namespace prometheus \
-  --selector component=server \
+  --selector app.kubernetes.io/component=server \
   --container prometheus-server \
   --follow
 ```
@@ -207,4 +207,18 @@ kubectl \
     --silent \
     --request GET http://argocd-server-metrics.argocd:8083/metrics \
 | grep "^argocd"
+```
+
+### spring-actuator-demo
+
+```bash
+kubectl create namespace demo
+
+kubectl config set-context \
+  --current \
+  --namespace demo
+
+watch -n 3 'kubectl get deploy,pods,svc,ing -o wide'
+
+kubectl apply -f deploy/
 ```

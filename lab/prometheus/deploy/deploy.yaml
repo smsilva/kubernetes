@@ -26,7 +26,4 @@ spec:
       containers:
         - name: spring-actuator-demo
           image: spring-actuator-demo:latest
-          imagePullPolicy: Never        
-
-      dnsPolicy: ClusterFirst
-      restartPolicy: Always
+          imagePullPolicy: Never

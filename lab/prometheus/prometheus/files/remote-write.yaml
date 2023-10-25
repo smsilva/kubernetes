@@ -17,6 +17,12 @@ remote_write:
           workload:(.*)"
         action: keep
 
+      - source_labels: [__name__]
+        regex: ^person_count$
+        target_label: newrelic_metric_type
+        replacement: "gauge"
+        action: replace
+
       - source_labels: [job]
         regex: '(.*)'
         target_label: prometheus_job
