@@ -16,3 +16,12 @@ spec:
                 name: spring-actuator-demo
                 port:
                   number: 8080
+    - http:
+        paths:
+          - path: /actuator
+            pathType: Prefix
+            backend:
+              service:
+                name: spring-actuator-demo
+                port:
+                  number: 9091

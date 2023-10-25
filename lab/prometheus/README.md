@@ -14,7 +14,7 @@ or
 k3d cluster create \
   --api-port 6550 \
   --port "8888:80@loadbalancer" \
-  --agents 3
+  --agents 2
 ```
 
 ## New Relic Secret
@@ -52,7 +52,7 @@ helm search repo prometheus-community/prometheus
 ## Prometheus Helm Install
 
 ```bash
-export CLUSTER_NAME="k3d-155"
+export CLUSTER_NAME="k3d-156"
 
 helm upgrade \
   --install \
