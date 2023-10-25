@@ -4,7 +4,7 @@
 {{- $ingressSupportsPathType := eq (include "ingress.supportsPathType" .) "true" -}}
 {{- $releaseName := .Release.Name -}}
 {{- $serviceName := include "prometheus.server.fullname" . }}
-{{- $servicePort := .Values.server.service.servicePort -}}
+{{- $servicePort := .Values.server.ingress.servicePort | default .Values.server.service.servicePort -}}
 {{- $ingressPath := .Values.server.ingress.path -}}
 {{- $ingressPathType := .Values.server.ingress.pathType -}}
 {{- $extraPaths := .Values.server.ingress.extraPaths -}}
@@ -21,7 +21,7 @@ metadata:
     {{ $key }}: {{ $value }}
 {{- end }}
   name: {{ template "prometheus.server.fullname" . }}
-{{ include "prometheus.namespace" . | indent 2 }}
+  namespace: {{ include "prometheus.namespace" . }}
 spec:
   {{- if and $ingressSupportsIngressClassName .Values.server.ingress.ingressClassName }}
   ingressClassName: {{ .Values.server.ingress.ingressClassName }}

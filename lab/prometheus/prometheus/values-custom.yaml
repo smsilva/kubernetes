@@ -1,7 +1,7 @@
 global:
   cluster: undefined-cluster-name
   remoteWrite:
-    enabled : false
+    enabled : true
 
 server:
   global:

@@ -1,0 +1,32 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: spring-actuator-demo
+  name: spring-actuator-demo
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: spring-actuator-demo
+
+  template:
+    metadata:
+      labels:
+        app: spring-actuator-demo
+
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9091"
+        prometheus.io/path: "/actuator/prometheus"
+
+    spec:
+      containers:
+        - name: spring-actuator-demo
+          image: spring-actuator-demo:latest
+          imagePullPolicy: Never        
+
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

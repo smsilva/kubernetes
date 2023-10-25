@@ -12,6 +12,8 @@ remote_write:
           process_resident_memory_bytes(.*)|\
           argocd(.*)|\
           coredns(.*)|\
+          person(.*)|\
+          jvm(.*)|\
           workload:(.*)"
         action: keep
 
