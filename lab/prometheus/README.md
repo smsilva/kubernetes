@@ -8,6 +8,15 @@ kind create cluster \
   --config "./kind/cluster.yaml"
 ```
 
+or
+
+```bash
+k3d cluster create \
+  --api-port 6550 \
+  --port "8888:80@loadbalancer" \
+  --agents 5
+```
+
 ## New Relic Secret
 
 ```bash
@@ -43,7 +52,7 @@ helm search repo prometheus-community/prometheus
 ## Prometheus Helm Install
 
 ```bash
-CLUSTER_NAME="kind-146"
+CLUSTER_NAME="k3d-147"
 
 helm upgrade \
   --install \
