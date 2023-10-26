@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spring-actuator-demo
+data:
+  ENVIRONMENT: 'k8s'
+  LOGS_DIRECTORY: '/var/log/'
+  LOGS_CONSOLE_JSON_PRETTY: 'false'
+  LOGBACK_CONSOLE_APPENDER: 'CONSOLE' # [CONSOLE, CONSOLE_JSON]
+  ZIPKIN_ENDPOINT: 'http://zipkin.zipkin:9411/api/v2/spans'

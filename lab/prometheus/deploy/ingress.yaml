@@ -6,6 +6,8 @@ metadata:
   annotations:
     ingress.kubernetes.io/ssl-redirect: "false"
 spec:
+  ingressClassName: traefik # [nginx, traefik]
+
   rules:
     - http:
         paths:

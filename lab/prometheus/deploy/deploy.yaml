@@ -21,9 +21,28 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9091"
         prometheus.io/path: "/actuator/prometheus"
-
     spec:
+      volumes:
+        - name: logs
+          emptyDir: {}
+
       containers:
         - name: spring-actuator-demo
-          image: spring-actuator-demo:latest
-          imagePullPolicy: Never
+          image: spring-actuator-demo:latest # docker.io/silviosilva/spring-actuator-demo:latest
+          imagePullPolicy: Never # [Always, Never, IfNotPresent]
+
+          ports:
+            - containerPort: 8080
+              name: http
+          
+            - containerPort: 9091
+              name: management
+          
+          envFrom:
+            - configMapRef:
+                name: spring-actuator-demo
+
+          volumeMounts:
+            - name: logs
+              mountPath: /var/log/
+              readOnly: false

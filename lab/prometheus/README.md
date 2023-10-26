@@ -14,7 +14,7 @@ or
 k3d cluster create \
   --api-port 6550 \
   --port "8888:80@loadbalancer" \
-  --agents 2
+  --agents 1
 ```
 
 ## New Relic Secret
@@ -221,4 +221,20 @@ kubectl config set-context \
 watch -n 3 'kubectl get deploy,pods,svc,ing -o wide'
 
 kubectl apply -f deploy/
+```
+
+### Zipkin
+
+```bash
+helm repo add openzipkin https://openzipkin.github.io/zipkin
+
+helm install zipkin \
+  --create-namespace \
+  --namespace zipkin \
+  openzipkin/zipkin \
+  --wait
+
+kubectl \
+  --namespace zipkin \
+  port-forward service/zipkin 9411:9411
 ```
