@@ -52,7 +52,7 @@ helm search repo prometheus-community/prometheus
 ## Prometheus Helm Install
 
 ```bash
-export CLUSTER_NAME="k3d-156"
+export CLUSTER_NAME="k3d-157"
 
 helm upgrade \
   --install \
