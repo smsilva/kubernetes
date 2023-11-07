@@ -46,7 +46,7 @@ helm repo update prometheus-community
 
 helm search repo prometheus-community/prometheus
 
-# helm fetch prometheus-community/prometheus --untar
+helm fetch prometheus-community/prometheus --untar
 ```
 
 ## Prometheus Helm Install
@@ -74,10 +74,16 @@ kubectl logs \
   --follow
 ```
 
-## Local Acess
+## Local Acess using Kind
 
 ```bash
 http://localhost:32081
+```
+
+## Local Acess using k3d
+
+```bash
+http://localhost:8888
 ```
 
 ## Port Forward
