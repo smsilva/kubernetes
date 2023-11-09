@@ -27,8 +27,6 @@ kubectl create namespace mongodb
 ```
 
 ```bash
-export MONGODB_ROOT_PASSWORD=$(openssl rand -base64 32)
-
 kubectl apply \
   --namespace mongodb \
   --filename - <<EOF
@@ -39,11 +37,15 @@ metadata:
   name: mongodb
 type: Opaque
 stringData:
-  mongodb-root-password: ${MONGODB_ROOT_PASSWORD?}
+  mongodb-root-password: $(openssl rand -base64 32)
   mongodb-replica-set-key: $(openssl rand -base64 32)
   mongodb-metrics-password: $(openssl rand -base64 32)
   mongodb-passwords: "jubarte,cisne"
 EOF
+```
+
+```bash
+watch -n 3 'kubectl --namespace mongodb get statefulsets,deployments,pods,services,secrets,pvc,pv'
 ```
 
 ```bash
@@ -58,11 +60,10 @@ helm install mongodb bitnami/mongodb \
   --namespace mongodb \
   --wait \
   --values - <<EOF
-architecture: replicaset
+architecture: replicaset # "standalone" or "replicaset"
 auth:
   enabled: true
-  existingSecret: "mongodb"
-  replicaSetKey: "$(openssl rand -base64 32)"
+  existingSecret: mongodb
   usernames:
     - silvios
     - paulos
@@ -71,6 +72,8 @@ auth:
     - humpback
 EOF
 ```
+
+### Create a Mongo Shell Pod
 
 ```bash
 export MONGODB_DATABASE_NAME="admin"
@@ -85,21 +88,43 @@ kubectl run mongodb-client \
   --rm \
   --tty \
   --stdin \
-  --restart='Never' \
+  --restart Never \
   --env="MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME?}" \
   --env="MONGODB_ROOT_USER=${MONGODB_ROOT_USER?}" \
   --env="MONGODB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD?}" \
-  --image docker.io/bitnami/mongodb:7.0.2-debian-11-r7 \
+  --image docker.io/bitnami/mongodb:7.0.3-debian-11-r1 \
   --command -- bash
+```
 
+### Connect to the MongoDB Server (archicteture = standalone)
+
+```bash
 mongosh ${MONGODB_DATABASE_NAME?} \
-  --host "mongodb-0.mongodb-headless.mongodb.svc.cluster.local:27017,mongodb-1.mongodb-headless.mongodb.svc.cluster.local:27017" \
-  --authenticationDatabase admin \
+  --host "mongodb.mongodb.svc.cluster.local:27017" \
   --username ${MONGODB_ROOT_USER?} \
   --password ${MONGODB_ROOT_PASSWORD?}
 
 mongosh humpback \
+  --host "mongodb.mongodb.svc.cluster.local:27017" \
+  --username silvios \
+  --password jubarte
+```
+
+### Connect to the MongoDB Server (archicteture = replicaset)
+
+```bash
+mongosh ${MONGODB_DATABASE_NAME?} \
   --host "mongodb-0.mongodb-headless.mongodb.svc.cluster.local:27017,mongodb-1.mongodb-headless.mongodb.svc.cluster.local:27017" \
+  --username ${MONGODB_ROOT_USER?} \
+  --password ${MONGODB_ROOT_PASSWORD?}
+
+mongosh ${MONGODB_DATABASE_NAME?} \
+  --host "mongodb-headless.mongodb.svc.cluster.local:27017" \
+  --username ${MONGODB_ROOT_USER?} \
+  --password ${MONGODB_ROOT_PASSWORD?}
+
+mongosh humpback \
+  --host "mongodb-headless.mongodb:27017" \
   --username silvios \
   --password jubarte
 ```
