@@ -8,7 +8,7 @@ spec:
  
   containers:
     - name: mongoshell
-      image: silviosilva/mongoshell:1.10.6
+      image: silviosilva/mongoshell:2.0.2
       imagePullPolicy: Never      
 
       envFrom:

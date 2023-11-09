@@ -9,15 +9,10 @@
 ## Create a k3d cluster
 
 ```bash
-mkdir -p /tmp/k3d/volumes/agents
-mkdir -p /tmp/k3d/volumes/servers
-
 k3d cluster create \
   --api-port 6550 \
   --port "8888:80@loadbalancer" \
-  --agents 2 \
-  --volume /tmp/k3d/volumes/agents:/data@agent:0,1 \
-  --volume /tmp/k3d/volumes/servers:/data@server:0
+  --agents 2
 ```
 
 ## Install MongoDB
@@ -45,7 +40,7 @@ EOF
 ```
 
 ```bash
-watch -n 3 'kubectl --namespace mongodb get statefulsets,deployments,pods,services,secrets,pvc,pv'
+watch -n 3 'kubectl --namespace mongodb get statefulsets,deployments,pods,services,secrets'
 ```
 
 ```bash

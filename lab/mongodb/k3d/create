@@ -1,9 +1,9 @@
 #!/bin/bash
 k3d cluster create
 
-docker pull silviosilva/mongoshell:1.10.6
+docker pull silviosilva/mongoshell:2.0.2
 
-k3d image import silviosilva/mongoshell:1.10.6
+k3d image import silviosilva/mongoshell:2.0.2
 
 watch -n 3 kubectl get pods
 
@@ -12,6 +12,14 @@ kubectl create namespace wasp
 kubectl config set-context \
   --current \
   --namespace wasp
+
+export MONGODB_PROVIDER="default" # default | atlas | cosmosdb
+export MONGODB_PASSWORD_URL_ENCODED=$(printf %s "${MONGODB_PASSWORD?}" | jq -sRr @uri)
+export MONGODB_CONNECTION_STRING_DEFAULT="mongodb://${MONGODB_USERNAME?}:${MONGODB_PASSWORD_URL_ENCODED?}@${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}?directConnection=true&appName=mongoshell"
+export MONGODB_CONNECTION_STRING_ATLAS="mongodb+srv://${MONGODB_USERNAME?}:${MONGODB_PASSWORD_URL_ENCODED?}@${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}?readPreference=secondaryPreferred&readPreferenceTags=workloadType:OPERATIONAL&retryWrites=true&w=majority&maxStalenessSeconds=90&maxIdleTimeMS=1500000&appName=mongoshell&minPoolSize=10"
+export MONGODB_CONNECTION_STRING_COSMOSDB="mongodb://${MONGODB_USERNAME?}:${MONGODB_PASSWORD_URL_ENCODED?}@${MONGODB_HOST?}/?ssl=false&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@${MONGODB_USERNAME?}@"
+export MONGODB_PROVIDER_KEY="MONGODB_CONNECTION_STRING_${MONGODB_PROVIDER^^}"
+export MONGODB_CONNECTION_STRING="${!MONGODB_PROVIDER_KEY}"
 
 kubectl apply \
   --namespace wasp \
@@ -28,7 +36,7 @@ stringData:
   MONGODB_USERNAME:             ${MONGODB_USERNAME?}
   MONGODB_PASSWORD:             ${MONGODB_PASSWORD?}
   MONGODB_PASSWORD_URL_ENCODED: ${MONGODB_PASSWORD_URL_ENCODED?}
-  MONGODB_CONNECTION_STRING:    mongodb://${MONGODB_USERNAME?}:${MONGODB_PASSWORD_URL_ENCODED}@${MONGODB_HOST?}/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@${MONGODB_USERNAME?}@
+  MONGODB_CONNECTION_STRING:    ${MONGODB_CONNECTION_STRING?}
 EOF
 
 kubectl apply -f pod.yaml && \
@@ -38,11 +46,6 @@ kubectl wait pod mongoshell \
   --namespace wasp
 
 kubectl exec -it mongoshell -- /bin/bash
-
-export MONGODB_PASSWORD_URL_ENCODED=$(printf %s "${MONGODB_PASSWORD?}" | jq -sRr @uri)
-export MONGODB_CONNECTION_STRING_MONGODB_ATLAS="mongodb+srv://${MONGODB_USERNAME?}:${MONGODB_PASSWORD_URL_ENCODED}@${MONGODB_HOST?}/${MONGODB_DATABASE_NAME?}?readPreference=secondaryPreferred&readPreferenceTags=workloadType:OPERATIONAL&retryWrites=true&w=majority&maxStalenessSeconds=90&maxIdleTimeMS=1500000&appName=mongoshell&minPoolSize=10"
-export MONGODB_CONNECTION_STRING_COSMOSDB_FOR_MONGODB="mongodb://${MONGODB_USERNAME?}:${MONGODB_PASSWORD_URL_ENCODED}@${MONGODB_HOST?}/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@${MONGODB_USERNAME?}@"
-export MONGODB_CONNECTION_STRING=${MONGODB_CONNECTION_STRING_COSMOSDB_FOR_MONGODB?}
 
 mongosh "${MONGODB_CONNECTION_STRING?}" \
   --eval "show collections"
@@ -57,4 +60,4 @@ db.movies.find({})
 
 db.movies.deleteMany({})
 
-db.movies.insertOne( {id: 00, title: "The silence of the lambs"} )
+db.movies.insertOne({"title": "The silence of the lambs"})
