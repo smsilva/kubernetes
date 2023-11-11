@@ -56,7 +56,7 @@ helm install mongodb bitnami/mongodb \
   --namespace mongodb \
   --wait \
   --values - <<EOF
-architecture: standalone # "standalone" or "replicaset"
+architecture: replicaset # "standalone" or "replicaset"
 auth:
   enabled: true
   existingSecret: mongodb
