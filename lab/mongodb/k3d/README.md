@@ -54,6 +54,8 @@ helm search repo bitnami/mongodb
 helm install mongodb bitnami/mongodb \
   --create-namespace \
   --namespace mongodb \
+  --dry-run \
+  --debug \
   --wait \
   --values - <<EOF
 architecture: replicaset # "standalone" or "replicaset"
@@ -135,7 +137,7 @@ kubectl apply \
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodb-nodeport
+  name: mongodb-external
 spec:
   type: NodePort
 
@@ -165,7 +167,7 @@ spec:
             pathType: Exact
             backend:
               service:
-                name: mongodb-nodeport
+                name: mongodb-external
                 port:
                   number: 27017           
 EOF
