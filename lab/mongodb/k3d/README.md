@@ -11,7 +11,8 @@
 ```bash
 k3d cluster create \
   --api-port 6550 \
-  --port "8888:80@loadbalancer" \
+  --port "8080:80@loadbalancer" \
+  --port "27017:30001@agent:0" \
   --agents 2
 ```
 
@@ -55,7 +56,7 @@ helm install mongodb bitnami/mongodb \
   --namespace mongodb \
   --wait \
   --values - <<EOF
-architecture: replicaset # "standalone" or "replicaset"
+architecture: standalone # "standalone" or "replicaset"
 auth:
   enabled: true
   existingSecret: mongodb
@@ -124,73 +125,65 @@ mongosh humpback \
   --password jubarte
 ```
 
-## Test Persistent Volume Claim creation
-
-```bash
-kubectl create namespace demo
-```
-
-```bash
-watch -n 3 'kubectl --namespace demo get pv,pvc,pods'
-```
+### Connect from outside the cluster
 
 ```bash
 kubectl apply \
-  --namespace demo \
-  --filename - <<EOF
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mongodb
-spec:
-  accessModes:
-    - ReadWriteOnce 
-
-  resources:
-    requests:
-      storage: 100Mi
-EOF
-```
-
-### Create a Pod to Test the Persistent Volume Claim
-
-```bash
-kubectl apply \
-  --namespace demo \
+  --namespace mongodb \
   --filename - <<EOF
 ---
 apiVersion: v1
-kind: Pod
+kind: Service
 metadata:
-  name: ubuntu
+  name: mongodb-nodeport
 spec:
-  containers:
-    - name: ubuntu
-      image: ubuntu:22.04
+  type: NodePort
 
-      command:
-        - sleep
-        - infinity
+  selector:
+    app.kubernetes.io/component: mongodb
+    app.kubernetes.io/instance: mongodb
+    app.kubernetes.io/name: mongodb
 
-      volumeMounts:
-        - name: mongodb
-          mountPath: /data/db
-
-  volumes:
-    - name: mongodb
-      persistentVolumeClaim:
-        claimName: mongodb
+  ports:
+    - name: tcp-mongodb
+      port: 27017
+      targetPort: 27017
+      nodePort: 30001
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mongodb
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: mongodb.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Exact
+            backend:
+              service:
+                name: mongodb-nodeport
+                port:
+                  number: 27017           
 EOF
+```
 
-kubectl --namespace demo exec ubuntu -- find /data/
+```bash
+nc -dv localhost 27017
+```
 
-kubectl --namespace demo exec ubuntu -- /bin/bash -c 'echo "Hello!" > /data/db/hello.txt'
+```bash
+echo "127.0.0.1   mongodb.example.com" | sudo tee -a /etc/hosts
+```
 
-kubectl --namespace demo exec ubuntu -- find /data/
-
-kubectl --namespace demo exec ubuntu -- cat /data/db/hello.txt
-
-kubectl delete namespace demo
+```bash
+mongosh humpback \
+  --host "mongodb.example.com:27017" \
+  --username silvios \
+  --password jubarte
 ```
 
 ## Cleanup
