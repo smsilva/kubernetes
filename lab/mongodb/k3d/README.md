@@ -16,7 +16,7 @@ k3d cluster create \
   --agents 2
 ```
 
-## Install MongoDB
+## MongoDB Installation
 
 ```bash
 kubectl create namespace mongodb
@@ -50,12 +50,14 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update bitnami
 
 helm search repo bitnami/mongodb
+```
 
+### Install MongoDB (archicteture = standalone)
+
+```bash
 helm install mongodb bitnami/mongodb \
   --create-namespace \
   --namespace mongodb \
-  --dry-run \
-  --debug \
   --wait \
   --values - <<EOF
 architecture: replicaset # "standalone" or "replicaset"
