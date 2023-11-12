@@ -60,7 +60,7 @@ helm install mongodb bitnami/mongodb \
   --namespace mongodb \
   --wait \
   --values - <<EOF
-architecture: replicaset # "standalone" or "replicaset"
+architecture: standalone # "standalone" or "replicaset"
 auth:
   enabled: true
   existingSecret: mongodb
@@ -141,8 +141,6 @@ kind: Service
 metadata:
   name: mongodb-external
 spec:
-  type: NodePort
-
   selector:
     app.kubernetes.io/component: mongodb
     app.kubernetes.io/instance: mongodb
@@ -154,24 +152,8 @@ spec:
       targetPort: 27017
       nodePort: 30001
       protocol: TCP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: mongodb
-spec:
-  ingressClassName: traefik
-  rules:
-    - host: mongodb.example.com
-      http:
-        paths:
-          - path: /
-            pathType: Exact
-            backend:
-              service:
-                name: mongodb-external
-                port:
-                  number: 27017           
+
+  type: NodePort
 EOF
 ```
 
