@@ -124,6 +124,12 @@ mongosh dev \
   --password jubarte
 ```
 
+```bash
+show collections
+db.movies.insertMany([{"name":"The Matrix"},{"name":"Avatar"}])
+db.movies.find()
+```
+
 ### Connect from outside the cluster
 
 ```bash
@@ -134,15 +140,8 @@ mongosh dev \
 ```
 
 ```bash
-mongosh dev \
-  --host "localhost:27017" \
-  --username silvios \
-  --password jubarte
-```
-
-```bash
-show collections
-db.movies.insertMany([{"name":"The Matrix"},{"name":"Avatar"}])
+db.movies.find()
+db.movies.insertOne({"name":"Titanic"})
 db.movies.find()
 ```
 
