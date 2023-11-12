@@ -16,7 +16,7 @@ k3d cluster create \
   --agents 2
 ```
 
-## MongoDB Installation
+## MongoDB Preparation
 
 ```bash
 kubectl create namespace mongodb
@@ -36,7 +36,7 @@ stringData:
   mongodb-root-password: $(openssl rand -base64 32)
   mongodb-replica-set-key: $(openssl rand -base64 32)
   mongodb-metrics-password: $(openssl rand -base64 32)
-  mongodb-passwords: "jubarte,cisne"
+  mongodb-passwords: "local,jubarte"
 EOF
 ```
 
@@ -52,7 +52,7 @@ helm repo update bitnami
 helm search repo bitnami/mongodb
 ```
 
-### Install MongoDB (archicteture = standalone)
+## Install MongoDB: archicteture = standalone
 
 ```bash
 helm install mongodb bitnami/mongodb \
@@ -60,23 +60,26 @@ helm install mongodb bitnami/mongodb \
   --namespace mongodb \
   --wait \
   --values - <<EOF
-architecture: standalone # "standalone" or "replicaset"
+architecture: standalone
+service:
+  type: NodePort
+  nodePorts:
+    mongodb: "30001"
 auth:
   enabled: true
   existingSecret: mongodb
   usernames:
+    - developer
     - silvios
-    - paulos
   databases:
-    - humpback
-    - humpback
+    - dev
+    - dev
 EOF
 ```
 
-### Create a Mongo Shell Pod
+### Connect to the MongoDB Server from inside the cluster
 
 ```bash
-export MONGODB_DATABASE_NAME="admin"
 export MONGODB_ROOT_USER="root"
 export MONGODB_ROOT_PASSWORD=$(kubectl get secret mongodb \
   --namespace mongodb \
@@ -89,28 +92,73 @@ kubectl run mongodb-client \
   --tty \
   --stdin \
   --restart Never \
-  --env="MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME?}" \
   --env="MONGODB_ROOT_USER=${MONGODB_ROOT_USER?}" \
   --env="MONGODB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD?}" \
   --image docker.io/bitnami/mongodb:7.0.3-debian-11-r1 \
   --command -- bash
 ```
 
-### Connect to the MongoDB Server (archicteture = standalone)
-
 ```bash
-mongosh ${MONGODB_DATABASE_NAME?} \
+mongosh \
   --host "mongodb.mongodb.svc.cluster.local:27017" \
   --username ${MONGODB_ROOT_USER?} \
   --password ${MONGODB_ROOT_PASSWORD?}
+```
 
-mongosh humpback \
+```bash
+mongosh dev \
+  --host "mongodb.mongodb.svc.cluster.local:27017" \
+  --username developer \
+  --password local
+```
+
+```bash
+mongosh dev \
   --host "mongodb.mongodb.svc.cluster.local:27017" \
   --username silvios \
   --password jubarte
 ```
 
-### Connect to the MongoDB Server (archicteture = replicaset)
+### Connect from outside the cluster
+
+```bash
+mongosh dev \
+  --host "localhost:27017" \
+  --username developer \
+  --password local
+```
+
+```bash
+mongosh dev \
+  --host "localhost:27017" \
+  --username silvios \
+  --password jubarte
+```
+
+## Install MongoDB: archicteture = replicaset
+
+```bash
+helm install mongodb bitnami/mongodb \
+  --create-namespace \
+  --namespace mongodb \
+  --dry-run \
+  --debug \
+  --wait \
+  --values - <<EOF
+architecture: replicaset
+auth:
+  enabled: true
+  existingSecret: mongodb
+  usernames:
+    - developer
+    - silvios
+  databases:
+    - dev
+    - dev
+EOF
+```
+
+### Connect to the MongoDB Server: archicteture = replicaset
 
 ```bash
 mongosh ${MONGODB_DATABASE_NAME?} \
@@ -123,51 +171,8 @@ mongosh ${MONGODB_DATABASE_NAME?} \
   --username ${MONGODB_ROOT_USER?} \
   --password ${MONGODB_ROOT_PASSWORD?}
 
-mongosh humpback \
+mongosh dev \
   --host "mongodb-headless.mongodb:27017" \
-  --username silvios \
-  --password jubarte
-```
-
-### Connect from outside the cluster
-
-```bash
-kubectl apply \
-  --namespace mongodb \
-  --filename - <<EOF
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mongodb-external
-spec:
-  selector:
-    app.kubernetes.io/component: mongodb
-    app.kubernetes.io/instance: mongodb
-    app.kubernetes.io/name: mongodb
-
-  ports:
-    - name: tcp-mongodb
-      port: 27017
-      targetPort: 27017
-      nodePort: 30001
-      protocol: TCP
-
-  type: NodePort
-EOF
-```
-
-```bash
-nc -dv localhost 27017
-```
-
-```bash
-echo "127.0.0.1   mongodb.example.com" | sudo tee -a /etc/hosts
-```
-
-```bash
-mongosh humpback \
-  --host "mongodb.example.com:27017" \
   --username silvios \
   --password jubarte
 ```
