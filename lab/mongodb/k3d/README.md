@@ -13,6 +13,7 @@ k3d cluster create \
   --api-port 6550 \
   --port "8080:80@loadbalancer" \
   --port "27017:30001@agent:0" \
+  --port "27018:30002@agent:0" \
   --agents 2
 ```
 
@@ -38,6 +39,22 @@ stringData:
   mongodb-metrics-password: $(openssl rand -base64 32)
   mongodb-passwords: "local,jubarte"
 EOF
+```
+
+```bash
+export MONGODB_ROOT_USER="root"
+export MONGODB_ROOT_PASSWORD=$(kubectl get secret mongodb \
+  --namespace mongodb \
+  --output jsonpath="{.data.mongodb-root-password}" \
+  | base64 -d)
+
+kubectl run mongodb-client \
+  --namespace mongodb \
+  --restart Never \
+  --env="MONGODB_ROOT_USER=${MONGODB_ROOT_USER?}" \
+  --env="MONGODB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD?}" \
+  --image docker.io/bitnami/mongodb:7.0.3-debian-11-r1 \
+  --command -- sleep infinity
 ```
 
 ```bash
@@ -80,22 +97,10 @@ EOF
 ### Connect to the MongoDB Server from inside the cluster
 
 ```bash
-export MONGODB_ROOT_USER="root"
-export MONGODB_ROOT_PASSWORD=$(kubectl get secret mongodb \
+kubectl exec mongodb-client \
   --namespace mongodb \
-  --output jsonpath="{.data.mongodb-root-password}" \
-  | base64 -d)
-
-kubectl run mongodb-client \
-  --namespace mongodb \
-  --rm \
   --tty \
-  --stdin \
-  --restart Never \
-  --env="MONGODB_ROOT_USER=${MONGODB_ROOT_USER?}" \
-  --env="MONGODB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD?}" \
-  --image docker.io/bitnami/mongodb:7.0.3-debian-11-r1 \
-  --command -- bash
+  --stdin -- bash
 ```
 
 ```bash
@@ -135,17 +140,28 @@ mongosh dev \
   --password jubarte
 ```
 
+```bash
+show collections
+db.movies.insertMany([{"name":"The Matrix"},{"name":"Avatar"}])
+db.movies.find()
+```
+
 ## Install MongoDB: archicteture = replicaset
 
 ```bash
 helm install mongodb bitnami/mongodb \
   --create-namespace \
   --namespace mongodb \
-  --dry-run \
-  --debug \
   --wait \
   --values - <<EOF
 architecture: replicaset
+externalAccess:
+  enabled: true
+  service:
+    type: NodePort
+    nodePorts:
+      - 30001
+      - 30002
 auth:
   enabled: true
   existingSecret: mongodb
@@ -161,20 +177,30 @@ EOF
 ### Connect to the MongoDB Server: archicteture = replicaset
 
 ```bash
-mongosh ${MONGODB_DATABASE_NAME?} \
+kubectl exec mongodb-client \
+  --namespace mongodb \
+  --tty \
+  --stdin -- bash
+```
+
+```bash
+mongosh \
   --host "mongodb-0.mongodb-headless.mongodb.svc.cluster.local:27017,mongodb-1.mongodb-headless.mongodb.svc.cluster.local:27017" \
   --username ${MONGODB_ROOT_USER?} \
   --password ${MONGODB_ROOT_PASSWORD?}
+```
 
-mongosh ${MONGODB_DATABASE_NAME?} \
-  --host "mongodb-headless.mongodb.svc.cluster.local:27017" \
-  --username ${MONGODB_ROOT_USER?} \
-  --password ${MONGODB_ROOT_PASSWORD?}
-
+```bash
 mongosh dev \
-  --host "mongodb-headless.mongodb:27017" \
+  --host "mongodb-0.mongodb-headless.mongodb.svc.cluster.local:27017,mongodb-1.mongodb-headless.mongodb.svc.cluster.local:27017" \
   --username silvios \
   --password jubarte
+```
+
+```bash
+show collections
+db.movies.insertMany([{"name":"The Matrix"},{"name":"Avatar"}])
+db.movies.find()
 ```
 
 ## Cleanup
