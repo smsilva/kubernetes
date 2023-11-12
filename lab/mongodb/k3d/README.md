@@ -13,7 +13,7 @@ k3d cluster create \
   --api-port 6550 \
   --port "8080:80@loadbalancer" \
   --port "27017:30001@agent:0" \
-  --port "27018:30002@agent:0" \
+  --port "27018:30002@agent:1" \
   --agents 2
 ```
 
