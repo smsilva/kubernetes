@@ -8,7 +8,7 @@ EOF
 source ~/.bashrc
 
 # WARNING: We should run these commands ONLY on master-1
-KUBERNETES_DESIRED_VERSION='1.25' && \
+KUBERNETES_DESIRED_VERSION='1.27' && \
 KUBERNETES_VERSION="$(apt-cache madison kubeadm \
 | grep ${KUBERNETES_DESIRED_VERSION} \
 | head -1 \

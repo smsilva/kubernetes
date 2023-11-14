@@ -28,7 +28,7 @@ EOF
 sudo apt update -q
 
 # Set Kubernetes Version
-KUBERNETES_DESIRED_VERSION='1.25' && \
+KUBERNETES_DESIRED_VERSION='1.27' && \
 KUBERNETES_VERSION="$(apt-cache madison kubeadm \
 | grep ${KUBERNETES_DESIRED_VERSION} \
 | head -1 \
@@ -42,6 +42,7 @@ echo "KUBERNETES_IMAGE_VERSION...: ${KUBERNETES_IMAGE_VERSION}" && \
 echo ""
 
 # Install and Mark Hold: kubelet, kubeadm and kubectl
+sudo apt-get --purge remove os-prober
 sudo apt-get install --yes -q \
   kubeadm="${KUBERNETES_VERSION?}" \
   kubelet="${KUBERNETES_VERSION?}" \
