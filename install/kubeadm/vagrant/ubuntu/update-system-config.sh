@@ -11,3 +11,8 @@ sed '/swap/d' /etc/fstab -i
 
 # Enable Configuration
 sysctl --system &> /dev/null
+
+# Remove OS Prober
+apt-get \
+  --purge remove os-prober \
+  --yes
