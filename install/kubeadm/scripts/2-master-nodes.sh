@@ -43,7 +43,7 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Watch Nodes and Pods from kube-system namespace
-watch -n 3 'kubectl get nodes,ds,pods,services -o wide -A'
+watch -n 3 'kubectl get nodes -o wide; echo; kubectl -n kube-system get pods -o wide; echo; kubectl get services -A'
 
 # (Another Terminal) Watch Interfaces and Route information
 ./watch-for-interfaces-and-routes.sh
