@@ -30,7 +30,7 @@ kubectl wait pods \
 ## Install Istio
 
 ```bash
-ISTIO_VERSION="${ISTIO_VERSION-1.17.1}"
+ISTIO_VERSION="${ISTIO_VERSION-1.20.1}"
 
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 
@@ -41,14 +41,14 @@ helm search repo \
   --version ${ISTIO_VERSION?}
 
 helm install \
+  istio-base istio/base \
   --namespace istio-system \
   --create-namespace \
-  --wait \
-  istio-base istio/base
+  --wait
 
 helm install \
-  --namespace istio-system \
   istio-control-plane istio/istiod \
+  --namespace istio-system \
   --wait
 
 kubectl create namespace istio-ingress
@@ -56,8 +56,8 @@ kubectl create namespace istio-ingress
 kubectl label namespace istio-ingress istio-injection=enabled
 
 helm install \
-  --namespace istio-ingress \
   istio-ingressgateway istio/gateway \
+  --namespace istio-ingress \
   --wait
 ```
 

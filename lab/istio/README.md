@@ -1,6 +1,6 @@
-#     Istio
+# Istio
 
-##    TL/DR Setup
+## TL/DR Setup
 
 Run the script below:
 
@@ -28,31 +28,30 @@ It will:
 
 - Start to follow `istio-proxy` logs for `httbin` pods
 
-##    References
+## References
 
-###   Envoy
+### Envoy
 
 - [Terminology](https://www.envoyproxy.io/docs/envoy/latest/intro/life_of_a_request#terminology)
 - [High level architecture](https://www.envoyproxy.io/docs/envoy/latest/intro/life_of_a_request#high-level-architecture)
 
+## Step by step Setup
 
-##    Step by step Setup
-
-###   Kind Cluster
+### Kind Cluster
 
 ```bash
 # Create Kind Cluster with Extra Ports exposed (32080 and 32443)
 kind create cluster \
-  --image "kindest/node:v1.24.7" \
+  --image "kindest/node:v1.27.3" \
   --config "./kind/cluster.yaml" \
   --name istio
 ```
 
-###   Install using Helm Charts
+### Install using Helm Charts
 
 ```bash
 # Configure Helm Repo
-ISTIO_VERSION="${ISTIO_VERSION-1.16.1}"
+ISTIO_VERSION="${ISTIO_VERSION-1.20.1}"
 
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 
@@ -64,17 +63,17 @@ helm search repo \
 
 # Install istio-base (CRDs)
 helm install \
+  istio-base istio/base \
   --namespace "istio-system" \
   --create-namespace \
-  istio-base istio/base \
   --version ${ISTIO_VERSION?} \
   --wait
 
 # Install Istio Discovery (istiod) - Logs in JSON format
 helm install \
+  istio-discovery istio/istiod \
   --namespace "istio-system" \
   --version ${ISTIO_VERSION?} \
-  istio-discovery istio/istiod \
   --values "./helm/istio-discovery/mesh-config.yaml" \
   --values "./helm/istio-discovery/telemetry.yaml" \
   --wait
@@ -83,9 +82,9 @@ helm install \
 kubectl apply \
   --filename "./helm/istio-ingress/namespace.yaml" && \
 helm install \
+  istio-ingress istio/gateway \
   --namespace "istio-ingress" \
   --version ${ISTIO_VERSION?} \
-  istio-ingress istio/gateway \
   --values "./helm/istio-ingress/service.yaml"
 
 # Show Istio Gateway POD
@@ -94,7 +93,7 @@ kubectl get pods \
   --selector "app=istio-ingress"
 ```
 
-###   Download Istio Repositories with Examples
+### Download Istio Repositories with Examples
 
 ```bash
 # Download the Latest Istio Repository
@@ -111,9 +110,9 @@ kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/prometheus.yaml"
 kubectl apply -f "${ISTIO_BASE_DIR?}/samples/addons/kiali.yaml"
 ```
 
-##    Deploy httpbin and curl pods
+## Deploy httpbin and curl pods
 
-###   deploy
+### Deploy
 
 ```bash
 # Example namespace and httpbin Deployment
@@ -139,7 +138,7 @@ kubectl run curl \
   --command -- sleep infinity
 ```
 
-###   Wait
+### Wait
 
 ```bash
 # Wait for httpbin deploy becomes Available
@@ -161,9 +160,9 @@ kubectl wait pod curl \
   --timeout 360s
 ```
 
-##    Tests
+## Tests
 
-###   Follow logs from httpbin pods
+### Follow logs from httpbin pods
 
 From another terminal:
 
@@ -175,9 +174,9 @@ kubectl logs \
   --follow
 ```
 
-###   In-cluster
+### In-cluster
 
-####     From default namespace
+#### From default namespace
 
 ```bash
 UUID=$(uuidgen)
@@ -198,7 +197,7 @@ kubectl \
 code ${HOME}/trash/${UUID}.json
 ```
 
-####     From example namespace
+#### From example namespace
 
 ```bash
 UUID=$(uuidgen)
@@ -221,7 +220,7 @@ kubectl \
 code ${HOME}/trash/${UUID}.json
 ```
 
-###   Prometheus Metrics
+### Prometheus Metrics
 
 ```bash
 watch -n 3 '
@@ -241,7 +240,7 @@ watch -n 3 '
   | egrep "^istio_request_bytes_count|^istio_requests_total|^istio_request_duration_milliseconds_sum"'
 ```
 
-###   Outside
+### Outside
 
 ```bash
 UUID=$(uuidgen)
@@ -263,7 +262,7 @@ curl \
 code ${HOME}/trash/${UUID}.json
 ```
 
-###   Load Test
+### Load Test
 
 ```bash
 wrk \
@@ -276,7 +275,7 @@ wrk \
   http://127.0.0.1:32082/get
 ```
 
-###   Generate Traffic
+### Generate Traffic
 
 ```bash
 # Generate Traffic for httpbin Deployment 200 from outside
@@ -314,7 +313,7 @@ watch -n 30 'curl \
   --request GET http://127.0.0.1:32082/status/503'
 ```
 
-##    Ingress
+## Ingress
 
 ```bash
 BASE_DOMAIN="sandbox.wasp.silvios.me"
@@ -358,7 +357,7 @@ curl \
 code ${HOME}/trash/${UUID}.json
 ```
 
-##    Envoy References
+## Envoy References
 
 - [Terminology](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/intro/terminology)
 
@@ -372,80 +371,80 @@ code ${HOME}/trash/${UUID}.json
 
 - [Route Discovery Service (RDS)](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/rds.html#route-discovery-service-rds)
 
-##    Commands
+## Commands
 
-###   Change envoy proxy log level
+### Change envoy proxy log level
 
 ```bash
 istioctl proxy-config log <POD_NAME_HERE>.<NAMESPACE_HERE> --level debug
 istioctl proxy-config log <POD_NAME_HERE>.<NAMESPACE_HERE> --level http:debug,redis:debug
 ```
 
-###   Change Envoy Proxy Log using Envoy admin port (15000). Reference here.
+### Change Envoy Proxy Log using Envoy admin port (15000). Reference here.
 
 ```bash
 kubectl exec $(kubectl get pod --selector app=<APP_LABEL_HERE> --output jsonpath='{.items[0].metadata.name}') \
   -c istio-proxy -- curl -X POST http://localhost:15000/logging?level=debug
 ```
 
-###   Analyze Config
+### Analyze Config
 
 ```bash
 istioctl analyze -n <NAMESPACE_HERE>
 ```
 
-###   Follow istiod Logs
+### Follow istiod Logs
 
 ```bash
 kubectl -n istio-system logs -f -l app=istiod
 ```
 
-###   Show Envoy Proxy Status
+### Show Envoy Proxy Status
 
 ```bash
 istioctl proxy-status
 istioctl proxy-status --context <KUBE_CONFIG_CONTEXT_NAME_HERE>
 ```
 
-###   Show Envoy Proxy Bootstrap Config
+### Show Envoy Proxy Bootstrap Config
 
 ```bash
 istioctl proxy-config bootstrap <POD_NAME_HERE>.<NAMESPACE_HERE>
 ```
 
-###   Show Envoy Proxy Cluster Config
+### Show Envoy Proxy Cluster Config
 
 ```bash
 istioctl proxy-config cluster <POD_NAME_HERE>.<NAMESPACE_HERE>
 ```
 
-###   Show Envoy Proxy Listener Config
+### Show Envoy Proxy Listener Config
 
 ```bash
 istioctl proxy-config listener <POD_NAME_HERE>.<NAMESPACE_HERE>
 ```
 
-###   Show Envoy Proxy EndpointsConfig
+### Show Envoy Proxy EndpointsConfig
 
 ```bash
 istioctl proxy-config endpoints <POD_NAME_HERE>.<NAMESPACE_HERE> --port 5556
 istioctl proxy-config endpoints <POD_NAME_HERE>.<NAMESPACE_HERE> --port 5556 -o json
 ```
 
-###   Show Envoy Proxy Routes Config
+### Show Envoy Proxy Routes Config
 
 ```bash
 istioctl proxy-config routes <POD_NAME_HERE>.<NAMESPACE_HERE>
 istioctl proxy-config routes <POD_NAME_HERE>.<NAMESPACE_HERE> --name 80
 ```
 
-###   Dump All Configuration for a Specific Profile on yaml format
+### Dump All Configuration for a Specific Profile on yaml format
 
 ```bash
 istioctl profile dump default
 ```
 
-###   Dump do istio-proxy sidecar configuration 
+### Dump do istio-proxy sidecar configuration 
 
 ```bash
 kubectl port-forward account-relay-service-5f68bdb98c-ggmdz 15000:15000
@@ -454,13 +453,13 @@ curl -s http://localhost:15000/config_dump \
 | tee istio-proxy-config.json
 ```
 
-###   Inspect Sidecar Injector Policy
+### Inspect Sidecar Injector Policy
 
 ```bash
 kubectl -n istio-system get cm istio-sidecar-injector -o yaml | grep "policy:"
 ```
 
-###   Check if the Kind Cluster NodePort is open
+### Check if the Kind Cluster NodePort is open
 
 ```bash
 nc -dv 127.0.0.1 32082
@@ -472,7 +471,7 @@ Expected output:
 Connection to 127.0.0.1 32082 port [tcp/*] succeeded!
 ```
 
-##    Cleanup
+## Cleanup
 
 ```bash
 kind delete cluster --name istio
