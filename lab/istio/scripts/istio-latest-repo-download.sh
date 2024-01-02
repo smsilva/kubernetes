@@ -2,10 +2,10 @@
 
 # Retrieve the latest Istio Version
 export ISTIO_VERSION=$(curl -sL https://github.com/istio/istio/releases \
-| grep -o 'releases/[0-9]*.[0-9]*.[0-9]*/' \
+| grep --only-matching 'releases/[0-9]*.[0-9]*.[0-9]*/' \
 | sort --version-sort \
-| tail -1 \
-| awk -F'/' '{ print $2}')
+| tail --lines 1 \
+| awk --field-separator '/' '{ print $2}')
 
 export ISTIO_BASE_DIR="${HOME}/istio-${ISTIO_VERSION}"
 
