@@ -10,10 +10,10 @@ wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
 ```bash
 k3d cluster create \
-  --image rancher/k3s:v1.24.7-k3s1 \
+  --image rancher/k3s:v1.28.6-k3s2 \
   --api-port 6550 \
   --port "8081:80@loadbalancer" \
-  --agents 2
+  --agents 3
 ```
 
 ## Exposing a Service
@@ -43,7 +43,7 @@ spec:
                   number: 80
 EOF
 
-curl -i http://localhost:8081
+curl -I http://localhost:8081
 ```
 
 ## Delete Cluster
