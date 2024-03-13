@@ -1,6 +1,14 @@
 # Keda
 
+## Create k3d cluster
+
+```bash
+k3d cluster create
+```
+
 ## Deploy RabbitMQ
+
+### Install
 
 ```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -9,15 +17,26 @@ helm repo update bitnami
 
 helm search repo bitnami/rabbitmq
 
-helm install \
+helm install rabbitmq bitnami/rabbitmq \
   --namespace rabbitmq \
   --create-namespace \
-  rabbitmq bitnami/rabbitmq \
   --wait
 
+watch -n 3 'kubectl --namespace rabbitmq get statefulset,pods,secrets'
+```
+
+### Access
+
+```bash
 kubectl port-forward svc/rabbitmq 15672:15672 \
   --namespace rabbitmq
+```
 
+http://localhost:15672/
+
+### Configuration
+  
+```bash
 cat <<EOF > /tmp/keda.conf
 export RABBITMQ_HOST="rabbitmq.rabbitmq.svc.cluster.local"
 export RABBITMQ_PORT="5672"
@@ -102,7 +121,9 @@ EOF
 code /tmp/keda.conf
 ```
 
-## Deploy Consumer
+## Consumer deployment
+
+### Environment Variables config
 
 ```bash
 cat <<EOF >> /tmp/keda.conf
@@ -133,7 +154,11 @@ echo "RABBITMQ_AMQP_URL.............: \${RABBITMQ_AMQP_URL:0:10}"
 EOF
 
 source /tmp/keda.conf
+```
 
+### Secret config
+
+```bash
 kubectl create namespace wasp
 
 kubectl apply \
@@ -155,8 +180,12 @@ stringData:
   RABBITMQ_QUEUE_NAME_MAIN: "${RABBITMQ_QUEUE_NAME_MAIN?}"
   RABBITMQ_AMQP_URL:        "${RABBITMQ_AMQP_URL?}"
 EOF
+```
 
-watch -n 3 'kubectl -n wasp get deploy,hpa,pods'
+### Deployment
+
+```bash
+watch -n 3 'kubectl --namespace wasp get deploy,hpa,pods'
 
 kubectl apply \
   --namespace wasp \
@@ -169,7 +198,9 @@ kubectl logs \
   --namespace wasp \
   --selector app=wasp-item-consumer \
   --follow
+```
 
+```bash
 kubectl scale deployment wasp-item-consumer \
   --namespace wasp \
   --replicas 0
@@ -194,9 +225,9 @@ helm install \
 ## Logs
 
 ```bash
-watch -n 3 'kubectl -n wasp get ScaledObject,hpa,deploy,pods'
+watch -n 3 'kubectl --namespace wasp get ScaledObject,hpa,deploy,pods'
 
-watch -n 3 'kubectl -n wasp logs -l app=wasp-item-consumer --tail 3'
+watch -n 3 'kubectl --namespace wasp logs -l app=wasp-item-consumer --tail 3'
 ```
 
 ## Create Keda Resources
