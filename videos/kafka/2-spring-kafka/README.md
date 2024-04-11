@@ -66,19 +66,26 @@ https://docs.spring.io/spring-integration/reference/kafka.html#kafka-inbound
 public class KafkaProducerConfig {
 
     @Bean
-    public ProducerFactory<Object, Object> kafkaProducerFactory(KafkaProperties properties) {
+    public ProducerFactory<String, Data> kafkaProducerFactory(KafkaProperties properties) {
         Map<String, Object> producerProperties = properties.buildProducerProperties(null);
         producerProperties.put(ProducerConfig.LINGER_MS_CONFIG, 1);
         producerProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, RoundRobinPartitioner.class);
-        return new DefaultKafkaProducerFactory<>(producerProperties);
+        return new DefaultKafkaProducerFactory<>(producerProperties, new StringSerializer(), new JsonSerializer<>());
+    }
+
+    @Bean
+    public KafkaTemplate<String, Data> kafkaTemplate(ProducerFactory<String, Data> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
     }
 
     @Bean
     public MessageHandler kafkaProducerHandler(
-            KafkaTemplate<String, String> kafkaTemplate,
-            @Value("${spring.kafka.producer.topic}") String topic) {
-        KafkaProducerMessageHandler<String, String> handler = new KafkaProducerMessageHandler<>(kafkaTemplate);
+            KafkaTemplate<String, Data> kafkaTemplate,
+            @Value("${spring.kafka.producer.topic}") String topic,
+            @Value("${spring.kafka.producer.message-key}") String messageKey) {
+        KafkaProducerMessageHandler<String, Data> handler = new KafkaProducerMessageHandler<>(kafkaTemplate);
         handler.setTopicExpression(new LiteralExpression(topic));
+        handler.setMessageKeyExpression(new LiteralExpression(messageKey));
         return handler;
     }
 
@@ -175,20 +182,6 @@ public class KafkaProducerController {
 curl --request POST http://localhost:8080/events/send
 ```
 
-### Serializer
-
-```yaml
-spring:
-  kafka:
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.value.default.type: com.example.kafka.producer.entity.Data
-        spring.json.type.mapping: "data:com.example.kafka.producer.entity.Data"
-        spring.json.trusted.packages: "com.example.kafka.producer.*"
-```
-
 ### Test
 
 ```shell
@@ -233,7 +226,14 @@ mvn -P native native:compile
 ### Dockerfile
 
 ```dockerfile
-FROM ubuntu:jammy
-COPY target/wasp-producer /wasp-producer
-CMD ["/wasp-producer"]
+FROM ubuntu:22.04
+
+RUN groupadd -r spring && \
+    useradd -r -g spring -m -s /bin/bash spring
+
+USER spring:spring
+
+COPY target/wasp-producer /app/entrypoint
+
+CMD ["/app/entrypoint"]
 ```
