@@ -1,4 +1,4 @@
-# Spring Producer
+# Spring Kafka Producer
 
 https://start.spring.io
 
