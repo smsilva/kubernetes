@@ -21,8 +21,6 @@ spring:
 
     producer:
       topic: ${SPRING_KAFKA_PRODUCER_TOPIC:events-inbound}
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 ```
 
 ## First run
@@ -58,40 +56,6 @@ kafka-topics.sh \
 
 https://docs.spring.io/spring-integration/reference/kafka.html#kafka-inbound
 
-### Configuration: ProducerFactory and MessageHandler
-
-```java
-@Configuration
-@ConditionalOnProperty(prefix = "spring.kafka", name = "enabled")
-public class KafkaProducerConfig {
-
-    @Bean
-    public ProducerFactory<String, Data> kafkaProducerFactory(KafkaProperties properties) {
-        Map<String, Object> producerProperties = properties.buildProducerProperties(null);
-        producerProperties.put(ProducerConfig.LINGER_MS_CONFIG, 1);
-        producerProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, RoundRobinPartitioner.class);
-        return new DefaultKafkaProducerFactory<>(producerProperties, new StringSerializer(), new JsonSerializer<>());
-    }
-
-    @Bean
-    public KafkaTemplate<String, Data> kafkaTemplate(ProducerFactory<String, Data> producerFactory) {
-        return new KafkaTemplate<>(producerFactory);
-    }
-
-    @Bean
-    public MessageHandler kafkaProducerHandler(
-            KafkaTemplate<String, Data> kafkaTemplate,
-            @Value("${spring.kafka.producer.topic}") String topic,
-            @Value("${spring.kafka.producer.message-key}") String messageKey) {
-        KafkaProducerMessageHandler<String, Data> handler = new KafkaProducerMessageHandler<>(kafkaTemplate);
-        handler.setTopicExpression(new LiteralExpression(topic));
-        handler.setMessageKeyExpression(new LiteralExpression(messageKey));
-        return handler;
-    }
-
-}
-```
-
 ### DTO: Data
 
 ```java
@@ -120,6 +84,41 @@ public class Data {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+}
+```
+
+### Configuration: ProducerFactory and MessageHandler
+
+
+```java
+@Configuration
+@ConditionalOnProperty(prefix = "spring.kafka", name = "enabled")
+public class KafkaProducerConfig {
+
+    @Bean
+    public ProducerFactory<String, Data> kafkaProducerFactory(KafkaProperties properties) {
+        Map<String, Object> producerProperties = properties.buildProducerProperties(null);
+        producerProperties.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+        producerProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, RoundRobinPartitioner.class);
+        return new DefaultKafkaProducerFactory<>(producerProperties, new StringSerializer(), new JsonSerializer<>());
+    }
+
+    @Bean
+    public KafkaTemplate<String, Data> kafkaTemplate(ProducerFactory<String, Data> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
+    }
+
+    @Bean
+    public MessageHandler kafkaProducerHandler(
+            KafkaTemplate<String, Data> kafkaTemplate,
+            @Value("${spring.kafka.producer.topic}") String topic,
+            @Value("${spring.kafka.producer.message-key}") String messageKey) {
+        KafkaProducerMessageHandler<String, Data> handler = new KafkaProducerMessageHandler<>(kafkaTemplate);
+        handler.setTopicExpression(new LiteralExpression(topic));
+        handler.setMessageKeyExpression(new LiteralExpression(messageKey));
+        return handler;
     }
 
 }
