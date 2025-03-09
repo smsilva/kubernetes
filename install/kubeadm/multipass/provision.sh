@@ -29,10 +29,10 @@ provision() {
   . ./08-setup-dns-bind.sh;                                       log_time "bind 9 configured"
   . ./09-restart-servers.sh;                                      log_time "servers restarted"
   . ./10-setup-loadbalancer-haproxy.sh;                           log_time "haproxy configured"
-  . ./11-update-system-config.sh                                  log_time "system config updated"
+  . ./11-update-system-config.sh;                                 log_time "system config updated"
   . ./12-update-local-etc-hosts.sh
-  . ./13-setup-cri-containerd.sh                                  log_time "containerd installed"
-  . ./14-setup-masters-tools.sh                                   log_time "master tools installed"
+  . ./13-setup-cri-containerd.sh;                                 log_time "containerd installed"
+  . ./14-setup-masters-tools.sh;                                  log_time "master tools installed"
 
   log_time "provision process is done"
 }

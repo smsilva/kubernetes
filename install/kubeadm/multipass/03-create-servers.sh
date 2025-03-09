@@ -20,7 +20,7 @@ for SERVER in ${SERVERS?}; do
     multipass launch \
       --cpus "${!SERVER_CPU_COUNT_KEY}" \
       --disk "${!SERVER_DISK_SIZE_KEY}" \
-      --mem "${!SERVER_MEMORY_KEY}" \
+      --memory "${!SERVER_MEMORY_KEY}" \
       --name "${SERVER?}" \
       --cloud-init "${CLOUD_INIT_TARGET_DIRECTORY?}/${SERVER?}.yaml" && \
     multipass mount "shared/" "${SERVER?}":"/shared"
