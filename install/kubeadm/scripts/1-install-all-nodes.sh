@@ -2,33 +2,40 @@
 nc -d loadbalancer 6443 && echo "OK" || echo "FAIL"
 
 # Update
-sudo apt-get update -qq && \
+sudo apt-get update -q && \
 sudo apt-get install --yes \
   apt-transport-https \
   ca-certificates \
-  curl
+  curl \
+  gnupg
 
 # Get Google Cloud Apt Key
+sudo mkdir -p -m 755 /etc/apt/keyrings
+
 curl \
   --fail \
   --silent \
   --show-error \
   --location \
-  "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
+  "https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key" \
 | sudo gpg \
   --dearmor \
-  --output /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+  --yes \
+  --output /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+# Allow unprivileged APT programs to read this keyring
+sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 # Add Kubernetes Repository
 cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
-deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /
 EOF
 
 # Update package list
 sudo apt update -q
 
 # Set Kubernetes Version
-KUBERNETES_DESIRED_VERSION='1.27' && \
+KUBERNETES_DESIRED_VERSION='1.32' && \
 KUBERNETES_VERSION="$(apt-cache madison kubeadm \
 | grep ${KUBERNETES_DESIRED_VERSION} \
 | head -1 \
