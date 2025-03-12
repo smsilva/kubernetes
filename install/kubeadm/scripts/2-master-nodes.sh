@@ -8,7 +8,7 @@ EOF
 source ~/.bashrc
 
 # WARNING: We should run these commands ONLY on master-1
-KUBERNETES_DESIRED_VERSION='1.27' && \
+KUBERNETES_DESIRED_VERSION='1.32' && \
 KUBERNETES_VERSION="$(apt-cache madison kubeadm \
 | grep ${KUBERNETES_DESIRED_VERSION} \
 | head -1 \
@@ -27,14 +27,16 @@ echo "KUBERNETES_BASE_VERSION....: ${KUBERNETES_BASE_VERSION}" && \
 echo ""
 
 # Initialize master-1 (=~ 1 minute 30 seconds) - check: http://loadbalancer.example.com/stats
+# Use with --pod-network-cidr "10.244.0.0/16" with Flannel CNI
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
 NODE_NAME=$(hostname --short) && \
 sudo kubeadm init \
-  --v 0 \
+  --v 3 \
   --node-name "${NODE_NAME?}" \
   --apiserver-advertise-address "${LOCAL_IP_ADDRESS?}" \
   --kubernetes-version "${KUBERNETES_BASE_VERSION?}" \
   --control-plane-endpoint "${CONTROL_PLANE_ENDPOINT?}" \
+  --pod-network-cidr "10.244.0.0/16" \
   --upload-certs | tee "${KUBEADM_LOG_FILE?}"
 
 # Config
@@ -49,8 +51,9 @@ watch -n 3 'kubectl get nodes -o wide; echo; kubectl -n kube-system get pods -o 
 ./watch-for-interfaces-and-routes.sh
 
 # Install CNI Plugin
+# kubectl apply -f "https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml"
 # kubectl apply -f "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
-kubectl apply -f "https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml"
+kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 
 # Retrieve token information from log file
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
@@ -65,11 +68,11 @@ grep '\-\-certificate-key' "${KUBEADM_LOG_FILE?}" --before 2 | grep \
     -e 's/ /=/' \
     -e 's/^/export KUBEADM_/'
 
-# [PASTE HERE] Execute on master-2 and master-3 and on all workers
+# [PASTE HERE] Execute it on masters and workers
 cat <<EOF > kubeadm-tokens
-export KUBEADM_TOKEN=prku4u.kunjtmjdpetovdib
-export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:e779e5e854e37ced47e617493235d65ab982226dccd05cb7aaa439f2f6e2c9fb
-export KUBEADM_CERTIFICATE_KEY=ff359629abf2431c09b6d35fd9cd34ff81de9adce92d5583e8aa836d965d2ebd
+export KUBEADM_TOKEN=prku4u.xxxxxxxxxxxxxxxxxxxx
+export KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH=sha256:xxxxxxxxxxxxxxxxxxxxxxxxxx
+export KUBEADM_CERTIFICATE_KEY=xxxxxxxxxxxxxxxxxxxxxxxx
 EOF
 
 # Join Command Variables
