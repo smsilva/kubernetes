@@ -54,6 +54,8 @@ watch -n 3 'kubectl get nodes -o wide; echo; kubectl -n kube-system get pods -o 
 # kubectl apply -f "https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml"
 # kubectl apply -f "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
 kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+kubectl --namespace kube-flannel get pods
+kubectl --namespace kube-flannel logs --selector app=flannel --follow
 
 # Retrieve token information from log file
 KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
