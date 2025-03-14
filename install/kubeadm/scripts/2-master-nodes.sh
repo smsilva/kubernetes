@@ -8,36 +8,37 @@ EOF
 source ~/.bashrc
 
 # WARNING: We should run these commands ONLY on master-1
-KUBERNETES_DESIRED_VERSION='1.32' && \
-KUBERNETES_VERSION="$(apt-cache madison kubeadm \
-| grep ${KUBERNETES_DESIRED_VERSION} \
+kubernetes_desired_version='1.32' && \
+kubernetes_version="$(apt-cache madison kubeadm \
+| grep ${kubernetes_desired_version} \
 | head -1 \
 | awk '{ print $3 }')" && \
-KUBERNETES_BASE_VERSION="${KUBERNETES_VERSION%-*}" && \
-LOCAL_IP_ADDRESS=$(grep $(hostname --short) /etc/hosts | awk '{ print $1 }') && \
-LOAD_BALANCER_PORT='6443' && \
-LOAD_BALANCER_NAME='loadbalancer' && \
-CONTROL_PLANE_ENDPOINT="${LOAD_BALANCER_NAME}:${LOAD_BALANCER_PORT}" && \
-CONTROL_PLANE_ENDPOINT_TEST=$(nc -d ${LOAD_BALANCER_NAME} ${LOAD_BALANCER_PORT} && echo "OK" || echo "FAIL") && \
+kubernetes_base_version="${kubernetes_version%-*}" && \
+local_ip_address=$(grep $(hostname --short) /etc/hosts | awk '{ print $1 }') && \
+load_balancer_port='6443' && \
+load_balancer_name='loadbalancer' && \
+control_plane_endpoint="${load_balancer_name}:${load_balancer_port}" && \
+control_plane_endpoint_test=$(nc -d ${load_balancer_name} ${load_balancer_port} && echo "OK" || echo "FAIL") && \
 clear && \
 echo "" && \
-echo "LOCAL_IP_ADDRESS...........: ${LOCAL_IP_ADDRESS}" && \
-echo "CONTROL_PLANE_ENDPOINT.....: ${CONTROL_PLANE_ENDPOINT} [${CONTROL_PLANE_ENDPOINT_TEST}]" && \
-echo "KUBERNETES_BASE_VERSION....: ${KUBERNETES_BASE_VERSION}" && \
+echo "local_ip_address...........: ${local_ip_address}" && \
+echo "control_plane_endpoint.....: ${control_plane_endpoint} [${control_plane_endpoint_test}]" && \
+echo "kubernetes_base_version....: ${kubernetes_base_version}" && \
 echo ""
 
 # Initialize master-1 (=~ 1 minute 30 seconds) - check: http://loadbalancer.example.com/stats
 # Use with --pod-network-cidr "10.244.0.0/16" with Flannel CNI
-KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
-NODE_NAME=$(hostname --short) && \
+kubeadm_log_file="${HOME}/kubeadm-init.log" && \
+node_name=$(hostname --short) && \
 sudo kubeadm init \
   --v 3 \
-  --node-name "${NODE_NAME?}" \
-  --apiserver-advertise-address "${LOCAL_IP_ADDRESS?}" \
-  --kubernetes-version "${KUBERNETES_BASE_VERSION?}" \
-  --control-plane-endpoint "${CONTROL_PLANE_ENDPOINT?}" \
+  --node-name "${node_name?}" \
+  --apiserver-advertise-address "${local_ip_address?}" \
+  --kubernetes-version "${kubernetes_base_version?}" \
+  --control-plane-endpoint "${control_plane_endpoint?}" \
   --pod-network-cidr "10.244.0.0/16" \
-  --upload-certs | tee "${KUBEADM_LOG_FILE?}"
+  --upload-certs \
+| tee "${kubeadm_log_file?}"
 
 # Config
 mkdir -p $HOME/.kube
@@ -56,10 +57,11 @@ watch -n 3 'kubectl get nodes -o wide; echo; kubectl -n kube-system get pods -o 
 kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 kubectl --namespace kube-flannel get pods
 kubectl --namespace kube-flannel logs --selector app=flannel --follow
+kubectl --namespace kube-flannel logs --selector app=flannel --previous
 
 # Retrieve token information from log file
-KUBEADM_LOG_FILE="${HOME}/kubeadm-init.log" && \
-grep '\-\-certificate-key' "${KUBEADM_LOG_FILE?}" --before 2 | grep \
+kubeadm_log_file="${HOME}/kubeadm-init.log" && \
+grep '\-\-certificate-key' "${kubeadm_log_file?}" --before 2 | grep \
   --only-matching \
   --extended-regexp '\-\-.*' | sed \
     -e 's/\-\-control-plane //' \
@@ -80,26 +82,26 @@ EOF
 # Join Command Variables
 source kubeadm-tokens
 
-NODE_NAME=$(hostname --short) && \
-LOCAL_IP_ADDRESS=$(grep ${NODE_NAME} /etc/hosts | head -1 | awk '{ print $1 }') && \
-LOAD_BALANCER_PORT='6443' && \
-LOAD_BALANCER_NAME='loadbalancer' && \
-CONTROL_PLANE_ENDPOINT="${LOAD_BALANCER_NAME}:${LOAD_BALANCER_PORT}" && \
-CONTROL_PLANE_ENDPOINT_TEST=$(curl -Is ${LOAD_BALANCER_NAME}:${LOAD_BALANCER_PORT} &> /dev/null && echo "OK" || echo "FAIL") && \
+node_name=$(hostname --short) && \
+local_ip_address=$(grep ${node_name} /etc/hosts | head -1 | awk '{ print $1 }') && \
+load_balancer_port='6443' && \
+load_balancer_name='loadbalancer' && \
+control_plane_endpoint="${load_balancer_name}:${load_balancer_port}" && \
+control_plane_endpoint_test=$(curl -Is ${load_balancer_name}:${load_balancer_port} &> /dev/null && echo "OK" || echo "FAIL") && \
 clear && \
 echo "" && \
-echo "NODE_NAME....................: ${NODE_NAME}" && \
-echo "LOCAL_IP_ADDRESS.............: ${LOCAL_IP_ADDRESS}" && \
-echo "CONTROL_PLANE_ENDPOINT.......: ${CONTROL_PLANE_ENDPOINT} [${CONTROL_PLANE_ENDPOINT_TEST}]" && \
+echo "node_name....................: ${node_name}" && \
+echo "local_ip_address.............: ${local_ip_address}" && \
+echo "control_plane_endpoint.......: ${control_plane_endpoint} [${control_plane_endpoint_test}]" && \
 echo "TOKEN........................: ${KUBEADM_TOKEN}" && \
 echo "DISCOVERY_TOKEN_CA_CERT_HASH.: ${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH}" && \
 echo ""
 
-sudo kubeadm join "${CONTROL_PLANE_ENDPOINT?}" \
+sudo kubeadm join "${control_plane_endpoint?}" \
   --v 0 \
   --control-plane \
-  --node-name "${NODE_NAME?}" \
-  --apiserver-advertise-address "${LOCAL_IP_ADDRESS?}" \
+  --node-name "${node_name?}" \
+  --apiserver-advertise-address "${local_ip_address?}" \
   --token "${KUBEADM_TOKEN?}" \
   --discovery-token-ca-cert-hash "${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH?}" \
   --certificate-key "${KUBEADM_CERTIFICATE_KEY?}" && \

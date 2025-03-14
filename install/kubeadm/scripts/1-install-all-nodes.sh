@@ -2,7 +2,7 @@
 nc -d loadbalancer 6443 && echo "OK" || echo "FAIL"
 
 # Update
-sudo apt-get update -q && \
+sudo apt-get update --quiet && \
 sudo apt-get install --yes \
   apt-transport-https \
   ca-certificates \
@@ -10,14 +10,17 @@ sudo apt-get install --yes \
   gnupg
 
 # Get Google Cloud Apt Key
-sudo mkdir -p -m 755 /etc/apt/keyrings
+sudo mkdir --parents --mode 755 /etc/apt/keyrings
+
+# Set Kubernetes Version
+kubernetes_desired_version="1.32"
 
 curl \
   --fail \
   --silent \
   --show-error \
   --location \
-  "https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key" \
+  --url "https://pkgs.k8s.io/core:/stable:/v${kubernetes_desired_version?}/deb/Release.key" \
 | sudo gpg \
   --dearmor \
   --yes \
@@ -28,51 +31,60 @@ sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 # Add Kubernetes Repository
 cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
-deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /
+deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${kubernetes_desired_version?}/deb/ /
 EOF
 
 # Update package list
-sudo apt update -q
+sudo apt update --quiet
 
-# Set Kubernetes Version
-KUBERNETES_DESIRED_VERSION='1.32' && \
-KUBERNETES_VERSION="$(apt-cache madison kubeadm \
-| grep ${KUBERNETES_DESIRED_VERSION} \
+kubernetes_version="$(apt-cache madison kubeadm \
+| grep ${kubernetes_desired_version} \
 | head -1 \
 | awk '{ print $3 }')" && \
-KUBERNETES_IMAGE_VERSION="${KUBERNETES_VERSION%-*}" && \
+kubernetes_image_version="${kubernetes_version%-*}" && \
 clear && \
 echo "" && \
-echo "KUBERNETES_DESIRED_VERSION.: ${KUBERNETES_DESIRED_VERSION}" && \
-echo "KUBERNETES_VERSION.........: ${KUBERNETES_VERSION}" && \
-echo "KUBERNETES_IMAGE_VERSION...: ${KUBERNETES_IMAGE_VERSION}" && \
+echo "kubernetes_desired_version.: ${kubernetes_desired_version}" && \
+echo "kubernetes_version.........: ${kubernetes_version}" && \
+echo "kubernetes_image_version...: ${kubernetes_image_version}" && \
 echo ""
 
 # Install and Mark Hold: kubelet, kubeadm and kubectl
-sudo apt-get install --yes -q \
-  kubeadm="${KUBERNETES_VERSION?}" \
-  kubelet="${KUBERNETES_VERSION?}" \
-  kubectl="${KUBERNETES_VERSION?}" \
-| egrep --invert-match "^Hit|^Get|^Selecting|^Preparing|^Unpacking" && \
+sudo apt-get install --yes --quiet \
+  kubeadm="${kubernetes_version?}" \
+  kubelet="${kubernetes_version?}" \
+  kubectl="${kubernetes_version?}" \
+| grep --invert-match --extended-regexp "^Hit|^Get|^Selecting|^Preparing|^Unpacking" && \
 sudo apt-mark hold \
   kubelet \
   kubeadm \
   kubectl
 
-# containerd config
-CONTAINERD_SOCK="unix:///var/run/containerd/containerd.sock" && \
-sudo crictl config \
-  runtime-endpoint "${CONTAINERD_SOCK?}" \
-  image-endpoint "${CONTAINERD_SOCK?}" && \
-clear && \
-sudo crictl images
+# crictl configuration
+cat <<EOF | sudo tee /etc/crictl.yaml
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 2
+debug: false
+pull-image-on-create: false
+EOF
+
+sudo groupadd containerd
+
+sudo chgrp containerd /run/containerd/containerd.sock
+
+sudo usermod \
+  --append \
+  --groups containerd \
+  ${USER}
+
+crictl images
 
 # Preloading Container Images
 if grep --quiet "master" <<< $(hostname --short); then
-  sudo kubeadm config images pull --kubernetes-version "${KUBERNETES_IMAGE_VERSION?}"
+  sudo kubeadm config images pull --kubernetes-version "${kubernetes_image_version?}"
 else
-  sudo crictl pull "registry.k8s.io/kube-proxy:v${KUBERNETES_IMAGE_VERSION?}"
+  crictl pull "registry.k8s.io/kube-proxy:v${kubernetes_image_version?}"
 fi
 
-# List Images
-sudo crictl images
+crictl images
