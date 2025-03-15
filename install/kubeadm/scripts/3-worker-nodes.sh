@@ -25,7 +25,7 @@ sudo kubeadm join "${control_plane_endpoint?}" \
 # Example
 kubectl create deploy nginx \
   --image nginx \
-  --replicas 4
+  --replicas 3
 
 kubectl expose deploy nginx \
   --port 80 \

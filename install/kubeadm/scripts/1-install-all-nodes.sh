@@ -89,7 +89,7 @@ crictl images
 source k8s.conf
 
 # Preloading Container Images
-if grep --quiet "master" <<< $(hostname --short); then
+if grep --quiet --extended-regexp "master|controlplane" <<< $(hostname --short); then
   sudo kubeadm config images pull --kubernetes-version "${kubernetes_image_version?}"
 else
   crictl pull "registry.k8s.io/kube-proxy:v${kubernetes_image_version?}"
