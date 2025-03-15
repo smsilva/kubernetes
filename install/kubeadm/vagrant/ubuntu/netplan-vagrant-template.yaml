@@ -12,6 +12,6 @@ network:
         addresses:
           - ${IP_DNS}
           - 8.8.8.8
-      routes:
-        - to: 10.96.0.0/16
-          via: ${IP_SERVER}
+      # routes:
+      #   - to: 10.96.0.0/16
+      #     via: ${IP_SERVER}

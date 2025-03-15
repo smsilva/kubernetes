@@ -60,6 +60,12 @@ sudo apt-mark hold \
   kubeadm \
   kubectl
 
+cat <<EOF > k8s.conf
+kubernetes_desired_version="${kubernetes_desired_version?}"
+kubernetes_version="${kubernetes_version?}"
+kubernetes_image_version="${kubernetes_image_version?}"
+EOF
+
 # crictl configuration
 cat <<EOF | sudo tee /etc/crictl.yaml
 runtime-endpoint: unix:///run/containerd/containerd.sock
@@ -79,6 +85,8 @@ sudo usermod \
   ${USER}
 
 crictl images
+
+source k8s.conf
 
 # Preloading Container Images
 if grep --quiet "master" <<< $(hostname --short); then
