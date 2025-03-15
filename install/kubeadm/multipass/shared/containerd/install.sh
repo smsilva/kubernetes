@@ -1,17 +1,28 @@
 #!/bin/bash
 cat > /etc/modules-load.d/containerd.conf <<EOF
-overlay
 br_netfilter
+ip_vs
+ip_vs_rr
+ip_vs_sh
+ip_vs_wrr
+nf_conntrack
+overlay
 EOF
 
 modprobe overlay
 modprobe br_netfilter
 
+systemctl restart systemd-modules-load.service
+systemctl status systemd-modules-load
+
 # Setup required sysctl params, these persist across reboots.
 cat > /etc/sysctl.d/99-kubernetes-cri.conf <<EOF
+net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables  = 1
 net.ipv4.ip_forward                 = 1
-net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv6.conf.all.disable_ipv6      = 1
+net.ipv6.conf.default.disable_ipv6  = 1
+net.ipv6.conf.lo.disable_ipv6       = 1
 EOF
 
 sysctl --system &> /dev/null

@@ -3,8 +3,12 @@ network:
   renderer: networkd
   ethernets:
     ens3:
-      dhcp4-overrides:
-        route-metric: 10
+      addresses:
+        - ${IP_SERVER}/24
       nameservers:
-        search: [${DOMAIN_NAME}]
-        addresses: [${IP_DNS}, 8.8.8.8, 8.8.4.4]
+        search: 
+          - ${DOMAIN_NAME}
+        addresses:
+          - ${IP_DNS}
+          - 8.8.8.8
+          - 8.8.4.4

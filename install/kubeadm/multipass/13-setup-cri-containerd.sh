@@ -3,6 +3,6 @@
 
 for SERVER in ${SERVERS?}; do
   if [[ ${SERVER?} =~ ^master|^worker ]]; then
-    multipass exec ${SERVER?} -- sudo /shared/containerd/install.sh > /dev/null
+    multipass exec ${SERVER?} -- sudo /shared/containerd/install.sh
   fi
 done

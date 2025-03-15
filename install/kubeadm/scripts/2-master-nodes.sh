@@ -16,7 +16,7 @@ kubernetes_version="$(apt-cache madison kubeadm \
 kubernetes_base_version="${kubernetes_version%-*}" && \
 local_ip_address=$(grep $(hostname --short) /etc/hosts | awk '{ print $1 }') && \
 load_balancer_port='6443' && \
-load_balancer_name='loadbalancer' && \
+load_balancer_name='loadbalancer.silvios.me' && \
 control_plane_endpoint="${load_balancer_name}:${load_balancer_port}" && \
 control_plane_endpoint_test=$(nc -d ${load_balancer_name} ${load_balancer_port} && echo "OK" || echo "FAIL") && \
 clear && \

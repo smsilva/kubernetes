@@ -1,5 +1,5 @@
 # Test Connectivity to Loadbalancer
-nc -d loadbalancer 6443 && echo "OK" || echo "FAIL"
+nc -d loadbalancer.silvios.me 6443 && echo "OK" || echo "FAIL"
 
 # Update
 sudo apt-get update --quiet && \
