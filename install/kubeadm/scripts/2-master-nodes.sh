@@ -88,7 +88,7 @@ source kubeadm-tokens
 node_name=$(hostname --short) && \
 local_ip_address=$(grep ${node_name} /etc/hosts | head -1 | awk '{ print $1 }') && \
 load_balancer_port='6443' && \
-load_balancer_name='loadbalancer' && \
+load_balancer_name='loadbalancer.silvios.me' && \
 control_plane_endpoint="${load_balancer_name}:${load_balancer_port}" && \
 control_plane_endpoint_test=$(curl -Is ${load_balancer_name}:${load_balancer_port} &> /dev/null && echo "OK" || echo "FAIL") && \
 clear && \
@@ -101,7 +101,7 @@ echo "DISCOVERY_TOKEN_CA_CERT_HASH.: ${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH}" &&
 echo ""
 
 sudo kubeadm join "${control_plane_endpoint?}" \
-  --v 0 \
+  --v 3 \
   --control-plane \
   --node-name "${node_name?}" \
   --apiserver-advertise-address "${local_ip_address?}" \
