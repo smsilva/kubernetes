@@ -7,28 +7,33 @@ echo ""
 echo "Creating Servers"
 echo ""
 
-for SERVER in ${SERVERS?}; do
-  SERVER_PREFIX_KEY_NAME=$(awk -F '-' '{ print $1 }' <<< "${SERVER}")
+for server_name in ${SERVERS?}; do
+  server_prefix_key_name=$(awk -F '-' '{ print $1 }' <<< "${server_name}")
 
-  SERVER_MEMORY_KEY="${SERVER_PREFIX_KEY_NAME^^}_MEMORY"
-  SERVER_CPU_COUNT_KEY="${SERVER_PREFIX_KEY_NAME^^}_CPU_COUNT"
-  SERVER_DISK_SIZE_KEY="${SERVER_PREFIX_KEY_NAME^^}_DISK_SIZE"
+  server_memory_key="${server_prefix_key_name^^}_MEMORY"
+  server_cpu_count_key="${server_prefix_key_name^^}_CPU_COUNT"
+  server_disk_size_key="${server_prefix_key_name^^}_DISK_SIZE"
 
-  echo "${SERVER?}.${DOMAIN_NAME?} (vcpu: ${!SERVER_CPU_COUNT_KEY} / mem: ${!SERVER_MEMORY_KEY} / disk: ${!SERVER_DISK_SIZE_KEY})"
+  server_cpu_count_value="${!server_cpu_count_key}"
+  server_memory_value="${!server_memory_key}"
+  server_disk_size_value="${!server_disk_size_key}"
+  server_cloud_init_file="${CLOUD_INIT_TARGET_DIRECTORY?}/${server_name?}.yaml"
 
-  if ! ./list.sh | grep -q -E ${SERVER?}; then
+  echo "${server_name?}.${DOMAIN_NAME?} (vcpu: ${server_cpu_count_value} / mem: ${server_memory_value} / disk: ${server_disk_size_value})"
+
+  if ! ./list.sh | grep --quiet --extended-regexp "${server_name?}"; then
     multipass launch \
-      --cpus "${!SERVER_CPU_COUNT_KEY}" \
-      --disk "${!SERVER_DISK_SIZE_KEY}" \
-      --memory "${!SERVER_MEMORY_KEY}" \
-      --name "${SERVER?}" \
-      --cloud-init "${CLOUD_INIT_TARGET_DIRECTORY?}/${SERVER?}.yaml" && \
-    multipass mount "shared/" "${SERVER?}":"/shared"
+      --cpus "${server_cpu_count_value}" \
+      --disk "${server_disk_size_value}" \
+      --memory "${server_memory_value}" \
+      --name "${server_name?}" \
+      --cloud-init "${server_cloud_init_file}" && \
+    multipass mount "shared/" "${server_name?}":"/shared"
   else
-    STATE=$(multipass info "${SERVER?}" | sed -n '/^State/ p' | awk '{ print $2 }')
+    server_state=$(multipass info "${server_name?}" | sed -n '/^State/ p' | awk '{ print $2 }')
 
-    if [ ${STATE} == "Stopped" ]; then
-      multipass start "${SERVER?}"
+    if [ ${server_state} == "Stopped" ]; then
+      multipass start "${server_name?}"
     fi
   fi
   

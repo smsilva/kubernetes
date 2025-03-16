@@ -14,6 +14,7 @@ kubernetes_version="$(apt-cache madison kubeadm \
 | head -1 \
 | awk '{ print $3 }')" && \
 kubernetes_base_version="${kubernetes_version%-*}" && \
+node_name=$(hostname --short) && \
 local_ip_address=$(grep $(hostname --short) /etc/hosts | awk '{ print $1 }') && \
 load_balancer_port='6443' && \
 load_balancer_name='loadbalancer.silvios.me' && \
@@ -21,6 +22,7 @@ control_plane_endpoint="${load_balancer_name}:${load_balancer_port}" && \
 control_plane_endpoint_test=$(nc -d ${load_balancer_name} ${load_balancer_port} && echo "OK" || echo "FAIL") && \
 clear && \
 echo "" && \
+echo "node_name..................: ${node_name}" && \
 echo "local_ip_address...........: ${local_ip_address}" && \
 echo "control_plane_endpoint.....: ${control_plane_endpoint} [${control_plane_endpoint_test}]" && \
 echo "kubernetes_base_version....: ${kubernetes_base_version}" && \
@@ -29,7 +31,6 @@ echo ""
 # Initialize master-1 (=~ 1 minute 30 seconds) - check: http://loadbalancer.example.com/stats
 # Use with --pod-network-cidr "10.244.0.0/16" with Flannel CNI
 kubeadm_log_file="${HOME}/kubeadm-init.log" && \
-node_name=$(hostname --short) && \
 sudo kubeadm init \
   --v 3 \
   --node-name "${node_name?}" \
@@ -52,7 +53,7 @@ watch -n 3 'kubectl get nodes -o wide; echo; kubectl -n kube-system get pods -o 
 ./watch-for-interfaces-and-routes.sh
 
 # Check iptables
-sudo iptables -t nat -L -v -n
+sudo iptables --table nat --verbose --numeric --list
 
 # Install CNI Plugin
 # kubectl apply -f "https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml"

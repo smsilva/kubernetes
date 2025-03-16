@@ -22,13 +22,12 @@ sudo kubeadm join "${control_plane_endpoint?}" \
   --discovery-token-ca-cert-hash "${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH?}" \
 | tee "kubeadm-join.log"
 
-sudo iptables -t nat -L -v -n
+sudo iptables --table nat --verbose --numeric --list
 
 # Example
 kubectl create deploy nginx \
   --image nginx \
-  --replicas 3
-
+  --replicas 3 && \
 kubectl wait \
   --for condition=ready pod \
   --selector app=nginx
