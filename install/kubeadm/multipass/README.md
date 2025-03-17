@@ -53,7 +53,7 @@ ping -c 3 node1
 
 ```
 sudo apt update
-sudo apt upgrade -y
+sudo apt upgrade --yes
 ```
 
 # Installing kubeadm
@@ -64,7 +64,7 @@ As mentioned [here](https://kubernetes.io/docs/setup/production-environment/tool
 
 ```bash
 # Disable SWAP
-sudo swapoff -a
+sudo swapoff --all
 
 # Update /etc/fstab remove lines with 'swap'
 sudo sed '/swap/d' /etc/fstab -i
