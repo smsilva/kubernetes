@@ -16,7 +16,7 @@ echo "DISCOVERY_TOKEN_CA_CERT_HASH.: ${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH}" &&
 echo ""
 
 sudo kubeadm join "${control_plane_endpoint?}" \
-  --v 5 \
+  --v 0 \
   --node-name "${node_name?}" \
   --token "${KUBEADM_TOKEN?}" \
   --discovery-token-ca-cert-hash "${KUBEADM_DISCOVERY_TOKEN_CA_CERT_HASH?}" \

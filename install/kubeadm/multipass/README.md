@@ -6,24 +6,16 @@
 sudo snap install multipass
 ```
 
-# Create `controlplane` node
+# Create `controlplane` and `workers` nodes
 
 ```
-multipass launch \
-  --name controlplane \
-  --cpus 2 \
-  --memory 3G \
-  --disk 80G
-```
-
-# Create `worker` node
-
-```
-multipass launch \
-  --name node1 \
-  --cpus 2 \
-  --memory 3G \
-  --disk 80G
+for server_name in {controlplane,node1,node2}; do
+  multipass launch \
+    --name "${server_name?}" \
+    --cpus 2 \
+    --memory 3G \
+    --disk 80G &
+done
 ```
 
 # Retrieve the IP addresses of the nodes
@@ -31,13 +23,15 @@ multipass launch \
 ```
 controlplane_ip=$(multipass info controlplane | grep IPv4 | awk '{print $2}')
 node1_ip=$(multipass info node1 | grep IPv4 | awk '{print $2}')
-
+node2_ip=$(multipass info node2 | grep IPv4 | awk '{print $2}')
 cat <<EOC
 sudo sed -i '/controlplane/d' /etc/hosts
-sudo sed -i '/node1/d' /etc/hosts
+sudo sed -i '/node1/d'        /etc/hosts
+sudo sed -i '/node2/d'        /etc/hosts
 cat <<EOF | sudo tee -a /etc/hosts
 ${controlplane_ip} controlplane
 ${node1_ip} node1
+${node2_ip} node2
 EOF
 EOC
 ```
@@ -47,13 +41,24 @@ EOC
 ```
 ping -c 3 controlplane
 ping -c 3 node1
+ping -c 3 node2
 ```
 
 # System update
 
 ```
-sudo apt update
+sudo apt update && \
 sudo apt upgrade --yes
+```
+
+## Install net-tools and bridge-utils
+
+```bash
+sudo apt-get install \
+  net-tools \
+  bridge-utils \
+  --yes \
+  --quiet 
 ```
 
 # Installing kubeadm
@@ -93,16 +98,8 @@ nf_conntrack
 overlay
 EOF
 
-sudo modprobe br_netfilter
-sudo modprobe ip_vs
-sudo modprobe ip_vs_rr
-sudo modprobe ip_vs_sh
-sudo modprobe ip_vs_wrr
-sudo modprobe nf_conntrack
-sudo modprobe overlay
-
-sudo systemctl restart systemd-modules-load.service
-sudo systemctl status systemd-modules-load
+sudo service systemd-modules-load restart
+sudo service systemd-modules-load status
 
 # Setup required sysctl params, these persist across reboots.
 cat <<EOF | sudo tee /etc/sysctl.d/10-kubernetes.conf
@@ -161,23 +158,30 @@ EOF
 
 ## Install containerd
 sudo apt-get update --quiet && \
-sudo apt-get install --yes --quiet containerd.io
+sudo apt-get install \
+  containerd.io \
+  --yes \
+  --quiet
 
 # Configure containerd
 sudo mkdir --parents /etc/containerd && \
-containerd config default | sudo tee /etc/containerd/config.toml
+containerd config default \
+| sudo tee /etc/containerd/config.toml
 
 # Configuring the systemd cgroup driver
 sudo sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
 
 # Restart containerd
-sudo systemctl restart containerd
+sudo service containerd restart
+sudo service containerd status
 
-containerd --version | awk '{ print $2, $3 }'
+containerd --version \
+| awk '{ print $2, $3 }'
 ```
 
-## Install net-tools
+# Cleanup
 
 ```bash
-sudo apt-get install --yes --quiet net-tools
+multipass delete \
+  --purge {controlplane,node1,node2}
 ```

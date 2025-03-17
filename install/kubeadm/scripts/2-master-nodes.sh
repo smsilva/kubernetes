@@ -41,7 +41,7 @@ sudo kubeadm init \
   --upload-certs \
 | tee "${kubeadm_log_file?}"
 
-# Config
+# kubeconfig
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
@@ -55,9 +55,10 @@ watch -n 3 'kubectl get nodes -o wide; echo; kubectl -n kube-system get pods -o 
 # Check iptables
 sudo iptables --table nat --verbose --numeric --list
 
-# Install CNI Plugin
-# kubectl apply -f "https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml"
-# kubectl apply -f "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
+# Watch Flannel Pods
+watch -n 3 'kubectl -n kube-flannel get pods -o wide; echo; kubectl get pods -o wide'
+
+# Install Flannel CNI Plugin
 kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 kubectl --namespace kube-flannel wait --for condition=ready pod --selector app=flannel
 kubectl --namespace kube-flannel logs --selector app=flannel --follow
