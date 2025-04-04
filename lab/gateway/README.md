@@ -5,8 +5,6 @@
 ```bash
 k3d cluster create \
   --api-port 6550 \
-  --port "8080:80@loadbalancer" \
-  --port "8443:443@loadbalancer" \
   --port "32080:80@loadbalancer" \
   --port "32443:443@loadbalancer" \
   --agents 2 \
@@ -33,9 +31,14 @@ kubectl expose deployment httpbin \
 
 kubectl run curl \
   --image curlimages/curl \
-  --command -- sleep 1d
+  --namespace example \
+  --command -- sleep 1d && \
+kubectl wait pod/curl \
+  --for=condition=Ready \
+  --timeout=5m \
+  --namespace example 
 
-kubectl exec curl -- curl -is httpbin/get
+kubectl exec curl -- curl -is -m 1 http://httpbin.example.svc.cluster.local/get
 ```
 
 ## Installation: NGINX Gateway Fabric
@@ -55,16 +58,18 @@ helm install ngf oci://ghcr.io/nginx/charts/nginx-gateway-fabric \
   --create-namespace \
   --namespace nginx-gateway && \
 kubectl wait \
+  --for=condition=Available \
   --timeout=5m \
-  --namespace nginx-gateway deployment/ngf-nginx-gateway-fabric \
-  --for=condition=Available
+  --namespace nginx-gateway deployment/ngf-nginx-gateway-fabric  
 ```
 
 ```bash
 kubectl get service \
   --namespace nginx-gateway \
   --selector app.kubernetes.io/instance=ngf
+```
 
+```bash
 kubectl patch service ngf-nginx-gateway-fabric \
   --namespace nginx-gateway \
   --type='json' \
