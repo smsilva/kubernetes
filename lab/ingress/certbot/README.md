@@ -26,7 +26,7 @@ cat <<'EOF' > /tmp/certbot.env
 base_domain="wasp.silvios.me"
 lets_encrypt_server_staging="acme-staging-v02"
 lets_encrypt_server_production="acme-v02"
-lets_encrypt_server=${lets_encrypt_server_production?}
+lets_encrypt_server=${lets_encrypt_server_staging?}
 lets_encrypt_alert_email="$(git config --get user.email)"
 certificate_directory="${HOME}/certificates/config/live/${base_domain?}"
 certificate_private_key="${certificate_directory?}/privkey.pem"
@@ -52,6 +52,7 @@ certbot certonly \
   --no-eff-email \
   --server "https://${lets_encrypt_server?}.api.letsencrypt.org/directory" \
   -d *.${base_domain?} \
+  -d *.services.${base_domain?} \
   --config-dir "${HOME}/certificates/config" \
   --work-dir "${HOME}/certificates/work" \
   --logs-dir "${HOME}/certificates/logs"
@@ -59,12 +60,10 @@ certbot certonly \
 # Check TXT Records (alternative method: https://dnschecker.org)
 source /tmp/certbot.env
 dig @8.8.8.8 +short TXT "_acme-challenge.${base_domain?}"
-dig @8.8.8.8 +short TXT "_acme-challenge.api.${base_domain?}"
+dig @8.8.8.8 +short TXT "_acme-challenge.services.${base_domain?}"
 
 # Certificate Files
-certificate_directory="${HOME}/certificates/config/live/${base_domain?}"
-certificate_private_key="${certificate_directory?}/privkey.pem"
-certificate_full_chain="${certificate_directory?}/fullchain.pem"
+source /tmp/certbot.env
 
 # Show Certificate Information
 openssl x509 \
