@@ -16,43 +16,59 @@ certbot --version
 ## Setup Certificate's Directory
 
 ```bash
-mkdir -p "${HOME}/certificates/"
+mkdir --parents "${HOME}/certificates/"
 ```
 
 ## Staging Let's Encrypt Wildcard Certificate
 
 ```bash
-BASE_DOMAIN="sandbox.wasp.silvios.me"
-LETS_ENCRYPT_SERVER_STAGING="acme-staging-v02"
-LETS_ENCRYPT_SERVER_PRODUCTION="acme-v02"
-LETS_ENCRYPT_SERVER=${LETS_ENCRYPT_SERVER_STAGING?}
-LETS_ENCRYPT_ALERT_EMAIL="$(git config --get user.email)"
+cat <<'EOF' > /tmp/certbot.env
+base_domain="wasp.silvios.me"
+lets_encrypt_server_staging="acme-staging-v02"
+lets_encrypt_server_production="acme-v02"
+lets_encrypt_server=${lets_encrypt_server_production?}
+lets_encrypt_alert_email="$(git config --get user.email)"
+certificate_directory="${HOME}/certificates/config/live/${base_domain?}"
+certificate_private_key="${certificate_directory?}/privkey.pem"
+certificate_full_chain="${certificate_directory?}/fullchain.pem"
+EOF
+
+source /tmp/certbot.env
+
+cat <<EOF
+lets_encrypt_server......: ${lets_encrypt_server}
+base_domain..............: ${base_domain}
+lets_encrypt_alert_email.: ${lets_encrypt_alert_email}
+certificate_directory....: ${certificate_directory}
+certificate_private_key..: ${certificate_private_key}
+certificate_full_chain...: ${certificate_full_chain}
+EOF
 
 certbot certonly \
   --manual \
   --preferred-challenges dns \
   --agree-tos \
-  --email "${LETS_ENCRYPT_ALERT_EMAIL?}" \
+  --email "${lets_encrypt_alert_email?}" \
   --no-eff-email \
-  --server "https://${LETS_ENCRYPT_SERVER?}.api.letsencrypt.org/directory" \
-  -d *.${BASE_DOMAIN?} \
-  -d *.services.${BASE_DOMAIN?} \
+  --server "https://${lets_encrypt_server?}.api.letsencrypt.org/directory" \
+  -d *.${base_domain?} \
   --config-dir "${HOME}/certificates/config" \
   --work-dir "${HOME}/certificates/work" \
   --logs-dir "${HOME}/certificates/logs"
 
 # Check TXT Records (alternative method: https://dnschecker.org)
-dig @8.8.8.8 +short TXT "_acme-challenge.${BASE_DOMAIN?}"
-dig @8.8.8.8 +short TXT "_acme-challenge.services.${BASE_DOMAIN?}"
+source /tmp/certbot.env
+dig @8.8.8.8 +short TXT "_acme-challenge.${base_domain?}"
+dig @8.8.8.8 +short TXT "_acme-challenge.api.${base_domain?}"
 
 # Certificate Files
-CERTIFICATE_DIRECTORY="${HOME}/certificates/config/live/${BASE_DOMAIN?}"
-CERTIFICATE_PRIVATE_KEY="${CERTIFICATE_DIRECTORY?}/privkey.pem"
-CERTIFICATE_FULL_CHAIN="${CERTIFICATE_DIRECTORY?}/fullchain.pem"
+certificate_directory="${HOME}/certificates/config/live/${base_domain?}"
+certificate_private_key="${certificate_directory?}/privkey.pem"
+certificate_full_chain="${certificate_directory?}/fullchain.pem"
 
 # Show Certificate Information
 openssl x509 \
-  -in "${CERTIFICATE_FULL_CHAIN?}" \
+  -in "${certificate_full_chain?}" \
   -noout \
   -subject \
   -issuer \
@@ -65,7 +81,7 @@ openssl x509 \
 kubectl \
   --namespace example \
   create secret tls \
-  tls-services-sandbox-wasp-silvios-me \
-  --key "${CERTIFICATE_PRIVATE_KEY?}" \
-  --cert "${CERTIFICATE_FULL_CHAIN?}"
+  tls-wasp-silvios-me \
+  --key "${certificate_private_key?}" \
+  --cert "${certificate_full_chain?}"
 ```
