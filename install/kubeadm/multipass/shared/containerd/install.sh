@@ -1,5 +1,5 @@
 #!/bin/bash
-cat > /etc/modules-load.d/containerd.conf <<EOF
+cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
 br_netfilter
 ip_vs
 ip_vs_rr
@@ -16,10 +16,10 @@ systemctl restart systemd-modules-load.service
 systemctl status systemd-modules-load
 
 # Setup required sysctl params, these persist across reboots.
-cat > /etc/sysctl.d/99-kubernetes-cri.conf <<EOF
+cat <<EOF | sudo tee /etc/sysctl.d/20-kubernetes-cri.conf
 net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables  = 1
-net.ipv4.ip_forward                 = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
 EOF
 
 sysctl --system &> /dev/null
@@ -77,7 +77,7 @@ containerd config default \
 | tee /etc/containerd/config.toml
 
 # Configuring the systemd cgroup driver
-sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+sed -i 's|SystemdCgroup = false|SystemdCgroup = true|g' /etc/containerd/config.toml
 
 # Restart containerd
 systemctl restart containerd
