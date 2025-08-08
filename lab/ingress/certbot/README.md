@@ -23,12 +23,12 @@ mkdir --parents "${HOME}/certificates/"
 
 ```bash
 cat <<'EOF' > /tmp/certbot.env
-base_domain="wasp.silvios.me"
+base_domain="sandbox.wasp.silvios.me"
 lets_encrypt_server_staging="acme-staging-v02"
 lets_encrypt_server_production="acme-v02"
 lets_encrypt_server=${lets_encrypt_server_staging?}
 lets_encrypt_alert_email="$(git config --get user.email)"
-certificate_directory="${HOME}/certificates/config/live/${base_domain?}"
+certificate_directory="${HOME}/certificates/config/live/${base_domain?}-0001"
 certificate_private_key="${certificate_directory?}/privkey.pem"
 certificate_full_chain="${certificate_directory?}/fullchain.pem"
 EOF
@@ -83,4 +83,28 @@ kubectl \
   tls-wasp-silvios-me \
   --key "${certificate_private_key?}" \
   --cert "${certificate_full_chain?}"
+
+# Show Certificate Information
+openssl x509 \
+  -in "${certificate_full_chain?}" \
+  -noout \
+  -subject \
+  -issuer \
+  -ext subjectAltName \
+  -nameopt lname \
+  -nameopt sep_multiline \
+  -dates
+
+# Generate PFX Certificate file
+openssl pkcs12 \
+  -export \
+  -inkey "${certificate_private_key?}" \
+  -in    "${certificate_full_chain?}" \
+  -out   "${certificate_directory?}/certificate.pfx"
+
+# Retrieve pfx file information
+openssl pkcs12 \
+  -in "${certificate_directory?}/certificate.pfx" \
+  -info \
+  -nokeys
 ```
