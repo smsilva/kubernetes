@@ -4,7 +4,7 @@
 
 ```bash
 sudo apt update
-sudo apt install python3 python3-venv libaugeas0
+sudo apt install --yes python3 python3-venv libaugeas0
 sudo python3 -m venv /opt/certbot/
 sudo /opt/certbot/bin/pip install --upgrade pip
 sudo /opt/certbot/bin/pip install certbot certbot
@@ -28,7 +28,7 @@ lets_encrypt_server_staging="acme-staging-v02"
 lets_encrypt_server_production="acme-v02"
 lets_encrypt_server=${lets_encrypt_server_staging?}
 lets_encrypt_alert_email="$(git config --get user.email)"
-certificate_directory="${HOME}/certificates/config/live/${base_domain?}-0001"
+certificate_directory="${HOME}/certificates/config/live/${base_domain?}"
 certificate_private_key="${certificate_directory?}/privkey.pem"
 certificate_full_chain="${certificate_directory?}/fullchain.pem"
 EOF
