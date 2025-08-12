@@ -31,18 +31,18 @@ lets_encrypt_alert_email="$(git config --get user.email)"
 certificate_directory="${HOME}/certificates/config/live/${base_domain?}"
 certificate_private_key="${certificate_directory?}/privkey.pem"
 certificate_full_chain="${certificate_directory?}/fullchain.pem"
-EOF
 
-source /tmp/certbot.env
-
-cat <<EOF
+cat <<EOC
 lets_encrypt_server......: ${lets_encrypt_server}
 base_domain..............: ${base_domain}
 lets_encrypt_alert_email.: ${lets_encrypt_alert_email}
 certificate_directory....: ${certificate_directory}
 certificate_private_key..: ${certificate_private_key}
 certificate_full_chain...: ${certificate_full_chain}
+EOC
 EOF
+
+source /tmp/certbot.env
 
 certbot certonly \
   --manual \
@@ -62,7 +62,7 @@ source /tmp/certbot.env
 dig @8.8.8.8 +short TXT "_acme-challenge.${base_domain?}"
 dig @8.8.8.8 +short TXT "_acme-challenge.services.${base_domain?}"
 
-# Certificate Files
+# Show Certificate Files
 source /tmp/certbot.env
 
 # Show Certificate Information
