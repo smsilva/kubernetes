@@ -107,4 +107,33 @@ openssl pkcs12 \
   -in "${certificate_directory?}/certificate.pfx" \
   -info \
   -nokeys
+
+remote_host_name="echo.${base_domain?}" && \
+echo \
+| openssl s_client \
+    -connect "${remote_host_name?}":443 2>/dev/null \
+| tee "${remote_host_name?}-openssl-sclient.txt"
+
+remote_host_name="echo.${base_domain?}" && \
+echo \
+| openssl s_client \
+    --connect "${remote_host_name?}":443 \
+| openssl x509 \
+    -noout \
+    -text \
+| tee "${remote_host_name?}-openssl-x509.txt"
+
+remote_host_name="echo.${base_domain?}" && \
+echo \
+| openssl s_client \
+    -connect "${remote_host_name?}":443 2>/dev/null \
+| openssl x509 \
+    -noout \
+    -subject \
+    -issuer \
+    -ext subjectAltName \
+    -nameopt lname \
+    -nameopt sep_multiline \
+    -dates \
+| tee "${remote_host_name?}-openssl-x509-custom.txt"
 ```
