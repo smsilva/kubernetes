@@ -2,7 +2,7 @@
 
 # https://docs.crossplane.io/v2.2/get-started/install/
 
-k3d cluster create
+k3d cluster create --wait
 
 for node in $(kubectl get nodes --output name); do
   kubectl wait ${node} \
