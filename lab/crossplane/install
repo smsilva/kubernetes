@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# https://docs.crossplane.io/v2.2/get-started/install/
+
+k3d cluster create
+
+for node in $(kubectl get nodes --output name); do
+  kubectl wait ${node} \
+    --for condition=Ready \
+    --timeout=360s
+done
+
+helm repo add crossplane-stable https://charts.crossplane.io/stable
+
+helm repo update
+
+helm install crossplane \
+  --create-namespace \
+  --namespace crossplane-system \
+  crossplane-stable/crossplane \
+  --wait
+
+kubectl \
+  wait deployment \
+    --namespace crossplane-system \
+    --selector release=crossplane \
+    --for condition=Available \
+    --timeout=360s
+
+kubectl get pods --namespace crossplane-system
