@@ -20,7 +20,7 @@ metadata:
   namespace: crossplane-system
 type: Opaque
 data:
-  creds: ${AWS_CREDENTIALS_FILE_BASE64_ENCODED?}
+  credentials: ${AWS_CREDENTIALS_FILE_BASE64_ENCODED?}
 EOF
 
 cat <<EOF | kubectl apply -f -
@@ -45,7 +45,7 @@ spec:
     secretRef:
       namespace: crossplane-system
       name: aws-secret
-      key: creds
+      key: credentials
 EOF
 
 cat <<EOF | kubectl create -f -

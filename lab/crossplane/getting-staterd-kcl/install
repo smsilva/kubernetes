@@ -1,0 +1,161 @@
+#!/bin/bash
+AWS_CREDENTIALS_FILE_BASE64_ENCODED=$(
+  cat <<EOF | base64 -w 0
+[default]
+aws_access_key_id = ${AWS_ACCESS_KEY?}
+aws_secret_access_key = ${AWS_SECRET_KEY?}
+EOF
+)
+
+kubectl apply -f - <<EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-secret
+  namespace: crossplane-system
+type: Opaque
+data:
+  credentials: ${AWS_CREDENTIALS_FILE_BASE64_ENCODED?}
+EOF
+
+kubectl apply -f- << EOF
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: kcl-function
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/function-kcl:v0.12.0
+EOF
+
+kubectl apply -f- << EOF
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-aws-ec2
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-ec2:v2.5.0
+EOF
+
+cat <<EOF | kubectl apply -f -
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: default
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-secret
+      key: credentials
+EOF
+
+kubectl apply -f- << EOF
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+ name: xnetworks.fn-demo.crossplane.io
+spec:
+ group: fn-demo.crossplane.io
+ names:
+   kind: XNetwork
+   plural: xnetworks
+ claimNames:
+   kind: Network
+   plural: networks
+ versions:
+   - name: v1alpha1
+     served: true
+     referenceable: true
+     schema:
+       openAPIV3Schema:
+         type: object
+         properties:
+           spec:
+             type: object
+             properties:
+               id:
+                 type: string
+                 description: ID of this Network that other objects will use to refer to it.
+             required:
+               - id
+EOF
+
+kubectl apply -f- << EOF
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+ name: xlabels.fn-demo.crossplane.io
+ labels:
+   provider: aws
+spec:
+ writeConnectionSecretsToNamespace: crossplane-system
+ compositeTypeRef:
+   apiVersion: fn-demo.crossplane.io/v1alpha1
+   kind: XNetwork
+ mode: Pipeline
+ pipeline:
+ - step: normal
+   functionRef:
+     name: kcl-function
+   input:
+     apiVersion: krm.kcl.dev/v1alpha1
+     kind: KCLRun
+     metadata:
+       name: basic
+     spec:
+       # Generate new resources
+       target: Resources
+       # OCI, Git or inline source
+       # source: oci://ghcr.io/kcl-lang/crossplane-xnetwork-kcl-function
+       # source: github.com/kcl-lang/modules/crossplane-xnetwork-kcl-function
+       source: |
+         # Get the XR spec fields
+         id = option("params")?.oxr?.spec.id or ""
+         # Render XR to crossplane managed resources
+         network_id_labels = {"networks.meta.fn.crossplane.io/network-id" = id} if id else {}
+         vpc = {
+             apiVersion = "ec2.aws.upbound.io/v1beta1"
+             kind = "VPC"
+             metadata.name = "vpc"
+             metadata.labels = network_id_labels
+             metadata.annotations = {
+              "krm.kcl.dev/ready" = "True"
+             }
+             spec.forProvider = {
+                 region = "eu-west-1"
+                 cidrBlock = "192.168.0.0/16"
+                 enableDnsSupport = True
+                 enableDnsHostnames = True
+             }
+         }
+         gateway = {
+             apiVersion = "ec2.aws.upbound.io/v1beta1"
+             kind = "InternetGateway"
+             metadata.name = "gateway"
+             metadata.labels = network_id_labels
+             metadata.annotations = {
+              "krm.kcl.dev/ready" = "True"
+             }
+             spec.forProvider = {
+                 region = "eu-west-1"
+                 vpcIdSelector.matchControllerRef = True
+             }
+         }
+         items = [vpc, gateway]
+EOF
+
+kubectl apply -f- << EOF
+apiVersion: fn-demo.crossplane.io/v1alpha1
+kind: Network
+metadata:
+  name: network-test-functions
+  namespace: default
+spec:
+  id: network-test-functions
+EOF
+
+crossplane beta trace network.fn-demo.crossplane.io/network-test-functions --watch
+
+kcl run oci://ghcr.io/kcl-lang/crossplane-xnetwork-kcl-function -S items -D params='{"oxr": {"spec": {"id": "network-test-functions"}}}'
