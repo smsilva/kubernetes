@@ -78,6 +78,9 @@ spec:
                id:
                  type: string
                  description: ID of this Network that other objects will use to refer to it.
+               region:
+                 type: string
+                 description: AWS region to create the network in.
              required:
                - id
 EOF
@@ -105,15 +108,13 @@ spec:
      metadata:
        name: basic
      spec:
-       # Generate new resources
        target: Resources
        # OCI, Git or inline source
        # source: oci://ghcr.io/kcl-lang/crossplane-xnetwork-kcl-function
        # source: github.com/kcl-lang/modules/crossplane-xnetwork-kcl-function
        source: |
-         # Get the XR spec fields
          id = option("params")?.oxr?.spec.id or ""
-         # Render XR to crossplane managed resources
+         region = option("params")?.oxr?.spec.region or "us-east-1"
          network_id_labels = {"networks.meta.fn.crossplane.io/network-id" = id} if id else {}
          vpc = {
              apiVersion = "ec2.aws.upbound.io/v1beta1"
@@ -124,7 +125,7 @@ spec:
               "krm.kcl.dev/ready" = "True"
              }
              spec.forProvider = {
-                 region = "eu-west-1"
+                 region = region
                  cidrBlock = "192.168.0.0/16"
                  enableDnsSupport = True
                  enableDnsHostnames = True
@@ -139,7 +140,7 @@ spec:
               "krm.kcl.dev/ready" = "True"
              }
              spec.forProvider = {
-                 region = "eu-west-1"
+                 region = region
                  vpcIdSelector.matchControllerRef = True
              }
          }
@@ -154,6 +155,7 @@ metadata:
   namespace: default
 spec:
   id: network-test-functions
+  region: us-east-1
 EOF
 
 crossplane beta trace network.fn-demo.crossplane.io/network-test-functions --watch
