@@ -1,5 +1,5 @@
 #!/bin/bash
-AWS_CREDENTIALS_FILE_BASE64_ENCODED=$(
+aws_credentials_file_base64_encoded=$(
   cat <<EOF | base64 -w 0
 [default]
 aws_access_key_id = ${AWS_ACCESS_KEY?}
@@ -16,7 +16,7 @@ metadata:
   namespace: crossplane-system
 type: Opaque
 data:
-  credentials: ${AWS_CREDENTIALS_FILE_BASE64_ENCODED?}
+  credentials: ${aws_credentials_file_base64_encoded?}
 EOF
 
 kubectl apply -f- << EOF
