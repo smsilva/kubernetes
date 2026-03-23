@@ -1,5 +1,5 @@
 #!/bin/bash
-ARGOCD_INITIAL_PASSWORD=$(kubectl \
+argocd_initial_password=$(kubectl \
   --namespace argocd \
   get secret argocd-initial-admin-secret \
   --output jsonpath="{.data.password}" | base64 -d)
@@ -9,7 +9,7 @@ cat <<EOF
 1. Copy ArgoCD Initial Credentials:
 
   user:     admin
-  password: ${ARGOCD_INITIAL_PASSWORD}
+  password: ${argocd_initial_password}
   url:      http://localhost:32080
 
 2. Create a new ArgoCD Application:
