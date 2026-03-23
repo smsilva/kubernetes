@@ -1,9 +1,9 @@
 #!/bin/bash
-CLUSTER_NAME="argocd"
+cluster_name="argocd"
 
 kind get clusters \
-| grep --quiet "${CLUSTER_NAME?}" || \
+| grep --quiet "${cluster_name?}" || \
 kind create cluster \
   --image "kindest/node:v1.24.7" \
   --config "kind-cluster.yaml" \
-  --name "${CLUSTER_NAME?}" > /dev/null
+  --name "${cluster_name?}" > /dev/null

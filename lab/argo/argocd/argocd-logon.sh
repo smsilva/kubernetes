@@ -1,18 +1,18 @@
 #!/bin/bash
 
-ARGOCD_URL=localhost:32080
-ARGOCD_INITIAL_PASSWORD=$(kubectl \
+argocd_url=localhost:32080
+argocd_initial_password=$(kubectl \
   --namespace argocd \
   get secret argocd-initial-admin-secret \
   --output jsonpath="{.data.password}" \
 | base64 --decode)
 
 echo "" && \
-echo "ARGOCD_URL...............: ${ARGOCD_URL}" && \
-echo "ARGOCD_INITIAL_PASSWORD..: ${ARGOCD_INITIAL_PASSWORD:0:5}"
+echo "argocd_url...............: ${argocd_url}" && \
+echo "argocd_initial_password..: ${argocd_initial_password:0:5}"
 
 argocd login \
-  ${ARGOCD_URL} \
+  ${argocd_url} \
   --username "admin" \
-  --password "${ARGOCD_INITIAL_PASSWORD}" \
+  --password "${argocd_initial_password}" \
   --insecure

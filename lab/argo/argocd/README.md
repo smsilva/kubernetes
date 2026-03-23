@@ -1,13 +1,7 @@
 # ArgoCD
 
-## Instalação usando Kind
+## Instalação
 
 ```bash
 ./run
-```
-
-## Instalação usando AKS
-
-```bash
-./run-aks.sh
 ```

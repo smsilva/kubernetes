@@ -20,7 +20,7 @@ helm upgrade \
 
 echo ""
 
-for DEPLOYMENT in $(kubectl \
+for deployment in $(kubectl \
   --namespace argocd \
   get deploy \
   --output name); do
@@ -29,7 +29,7 @@ for DEPLOYMENT in $(kubectl \
     wait \
     --for condition=Available \
     --timeout=360s \
-    "${DEPLOYMENT}" &> /dev/null
+    "${deployment}" &> /dev/null
 done
 
 echo ""

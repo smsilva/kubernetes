@@ -1,17 +1,17 @@
 #!/bin/bash
 kubectl_patch() {
-  KEYPAIR_DATA=$1
-  TEMPORARY_PATCH_FILE=$(mktemp)
+  keypair_data=$1
+  temporary_patch_file=$(mktemp)
 
-cat <<EOF > "${TEMPORARY_PATCH_FILE?}"
+cat <<EOF > "${temporary_patch_file?}"
 stringData:
-  ${KEYPAIR_DATA}
+  ${keypair_data}
 EOF
 
   kubectl \
     --namespace argocd \
     patch secret argocd-notifications-secret \
-    --patch-file="${TEMPORARY_PATCH_FILE?}"
+    --patch-file="${temporary_patch_file?}"
 }
 
 if [ -n "${TELEGRAM_BOT_TOKEN}" ]; then
@@ -20,9 +20,9 @@ fi
 
 printenv \
 | grep "^GOOGLE_CHAT_WEBHOOK_URL_" \
-| while read -r LINE; do
-  KEY=$(awk -F "=" '{ print $1 }' <<< "${LINE}" | tr '[:upper:]' '[:lower:]')
-  VALUE=$(sed 's/^[^=]*=//' <<< "${LINE}")
+| while read -r key_value; do
+  key=$(awk -F "=" '{ print $1 }' <<< "${key_value}" | tr '[:upper:]' '[:lower:]')
+  value=$(sed 's/^[^=]*=//' <<< "${key_value}")
 
-  kubectl_patch "${KEY//_/-}: ${VALUE}"
+  kubectl_patch "${key//_/-}: ${value}"
 done
