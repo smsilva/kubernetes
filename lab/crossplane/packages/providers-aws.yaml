@@ -1,0 +1,135 @@
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-family-aws
+spec:
+  package: xpkg.upbound.io/upbound/provider-family-aws:v2.4.0
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-acm
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-acm:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-docdb
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-docdb:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-ec2
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-ec2:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-ecr
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-ecr:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-eks
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-eks:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-iam
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-iam:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-kms
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-kms:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-lambda
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-lambda:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-rds
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-rds:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-resourcegroups
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-resourcegroups:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-rolesanywhere
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-rolesanywhere:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-route53
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-route53:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-s3
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-s3:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-secretsmanager
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-secretsmanager:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-servicequotas
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-servicequotas:v2
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-vpc
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-vpc:v2

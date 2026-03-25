@@ -1,0 +1,31 @@
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: crossplane-contrib-provider-keycloak
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/provider-keycloak:v2.6.0
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-helm
+spec:
+  package: xpkg.upbound.io/upbound/provider-helm:v1
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-kubernetes
+spec:
+  package: xpkg.upbound.io/upbound/provider-kubernetes:v1.2.1
+
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-terraform
+spec:
+  package: xpkg.upbound.io/upbound/provider-terraform:v1
