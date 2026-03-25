@@ -2,7 +2,10 @@
 
 # https://docs.crossplane.io/v2.2/get-started/install/
 
-k3d cluster create --wait
+k3d cluster create \
+  --servers 3 \
+  --wait \
+  --timeout 360s
 
 for node in $(kubectl get nodes --output name); do
   kubectl wait ${node} \
@@ -18,6 +21,7 @@ helm install crossplane \
   --create-namespace \
   --namespace crossplane-system \
   crossplane-stable/crossplane \
+  --version 2.2.0 \
   --wait
 
 kubectl \
