@@ -15,19 +15,37 @@ metadata:
   name: upbound-provider-aws-eks
 spec:
   package: xpkg.upbound.io/upbound/provider-aws-eks:v2.5.1
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-ec2
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-ec2:v2.5.1
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-iam
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-iam:v2.5.1
 EOF
 
-kubectl wait \
-  --for=condition=Ready pods \
-  --selector=pkg.crossplane.io/provider=upbound-provider-aws-eks \
-  --namespace=crossplane-system \
-  --timeout=120s
+kubectl wait provider/upbound-provider-family-aws \
+  --for=condition=Healthy \
+  --timeout=300s
 
-kubectl wait \
-  --for=condition=Ready pods \
-  --selector=pkg.crossplane.io/provider=upbound-provider-family-aws \
-  --namespace=crossplane-system \
-  --timeout=120s
+kubectl wait provider/upbound-provider-aws-eks \
+  --for=condition=Healthy \
+  --timeout=300s
+
+kubectl wait provider/upbound-provider-aws-ec2 \
+  --for=condition=Healthy \
+  --timeout=300s
+
+kubectl wait provider/upbound-provider-aws-iam \
+  --for=condition=Healthy \
+  --timeout=300s
 
 kubectl get pods \
   --namespace=crossplane-system
@@ -48,3 +66,5 @@ spec:
       name: aws-secret
       key: credentials
 EOF
+
+kubectl get providerconfigs.aws.upbound.io
