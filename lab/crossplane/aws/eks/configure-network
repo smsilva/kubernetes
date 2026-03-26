@@ -1,0 +1,109 @@
+#!/bin/bash
+
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: VPC
+metadata:
+  name: eks-vpc
+spec:
+  forProvider:
+    region: us-east-1
+    cidrBlock: 172.16.0.0/16
+    tags:
+      Name: eks-vpc
+EOF
+
+kubectl wait vpc.ec2.aws.upbound.io/eks-vpc \
+  --for=condition=Ready \
+  --timeout=120s
+
+kubectl get vpcs.ec2.aws.upbound.io
+
+# Subnets
+cat <<EOF | kubectl apply -f -
+---
+# Subnet pública 1 (us-east-1a)
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: eks-subnet-public-1a
+spec:
+  forProvider:
+    region: us-east-1
+    availabilityZone: us-east-1a
+    cidrBlock: 172.16.1.0/24
+    mapPublicIpOnLaunch: true
+    vpcIdRef:
+      name: eks-vpc
+    tags:
+      Name: eks-subnet-public-1a
+      kubernetes.io/role/elb: "1"
+      kubernetes.io/cluster/eks-cluster: owned
+---
+# Subnet pública 2 (us-east-1b)
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: eks-subnet-public-1b
+spec:
+  forProvider:
+    region: us-east-1
+    availabilityZone: us-east-1b
+    cidrBlock: 172.16.2.0/24
+    mapPublicIpOnLaunch: true
+    vpcIdRef:
+      name: eks-vpc
+    tags:
+      Name: eks-subnet-public-1b
+      kubernetes.io/role/elb: "1"
+      kubernetes.io/cluster/eks-cluster: owned
+---
+# Subnet privada 1 (us-east-1a)
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: eks-subnet-private-1a
+spec:
+  forProvider:
+    region: us-east-1
+    availabilityZone: us-east-1a
+    cidrBlock: 172.16.3.0/24
+    vpcIdRef:
+      name: eks-vpc
+    tags:
+      Name: eks-subnet-private-1a
+      kubernetes.io/role/internal-elb: "1"
+      kubernetes.io/cluster/eks-cluster: owned
+---
+# Subnet privada 2 (us-east-1b)
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: eks-subnet-private-1b
+spec:
+  forProvider:
+    region: us-east-1
+    availabilityZone: us-east-1b
+    cidrBlock: 172.16.4.0/24
+    vpcIdRef:
+      name: eks-vpc
+    tags:
+      Name: eks-subnet-private-1b
+      kubernetes.io/role/internal-elb: "1"
+      kubernetes.io/cluster/eks-cluster: owned
+EOF
+
+kubectl wait subnet.ec2.aws.upbound.io/eks-subnet-public-1a \
+  --for=condition=Ready --timeout=120s
+
+kubectl wait subnet.ec2.aws.upbound.io/eks-subnet-public-1b \
+  --for=condition=Ready --timeout=120s
+
+kubectl wait subnet.ec2.aws.upbound.io/eks-subnet-private-1a \
+  --for=condition=Ready --timeout=120s
+
+kubectl wait subnet.ec2.aws.upbound.io/eks-subnet-private-1b \
+  --for=condition=Ready --timeout=120s
+
+kubectl get subnets.ec2.aws.upbound.io

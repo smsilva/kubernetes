@@ -1,0 +1,219 @@
+#!/bin/bash
+
+# Internet Gateway
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: InternetGateway
+metadata:
+  name: eks-igw
+spec:
+  forProvider:
+    region: us-east-1
+    vpcIdRef:
+      name: eks-vpc
+    tags:
+      Name: eks-igw
+EOF
+
+kubectl wait internetgateway.ec2.aws.upbound.io/eks-igw \
+  --for=condition=Ready \
+  --timeout=120s
+
+kubectl get internetgateways.ec2.aws.upbound.io
+
+# Elastic IP para o NAT Gateway
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: EIP
+metadata:
+  name: eks-nat-eip
+spec:
+  forProvider:
+    region: us-east-1
+    domain: vpc
+    tags:
+      Name: eks-nat-eip
+EOF
+
+kubectl wait eip.ec2.aws.upbound.io/eks-nat-eip \
+  --for=condition=Ready \
+  --timeout=120s
+
+kubectl get eips.ec2.aws.upbound.io
+
+# NAT Gateway (na subnet pública 1a)
+# Força o refresh do cache de descoberta do kubectl
+kubectl api-resources > /dev/null
+
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: NATGateway
+metadata:
+  name: eks-nat-gw
+spec:
+  forProvider:
+    region: us-east-1
+    connectivityType: public
+    allocationIdRef:
+      name: eks-nat-eip
+    subnetIdRef:
+      name: eks-subnet-public-1a
+    tags:
+      Name: eks-nat-gw
+EOF
+
+# NAT Gateway demora alguns minutos para ficar disponível
+kubectl wait natgateway.ec2.aws.upbound.io/eks-nat-gw \
+  --for=condition=Ready \
+  --timeout=300s
+
+kubectl get natgateways.ec2.aws.upbound.io
+
+# Route Tables
+cat <<EOF | kubectl apply -f -
+---
+# Route table pública
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: RouteTable
+metadata:
+  name: eks-rt-public
+spec:
+  forProvider:
+    region: us-east-1
+    vpcIdRef:
+      name: eks-vpc
+    tags:
+      Name: eks-rt-public
+---
+# Route table privada
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: RouteTable
+metadata:
+  name: eks-rt-private
+spec:
+  forProvider:
+    region: us-east-1
+    vpcIdRef:
+      name: eks-vpc
+    tags:
+      Name: eks-rt-private
+EOF
+
+kubectl wait routetable.ec2.aws.upbound.io/eks-rt-public \
+  --for=condition=Ready --timeout=120s
+
+kubectl wait routetable.ec2.aws.upbound.io/eks-rt-private \
+  --for=condition=Ready --timeout=120s
+
+kubectl get routetables.ec2.aws.upbound.io
+
+# Routes
+cat <<EOF | kubectl apply -f -
+---
+# Rota pública → Internet Gateway
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Route
+metadata:
+  name: eks-route-public-igw
+spec:
+  forProvider:
+    region: us-east-1
+    destinationCidrBlock: 0.0.0.0/0
+    routeTableIdRef:
+      name: eks-rt-public
+    gatewayIdRef:
+      name: eks-igw
+---
+# Rota privada → NAT Gateway
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Route
+metadata:
+  name: eks-route-private-nat
+spec:
+  forProvider:
+    region: us-east-1
+    destinationCidrBlock: 0.0.0.0/0
+    routeTableIdRef:
+      name: eks-rt-private
+    natGatewayIdRef:
+      name: eks-nat-gw
+EOF
+
+kubectl wait route.ec2.aws.upbound.io/eks-route-public-igw \
+  --for=condition=Ready --timeout=120s
+
+kubectl wait route.ec2.aws.upbound.io/eks-route-private-nat \
+  --for=condition=Ready --timeout=120s
+
+kubectl get routes.ec2.aws.upbound.io
+
+# Route Table Associations
+cat <<EOF | kubectl apply -f -
+---
+# Associações públicas
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: RouteTableAssociation
+metadata:
+  name: eks-rta-public-1a
+spec:
+  forProvider:
+    region: us-east-1
+    routeTableIdRef:
+      name: eks-rt-public
+    subnetIdRef:
+      name: eks-subnet-public-1a
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: RouteTableAssociation
+metadata:
+  name: eks-rta-public-1b
+spec:
+  forProvider:
+    region: us-east-1
+    routeTableIdRef:
+      name: eks-rt-public
+    subnetIdRef:
+      name: eks-subnet-public-1b
+---
+# Associações privadas
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: RouteTableAssociation
+metadata:
+  name: eks-rta-private-1a
+spec:
+  forProvider:
+    region: us-east-1
+    routeTableIdRef:
+      name: eks-rt-private
+    subnetIdRef:
+      name: eks-subnet-private-1a
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: RouteTableAssociation
+metadata:
+  name: eks-rta-private-1b
+spec:
+  forProvider:
+    region: us-east-1
+    routeTableIdRef:
+      name: eks-rt-private
+    subnetIdRef:
+      name: eks-subnet-private-1b
+EOF
+
+kubectl wait routetableassociation.ec2.aws.upbound.io/eks-rta-public-1a \
+  --for=condition=Ready --timeout=120s
+
+kubectl wait routetableassociation.ec2.aws.upbound.io/eks-rta-public-1b \
+  --for=condition=Ready --timeout=120s
+
+kubectl wait routetableassociation.ec2.aws.upbound.io/eks-rta-private-1a \
+  --for=condition=Ready --timeout=120s
+
+kubectl wait routetableassociation.ec2.aws.upbound.io/eks-rta-private-1b \
+  --for=condition=Ready --timeout=120s
+
+kubectl get routetableassociations.ec2.aws.upbound.io

@@ -12,6 +12,13 @@ spec:
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
+  name: upbound-provider-aws-vpc
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-vpc:v2.5.1
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
   name: upbound-provider-aws-eks
 spec:
   package: xpkg.upbound.io/upbound/provider-aws-eks:v2.5.1
@@ -32,6 +39,10 @@ spec:
 EOF
 
 kubectl wait provider/upbound-provider-family-aws \
+  --for=condition=Healthy \
+  --timeout=300s
+
+kubectl wait provider/upbound-provider-aws-vpc \
   --for=condition=Healthy \
   --timeout=300s
 
