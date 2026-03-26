@@ -1,0 +1,34 @@
+#!/bin/bash
+
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: eks.aws.upbound.io/v1beta2
+kind: NodeGroup
+metadata:
+  name: eks-node-group
+spec:
+  forProvider:
+    region: us-east-1
+    clusterNameRef:
+      name: eks-cluster
+    nodeRoleArnRef:
+      name: eks-node-role
+    subnetIdRefs:
+      - name: eks-subnet-private-1a
+      - name: eks-subnet-private-1b
+    scalingConfig:
+      - desiredSize: 2
+        minSize: 1
+        maxSize: 3
+    instanceTypes:
+      - t3.medium
+    tags:
+      Name: eks-node-group
+EOF
+
+# Node group demora alguns minutos para ficar disponível
+kubectl wait nodegroup.eks.aws.upbound.io/eks-node-group \
+  --for=condition=Ready \
+  --timeout=600s
+
+kubectl get nodegroups.eks.aws.upbound.io

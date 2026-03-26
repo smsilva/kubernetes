@@ -1,0 +1,34 @@
+#!/bin/bash
+
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: eks.aws.upbound.io/v1beta2
+kind: Cluster
+metadata:
+  name: eks-cluster
+spec:
+  forProvider:
+    region: us-east-1
+    version: "1.32"
+    roleArnRef:
+      name: eks-cluster-role
+    accessConfig:
+      authenticationMode: API_AND_CONFIG_MAP
+    vpcConfig:
+      endpointPrivateAccess: true
+      endpointPublicAccess: true
+      subnetIdRefs:
+        - name: eks-subnet-private-1a
+        - name: eks-subnet-private-1b
+        - name: eks-subnet-public-1a
+        - name: eks-subnet-public-1b
+    tags:
+      Name: eks-cluster
+EOF
+
+# Cluster demora alguns minutos para ficar disponível
+kubectl wait cluster.eks.aws.upbound.io/eks-cluster \
+  --for=condition=Ready \
+  --timeout=600s
+
+kubectl get clusters.eks.aws.upbound.io

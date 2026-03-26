@@ -1,0 +1,126 @@
+#!/bin/bash
+
+# IAM Role para o cluster EKS
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Role
+metadata:
+  name: eks-cluster-role
+spec:
+  forProvider:
+    assumeRolePolicy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "eks.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    tags:
+      Name: eks-cluster-role
+EOF
+
+kubectl wait role.iam.aws.upbound.io/eks-cluster-role \
+  --for=condition=Ready \
+  --timeout=120s
+
+# IAM Role para os Node Groups
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Role
+metadata:
+  name: eks-node-role
+spec:
+  forProvider:
+    assumeRolePolicy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    tags:
+      Name: eks-node-role
+EOF
+
+kubectl wait role.iam.aws.upbound.io/eks-node-role \
+  --for=condition=Ready \
+  --timeout=120s
+
+kubectl get roles.iam.aws.upbound.io
+
+# Policy Attachments para o cluster
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: eks-cluster-policy
+spec:
+  forProvider:
+    policyArn: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+    roleRef:
+      name: eks-cluster-role
+EOF
+
+kubectl wait rolepolicyattachment.iam.aws.upbound.io/eks-cluster-policy \
+  --for=condition=Ready \
+  --timeout=120s
+
+# Policy Attachments para os nodes
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: eks-node-policy-worker
+spec:
+  forProvider:
+    policyArn: arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+    roleRef:
+      name: eks-node-role
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: eks-node-policy-ecr
+spec:
+  forProvider:
+    policyArn: arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+    roleRef:
+      name: eks-node-role
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: eks-node-policy-cni
+spec:
+  forProvider:
+    policyArn: arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+    roleRef:
+      name: eks-node-role
+EOF
+
+kubectl wait rolepolicyattachment.iam.aws.upbound.io/eks-node-policy-worker \
+  --for=condition=Ready --timeout=120s
+
+kubectl wait rolepolicyattachment.iam.aws.upbound.io/eks-node-policy-ecr \
+  --for=condition=Ready --timeout=120s
+
+kubectl wait rolepolicyattachment.iam.aws.upbound.io/eks-node-policy-cni \
+  --for=condition=Ready --timeout=120s
+
+kubectl get rolepolicyattachments.iam.aws.upbound.io
