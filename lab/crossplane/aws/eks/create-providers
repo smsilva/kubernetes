@@ -1,0 +1,50 @@
+#!/bin/bash
+
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-family-aws
+spec:
+  package: xpkg.upbound.io/upbound/provider-family-aws:v2.5.1
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-aws-eks
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-eks:v2.5.1
+EOF
+
+kubectl wait \
+  --for=condition=Ready pods \
+  --selector=pkg.crossplane.io/provider=upbound-provider-aws-eks \
+  --namespace=crossplane-system \
+  --timeout=120s
+
+kubectl wait \
+  --for=condition=Ready pods \
+  --selector=pkg.crossplane.io/provider=upbound-provider-family-aws \
+  --namespace=crossplane-system \
+  --timeout=120s
+
+kubectl get pods \
+  --namespace=crossplane-system
+
+kubectl get providers
+
+# Cluster ProviderConfig
+cat <<EOF | kubectl apply -f -
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: default
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-secret
+      key: credentials
+EOF
