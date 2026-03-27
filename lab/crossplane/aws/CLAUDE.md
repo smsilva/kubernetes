@@ -1,39 +1,42 @@
 # Crossplane AWS EKS Lab
 
-Este lab provisiona um cluster EKS na AWS usando Crossplane como camada de IaC, gerenciando recursos AWS diretamente via CRDs no Kubernetes.
+Este lab provisiona um cluster EKS na AWS usando Crossplane como camada de IaC, gerenciando recursos AWS diretamente via CRDs no Kubernetes local (k3d).
 
-## Visão geral da arquitetura
+## Arquitetura
 
 ```
 k3d cluster (local)
 └── Crossplane (crossplane-system)
-    ├── provider-family-aws      → autenticação base
-    ├── provider-aws-vpc         → VPC, Subnets, IGW, NAT, Routes
-    ├── provider-aws-ec2         → EIP, NATGateway, SecurityGroup
-    ├── provider-aws-iam         → Roles, PolicyAttachments
-    └── provider-aws-eks         → Cluster, NodeGroup, AccessEntry
+    ├── provider-family-aws v2.5.1   → autenticação base
+    ├── provider-aws-vpc v2.5.1      → VPC, Subnets, IGW, NATGateway, Routes
+    ├── provider-aws-ec2 v2.5.1      → EIP
+    ├── provider-aws-iam v2.5.1      → Roles, RolePolicyAttachments
+    ├── provider-aws-eks v2.5.1      → Cluster, NodeGroup, AccessEntry, ClusterAuth
+    └── provider-kubernetes v0.15.0  → Objects (recursos dentro do EKS)
 ```
 
-**Rede provisionada:**
-- VPC `172.16.0.0/16` em `us-east-1`
-- 2 subnets públicas: `172.16.1.0/24` (1a), `172.16.2.0/24` (1b)
-- 2 subnets privadas: `172.16.3.0/24` (1a), `172.16.4.0/24` (1b)
-- Internet Gateway + NAT Gateway (na subnet pública 1a) + Elastic IP
-- Route tables pública (→ IGW) e privada (→ NAT)
+**Rede (us-east-1):**
+- VPC `172.16.0.0/16`
+- Subnets públicas: `172.16.1.0/24` (1a), `172.16.2.0/24` (1b) — tag `kubernetes.io/role/elb`
+- Subnets privadas: `172.16.3.0/24` (1a), `172.16.4.0/24` (1b) — tag `kubernetes.io/role/internal-elb`
+- Internet Gateway → route table pública
+- NAT Gateway (subnet pública 1a) + EIP → route table privada
 
 **Cluster EKS:**
-- Nome: `eks-cluster`, versão `1.32`, região `us-east-1`
+- Nome: `eks-cluster`, versão `1.32`
 - `authenticationMode: API_AND_CONFIG_MAP`
-- Node group com 2x `t3.medium` nas subnets **privadas**
+- Endpoint público e privado habilitados
+- Node group: 2x `t3.medium` nas subnets **privadas** (min 1, max 3)
 
 ## Pré-requisitos
 
-- k3d, kubectl, helm e aws CLI instalados
-- Variáveis de ambiente `AWS_ACCESS_KEY` e `AWS_SECRET_KEY` exportadas
+- `k3d`, `kubectl`, `helm` e `aws` CLI instalados
+- `AWS_ACCESS_KEY` e `AWS_SECRET_KEY` exportados
+- Sessão AWS CLI válida (`aws sts get-caller-identity` deve retornar sem erro)
 
 ## Ordem de execução
 
-### 1. Instalar Crossplane no cluster local
+### 1. Instalar Crossplane
 ```bash
 lab/crossplane/install
 ```
@@ -43,75 +46,95 @@ Cria cluster k3d com 3 servidores e instala Crossplane v2.2.0 via Helm.
 ```bash
 lab/crossplane/aws/create-secret
 ```
-Requer `AWS_ACCESS_KEY` e `AWS_SECRET_KEY` exportados. Cria o Secret `aws-secret` no namespace `crossplane-system`.
+Cria o Secret `aws-secret` no namespace `crossplane-system` com as credenciais AWS.
 
 ### 3. Instalar providers e ProviderConfig
 ```bash
 lab/crossplane/aws/eks/create-providers
 ```
-Instala os providers `family-aws`, `vpc`, `ec2`, `iam` e `eks` (todos v2.5.1) e cria o `ProviderConfig` apontando para o `aws-secret`.
+Instala os 5 providers AWS (todos v2.5.1) e cria o `ProviderConfig` `default` apontando para o `aws-secret`.
 
-### 4. Provisionar a rede (VPC, subnets)
+### 4. Provisionar VPC e subnets
 ```bash
 lab/crossplane/aws/eks/configure-network
 ```
-Cria VPC e 4 subnets (2 públicas + 2 privadas).
+Cria a VPC e 4 subnets com as tags necessárias para o EKS reconhecer subnets públicas e privadas.
 
-### 5. Provisionar acesso à rede (IGW, NAT, routes)
+### 5. Provisionar acesso à rede
 ```bash
 lab/crossplane/aws/eks/configure-network-access
 ```
-Cria Internet Gateway, Elastic IP, NAT Gateway, route tables e associações de subnets.
+Cria Internet Gateway, EIP, NAT Gateway, route tables e associações.
 
-> **Atenção:** O NAT Gateway leva alguns minutos para ficar `Ready`. O script aguarda até 300s.
+> O NAT Gateway leva alguns minutos para ficar `Ready` (timeout: 300s).
 
 ### 6. Criar roles IAM
 ```bash
 lab/crossplane/aws/eks/create-iam
 ```
-Cria `eks-cluster-role` (para o plano de controle) e `eks-node-role` (para os nodes), com as políticas obrigatórias:
-- Cluster: `AmazonEKSClusterPolicy`
-- Nodes: `AmazonEKSWorkerNodePolicy`, `AmazonEC2ContainerRegistryReadOnly`, `AmazonEKS_CNI_Policy`
+- `eks-cluster-role` (trust: `eks.amazonaws.com`) + `AmazonEKSClusterPolicy`
+- `eks-node-role` (trust: `ec2.amazonaws.com`) + `AmazonEKSWorkerNodePolicy`, `AmazonEC2ContainerRegistryReadOnly`, `AmazonEKS_CNI_Policy`
 
 ### 7. Criar o cluster EKS
 ```bash
 lab/crossplane/aws/eks/create-cluster
 ```
-O cluster leva em torno de 10-15 minutos para ficar `Ready`. O script aguarda até 600s.
+Leva 10-15 minutos. Timeout configurado em 900s.
 
 ### 8. Criar o node group
 ```bash
 lab/crossplane/aws/eks/create-nodegroup
 ```
-Cria node group com `desiredSize: 2`, `minSize: 1`, `maxSize: 3` usando `t3.medium`. Leva alguns minutos. O script aguarda até 600s.
+Leva alguns minutos. Timeout configurado em 600s.
 
-### 9. Configurar acesso e kubeconfig
+### 9. Configurar acesso ao cluster
 ```bash
 lab/crossplane/aws/eks/configure-access
 ```
-Usa `aws sts get-caller-identity` para obter o ARN do usuário atual, cria um `AccessEntry` e associa a policy `AmazonEKSClusterAdminPolicy`. Por fim, executa `aws eks update-kubeconfig` para configurar o acesso local.
+Obtém o ARN do usuário atual via `aws sts get-caller-identity`, cria `AccessEntry` + `AmazonEKSClusterAdminPolicy` e executa `aws eks update-kubeconfig`.
 
-## Comandos úteis para acompanhar o progresso
+> Para usar um grupo IAM: crie uma Role com `sts:AssumeRole` para o grupo, e use o ARN dessa role no `AccessEntry` em vez do usuário direto.
+
+### 10. Configurar provider-kubernetes e criar recursos no EKS
+```bash
+lab/crossplane/aws/eks/configure-kubernetes-provider
+```
+- Instala o `provider-kubernetes` v0.15.0
+- Cria `ClusterAuth` com `refreshPeriod: 9m` (renova token antes dos 10m máximos do EKS)
+- Cria `ProviderConfig` `eks-cluster` apontando para o Secret gerado pelo `ClusterAuth`
+- Cria o namespace `delta` no EKS via `Object`
+
+## Destruir todos os recursos
+```bash
+lab/crossplane/aws/eks/destroy
+```
+Remove todos os recursos na ordem inversa de criação, respeitando dependências. Aguarda a confirmação de deleção em cada etapa antes de prosseguir.
+
+## Comandos úteis
 
 ```bash
-# Todos os recursos gerenciados e seus status
+# Todos os managed resources e seus status
 kubectl get managed
 
 # Status dos providers
 kubectl get providers
 
-# Eventos de um recurso específico (útil para debugar erros)
+# Inspecionar erro em um recurso específico
 kubectl describe <kind>.<group>/<name>
+
+# Alternar contexto entre k3d e EKS
+kubectl config use-context k3d-k3s-default
+kubectl config use-context arn:aws:eks:us-east-1:<account-id>:cluster/eks-cluster
 ```
 
-## Observações importantes
+## Pegadinhas conhecidas
 
-- O `kind` correto para o NAT Gateway é `NATGateway` (maiúsculas), não `NatGateway`.
-- O `Cluster` e o `NodeGroup` usam `apiVersion: eks.aws.upbound.io/v1beta2` (não v1beta1).
-- Os nodes ficam nas subnets **privadas** — acesso via NAT Gateway, não diretamente pela internet.
-- O `configure-access` depende que a sessão AWS CLI esteja autenticada (`aws sts get-caller-identity` deve funcionar).
-
-
-## Atualização deste arquivo
-
-Este arquivo deve ser atualizado se houverem mudanças significativas no processo de provisionamento, na arquitetura ou nos comandos usados.
+| Problema | Causa | Solução |
+|---|---|---|
+| `no matches for kind "NatGateway"` | Kind incorreto | Usar `NATGateway` (maiúsculas) |
+| `unknown field "resourcesVpcConfig"` | Campo errado no Cluster | Usar `vpcConfig` (objeto, não lista) |
+| `unknown field "assumeRolePolicyDocument"` | Campo errado na Role IAM | Usar `assumeRolePolicy` |
+| `unknown field "scalingConfig[0]"` | scalingConfig é objeto, não lista | Remover o `-` e alinhar como objeto |
+| `unknown field "accessScope[0]"` | accessScope é objeto, não lista | Remover o `-` e alinhar como objeto |
+| `kubectl wait` aponta para o EKS | Contexto trocado após `update-kubeconfig` | Voltar para `k3d-k3s-default` antes de operar o Crossplane |
+| Token do ClusterAuth expira | Token EKS dura 15min | `refreshPeriod: 9m` garante renovação antes do vencimento |
