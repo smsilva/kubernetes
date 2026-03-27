@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# Instala o provider-kubernetes
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-kubernetes
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.15.0
+EOF
+
+kubectl wait provider/provider-kubernetes \
+  --for=condition=Healthy \
+  --timeout=300s
+
+# ClusterAuth: obtém o kubeconfig do EKS e armazena em um Secret
+# refreshPeriod controla a renovação do token (máximo 10m)
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: eks.aws.upbound.io/v1beta1
+kind: ClusterAuth
+metadata:
+  name: eks-cluster-auth
+spec:
+  forProvider:
+    region: us-east-1
+    clusterNameRef:
+      name: eks-cluster
+    refreshPeriod: 9m
+  writeConnectionSecretToRef:
+    name: eks-cluster-kubeconfig
+    namespace: crossplane-system
+EOF
+
+kubectl wait clusterauth.eks.aws.upbound.io/eks-cluster-auth \
+  --for=condition=Ready \
+  --timeout=120s
+
+# ProviderConfig para o provider-kubernetes apontando para o EKS
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: eks-cluster
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: eks-cluster-kubeconfig
+      key: kubeconfig
+EOF
+
+kubectl get providerconfigs.kubernetes.crossplane.io
+
+# Namespace delta no EKS via Crossplane
+cat <<EOF | kubectl apply -f -
+---
+apiVersion: kubernetes.crossplane.io/v1alpha2
+kind: Object
+metadata:
+  name: namespace-delta
+spec:
+  providerConfigRef:
+    name: eks-cluster
+  forProvider:
+    manifest:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: delta
+EOF
+
+kubectl wait object.kubernetes.crossplane.io/namespace-delta \
+  --for=condition=Ready \
+  --timeout=120s
+
+kubectl get objects.kubernetes.crossplane.io
