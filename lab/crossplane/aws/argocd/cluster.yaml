@@ -4,12 +4,16 @@ kind: Application
 metadata:
   name: aws-eks-cluster
   namespace: argocd
+
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+
   finalizers:
     - resources-finalizer.argocd.argoproj.io/foreground
+
 spec:
   project: default
+
   source:
     repoURL: https://github.com/smsilva/kubernetes.git
     targetRevision: dev
@@ -17,12 +21,15 @@ spec:
     helm:
       valueFiles:
         - values.yaml
+
   destination:
     server: https://kubernetes.default.svc
+
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+
     syncOptions:
       - ServerSideApply=true
       - SkipDryRunOnMissingResource=true
