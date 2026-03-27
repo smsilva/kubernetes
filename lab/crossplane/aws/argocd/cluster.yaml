@@ -17,11 +17,10 @@ spec:
         - values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: poc
   syncPolicy:
     automated:
       prune: false
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
       - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
