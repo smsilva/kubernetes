@@ -1,0 +1,192 @@
+#!/bin/bash
+
+# =============================================================================
+# Ordem de deleção (inverso da criação, respeitando dependências):
+#
+# 1. Object (namespace-delta)          → depende do ProviderConfig kubernetes
+# 2. ProviderConfig kubernetes         → depende do ClusterAuth
+# 3. ClusterAuth                       → depende do Cluster EKS
+# 4. Provider kubernetes               → depende do ProviderConfig ser deletado
+# 5. AccessPolicyAssociation           → depende do AccessEntry e Cluster
+# 6. AccessEntry                       → depende do Cluster
+# 7. NodeGroup                         → depende do Cluster e IAM roles
+# 8. Cluster                           → depende das subnets e IAM roles
+# 9. RolePolicyAttachments             → dependem das Roles
+# 10. Roles IAM                        → dependem dos PolicyAttachments serem deletados
+# 11. RouteTableAssociations           → dependem das RouteTables e Subnets
+# 12. Routes                           → dependem das RouteTables, IGW e NATGateway
+# 13. RouteTables                      → dependem da VPC
+# 14. NATGateway                       → depende da Subnet e EIP
+# 15. EIP                              → depende do NATGateway ser deletado
+# 16. InternetGateway                  → depende da VPC
+# 17. Subnets                          → dependem da VPC
+# 18. VPC                              → depende de todos os recursos de rede serem deletados
+# 19. ProviderConfig AWS               → depende de todos os managed resources serem deletados
+# 20. Providers AWS                    → dependem do ProviderConfig ser deletado
+# =============================================================================
+
+# 1. Object: namespace-delta
+kubectl delete object.kubernetes.crossplane.io/namespace-delta
+
+kubectl wait object.kubernetes.crossplane.io/namespace-delta \
+  --for=delete \
+  --timeout=120s
+
+# 2. ProviderConfig kubernetes
+kubectl delete providerconfig.kubernetes.crossplane.io/eks-cluster
+
+# 3. ClusterAuth
+kubectl delete clusterauth.eks.aws.upbound.io/eks-cluster-auth
+
+kubectl wait clusterauth.eks.aws.upbound.io/eks-cluster-auth \
+  --for=delete \
+  --timeout=120s
+
+# 4. Provider kubernetes
+kubectl delete provider/provider-kubernetes
+
+kubectl wait provider/provider-kubernetes \
+  --for=delete \
+  --timeout=300s
+
+# 5. AccessPolicyAssociation
+kubectl delete accesspolicyassociation.eks.aws.upbound.io/eks-access-admin
+
+kubectl wait accesspolicyassociation.eks.aws.upbound.io/eks-access-admin \
+  --for=delete \
+  --timeout=120s
+
+# 6. AccessEntry
+kubectl delete accessentry.eks.aws.upbound.io/eks-access-entry
+
+kubectl wait accessentry.eks.aws.upbound.io/eks-access-entry \
+  --for=delete \
+  --timeout=120s
+
+# 7. NodeGroup (demora alguns minutos)
+kubectl delete nodegroup.eks.aws.upbound.io/eks-node-group
+
+kubectl wait nodegroup.eks.aws.upbound.io/eks-node-group \
+  --for=delete \
+  --timeout=600s
+
+# 8. Cluster EKS (demora alguns minutos)
+kubectl delete cluster.eks.aws.upbound.io/eks-cluster
+
+kubectl wait cluster.eks.aws.upbound.io/eks-cluster \
+  --for=delete \
+  --timeout=600s
+
+# 9. RolePolicyAttachments
+kubectl delete rolepolicyattachment.iam.aws.upbound.io/eks-cluster-policy \
+  rolepolicyattachment.iam.aws.upbound.io/eks-node-policy-worker \
+  rolepolicyattachment.iam.aws.upbound.io/eks-node-policy-ecr \
+  rolepolicyattachment.iam.aws.upbound.io/eks-node-policy-cni
+
+kubectl wait rolepolicyattachment.iam.aws.upbound.io/eks-cluster-policy \
+  rolepolicyattachment.iam.aws.upbound.io/eks-node-policy-worker \
+  rolepolicyattachment.iam.aws.upbound.io/eks-node-policy-ecr \
+  rolepolicyattachment.iam.aws.upbound.io/eks-node-policy-cni \
+  --for=delete \
+  --timeout=120s
+
+# 10. Roles IAM
+kubectl delete role.iam.aws.upbound.io/eks-cluster-role \
+  role.iam.aws.upbound.io/eks-node-role
+
+kubectl wait role.iam.aws.upbound.io/eks-cluster-role \
+  role.iam.aws.upbound.io/eks-node-role \
+  --for=delete \
+  --timeout=120s
+
+# 11. RouteTableAssociations
+kubectl delete routetableassociation.ec2.aws.upbound.io/eks-rta-public-1a \
+  routetableassociation.ec2.aws.upbound.io/eks-rta-public-1b \
+  routetableassociation.ec2.aws.upbound.io/eks-rta-private-1a \
+  routetableassociation.ec2.aws.upbound.io/eks-rta-private-1b
+
+kubectl wait routetableassociation.ec2.aws.upbound.io/eks-rta-public-1a \
+  routetableassociation.ec2.aws.upbound.io/eks-rta-public-1b \
+  routetableassociation.ec2.aws.upbound.io/eks-rta-private-1a \
+  routetableassociation.ec2.aws.upbound.io/eks-rta-private-1b \
+  --for=delete \
+  --timeout=120s
+
+# 12. Routes
+kubectl delete route.ec2.aws.upbound.io/eks-route-public-igw \
+  route.ec2.aws.upbound.io/eks-route-private-nat
+
+kubectl wait route.ec2.aws.upbound.io/eks-route-public-igw \
+  route.ec2.aws.upbound.io/eks-route-private-nat \
+  --for=delete \
+  --timeout=120s
+
+# 13. RouteTables
+kubectl delete routetable.ec2.aws.upbound.io/eks-rt-public \
+  routetable.ec2.aws.upbound.io/eks-rt-private
+
+kubectl wait routetable.ec2.aws.upbound.io/eks-rt-public \
+  routetable.ec2.aws.upbound.io/eks-rt-private \
+  --for=delete \
+  --timeout=120s
+
+# 14. NATGateway (demora alguns minutos)
+kubectl delete natgateway.ec2.aws.upbound.io/eks-nat-gw
+
+kubectl wait natgateway.ec2.aws.upbound.io/eks-nat-gw \
+  --for=delete \
+  --timeout=300s
+
+# 15. EIP
+kubectl delete eip.ec2.aws.upbound.io/eks-nat-eip
+
+kubectl wait eip.ec2.aws.upbound.io/eks-nat-eip \
+  --for=delete \
+  --timeout=120s
+
+# 16. InternetGateway
+kubectl delete internetgateway.ec2.aws.upbound.io/eks-igw
+
+kubectl wait internetgateway.ec2.aws.upbound.io/eks-igw \
+  --for=delete \
+  --timeout=120s
+
+# 17. Subnets
+kubectl delete subnet.ec2.aws.upbound.io/eks-subnet-public-1a \
+  subnet.ec2.aws.upbound.io/eks-subnet-public-1b \
+  subnet.ec2.aws.upbound.io/eks-subnet-private-1a \
+  subnet.ec2.aws.upbound.io/eks-subnet-private-1b
+
+kubectl wait subnet.ec2.aws.upbound.io/eks-subnet-public-1a \
+  subnet.ec2.aws.upbound.io/eks-subnet-public-1b \
+  subnet.ec2.aws.upbound.io/eks-subnet-private-1a \
+  subnet.ec2.aws.upbound.io/eks-subnet-private-1b \
+  --for=delete \
+  --timeout=120s
+
+# 18. VPC
+kubectl delete vpc.ec2.aws.upbound.io/eks-vpc
+
+kubectl wait vpc.ec2.aws.upbound.io/eks-vpc \
+  --for=delete \
+  --timeout=120s
+
+# 19. ProviderConfig AWS
+kubectl delete providerconfig.aws.upbound.io/default
+
+# 20. Providers AWS
+kubectl delete provider/upbound-provider-aws-ec2 \
+  provider/upbound-provider-aws-eks \
+  provider/upbound-provider-aws-iam \
+  provider/upbound-provider-aws-vpc \
+  provider/upbound-provider-family-aws
+
+kubectl wait provider/upbound-provider-aws-ec2 \
+  provider/upbound-provider-aws-eks \
+  provider/upbound-provider-aws-iam \
+  provider/upbound-provider-aws-vpc \
+  provider/upbound-provider-family-aws \
+  --for=delete \
+  --timeout=300s
+
+echo "Todos os recursos do lab foram removidos."
