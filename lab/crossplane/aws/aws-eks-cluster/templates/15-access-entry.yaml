@@ -5,6 +5,7 @@ apiVersion: eks.aws.upbound.io/v1beta1
 kind: AccessEntry
 metadata:
   name: eks-access-entry
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: "13"
 spec:
@@ -20,6 +21,7 @@ apiVersion: eks.aws.upbound.io/v1beta1
 kind: AccessPolicyAssociation
 metadata:
   name: eks-access-admin
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: "13"
 spec:

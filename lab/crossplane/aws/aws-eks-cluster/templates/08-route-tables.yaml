@@ -13,6 +13,7 @@ apiVersion: ec2.aws.upbound.io/v1beta1
 kind: RouteTable
 metadata:
   name: {{ .name }}
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: "7"
 spec:

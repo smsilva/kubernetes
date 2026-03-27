@@ -20,6 +20,7 @@ apiVersion: ec2.aws.upbound.io/v1beta1
 kind: Subnet
 metadata:
   name: {{ .name }}
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: "4"
 spec:
@@ -42,6 +43,7 @@ apiVersion: ec2.aws.upbound.io/v1beta1
 kind: Subnet
 metadata:
   name: {{ .name }}
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: "4"
 spec:

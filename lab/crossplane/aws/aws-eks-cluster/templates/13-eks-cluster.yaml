@@ -5,6 +5,7 @@ apiVersion: eks.aws.upbound.io/v1beta2
 kind: Cluster
 metadata:
   name: {{ .Values.cluster.name }}
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: "11"
 spec:

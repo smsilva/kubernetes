@@ -4,6 +4,7 @@ apiVersion: ec2.aws.upbound.io/v1beta1
 kind: VPC
 metadata:
   name: {{ .Values.network.vpcName }}
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:

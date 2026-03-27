@@ -5,6 +5,7 @@ apiVersion: eks.aws.upbound.io/v1beta2
 kind: NodeGroup
 metadata:
   name: {{ .Values.nodeGroup.name }}
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: "12"
 spec:

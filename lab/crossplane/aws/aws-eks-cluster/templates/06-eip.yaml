@@ -4,6 +4,7 @@ apiVersion: ec2.aws.upbound.io/v1beta1
 kind: EIP
 metadata:
   name: eks-nat-eip
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: "5"
 spec:

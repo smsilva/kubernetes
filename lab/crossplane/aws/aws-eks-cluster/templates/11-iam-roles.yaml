@@ -18,6 +18,7 @@ apiVersion: iam.aws.upbound.io/v1beta1
 kind: Role
 metadata:
   name: {{ .name }}
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: "9"
 spec:

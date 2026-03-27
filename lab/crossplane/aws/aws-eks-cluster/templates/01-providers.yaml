@@ -13,6 +13,7 @@ apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: {{ .name }}
+  namespace: ""
   annotations:
     argocd.argoproj.io/sync-wave: {{ $wave | quote }}
 spec:
