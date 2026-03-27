@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Obtém o ARN do usuário/role IAM atual para conceder acesso ao cluster
-CALLER_ARN=$(aws sts get-caller-identity --query Arn --output text)
+caller_arn=$(aws sts get-caller-identity --query Arn --output text)
 
 cat <<EOF | kubectl apply -f -
 ---
@@ -14,7 +14,7 @@ spec:
     region: us-east-1
     clusterNameRef:
       name: eks-cluster
-    principalArn: ${CALLER_ARN}
+    principalArn: ${caller_arn}
     tags:
       Name: eks-access-entry
 EOF
@@ -34,7 +34,7 @@ spec:
     region: us-east-1
     clusterNameRef:
       name: eks-cluster
-    principalArn: ${CALLER_ARN}
+    principalArn: ${caller_arn}
     policyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
     accessScope:
       type: cluster
@@ -48,9 +48,9 @@ kubectl get accessentries.eks.aws.upbound.io
 kubectl get accesspolicyassociations.eks.aws.upbound.io
 
 # Atualiza o kubeconfig local
-CLUSTER_REGION=$(kubectl get cluster.eks.aws.upbound.io/eks-cluster \
+cluster_region=$(kubectl get cluster.eks.aws.upbound.io/eks-cluster \
   -o jsonpath='{.spec.forProvider.region}')
 
 aws eks update-kubeconfig \
-  --region ${CLUSTER_REGION} \
+  --region ${cluster_region} \
   --name eks-cluster
