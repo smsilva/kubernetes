@@ -17,9 +17,9 @@ spec:
       - name: eks-subnet-private-1a
       - name: eks-subnet-private-1b
     scalingConfig:
-      - desiredSize: 2
-        minSize: 1
-        maxSize: 3
+      desiredSize: 2
+      minSize: 1
+      maxSize: 3
     instanceTypes:
       - t3.medium
     tags:

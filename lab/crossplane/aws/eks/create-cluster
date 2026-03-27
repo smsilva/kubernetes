@@ -29,6 +29,6 @@ EOF
 # Cluster demora alguns minutos para ficar disponível
 kubectl wait cluster.eks.aws.upbound.io/eks-cluster \
   --for=condition=Ready \
-  --timeout=600s
+  --timeout=900s
 
 kubectl get clusters.eks.aws.upbound.io

@@ -37,7 +37,7 @@ spec:
     principalArn: ${CALLER_ARN}
     policyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
     accessScope:
-      - type: cluster
+      type: cluster
 EOF
 
 kubectl wait accesspolicyassociation.eks.aws.upbound.io/eks-access-admin \
