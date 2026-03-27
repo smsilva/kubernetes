@@ -1,0 +1,20 @@
+# wave 1 — Providers devem estar Healthy antes de qualquer managed resource.
+{{- $wave := "1" }}
+{{- $providers := list
+  (dict "name" "upbound-provider-family-aws" "pkg" (printf "xpkg.upbound.io/upbound/provider-family-aws:%s" .Values.providers.awsFamily))
+  (dict "name" "upbound-provider-aws-vpc"    "pkg" (printf "xpkg.upbound.io/upbound/provider-aws-vpc:%s"    .Values.providers.awsVpc))
+  (dict "name" "upbound-provider-aws-eks"    "pkg" (printf "xpkg.upbound.io/upbound/provider-aws-eks:%s"    .Values.providers.awsEks))
+  (dict "name" "upbound-provider-aws-ec2"    "pkg" (printf "xpkg.upbound.io/upbound/provider-aws-ec2:%s"    .Values.providers.awsEc2))
+  (dict "name" "upbound-provider-aws-iam"    "pkg" (printf "xpkg.upbound.io/upbound/provider-aws-iam:%s"    .Values.providers.awsIam))
+}}
+{{- range $providers }}
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ $wave | quote }}
+spec:
+  package: {{ .pkg }}
+{{- end }}

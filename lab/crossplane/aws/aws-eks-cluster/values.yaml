@@ -1,0 +1,55 @@
+aws:
+  region: us-east-1
+
+  credentialsSecret:
+    namespace: crossplane-system
+    name: aws-secret
+    key: credentials
+
+providers:
+  awsFamily: v2.5.1
+  awsVpc: v2.5.1
+  awsEks: v2.5.1
+  awsEc2: v2.5.1
+  awsIam: v2.5.1
+  kubernetes: v0.15.0
+
+network:
+  vpcName: eks-vpc
+  vpcCidr: 172.16.0.0/16
+  subnets:
+    publicA:
+      name: eks-subnet-public-1a
+      cidr: 172.16.1.0/24
+      az: us-east-1a
+    publicB:
+      name: eks-subnet-public-1b
+      cidr: 172.16.2.0/24
+      az: us-east-1b
+    privateA:
+      name: eks-subnet-private-1a
+      cidr: 172.16.3.0/24
+      az: us-east-1a
+    privateB:
+      name: eks-subnet-private-1b
+      cidr: 172.16.4.0/24
+      az: us-east-1b
+
+cluster:
+  name: eks-cluster
+  version: "1.32"
+  authenticationMode: API_AND_CONFIG_MAP
+  endpointPublicAccess: true
+  endpointPrivateAccess: true
+
+nodeGroup:
+  name: eks-node-group
+  instanceType: t3.medium
+  desiredSize: 2
+  minSize: 1
+  maxSize: 3
+
+# ARN do usuário ou role IAM que receberá acesso admin ao cluster
+# Exemplo: arn:aws:iam::123456789012:user/meu-usuario
+accessEntry:
+  principalArn: "arn:aws:iam::221047292361:user/silvios"

@@ -1,0 +1,58 @@
+# wave 4 — Subnets referenciam a VPC via vpcIdRef: o Crossplane aguarda a VPC
+# estar Ready antes de criar cada subnet, independentemente das waves.
+{{- $region   := .Values.aws.region }}
+{{- $vpcName  := .Values.network.vpcName }}
+{{- $cluster  := .Values.cluster.name }}
+
+{{- $publicSubnets := list
+  (dict "name" .Values.network.subnets.publicA.name "cidr" .Values.network.subnets.publicA.cidr "az" .Values.network.subnets.publicA.az)
+  (dict "name" .Values.network.subnets.publicB.name "cidr" .Values.network.subnets.publicB.cidr "az" .Values.network.subnets.publicB.az)
+}}
+
+{{- $privateSubnets := list
+  (dict "name" .Values.network.subnets.privateA.name "cidr" .Values.network.subnets.privateA.cidr "az" .Values.network.subnets.privateA.az)
+  (dict "name" .Values.network.subnets.privateB.name "cidr" .Values.network.subnets.privateB.cidr "az" .Values.network.subnets.privateB.az)
+}}
+
+{{- range $publicSubnets }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  forProvider:
+    region: {{ $region }}
+    availabilityZone: {{ .az }}
+    cidrBlock: {{ .cidr }}
+    mapPublicIpOnLaunch: true
+    vpcIdRef:
+      name: {{ $vpcName }}
+    tags:
+      Name: {{ .name }}
+      kubernetes.io/role/elb: "1"
+      kubernetes.io/cluster/{{ $cluster }}: owned
+{{- end }}
+
+{{- range $privateSubnets }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  forProvider:
+    region: {{ $region }}
+    availabilityZone: {{ .az }}
+    cidrBlock: {{ .cidr }}
+    vpcIdRef:
+      name: {{ $vpcName }}
+    tags:
+      Name: {{ .name }}
+      kubernetes.io/role/internal-elb: "1"
+      kubernetes.io/cluster/{{ $cluster }}: owned
+{{- end }}

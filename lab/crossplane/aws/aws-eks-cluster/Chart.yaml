@@ -1,0 +1,13 @@
+apiVersion: v2
+name: aws-eks-cluster
+description: Provisiona um cluster EKS na AWS via Crossplane managed resources
+type: application
+version: 0.1.0
+appVersion: "1.32"
+keywords:
+  - crossplane
+  - aws
+  - eks
+  - kubernetes
+maintainers:
+  - name: silvios

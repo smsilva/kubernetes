@@ -1,0 +1,42 @@
+# wave 8 — Routes referenciam RouteTable, IGW e NAT Gateway via *Ref.
+# O Crossplane aguarda cada dependência estar Ready antes de criar a rota.
+{{- $region := .Values.aws.region }}
+
+{{- $routes := list
+  (dict
+    "name"           "eks-route-public-igw"
+    "routeTableRef"  "eks-rt-public"
+    "gatewayRef"     "eks-igw"
+    "natGatewayRef"  ""
+  )
+  (dict
+    "name"           "eks-route-private-nat"
+    "routeTableRef"  "eks-rt-private"
+    "gatewayRef"     ""
+    "natGatewayRef"  "eks-nat-gw"
+  )
+}}
+
+{{- range $routes }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: Route
+metadata:
+  name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+spec:
+  forProvider:
+    region: {{ $region }}
+    destinationCidrBlock: 0.0.0.0/0
+    routeTableIdRef:
+      name: {{ .routeTableRef }}
+    {{- if .gatewayRef }}
+    gatewayIdRef:
+      name: {{ .gatewayRef }}
+    {{- end }}
+    {{- if .natGatewayRef }}
+    natGatewayIdRef:
+      name: {{ .natGatewayRef }}
+    {{- end }}
+{{- end }}

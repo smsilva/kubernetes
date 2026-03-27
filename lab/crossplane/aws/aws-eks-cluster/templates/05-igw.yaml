@@ -1,0 +1,15 @@
+# wave 5 — Internet Gateway referencia VPC via vpcIdRef.
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: InternetGateway
+metadata:
+  name: eks-igw
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  forProvider:
+    region: {{ .Values.aws.region }}
+    vpcIdRef:
+      name: {{ .Values.network.vpcName }}
+    tags:
+      Name: eks-igw

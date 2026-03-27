@@ -1,0 +1,19 @@
+# wave 15 — ClusterAuth obtém o kubeconfig do EKS e grava em um Secret.
+# refreshPeriod: 9m renova o token antes do limite de 10m do EKS.
+# O Secret gerado (eks-cluster-kubeconfig) é consumido pelo ProviderConfig kubernetes.
+---
+apiVersion: eks.aws.upbound.io/v1beta1
+kind: ClusterAuth
+metadata:
+  name: eks-cluster-auth
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  forProvider:
+    region: {{ .Values.aws.region }}
+    clusterNameRef:
+      name: {{ .Values.cluster.name }}
+    refreshPeriod: 9m
+  writeConnectionSecretToRef:
+    name: eks-cluster-kubeconfig
+    namespace: crossplane-system

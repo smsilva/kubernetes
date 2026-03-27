@@ -1,0 +1,38 @@
+# wave 9 — IAM Roles não dependem de recursos de rede; podem ser criadas em paralelo
+# com a wave de rede, mas ficam aqui para garantir que a wave de rede termine antes
+# (evita criar o cluster antes da rede estar pronta).
+{{- $roles := list
+  (dict
+    "name"      "eks-cluster-role"
+    "principal" "eks.amazonaws.com"
+  )
+  (dict
+    "name"      "eks-node-role"
+    "principal" "ec2.amazonaws.com"
+  )
+}}
+
+{{- range $roles }}
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Role
+metadata:
+  name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+spec:
+  forProvider:
+    assumeRolePolicy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": { "Service": {{ .principal | quote }} },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+    tags:
+      Name: {{ .name }}
+{{- end }}

@@ -1,0 +1,16 @@
+# wave 16 — ProviderConfig kubernetes aponta para o Secret gerado pelo ClusterAuth.
+# A wave garante que o ClusterAuth (e portanto o Secret) já existe.
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: eks-cluster
+  annotations:
+    argocd.argoproj.io/sync-wave: "16"
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: eks-cluster-kubeconfig
+      key: kubeconfig

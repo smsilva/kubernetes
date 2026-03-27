@@ -1,0 +1,27 @@
+# wave 12 — NodeGroup referencia Cluster (clusterNameRef), Role (nodeRoleArnRef)
+# e Subnets (subnetIdRefs). O Crossplane aguarda o cluster estar Ready.
+---
+apiVersion: eks.aws.upbound.io/v1beta2
+kind: NodeGroup
+metadata:
+  name: {{ .Values.nodeGroup.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "12"
+spec:
+  forProvider:
+    region: {{ .Values.aws.region }}
+    clusterNameRef:
+      name: {{ .Values.cluster.name }}
+    nodeRoleArnRef:
+      name: eks-node-role
+    subnetIdRefs:
+      - name: {{ .Values.network.subnets.privateA.name }}
+      - name: {{ .Values.network.subnets.privateB.name }}
+    scalingConfig:
+      desiredSize: {{ .Values.nodeGroup.desiredSize }}
+      minSize: {{ .Values.nodeGroup.minSize }}
+      maxSize: {{ .Values.nodeGroup.maxSize }}
+    instanceTypes:
+      - {{ .Values.nodeGroup.instanceType }}
+    tags:
+      Name: {{ .Values.nodeGroup.name }}

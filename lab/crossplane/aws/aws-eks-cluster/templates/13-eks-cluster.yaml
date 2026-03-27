@@ -1,0 +1,27 @@
+# wave 11 — EKS Cluster referencia Role (roleArnRef) e Subnets (subnetIdRefs).
+# O Crossplane aguarda todas as referências estarem Ready.
+---
+apiVersion: eks.aws.upbound.io/v1beta2
+kind: Cluster
+metadata:
+  name: {{ .Values.cluster.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+spec:
+  forProvider:
+    region: {{ .Values.aws.region }}
+    version: {{ .Values.cluster.version | quote }}
+    roleArnRef:
+      name: eks-cluster-role
+    accessConfig:
+      authenticationMode: {{ .Values.cluster.authenticationMode }}
+    vpcConfig:
+      endpointPrivateAccess: {{ .Values.cluster.endpointPrivateAccess }}
+      endpointPublicAccess: {{ .Values.cluster.endpointPublicAccess }}
+      subnetIdRefs:
+        - name: {{ .Values.network.subnets.privateA.name }}
+        - name: {{ .Values.network.subnets.privateB.name }}
+        - name: {{ .Values.network.subnets.publicA.name }}
+        - name: {{ .Values.network.subnets.publicB.name }}
+    tags:
+      Name: {{ .Values.cluster.name }}

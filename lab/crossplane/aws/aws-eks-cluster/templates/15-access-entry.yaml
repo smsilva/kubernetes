@@ -1,0 +1,33 @@
+# wave 13 — AccessEntry e AccessPolicyAssociation referenciam o Cluster via
+# clusterNameRef. O principalArn é fornecido diretamente via values.
+---
+apiVersion: eks.aws.upbound.io/v1beta1
+kind: AccessEntry
+metadata:
+  name: eks-access-entry
+  annotations:
+    argocd.argoproj.io/sync-wave: "13"
+spec:
+  forProvider:
+    region: {{ .Values.aws.region }}
+    clusterNameRef:
+      name: {{ .Values.cluster.name }}
+    principalArn: {{ .Values.accessEntry.principalArn }}
+    tags:
+      Name: eks-access-entry
+---
+apiVersion: eks.aws.upbound.io/v1beta1
+kind: AccessPolicyAssociation
+metadata:
+  name: eks-access-admin
+  annotations:
+    argocd.argoproj.io/sync-wave: "13"
+spec:
+  forProvider:
+    region: {{ .Values.aws.region }}
+    clusterNameRef:
+      name: {{ .Values.cluster.name }}
+    principalArn: {{ .Values.accessEntry.principalArn }}
+    policyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
+    accessScope:
+      type: cluster

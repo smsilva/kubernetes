@@ -1,0 +1,19 @@
+# wave 6 — NAT Gateway referencia EIP (allocationIdRef) e Subnet (subnetIdRef).
+# O Crossplane aguarda ambos estarem Ready antes de criar o NAT Gateway.
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: NATGateway
+metadata:
+  name: eks-nat-gw
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  forProvider:
+    region: {{ .Values.aws.region }}
+    connectivityType: public
+    allocationIdRef:
+      name: eks-nat-eip
+    subnetIdRef:
+      name: {{ .Values.network.subnets.publicA.name }}
+    tags:
+      Name: eks-nat-gw

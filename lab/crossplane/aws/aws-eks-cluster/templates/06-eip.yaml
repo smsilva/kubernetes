@@ -1,0 +1,14 @@
+# wave 5 — EIP não tem dependências de outros managed resources.
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: EIP
+metadata:
+  name: eks-nat-eip
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  forProvider:
+    region: {{ .Values.aws.region }}
+    domain: vpc
+    tags:
+      Name: eks-nat-eip

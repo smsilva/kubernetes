@@ -1,0 +1,14 @@
+# wave 3 — VPC: base de toda a rede.
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: VPC
+metadata:
+  name: {{ .Values.network.vpcName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  forProvider:
+    region: {{ .Values.aws.region }}
+    cidrBlock: {{ .Values.network.vpcCidr }}
+    tags:
+      Name: {{ .Values.network.vpcName }}

@@ -1,0 +1,26 @@
+# wave 8 — Associations referenciam RouteTable e Subnet via *Ref.
+{{- $region := .Values.aws.region }}
+
+{{- $associations := list
+  (dict "name" "eks-rta-public-1a"  "rtRef" "eks-rt-public"  "subnetRef" .Values.network.subnets.publicA.name)
+  (dict "name" "eks-rta-public-1b"  "rtRef" "eks-rt-public"  "subnetRef" .Values.network.subnets.publicB.name)
+  (dict "name" "eks-rta-private-1a" "rtRef" "eks-rt-private" "subnetRef" .Values.network.subnets.privateA.name)
+  (dict "name" "eks-rta-private-1b" "rtRef" "eks-rt-private" "subnetRef" .Values.network.subnets.privateB.name)
+}}
+
+{{- range $associations }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: RouteTableAssociation
+metadata:
+  name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+spec:
+  forProvider:
+    region: {{ $region }}
+    routeTableIdRef:
+      name: {{ .rtRef }}
+    subnetIdRef:
+      name: {{ .subnetRef }}
+{{- end }}

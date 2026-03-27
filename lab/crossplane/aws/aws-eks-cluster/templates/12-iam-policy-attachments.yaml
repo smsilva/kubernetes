@@ -1,0 +1,39 @@
+# wave 10 — RolePolicyAttachments referenciam Roles via roleRef.
+# O Crossplane aguarda cada Role estar Ready antes de criar o attachment.
+{{- $attachments := list
+  (dict
+    "name"      "eks-cluster-policy"
+    "roleRef"   "eks-cluster-role"
+    "policyArn" "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  )
+  (dict
+    "name"      "eks-node-policy-worker"
+    "roleRef"   "eks-node-role"
+    "policyArn" "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+  )
+  (dict
+    "name"      "eks-node-policy-ecr"
+    "roleRef"   "eks-node-role"
+    "policyArn" "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  )
+  (dict
+    "name"      "eks-node-policy-cni"
+    "roleRef"   "eks-node-role"
+    "policyArn" "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  )
+}}
+
+{{- range $attachments }}
+---
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  forProvider:
+    policyArn: {{ .policyArn }}
+    roleRef:
+      name: {{ .roleRef }}
+{{- end }}

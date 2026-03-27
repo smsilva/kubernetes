@@ -1,0 +1,25 @@
+# wave 7 — Route Tables referenciam VPC via vpcIdRef.
+{{- $region  := .Values.aws.region }}
+{{- $vpcName := .Values.network.vpcName }}
+
+{{- $routeTables := list
+  (dict "name" "eks-rt-public")
+  (dict "name" "eks-rt-private")
+}}
+
+{{- range $routeTables }}
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: RouteTable
+metadata:
+  name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+spec:
+  forProvider:
+    region: {{ $region }}
+    vpcIdRef:
+      name: {{ $vpcName }}
+    tags:
+      Name: {{ .name }}
+{{- end }}

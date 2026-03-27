@@ -1,0 +1,11 @@
+# wave 14 — Provider Kubernetes instalado após o cluster estar Ready.
+# Necessário antes de criar ClusterAuth e ProviderConfig kubernetes.
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-kubernetes
+  annotations:
+    argocd.argoproj.io/sync-wave: "14"
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:{{ .Values.providers.kubernetes }}
