@@ -1,0 +1,37 @@
+#!/bin/bash
+set -e
+
+this_script_path="$(realpath ${0})"
+this_script_directory="${this_script_path%/*}"
+
+PATH="${this_script_directory}:${this_script_directory}/eks:${this_script_directory}/../:${PATH}"
+
+# 1. Instalar Crossplane
+install
+
+# 2. Criar Secret com credenciais AWS
+create-secret
+
+# 3. Instalar providers e ProviderConfig
+create-providers
+
+# 4. Provisionar VPC e subnets
+configure-network
+
+# 5. Provisionar acesso à rede (IGW, EIP, NAT Gateway, route tables)
+configure-network-access
+
+# 6. Criar roles IAM
+create-iam
+
+# 7. Criar o cluster EKS
+create-cluster
+
+# 8. Criar o node group
+create-nodegroup
+
+# 9. Configurar acesso ao cluster
+configure-access
+
+# 10. Configurar provider-kubernetes e criar recursos no EKS
+configure-kubernetes-provider
