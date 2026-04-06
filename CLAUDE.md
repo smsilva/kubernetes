@@ -15,13 +15,23 @@ This is a Portuguese-language educational repository containing Kubernetes insta
 │   ├── gke/          # Google GKE
 │   ├── kind/         # Kind local clusters
 │   ├── k3d/          # k3d local clusters
+│   ├── k3s/          # K3s lightweight Kubernetes
 │   ├── kubeadm/      # Bare metal / VM installations
-│   └── ...
+│   ├── minikube/     # Minikube local clusters
+│   ├── microstack/   # OpenStack-based local clusters
+│   ├── openstack/    # OpenStack cloud installations
+│   └── rancher/      # Rancher Kubernetes management
 ├── lab/              # Hands-on labs for Kubernetes tools
-│   ├── argo/         # ArgoCD and Argo Rollouts
+│   ├── argo/         # ArgoCD and Argo Rollouts (argocd/, argorollouts/)
 │   ├── istio/        # Service mesh examples
-│   ├── crossplane/   # Infrastructure as Code
+│   ├── crossplane/   # Infrastructure as Code (AWS, Azure, GCP providers)
 │   ├── vault/        # HashiCorp Vault on k8s
+│   ├── cert-manager/ # Certificate management
+│   ├── external-secrets/ # External Secrets Operator
+│   ├── gateway/      # Kubernetes Gateway API
+│   ├── kyverno/      # Policy engine
+│   ├── prometheus/   # Monitoring and alerting
+│   ├── grafana/      # Observability dashboards
 │   └── ...           # 40+ other tools
 └── videos/           # Supporting materials for video content
 ```
@@ -121,9 +131,13 @@ Examples:
 The repository excludes:
 - `.terraform/` directories and `.tfstate` files
 - `credentials.json` and `password.conf` files
-- Generated certificates (`*.pem`)
-- Cloud-init files and environment configs
-- Vagrant/machines directories
+- Generated certificates (`*.pem`) — only in `install/kind/`
+- Cloud-init files, environment configs, and multipass network/DNS configs
+- Vagrant/machines directories (`.vagrant/`)
+- Log files (`**/*.log`) and vim swap files (`**/*.swp`)
+- Crossplane package files (`**/*.xpkg`)
+- Specific cluster configs: `lab/argocd/kind-cluster.yaml`, `lab/kyverno/kind-cluster.yaml`
+- Packer JSON files and Terraform output JSON files
 
 ## This file evolution
 
