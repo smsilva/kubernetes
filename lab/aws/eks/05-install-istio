@@ -1,0 +1,48 @@
+#!/bin/bash
+# Passo 05: Instala Istio (base, istiod e ingress gateway como ClusterIP)
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+istio_version="1.24.3"
+
+helm repo add istio https://istio-release.storage.googleapis.com/charts
+helm repo update istio
+
+# =============================================================================
+# istio-base (CRDs)
+# =============================================================================
+helm upgrade \
+  --install istio-base istio/base \
+  --namespace istio-system \
+  --create-namespace \
+  --version "${istio_version}" \
+  --wait
+
+# =============================================================================
+# istiod (control plane)
+# =============================================================================
+helm upgrade \
+  --install istiod istio/istiod \
+  --namespace istio-system \
+  --version "${istio_version}" \
+  --wait
+
+kubectl --namespace istio-system wait deployment/istiod \
+  --for condition=Available \
+  --timeout=120s
+
+# =============================================================================
+# istio-ingressgateway (ClusterIP — tráfego recebido via ALB)
+# =============================================================================
+helm upgrade \
+  --install istio-ingressgateway istio/gateway \
+  --namespace istio-ingress \
+  --create-namespace \
+  --version "${istio_version}" \
+  --set service.type=ClusterIP \
+  --wait
+
+echo ""
+kubectl -n istio-system get pods
+kubectl -n istio-ingress get pods,svc

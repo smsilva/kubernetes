@@ -1,0 +1,55 @@
+#!/bin/bash
+# Passo 02: Cria o cluster EKS com node group nas subnets privadas
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+. "$(dirname "$0")/.vpc-ids"
+
+eksctl create cluster -f - <<EOF
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: ${cluster_name?}
+  region: ${aws_region?}
+  version: "${cluster_version?}"
+  tags:
+    project: ${tag_project}
+    env: ${tag_env}
+
+vpc:
+  id: ${vpc_id?}
+  subnets:
+    public:
+      ${aws_region}a:
+        id: ${subnet_pub_1a?}
+      ${aws_region}b:
+        id: ${subnet_pub_1b?}
+    private:
+      ${aws_region}a:
+        id: ${subnet_priv_1a?}
+      ${aws_region}b:
+        id: ${subnet_priv_1b?}
+
+iam:
+  withOIDC: true
+
+managedNodeGroups:
+  - name: ${cluster_name}-nodes
+    instanceType: ${node_type?}
+    minSize: ${node_min?}
+    maxSize: ${node_max?}
+    desiredCapacity: ${node_desired?}
+    privateNetworking: true
+    tags:
+      project: ${tag_project}
+      env: ${tag_env}
+    iam:
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+EOF
+
+echo ""
+eksctl get cluster --name "${cluster_name?}" --region "${aws_region?}"

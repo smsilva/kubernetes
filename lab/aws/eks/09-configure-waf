@@ -1,0 +1,109 @@
+#!/bin/bash
+# Passo 08: Cria WebACL no AWS WAF e associa ao ALB
+# Shield Standard já está ativo por padrão em todos os recursos AWS — nenhuma configuração necessária
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+# =============================================================================
+# Obtém o ARN do ALB criado pelo Gateway no passo 06
+# =============================================================================
+alb_arn=$(
+  aws resourcegroupstaggingapi get-resources \
+    --region "${aws_region?}" \
+    --resource-type-filters elasticloadbalancing:loadbalancer \
+    --tag-filters "Key=project,Values=${tag_project}" "Key=env,Values=${tag_env}" \
+    --query 'ResourceTagMappingList[0].ResourceARN' \
+    --output text
+)
+
+if [[ -z "${alb_arn}" || "${alb_arn}" == "None" ]]; then
+  echo "Erro: ALB não encontrado. Execute o passo 06 antes de continuar."
+  exit 1
+fi
+
+echo "ALB ARN: ${alb_arn}"
+
+# =============================================================================
+# WebACL com AWS Managed Rules
+# =============================================================================
+echo "Criando WebACL..."
+web_acl_arn=$(
+  aws wafv2 create-web-acl \
+    --region "${aws_region?}" \
+    --name "${cluster_name}-web-acl" \
+    --scope REGIONAL \
+    --default-action Allow={} \
+    --visibility-config "SampledRequestsEnabled=true,CloudWatchMetricsEnabled=true,MetricName=${cluster_name}-web-acl" \
+    --rules '[
+      {
+        "Name": "AWSManagedRulesCommonRuleSet",
+        "Priority": 1,
+        "OverrideAction": {"None": {}},
+        "Statement": {
+          "ManagedRuleGroupStatement": {
+            "VendorName": "AWS",
+            "Name": "AWSManagedRulesCommonRuleSet"
+          }
+        },
+        "VisibilityConfig": {
+          "SampledRequestsEnabled": true,
+          "CloudWatchMetricsEnabled": true,
+          "MetricName": "AWSManagedRulesCommonRuleSet"
+        }
+      },
+      {
+        "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+        "Priority": 2,
+        "OverrideAction": {"None": {}},
+        "Statement": {
+          "ManagedRuleGroupStatement": {
+            "VendorName": "AWS",
+            "Name": "AWSManagedRulesKnownBadInputsRuleSet"
+          }
+        },
+        "VisibilityConfig": {
+          "SampledRequestsEnabled": true,
+          "CloudWatchMetricsEnabled": true,
+          "MetricName": "AWSManagedRulesKnownBadInputsRuleSet"
+        }
+      },
+      {
+        "Name": "AWSManagedRulesAmazonIpReputationList",
+        "Priority": 3,
+        "OverrideAction": {"None": {}},
+        "Statement": {
+          "ManagedRuleGroupStatement": {
+            "VendorName": "AWS",
+            "Name": "AWSManagedRulesAmazonIpReputationList"
+          }
+        },
+        "VisibilityConfig": {
+          "SampledRequestsEnabled": true,
+          "CloudWatchMetricsEnabled": true,
+          "MetricName": "AWSManagedRulesAmazonIpReputationList"
+        }
+      }
+    ]' \
+    --query 'Summary.ARN' --output text
+)
+
+echo "WebACL ARN: ${web_acl_arn}"
+
+# =============================================================================
+# Associa a WebACL ao ALB
+# =============================================================================
+echo "Associando WebACL ao ALB..."
+aws wafv2 associate-web-acl \
+  --region "${aws_region?}" \
+  --web-acl-arn "${web_acl_arn?}" \
+  --resource-arn "${alb_arn?}"
+
+echo ""
+echo "WAF configurado com sucesso."
+echo "Regras ativas:"
+echo "  - AWSManagedRulesCommonRuleSet       (proteção geral: XSS, SQLi, etc.)"
+echo "  - AWSManagedRulesKnownBadInputsRuleSet (inputs maliciosos conhecidos)"
+echo "  - AWSManagedRulesAmazonIpReputationList (IPs maliciosos e botnets)"
+echo ""
+echo "Shield Standard: ativo por padrão em todos os recursos AWS (sem custo adicional)"

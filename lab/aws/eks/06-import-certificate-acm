@@ -1,0 +1,33 @@
+#!/bin/bash
+# Passo 06: Importa o certificado Let's Encrypt no ACM e atualiza env.conf com o ARN
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+cert_dir="${HOME}/certificates/config/live/${domain?}"
+
+if [[ ! -f "${cert_dir}/cert.pem" ]]; then
+  echo "Erro: certificado não encontrado em ${cert_dir}"
+  echo "Esperado:"
+  echo "  ${cert_dir}/cert.pem"
+  echo "  ${cert_dir}/privkey.pem"
+  echo "  ${cert_dir}/fullchain.pem"
+  exit 1
+fi
+
+cert_arn=$(
+  aws acm import-certificate \
+    --region "${aws_region?}" \
+    --certificate "fileb://${cert_dir}/cert.pem" \
+    --private-key "fileb://${cert_dir}/privkey.pem" \
+    --certificate-chain "fileb://${cert_dir}/fullchain.pem" \
+    --tags "Key=project,Value=${tag_project}" "Key=env,Value=${tag_env}" "Key=domain,Value=${domain}" \
+    --query 'CertificateArn' --output text
+)
+
+echo "Certificate ARN: ${cert_arn}"
+
+# Atualiza cert_arn em env.conf
+sed -i "s|^cert_arn=.*|cert_arn=\"${cert_arn}\"|" "$(dirname "$0")/env.conf"
+
+echo "env.conf atualizado com cert_arn"

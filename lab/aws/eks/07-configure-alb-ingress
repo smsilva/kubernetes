@@ -1,0 +1,103 @@
+#!/bin/bash
+# Passo 06: Cria o ALB via Gateway API apontando para o Istio IngressGateway (TLS via ACM)
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+. "$(dirname "$0")/.vpc-ids"
+
+if [[ -z "${cert_arn}" ]]; then
+  echo "Erro: cert_arn não definido em env.conf"
+  echo "Importe ou solicite o certificado no ACM e preencha a variável cert_arn"
+  exit 1
+fi
+
+gateway_api_version="v1.2.1"
+
+# =============================================================================
+# Gateway API CRDs
+# =============================================================================
+echo "Instalando Gateway API CRDs ${gateway_api_version}..."
+kubectl apply -f \
+  "https://github.com/kubernetes-sigs/gateway-api/releases/download/${gateway_api_version}/standard-install.yaml"
+
+# =============================================================================
+# GatewayClass, Gateway e HTTPRoute
+# =============================================================================
+kubectl apply -f - <<EOF
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: alb
+spec:
+  controllerName: eks.amazonaws.com/alb
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: alb-gateway
+  namespace: istio-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: ${cert_arn}
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/subnets: ${subnet_pub_1a},${subnet_pub_1b}
+    alb.ingress.kubernetes.io/tags: project=${tag_project},env=${tag_env}
+spec:
+  gatewayClassName: alb
+
+  listeners:
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same
+
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-ingress
+spec:
+  parentRefs:
+    - name: alb-gateway
+      namespace: istio-ingress
+
+  hostnames:
+    - "*.${domain}"
+
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: istio-ingressgateway
+          port: 80
+EOF
+
+echo ""
+echo "Aguardando o ALB ficar disponível..."
+kubectl --namespace istio-ingress wait gateway/alb-gateway \
+  --for=condition=Programmed \
+  --timeout=180s
+
+alb_hostname=$(
+  kubectl --namespace istio-ingress get gateway alb-gateway \
+    --output jsonpath='{.status.addresses[0].value}'
+)
+
+echo ""
+echo "ALB hostname: ${alb_hostname}"
+echo "Aponte *.${domain} para este hostname no seu DNS (CNAME)"

@@ -1,0 +1,185 @@
+#!/bin/bash
+# Passo 01: Cria VPC com subnets públicas e privadas, IGW, NAT Gateway e route tables
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+# =============================================================================
+# VPC
+# =============================================================================
+echo "Criando VPC..."
+vpc_id=$(
+  aws ec2 create-vpc \
+    --cidr-block "${vpc_cidr?}" \
+    --region "${aws_region?}" \
+    --tag-specifications "ResourceType=vpc,Tags=[{Key=Name,Value=${cluster_name}-vpc},{Key=project,Value=${tag_project}},{Key=env,Value=${tag_env}}]" \
+    --query 'Vpc.VpcId' --output text
+)
+
+aws ec2 modify-vpc-attribute --vpc-id "${vpc_id?}" --enable-dns-support
+aws ec2 modify-vpc-attribute --vpc-id "${vpc_id?}" --enable-dns-hostnames
+
+echo "VPC criada: ${vpc_id}"
+
+# =============================================================================
+# Subnets públicas
+# =============================================================================
+echo "Criando subnets públicas..."
+subnet_pub_1a=$(
+  aws ec2 create-subnet \
+    --vpc-id "${vpc_id?}" \
+    --cidr-block "${subnet_public_1a_cidr?}" \
+    --availability-zone "${aws_region}a" \
+    --region "${aws_region?}" \
+    --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=${cluster_name}-subnet-public-1a},{Key=kubernetes.io/role/elb,Value=1},{Key=kubernetes.io/cluster/${cluster_name},Value=owned},{Key=project,Value=${tag_project}}]" \
+    --query 'Subnet.SubnetId' --output text
+)
+
+subnet_pub_1b=$(
+  aws ec2 create-subnet \
+    --vpc-id "${vpc_id?}" \
+    --cidr-block "${subnet_public_1b_cidr?}" \
+    --availability-zone "${aws_region}b" \
+    --region "${aws_region?}" \
+    --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=${cluster_name}-subnet-public-1b},{Key=kubernetes.io/role/elb,Value=1},{Key=kubernetes.io/cluster/${cluster_name},Value=owned},{Key=project,Value=${tag_project}}]" \
+    --query 'Subnet.SubnetId' --output text
+)
+
+aws ec2 modify-subnet-attribute --subnet-id "${subnet_pub_1a?}" --map-public-ip-on-launch
+aws ec2 modify-subnet-attribute --subnet-id "${subnet_pub_1b?}" --map-public-ip-on-launch
+
+echo "Subnet pública 1a: ${subnet_pub_1a}"
+echo "Subnet pública 1b: ${subnet_pub_1b}"
+
+# =============================================================================
+# Subnets privadas
+# =============================================================================
+echo "Criando subnets privadas..."
+subnet_priv_1a=$(
+  aws ec2 create-subnet \
+    --vpc-id "${vpc_id?}" \
+    --cidr-block "${subnet_private_1a_cidr?}" \
+    --availability-zone "${aws_region}a" \
+    --region "${aws_region?}" \
+    --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=${cluster_name}-subnet-private-1a},{Key=kubernetes.io/role/internal-elb,Value=1},{Key=kubernetes.io/cluster/${cluster_name},Value=owned},{Key=project,Value=${tag_project}}]" \
+    --query 'Subnet.SubnetId' --output text
+)
+
+subnet_priv_1b=$(
+  aws ec2 create-subnet \
+    --vpc-id "${vpc_id?}" \
+    --cidr-block "${subnet_private_1b_cidr?}" \
+    --availability-zone "${aws_region}b" \
+    --region "${aws_region?}" \
+    --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=${cluster_name}-subnet-private-1b},{Key=kubernetes.io/role/internal-elb,Value=1},{Key=kubernetes.io/cluster/${cluster_name},Value=owned},{Key=project,Value=${tag_project}}]" \
+    --query 'Subnet.SubnetId' --output text
+)
+
+echo "Subnet privada 1a: ${subnet_priv_1a}"
+echo "Subnet privada 1b: ${subnet_priv_1b}"
+
+# =============================================================================
+# Internet Gateway
+# =============================================================================
+echo "Criando Internet Gateway..."
+igw_id=$(
+  aws ec2 create-internet-gateway \
+    --region "${aws_region?}" \
+    --tag-specifications "ResourceType=internet-gateway,Tags=[{Key=Name,Value=${cluster_name}-igw},{Key=project,Value=${tag_project}}]" \
+    --query 'InternetGateway.InternetGatewayId' --output text
+)
+
+aws ec2 attach-internet-gateway \
+  --internet-gateway-id "${igw_id?}" \
+  --vpc-id "${vpc_id?}"
+
+echo "Internet Gateway: ${igw_id}"
+
+# =============================================================================
+# NAT Gateway (na subnet pública 1a)
+# =============================================================================
+echo "Alocando Elastic IP para o NAT Gateway..."
+eip_alloc=$(
+  aws ec2 allocate-address \
+    --domain vpc \
+    --region "${aws_region?}" \
+    --tag-specifications "ResourceType=elastic-ip,Tags=[{Key=Name,Value=${cluster_name}-nat-eip},{Key=project,Value=${tag_project}}]" \
+    --query 'AllocationId' --output text
+)
+
+echo "Criando NAT Gateway (aguarde ~2 minutos)..."
+nat_gw_id=$(
+  aws ec2 create-nat-gateway \
+    --subnet-id "${subnet_pub_1a?}" \
+    --allocation-id "${eip_alloc?}" \
+    --region "${aws_region?}" \
+    --tag-specifications "ResourceType=natgateway,Tags=[{Key=Name,Value=${cluster_name}-nat-gw},{Key=project,Value=${tag_project}}]" \
+    --query 'NatGateway.NatGatewayId' --output text
+)
+
+aws ec2 wait nat-gateway-available \
+  --nat-gateway-ids "${nat_gw_id?}" \
+  --region "${aws_region?}"
+
+echo "NAT Gateway: ${nat_gw_id}"
+
+# =============================================================================
+# Route Tables
+# =============================================================================
+echo "Criando route table pública..."
+rt_public=$(
+  aws ec2 create-route-table \
+    --vpc-id "${vpc_id?}" \
+    --region "${aws_region?}" \
+    --tag-specifications "ResourceType=route-table,Tags=[{Key=Name,Value=${cluster_name}-rt-public},{Key=project,Value=${tag_project}}]" \
+    --query 'RouteTable.RouteTableId' --output text
+)
+
+aws ec2 create-route \
+  --route-table-id "${rt_public?}" \
+  --destination-cidr-block 0.0.0.0/0 \
+  --gateway-id "${igw_id?}"
+
+aws ec2 associate-route-table --route-table-id "${rt_public?}" --subnet-id "${subnet_pub_1a?}"
+aws ec2 associate-route-table --route-table-id "${rt_public?}" --subnet-id "${subnet_pub_1b?}"
+
+echo "Criando route table privada..."
+rt_private=$(
+  aws ec2 create-route-table \
+    --vpc-id "${vpc_id?}" \
+    --region "${aws_region?}" \
+    --tag-specifications "ResourceType=route-table,Tags=[{Key=Name,Value=${cluster_name}-rt-private},{Key=project,Value=${tag_project}}]" \
+    --query 'RouteTable.RouteTableId' --output text
+)
+
+aws ec2 create-route \
+  --route-table-id "${rt_private?}" \
+  --destination-cidr-block 0.0.0.0/0 \
+  --nat-gateway-id "${nat_gw_id?}"
+
+aws ec2 associate-route-table --route-table-id "${rt_private?}" --subnet-id "${subnet_priv_1a?}"
+aws ec2 associate-route-table --route-table-id "${rt_private?}" --subnet-id "${subnet_priv_1b?}"
+
+# =============================================================================
+# Salva IDs para uso nos próximos passos
+# =============================================================================
+cat > "$(dirname "$0")/.vpc-ids" <<EOF
+vpc_id=${vpc_id}
+subnet_pub_1a=${subnet_pub_1a}
+subnet_pub_1b=${subnet_pub_1b}
+subnet_priv_1a=${subnet_priv_1a}
+subnet_priv_1b=${subnet_priv_1b}
+igw_id=${igw_id}
+eip_alloc=${eip_alloc}
+nat_gw_id=${nat_gw_id}
+rt_public=${rt_public}
+rt_private=${rt_private}
+EOF
+
+echo ""
+echo "VPC e rede criadas com sucesso. IDs salvos em .vpc-ids"
+aws ec2 describe-vpcs \
+  --vpc-ids "${vpc_id?}" \
+  --region "${aws_region?}" \
+  --query 'Vpcs[*].{VpcId:VpcId,CIDR:CidrBlock,State:State}' \
+  --output table

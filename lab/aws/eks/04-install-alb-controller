@@ -1,0 +1,65 @@
+#!/bin/bash
+# Passo 04: Instala o AWS Load Balancer Controller com IRSA
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+. "$(dirname "$0")/.vpc-ids"
+
+alb_controller_version="v2.11.0"
+
+aws_account_id=$(
+  aws sts get-caller-identity \
+    --query 'Account' --output text
+)
+
+# =============================================================================
+# IAM Policy
+# =============================================================================
+echo "Baixando IAM policy do ALB Controller ${alb_controller_version}..."
+curl -sL \
+  "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${alb_controller_version}/docs/install/iam_policy.json" \
+  -o /tmp/alb-iam-policy.json
+
+policy_arn=$(
+  aws iam create-policy \
+    --policy-name AWSLoadBalancerControllerIAMPolicy \
+    --policy-document file:///tmp/alb-iam-policy.json \
+    --query 'Policy.Arn' --output text 2>/dev/null \
+  || aws iam list-policies \
+    --query "Policies[?PolicyName=='AWSLoadBalancerControllerIAMPolicy'].Arn" \
+    --output text
+)
+
+echo "Policy ARN: ${policy_arn}"
+
+# =============================================================================
+# IAM Service Account (IRSA)
+# =============================================================================
+echo "Criando IAM service account com IRSA..."
+eksctl create iamserviceaccount \
+  --cluster "${cluster_name?}" \
+  --region "${aws_region?}" \
+  --namespace kube-system \
+  --name aws-load-balancer-controller \
+  --attach-policy-arn "${policy_arn?}" \
+  --approve \
+  --override-existing-serviceaccounts
+
+# =============================================================================
+# Helm install
+# =============================================================================
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update eks
+
+helm upgrade \
+  --install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  --namespace kube-system \
+  --set clusterName="${cluster_name?}" \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller \
+  --set region="${aws_region?}" \
+  --set vpcId="${vpc_id?}" \
+  --wait
+
+echo ""
+kubectl -n kube-system get deployment aws-load-balancer-controller
