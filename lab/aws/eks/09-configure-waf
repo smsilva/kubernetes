@@ -29,6 +29,15 @@ echo "ALB ARN: ${alb_arn}"
 # =============================================================================
 echo "Criando WebACL..."
 web_acl_arn=$(
+  aws wafv2 list-web-acls \
+    --region "${aws_region?}" \
+    --scope REGIONAL \
+    --query "WebACLs[?Name=='${cluster_name}-web-acl'].ARN" \
+    --output text 2>/dev/null
+)
+
+if [[ -z "${web_acl_arn}" ]]; then
+web_acl_arn=$(
   aws wafv2 create-web-acl \
     --region "${aws_region?}" \
     --name "${cluster_name}-web-acl" \
@@ -87,17 +96,24 @@ web_acl_arn=$(
     ]' \
     --query 'Summary.ARN' --output text
 )
+fi
 
 echo "WebACL ARN: ${web_acl_arn}"
 
 # =============================================================================
-# Associa a WebACL ao ALB
+# Associa a WebACL ao ALB (com retry para WAFUnavailableEntityException)
 # =============================================================================
 echo "Associando WebACL ao ALB..."
-aws wafv2 associate-web-acl \
-  --region "${aws_region?}" \
-  --web-acl-arn "${web_acl_arn?}" \
-  --resource-arn "${alb_arn?}"
+for i in $(seq 1 10); do
+  if aws wafv2 associate-web-acl \
+    --region "${aws_region?}" \
+    --web-acl-arn "${web_acl_arn?}" \
+    --resource-arn "${alb_arn?}" 2>/dev/null; then
+    break
+  fi
+  echo "  ALB ainda não indexado pelo WAF, aguardando 15s (tentativa ${i}/10)..."
+  sleep 15
+done
 
 echo ""
 echo "WAF configurado com sucesso."
@@ -107,3 +123,26 @@ echo "  - AWSManagedRulesKnownBadInputsRuleSet (inputs maliciosos conhecidos)"
 echo "  - AWSManagedRulesAmazonIpReputationList (IPs maliciosos e botnets)"
 echo ""
 echo "Shield Standard: ativo por padrão em todos os recursos AWS (sem custo adicional)"
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo "WebACL associada ao ALB:"
+aws wafv2 get-web-acl-for-resource \
+  --region "${aws_region?}" \
+  --resource-arn "${alb_arn?}" \
+  --query 'WebACL.{Nome:Name,ARN:ARN}' \
+  --output table
+
+echo ""
+echo "Regras da WebACL:"
+aws wafv2 get-web-acl \
+  --region "${aws_region?}" \
+  --scope REGIONAL \
+  --id "$(echo "${web_acl_arn?}" | awk -F'/' '{print $(NF-1)}')" \
+  --name "${cluster_name}-web-acl" \
+  --query 'WebACL.Rules[*].{Nome:Name,Prioridade:Priority}' \
+  --output table

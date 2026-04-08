@@ -178,8 +178,33 @@ EOF
 
 echo ""
 echo "VPC e rede criadas com sucesso. IDs salvos em .vpc-ids"
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
 aws ec2 describe-vpcs \
   --vpc-ids "${vpc_id?}" \
   --region "${aws_region?}" \
   --query 'Vpcs[*].{VpcId:VpcId,CIDR:CidrBlock,State:State}' \
+  --output table
+
+aws ec2 describe-subnets \
+  --filters "Name=vpc-id,Values=${vpc_id}" \
+  --region "${aws_region?}" \
+  --query 'Subnets[*].{Name:Tags[?Key==`Name`]|[0].Value,SubnetId:SubnetId,CIDR:CidrBlock,AZ:AvailabilityZone,PublicIP:MapPublicIpOnLaunch}' \
+  --output table
+
+aws ec2 describe-nat-gateways \
+  --nat-gateway-ids "${nat_gw_id}" \
+  --region "${aws_region?}" \
+  --query 'NatGateways[*].{NatGW:NatGatewayId,State:State,Subnet:SubnetId}' \
+  --output table
+
+aws ec2 describe-route-tables \
+  --route-table-ids "${rt_public}" "${rt_private}" \
+  --region "${aws_region?}" \
+  --query 'RouteTables[*].{Name:Tags[?Key==`Name`]|[0].Value,RTID:RouteTableId,Rotas:Routes[*].DestinationCidrBlock}' \
   --output table

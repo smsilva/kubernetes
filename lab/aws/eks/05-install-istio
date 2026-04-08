@@ -46,3 +46,24 @@ helm upgrade \
 echo ""
 kubectl -n istio-system get pods
 kubectl -n istio-ingress get pods,svc
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo "Helm releases Istio:"
+helm list -n istio-system
+helm list -n istio-ingress
+
+echo ""
+echo "istiod pronto:"
+kubectl -n istio-system wait deployment/istiod \
+  --for condition=Available --timeout=30s
+
+echo ""
+echo "Tipo de serviço do IngressGateway (esperado: ClusterIP):"
+kubectl -n istio-ingress get svc istio-ingressgateway \
+  -o jsonpath='{.spec.type}'
+echo ""

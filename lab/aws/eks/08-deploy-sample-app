@@ -86,5 +86,19 @@ kubectl --namespace sample wait deployment/httpbin \
 
 echo ""
 echo "App disponível em: https://httpbin.${domain}/get"
+
+# =============================================================================
+# Verificação
+# =============================================================================
 echo ""
-curl -s "https://httpbin.${domain}/get" | head -20
+echo "--- Verificação ---"
+
+kubectl -n sample get deployment,svc,gateway,virtualservice
+
+echo ""
+echo "Pods:"
+kubectl -n sample get pods -o wide
+
+echo ""
+echo "Testando endpoint (fluxo completo: ALB → Istio → httpbin):"
+curl -s "https://httpbin.${domain}/get" | python3 -m json.tool

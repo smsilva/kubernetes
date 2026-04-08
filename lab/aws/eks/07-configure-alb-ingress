@@ -1,5 +1,5 @@
 #!/bin/bash
-# Passo 06: Cria o ALB via Gateway API apontando para o Istio IngressGateway (TLS via ACM)
+# Passo 07: Cria o ALB via Ingress apontando para o Istio IngressGateway (TLS via ACM)
 
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
@@ -11,93 +11,86 @@ if [[ -z "${cert_arn}" ]]; then
   exit 1
 fi
 
-gateway_api_version="v1.2.1"
-
 # =============================================================================
-# Gateway API CRDs
-# =============================================================================
-echo "Instalando Gateway API CRDs ${gateway_api_version}..."
-kubectl apply -f \
-  "https://github.com/kubernetes-sigs/gateway-api/releases/download/${gateway_api_version}/standard-install.yaml"
-
-# =============================================================================
-# GatewayClass, Gateway e HTTPRoute
+# IngressClass + Ingress
 # =============================================================================
 kubectl apply -f - <<EOF
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: GatewayClass
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
 metadata:
   name: alb
 spec:
-  controllerName: eks.amazonaws.com/alb
+  controller: ingress.k8s.aws/alb
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: alb-gateway
+  name: alb-ingress
   namespace: istio-ingress
   annotations:
+    kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/certificate-arn: ${cert_arn}
     alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
     alb.ingress.kubernetes.io/subnets: ${subnet_pub_1a},${subnet_pub_1b}
     alb.ingress.kubernetes.io/tags: project=${tag_project},env=${tag_env}
 spec:
-  gatewayClassName: alb
-
-  listeners:
-    - name: http
-      port: 80
-      protocol: HTTP
-      allowedRoutes:
-        namespaces:
-          from: Same
-
-    - name: https
-      port: 443
-      protocol: HTTPS
-      tls:
-        mode: Terminate
-      allowedRoutes:
-        namespaces:
-          from: Same
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: istio-ingressgateway
-  namespace: istio-ingress
-spec:
-  parentRefs:
-    - name: alb-gateway
-      namespace: istio-ingress
-
-  hostnames:
-    - "*.${domain}"
-
+  ingressClassName: alb
   rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      backendRefs:
-        - name: istio-ingressgateway
-          port: 80
+    - host: "*.${domain}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: istio-ingressgateway
+                port:
+                  number: 80
 EOF
 
 echo ""
 echo "Aguardando o ALB ficar disponível..."
-kubectl --namespace istio-ingress wait gateway/alb-gateway \
-  --for=condition=Programmed \
-  --timeout=180s
+kubectl --namespace istio-ingress wait ingress/alb-ingress \
+  --for=jsonpath='{.status.loadBalancer.ingress[0].hostname}' \
+  --timeout=180s 2>/dev/null \
+  || true
 
 alb_hostname=$(
-  kubectl --namespace istio-ingress get gateway alb-gateway \
-    --output jsonpath='{.status.addresses[0].value}'
+  kubectl --namespace istio-ingress get ingress alb-ingress \
+    --output jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 )
 
 echo ""
 echo "ALB hostname: ${alb_hostname}"
 echo "Aponte *.${domain} para este hostname no seu DNS (CNAME)"
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+kubectl -n istio-ingress get ingress alb-ingress -o wide
+
+echo ""
+alb_name=$(echo "${alb_hostname}" | cut -d. -f1 | rev | cut -d- -f2- | rev)
+aws elbv2 describe-load-balancers \
+  --region "${aws_region?}" \
+  --query "LoadBalancers[?contains(DNSName,'${alb_hostname}')].{Nome:LoadBalancerName,DNS:DNSName,Estado:State.Code,Scheme:Scheme}" \
+  --output table
+
+echo ""
+echo "Listeners:"
+alb_arn=$(aws elbv2 describe-load-balancers \
+  --region "${aws_region?}" \
+  --query "LoadBalancers[?DNSName=='${alb_hostname}'].LoadBalancerArn" \
+  --output text)
+aws elbv2 describe-listeners \
+  --load-balancer-arn "${alb_arn}" \
+  --region "${aws_region?}" \
+  --query 'Listeners[*].{Porta:Port,Protocolo:Protocol,AcaoDefault:DefaultActions[0].Type}' \
+  --output table

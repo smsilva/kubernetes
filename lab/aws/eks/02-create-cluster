@@ -53,3 +53,23 @@ EOF
 
 echo ""
 eksctl get cluster --name "${cluster_name?}" --region "${aws_region?}"
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+aws eks describe-cluster --name "${cluster_name?}" --region "${aws_region?}" \
+  --query 'cluster.{Nome:name,Versao:version,Status:status,Endpoint:endpoint}' \
+  --output table
+
+echo ""
+kubectl get nodes -o wide
+
+echo ""
+aws eks list-addons --cluster-name "${cluster_name?}" --region "${aws_region?}" --output table
+
+echo ""
+aws iam list-open-id-connect-providers \
+  --query 'OpenIDConnectProviderList[*].Arn' --output table

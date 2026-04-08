@@ -5,7 +5,7 @@ set -euo pipefail
 . "$(dirname "$0")/env.conf"
 . "$(dirname "$0")/.vpc-ids"
 
-alb_controller_version="v2.11.0"
+alb_controller_version="v2.17.1"
 
 aws_account_id=$(
   aws sts get-caller-identity \
@@ -54,6 +54,7 @@ helm repo update eks
 helm upgrade \
   --install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --namespace kube-system \
+  --version 1.17.1 \
   --set clusterName="${cluster_name?}" \
   --set serviceAccount.create=false \
   --set serviceAccount.name=aws-load-balancer-controller \
@@ -63,3 +64,23 @@ helm upgrade \
 
 echo ""
 kubectl -n kube-system get deployment aws-load-balancer-controller
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+kubectl -n kube-system get deployment aws-load-balancer-controller -o wide
+
+echo ""
+echo "IRSA annotation no ServiceAccount:"
+kubectl -n kube-system get sa aws-load-balancer-controller \
+  -o jsonpath='{.metadata.annotations.eks\.amazonaws\.com/role-arn}'
+echo ""
+
+echo ""
+echo "Imagem em uso:"
+kubectl -n kube-system get deployment aws-load-balancer-controller \
+  -o jsonpath='{.spec.template.spec.containers[0].image}'
+echo ""

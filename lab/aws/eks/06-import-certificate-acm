@@ -31,3 +31,15 @@ echo "Certificate ARN: ${cert_arn}"
 sed -i "s|^cert_arn=.*|cert_arn=\"${cert_arn}\"|" "$(dirname "$0")/env.conf"
 
 echo "env.conf atualizado com cert_arn"
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+aws acm describe-certificate \
+  --certificate-arn "${cert_arn}" \
+  --region "${aws_region?}" \
+  --query 'Certificate.{Dominio:DomainName,Status:Status,Expira:NotAfter}' \
+  --output table

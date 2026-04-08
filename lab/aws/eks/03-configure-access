@@ -9,10 +9,18 @@ aws eks update-kubeconfig \
   --region "${aws_region?}" \
   --name "${cluster_name?}"
 
-# Obtém o ARN do caller atual (usuário ou role IAM)
-caller_arn=$(
+# Obtém o ARN da role IAM do caller (assumed-role → IAM role ARN)
+role_name=$(
   aws sts get-caller-identity \
     --query 'Arn' \
+    --output text \
+  | grep -oP '(?<=assumed-role/)[^/]+'
+)
+
+caller_arn=$(
+  aws iam get-role \
+    --role-name "${role_name?}" \
+    --query 'Role.Arn' \
     --output text
 )
 
@@ -33,4 +41,21 @@ aws eks associate-access-policy \
   --access-scope type=cluster
 
 echo ""
-kubectl get nodes
+kubectl get nodes -o wide
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+aws eks list-access-entries --cluster-name "${cluster_name?}" --region "${aws_region?}" \
+  --query 'accessEntries' --output table
+
+echo ""
+aws eks list-associated-access-policies \
+  --cluster-name "${cluster_name?}" \
+  --region "${aws_region?}" \
+  --principal-arn "${caller_arn?}" \
+  --query 'associatedAccessPolicies[*].{Policy:policyArn,Scope:accessScope.type}' \
+  --output table
