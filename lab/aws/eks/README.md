@@ -99,9 +99,9 @@ Edite `env.conf` antes de executar os scripts:
 ```bash
 # Variáveis que precisam ser revisadas antes de começar
 aws_region="us-east-1"
-cluster_name="eks-cluster"
+cluster_name="wasp-calm-crow-ndx4"
 domain="wasp.silvios.me"
-cert_arn=""     # preencher no passo 06 (após importar o cert no ACM)
+cert_arn="" # preencher no passo 06 (após importar o cert no ACM)
 ```
 
 ## Passo a passo
