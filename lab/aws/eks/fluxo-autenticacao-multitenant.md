@@ -84,6 +84,27 @@ customer1-us-east-1  customer1-us-west-1             customer2-ap-northeast-1
 
 ## Fluxo de autenticação
 
+### Resumido
+
+```
+motoko@customer1.com (Tokyo, Japan)
+
+GET https://wasp.silvios.me
+  - platform-us-east-1.wasp.silvios.me
+  - platform-sa-east-1.wasp.silvios.me
+  - platform-eu-central-1.wasp.silvios.me
+  > platform-ap-south-1.wasp.silvios.me
+
+GET https://discovery.wasp.silvios.me/tenant?email=motoko@customer1.com
+  - customer1.wasp.silvios.me
+
+GET https://customer1.wasp.silvios.me
+  - customer1-ap-east-1.wasp.silvios.me
+  > customer1-ap-northeast-1.wasp.silvios.me
+```
+
+### Expandido
+
 ```
 1. GET https://wasp.silvios.me
 
