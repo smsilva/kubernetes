@@ -4,7 +4,7 @@
 # Ordem de deleção:
 #  1. Sample app (VirtualService, Gateway Istio, Service, Deployment, Namespace)
 #  2. WAF: desassocia WebACL do ALB e deleta a WebACL
-#  3. Gateway API: HTTPRoute, Gateway, GatewayClass, CRDs
+#  3. Ingress: alb-ingress (Ingress), alb (IngressClass)
 #  4. Istio: istio-ingressgateway, istiod, istio-base, namespaces
 #  5. ALB Controller: Helm, IAM service account, IAM policy
 #  6. Cluster EKS (eksctl — inclui node group e OIDC provider)

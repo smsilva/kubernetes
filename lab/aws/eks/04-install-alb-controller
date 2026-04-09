@@ -5,7 +5,7 @@ set -euo pipefail
 . "$(dirname "$0")/env.conf"
 . "$(dirname "$0")/.vpc-ids"
 
-alb_controller_version="v2.17.1"
+alb_controller_version="v3.2.1"
 
 aws_account_id=$(
   aws sts get-caller-identity \
@@ -54,7 +54,7 @@ helm repo update eks
 helm upgrade \
   --install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --namespace kube-system \
-  --version 1.17.1 \
+  --version 3.2.1 \
   --set clusterName="${cluster_name?}" \
   --set serviceAccount.create=false \
   --set serviceAccount.name=aws-load-balancer-controller \

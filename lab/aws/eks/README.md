@@ -15,7 +15,7 @@ Provisionar um cluster EKS com VPC pública e privada, onde o tráfego de entrad
 | EKS Cluster | AWS | Control plane gerenciado, versão `1.34`, OIDC provider habilitado para IRSA |
 | Managed Node Group | AWS | 2–5 nós `t3.medium` nas subnets privadas, IMDSv2 obrigatório |
 | IAM Access Entry | AWS | Permissão `cluster-admin` para o caller IAM via EKS Access API |
-| AWS Load Balancer Controller | Kubernetes | Operador que provisiona e gerencia o ALB a partir de recursos Ingress |
+| AWS Load Balancer Controller `v3.2.1` | Kubernetes | Operador que provisiona e gerencia o ALB a partir de recursos `Ingress` e `IngressClass` |
 | IAM Role (IRSA) | AWS | Role vinculada ao service account do ALB Controller via OIDC |
 | ALB | AWS | Load balancer internet-facing, TLS terminado via ACM, redireciona HTTP→HTTPS |
 | ACM Certificate | AWS | Certificado Let's Encrypt importado para `*.wasp.silvios.me` |
@@ -28,6 +28,8 @@ Provisionar um cluster EKS com VPC pública e privada, onde o tráfego de entrad
 > **Nota:** Os Security Groups (cluster, nodes e ALB) são criados automaticamente pelo `eksctl` e pelo ALB Controller — nenhum SG é definido explicitamente nos scripts. Ver [SEC-005](#sec-005-ausência-de-security-groups-dedicados-para-o-alb--baixo) na revisão de segurança.
 
 ## Arquitetura
+
+### Fluxo de tráfego
 
 ```
 Internet
@@ -43,7 +45,44 @@ Istio IngressGateway  (namespace: istio-ingress, ClusterIP)
 Aplicações  (namespaces com sidecar injection habilitado)
 ```
 
-**Ferramentas:** `aws cli` · `eksctl` · `helm`
+### Topologia
+
+```
+           sara@customer1.com                        motoko@customer2.com
+                    │                                          │
+                    └─────────────────────┬────────────────────┘
+                                          ▼
+                                   wasp.silvios.me
+                                          │
+                                Global Accelerator
+                                          │
+                    ┌─────────────────────┴────────────────────┐
+                    ▼                                          ▼
+         platform-us-east-1-wasp                  platform-eu-central-1-wasp
+              (us-east-1)                              (eu-central-1)
+                    │                                          │
+                    ▼                                          ▼
+            discovery-service                          discovery-service
+                    │                                          │
+                    ▼                                          ▼
+       customer1.wasp.silvios.me                 customer2.wasp.silvios.me
+                    │                                          │
+         ┌──────────┴─────────┐                                │
+         ▼                    ▼                                ▼
+customer1-us-east-1  customer1-us-west-1             customer2-ap-east-1
+```
+
+### Fluxo de autenticação multi-tenant
+
+O design do fluxo de login, incluindo suporte a múltiplos IdPs por tenant (Google SSO, Microsoft, Okta, Auth0, Keycloak), arquitetura de dados no DynamoDB e integração com Cognito e Istio, está documentado em:
+
+**[fluxo-autenticacao-multitenant.md](fluxo-autenticacao-multitenant.md)**
+
+**Ferramentas:** 
+
+- `aws cli`
+- `eksctl`
+- `helm`
 
 ## Pré-requisitos
 
@@ -202,6 +241,24 @@ lab/aws/eks/
 ├── 09-configure-waf           # WAF WebACL + associação ao ALB
 └── destroy                    # deleção na ordem inversa
 ```
+
+## Decisões técnicas e backlog
+
+### Gateway API — pendente de validação
+
+O ALB Controller v3.x adicionou suporte à Kubernetes Gateway API (`GatewayClass`, `Gateway`, `HTTPRoute`) a partir da v3.0. Este lab utiliza intencionalmente os recursos clássicos `Ingress` e `IngressClass` por ser mais estável e amplamente validado.
+
+**Por que não usar Gateway API agora:**
+
+A issue [kubernetes-sigs/aws-load-balancer-controller#4674](https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/4674) (aberta em abril de 2026) reporta que o upgrade de `v3.1.0` para `v3.2.1` quebra instalações onde a Gateway API **não está habilitada**, pois os CRDs de `ListenerSet` ficam ausentes. Enquanto esse tipo de problema de compatibilidade não estiver estabilizado, manter `Ingress`/`IngressClass` é a escolha conservadora.
+
+**Quando revisitar:**
+
+- Aguardar resolução da issue #4674 e de outros bugs de compatibilidade na série v3.x
+- Avaliar o suporte a `HTTPRoute` → ALB para substituir o `Ingress` atual (`07-configure-alb-ingress`)
+- O Istio `Gateway` + `VirtualService` (passo 08) é um recurso do próprio Istio e **não** é afetado por essa limitação do ALB Controller
+
+---
 
 ## Revisão de segurança
 
