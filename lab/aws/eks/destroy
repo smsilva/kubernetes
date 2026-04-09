@@ -66,20 +66,22 @@ if [[ -n "${web_acl_id}" && "${web_acl_id}" != "None" ]]; then
 fi
 
 # =============================================================================
-# 3. Gateway API
+# 3. Ingress + IngressClass
 # =============================================================================
-echo "Removendo recursos Gateway API..."
-kubectl --namespace istio-ingress delete httproute istio-ingressgateway --ignore-not-found
-kubectl --namespace istio-ingress delete gateway alb-gateway --ignore-not-found
-kubectl delete gatewayclass alb --ignore-not-found
+echo "Removendo Ingress e IngressClass..."
+kubectl --namespace istio-ingress delete ingress alb-ingress --ignore-not-found
+kubectl delete ingressclass alb --ignore-not-found
 
 # =============================================================================
 # 4. Istio
 # =============================================================================
 echo "Removendo Istio..."
-helm uninstall istio-ingressgateway --namespace istio-ingress --ignore-not-found
-helm uninstall istiod --namespace istio-system --ignore-not-found
-helm uninstall istio-base --namespace istio-system --ignore-not-found
+helm uninstall istio-ingressgateway --namespace istio-ingress 2>/dev/null || true
+helm uninstall istiod --namespace istio-system 2>/dev/null || true
+helm uninstall istio-base --namespace istio-system 2>/dev/null || true
+
+# CRDs do Istio são retidos pela resource policy — deletar explicitamente
+kubectl get crd -o name | grep '\.istio\.io' | xargs -r kubectl delete
 
 kubectl delete namespace istio-ingress --ignore-not-found
 kubectl delete namespace istio-system --ignore-not-found
@@ -181,3 +183,7 @@ aws ec2 delete-vpc --vpc-id "${vpc_id?}" --region "${aws_region?}"
 
 echo ""
 echo "Todos os recursos do lab foram removidos."
+echo "Atenção: o certificado ACM não foi removido — deletar manualmente se necessário."
+
+# Limpa arquivo de IDs para evitar uso acidental em execuções futuras
+rm -f "$(dirname "$0")/.vpc-ids"

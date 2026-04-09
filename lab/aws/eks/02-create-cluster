@@ -41,6 +41,9 @@ managedNodeGroups:
     maxSize: ${node_max?}
     desiredCapacity: ${node_desired?}
     privateNetworking: true
+    instanceMetadataOptions:
+      httpTokens: required
+      httpPutResponseHopLimit: 1
     tags:
       project: ${tag_project}
       env: ${tag_env}
