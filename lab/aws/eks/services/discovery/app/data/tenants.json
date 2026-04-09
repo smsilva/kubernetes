@@ -1,0 +1,18 @@
+[
+  {
+    "domain": "gmail.com",
+    "tenant_id": "customer1",
+    "tenant_url": "customer1.wasp.silvios.me",
+    "client_id": "<cognito-app-client-id-customer1>",
+    "idp_name": "Google",
+    "cognito_pool_id": "<cognito-pool-id>"
+  },
+  {
+    "domain": "customer2.com",
+    "tenant_id": "customer2",
+    "tenant_url": "customer2.wasp.silvios.me",
+    "client_id": "<cognito-app-client-id-customer2>",
+    "idp_name": "MicrosoftAD-Customer2",
+    "cognito_pool_id": "<cognito-pool-id>"
+  }
+]

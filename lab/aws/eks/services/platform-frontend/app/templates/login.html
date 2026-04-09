@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — WASP Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/login.css">
+</head>
+<body>
+
+  <!-- Theme toggle -->
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/>
+    </svg>
+    <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7zM2 13h2M20 13h2M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+  <div class="card">
+
+    <!-- Logo -->
+    <div class="logo-section">
+      <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M22 3L40 13V31L22 41L4 31V13L22 3Z" fill="#1A73E8"/>
+        <path d="M13 16L17.5 28L22 19.5L26.5 28L31 16" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="logo-name">WASP Platform</span>
+    </div>
+
+    <!-- Headings -->
+    <h1 class="card-title">Sign in</h1>
+    <p class="card-subtitle">Use your WASP Platform account</p>
+
+    <!-- Form -->
+    <form method="POST" action="/login">
+      <div class="text-field">
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder=" "
+          value="{{ email | default('') }}"
+          autocomplete="email"
+          autofocus
+          {% if error %}class="has-error"{% endif %}
+        >
+        <label for="email">Email address</label>
+      </div>
+
+      <div class="supporting-text">
+        {% if error %}
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm.75 11.5h-1.5v-1.5h1.5v1.5zm0-3h-1.5V6.5h1.5V10.5z" fill="#B3261E"/>
+          </svg>
+          {{ error }}
+        {% endif %}
+      </div>
+
+      <div class="actions">
+        <a href="#" class="btn-text">Create account</a>
+        <button type="submit" class="btn-filled">Continue</button>
+      </div>
+    </form>
+
+    <p class="card-footer">
+      By continuing, you agree to the
+      <a href="#">Terms of Service</a> and
+      <a href="#">Privacy Policy</a>.
+    </p>
+
+  </div>
+
+  <script>
+    // ── Theme toggle ──────────────────────────────
+    const html = document.documentElement;
+    const saved = localStorage.getItem('wasp-theme');
+    if (saved) html.dataset.theme = saved;
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+      html.dataset.theme = next;
+      localStorage.setItem('wasp-theme', next);
+    });
+
+    // ── Ripple effect ─────────────────────────────
+    document.querySelectorAll('.btn-filled, .btn-text').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const r = document.createElement('span');
+        r.className = 'ripple';
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+        btn.appendChild(r);
+        r.addEventListener('animationend', () => r.remove());
+      });
+    });
+  </script>
+</body>
+</html>

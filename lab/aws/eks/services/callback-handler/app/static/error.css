@@ -1,0 +1,202 @@
+/* ── Light theme (default) ────────────────────── */
+:root {
+  --color-primary:      #1A73E8;
+  --color-on-primary:   #FFFFFF;
+  --color-surface:      #FFFFFF;
+  --color-background:   #F8F9FA;
+  --color-on-surface:   #202124;
+  --color-secondary:    #5F6368;
+  --color-outline:      #747775;
+  --color-error:        #B3261E;
+  --color-error-bg:     rgba(179,38,30,.10);
+  --color-toggle-bg:    rgba(0,0,0,.06);
+  --color-toggle-hover: rgba(0,0,0,.10);
+  --color-card-border:  transparent;
+}
+
+/* ── Dark theme ───────────────────────────────── */
+[data-theme="dark"] {
+  --color-primary:      #8AB4F8;
+  --color-on-primary:   #003063;
+  --color-surface:      #303134;
+  --color-background:   #202124;
+  --color-on-surface:   #E8EAED;
+  --color-secondary:    #9AA0A6;
+  --color-outline:      #5F6368;
+  --color-error:        #F28B82;
+  --color-error-bg:     rgba(242,139,130,.12);
+  --color-toggle-bg:    rgba(255,255,255,.08);
+  --color-toggle-hover: rgba(255,255,255,.13);
+  --color-card-border:  rgba(255,255,255,.08);
+}
+
+/* ── System preference (no manual override) ───── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-primary:      #8AB4F8;
+    --color-on-primary:   #003063;
+    --color-surface:      #303134;
+    --color-background:   #202124;
+    --color-on-surface:   #E8EAED;
+    --color-secondary:    #9AA0A6;
+    --color-outline:      #5F6368;
+    --color-error:        #F28B82;
+    --color-error-bg:     rgba(242,139,130,.12);
+    --color-toggle-bg:    rgba(255,255,255,.08);
+    --color-toggle-hover: rgba(255,255,255,.13);
+    --color-card-border:  rgba(255,255,255,.08);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--color-background);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  transition: background-color 250ms ease;
+}
+
+/* ── Theme toggle ─────────────────────────────── */
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-toggle-bg);
+  color: var(--color-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.theme-toggle:hover { background: var(--color-toggle-hover); }
+
+.theme-toggle .icon-moon,
+.theme-toggle .icon-sun { display: none; }
+
+[data-theme="dark"]  .theme-toggle .icon-sun  { display: block; }
+[data-theme="dark"]  .theme-toggle .icon-moon { display: none;  }
+[data-theme="light"] .theme-toggle .icon-moon { display: block; }
+[data-theme="light"] .theme-toggle .icon-sun  { display: none;  }
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .theme-toggle .icon-moon { display: block; }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .theme-toggle .icon-sun { display: block; }
+}
+:root:not([data-theme]) .theme-toggle .icon-moon { display: block; }
+
+/* ── Card ─────────────────────────────────────── */
+.card {
+  background: var(--color-surface);
+  border-radius: 28px;
+  border: 1px solid var(--color-card-border);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.30),
+    0 2px 6px 2px rgba(0,0,0,.15);
+  padding: 48px 40px 36px;
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+  animation: card-enter 220ms cubic-bezier(.2, 0, 0, 1) both;
+  transition: background-color 250ms ease, border-color 250ms ease;
+}
+
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ── Logo ─────────────────────────────────────── */
+.logo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.logo-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-secondary);
+  letter-spacing: .1px;
+  transition: color 250ms ease;
+}
+
+/* ── Error icon ───────────────────────────────── */
+.error-icon {
+  width: 56px;
+  height: 56px;
+  background: var(--color-error-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  transition: background-color 250ms ease;
+}
+
+/* ── Typography ───────────────────────────────── */
+.card-title {
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--color-on-surface);
+  margin-bottom: 8px;
+  transition: color 250ms ease;
+}
+
+.card-subtitle {
+  font-size: 14px;
+  color: var(--color-secondary);
+  margin-bottom: 32px;
+  line-height: 1.6;
+  transition: color 250ms ease;
+}
+
+/* ── MD3 Outlined button ──────────────────────── */
+.btn-outlined {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .1px;
+  color: var(--color-primary);
+  text-decoration: none;
+  padding: 10px 24px;
+  border-radius: 20px;
+  border: 1px solid var(--color-primary);
+  position: relative;
+  overflow: hidden;
+  transition: background-color 150ms ease, color 250ms ease, border-color 250ms ease;
+}
+
+.btn-outlined:hover  { background: rgba(26,115,232,.08); }
+.btn-outlined:active { background: rgba(26,115,232,.12); }
+
+/* Ripple */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 550ms linear;
+  background: rgba(26,115,232,.2);
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}

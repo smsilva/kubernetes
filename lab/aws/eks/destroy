@@ -90,7 +90,7 @@ kubectl delete namespace istio-system --ignore-not-found
 # 5. ALB Controller
 # =============================================================================
 echo "Removendo ALB Controller..."
-helm uninstall aws-load-balancer-controller --namespace kube-system --ignore-not-found
+helm uninstall aws-load-balancer-controller --namespace kube-system 2>/dev/null || true
 
 eksctl delete iamserviceaccount \
   --cluster "${cluster_name?}" \
