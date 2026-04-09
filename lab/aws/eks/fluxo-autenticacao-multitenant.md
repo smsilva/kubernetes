@@ -89,18 +89,18 @@ customer1-us-east-1  customer1-us-west-1             customer2-ap-northeast-1
 ```
 motoko@customer1.com (Tokyo, Japan)
 
-GET https://wasp.silvios.me
-  - platform-us-east-1.wasp.silvios.me
-  - platform-sa-east-1.wasp.silvios.me
-  - platform-eu-central-1.wasp.silvios.me
-  > platform-ap-south-1.wasp.silvios.me
+GET https://wasp.silvios.me                  - Global Accelerator
+  - platform-us-east-1.wasp.silvios.me       - US East (N. Virginia)
+  - platform-sa-east-1.wasp.silvios.me       - South America (São Paulo)
+  - platform-eu-central-1.wasp.silvios.me    - Europe (Frankfurt)
+  > platform-ap-south-1.wasp.silvios.me      - Asia Pacific (Mumbai)
 
 GET https://discovery.wasp.silvios.me/tenant?email=motoko@customer1.com
   - customer1.wasp.silvios.me
 
-GET https://customer1.wasp.silvios.me
-  - customer1-ap-east-1.wasp.silvios.me
-  > customer1-ap-northeast-1.wasp.silvios.me
+GET https://customer1.wasp.silvios.me        - Global Accelerator
+  - customer1-ap-east-1.wasp.silvios.me      - Asia Pacific (Hong Kong)
+  > customer1-ap-northeast-1.wasp.silvios.me - Asia Pacific (Tokyo)
 ```
 
 ### Expandido
