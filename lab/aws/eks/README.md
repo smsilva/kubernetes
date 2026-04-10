@@ -77,7 +77,6 @@ customer1-us-east-1  customer1-us-west-1             customer2-ap-east-1
 O design do fluxo de login, incluindo suporte a múltiplos IdPs por tenant (Google SSO, Microsoft, Okta, Auth0, Keycloak), arquitetura de dados no DynamoDB e integração com Cognito e Istio, está documentado em:
 
 - **[Arquitetura de Autenticação Multi-tenant](docs/fluxo-autenticacao-multitenant.md)**
-- **[Plano de Implementação](docs/plano-autenticacao-multitenant.md)**
 - **[Decisões Técnicas e Trade-offs](docs/decisoes-tecnicas.md)**
 - **[Onboarding de Novo Customer](docs/onboarding-novo-customer.md)**
 
