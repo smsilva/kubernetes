@@ -4,11 +4,7 @@
 
 ---
 
-## O que está provisionado
-
-Este lab implanta um cluster EKS na AWS com ALB + Istio Gateway + WAF, acessível via `*.wasp.silvios.me`.
-
-### Identificadores principais
+## Identificadores principais
 
 | Recurso | Valor |
 |---|---|
@@ -19,58 +15,13 @@ Este lab implanta um cluster EKS na AWS com ALB + Istio Gateway + WAF, acessíve
 | **VPC ID** | `vpc-03cb9d83815b52ee1` |
 | **AWS Account ID** | `221047292361` |
 
-### Rede (VPC 10.0.0.0/16)
-
-| Subnet | CIDR | AZ | Tipo |
-|---|---|---|---|
-| `subnet-0d11908e3d3ac35ba` | 10.0.1.0/24 | us-east-1a | Pública (ALB/NAT) |
-| `subnet-01b8a77128b10757f` | 10.0.2.0/24 | us-east-1b | Pública (ALB/NAT) |
-| `subnet-0f4bcf85d2c59f868` | 10.0.3.0/24 | us-east-1a | Privada (EKS nodes) |
-| `subnet-01a17ca1086c1e995` | 10.0.4.0/24 | us-east-1b | Privada (EKS nodes) |
-
----
-
-## Componentes instalados
-
-### AWS Load Balancer Controller
-- **Namespace:** `kube-system`
-- **Versão:** `v3.2.1`
-- **IRSA:** Habilitado (`aws-load-balancer-controller` service account)
-- **IAM Policy:** `AWSLoadBalancerControllerIAMPolicy`
-
-### Istio
-- **Versão:** `1.24.3`
-- **Control plane:** namespace `istio-system`
-- **IngressGateway:** namespace `istio-ingress`, tipo `ClusterIP`
-- **Health check:** porta `15021`, path `/healthz/ready`
-
-### ALB Ingress
-- **Namespace:** `istio-ingress`
-- **Host pattern:** `*.wasp.silvios.me`
-- **Backend:** `istio-ingressgateway:80`
-- **TLS:** terminado no ALB via ACM — certificado SAN `*.wasp.silvios.me` + `wasp.silvios.me` (apex) cobre todos os subdomínios e o apex; um único CNAME `*.wasp.silvios.me → ALB hostname` no Azure DNS é suficiente. Exceção: `idp.wasp.silvios.me` aponta para o CloudFront do Cognito (script 12).
-- **HTTP→HTTPS redirect:** habilitado
-- **Target type:** `ip` (aponta direto para pods)
-
-### WAF
-- **WebACL:** `wasp-calm-crow-ndx4-web-acl`
-- **Scope:** REGIONAL, associado ao ALB
-- **Regras ativas:** `AWSManagedRulesCommonRuleSet`, `AWSManagedRulesKnownBadInputsRuleSet`, `AWSManagedRulesAmazonIpReputationList`
-- **Gap documentado (SEC-007):** sem rate limiting
-
-### Aplicação de exemplo (httpbin)
-- **Namespace:** `sample` (com `istio-injection: enabled`)
-- **URL:** `https://httpbin.wasp.silvios.me/get`
-- **Gateway:** `httpbin-gateway` (HTTP/80, host `httpbin.wasp.silvios.me`)
-- **VirtualService:** roteia para `httpbin:8000`
-
 ---
 
 ## Fluxo de tráfego
 
 ```
 Internet → ALB (TLS termination, ACM cert)
-         → WAF (managed rules)
+         → WAF (managed rules + rate limiting)
          → Istio IngressGateway (ClusterIP, private subnet)
          → Istio Gateway + VirtualService
          → Aplicação (namespace com sidecar injection)
@@ -78,20 +29,9 @@ Internet → ALB (TLS termination, ACM cert)
 
 ---
 
-## Documentação de referência
-
-| Documento | Conteúdo |
-|---|---|
-| `docs/fluxo-autenticacao-multitenant.md` | Arquitetura do fluxo de autenticação multi-tenant |
-| `docs/plano-autenticacao-multitenant.md` | Plano de implementação com checklist de passos |
-| `docs/decisoes-tecnicas.md` | Decisões de design, trade-offs e itens adiados conscientemente |
-| `docs/onboarding-novo-customer.md` | Passos para cadastrar novo tenant: IdP, DynamoDB, K8s, domínios compartilhados |
-
----
-
 ## Estrutura dos scripts
 
-Scripts em `scripts/`, documentos em `docs/`.
+Scripts em `scripts/`, documentos em `docs/`. Configurações globais em `scripts/env.conf`.
 
 | Script | O que faz |
 |---|---|
@@ -109,71 +49,31 @@ Scripts em `scripts/`, documentos em `docs/`.
 | `scripts/12-configure-dns-cognito` | Custom domain Cognito (`idp.wasp.silvios.me`) + CNAME no Azure DNS |
 | `scripts/13-deploy-services` | Build/push Docker Hub, IRSA discovery, deploy K8s dos 4 namespaces |
 | `scripts/14-configure-istio-auth` | Istio `RequestAuthentication` + `AuthorizationPolicy` no namespace `customer1` |
-| `scripts/15-configure-waf-ratelimit` | Rate limiting WAF para `/login` e `/callback` (endereça SEC-007) |
+| `scripts/15-configure-waf-ratelimit` | Rate limiting WAF para `/login` e `/callback` |
 | `scripts/destroy` | Destrói tudo na ordem inversa (ACM deve ser removido manualmente) |
 
-**Script pendente (sessão futura):** `scripts/07b-configure-global-accelerator`
-Deve ser criado e executado **entre os scripts 07 e 08**. O Global Accelerator provisiona dois IPs anycast estáticos que substituem os A records frágeis de `wasp.silvios.me` (IPs do ALB mudam). Ver seção DNS abaixo.
+**Script pendente:** `scripts/07b-configure-global-accelerator` — deve ser criado entre os scripts 07 e 08. Provisiona dois IPs anycast estáticos (Global Accelerator → ALB) para substituir os A records frágeis do apex `wasp.silvios.me`, cujos IPs de ALB são rotativos.
 
-Configurações globais em `scripts/env.conf`. Variáveis preenchidas automaticamente pelos scripts:
-- `cert_arn` (script 06), `cognito_user_pool_id`, `cognito_app_client_id`, `cognito_cloudfront_domain` (scripts 11/12)
+---
+
+## Documentação de referência
+
+| Documento | Conteúdo |
+|---|---|
+| `docs/fluxo-autenticacao-multitenant.md` | Arquitetura do fluxo de autenticação multi-tenant |
+| `docs/plano-autenticacao-multitenant.md` | Plano de implementação com checklist de passos |
+| `docs/decisoes-tecnicas.md` | Decisões de design, trade-offs e itens adiados conscientemente |
+| `docs/onboarding-novo-customer.md` | Passos para cadastrar novo tenant: IdP, DynamoDB, K8s, domínios compartilhados |
 
 ---
 
 ## DNS
 
-O domínio `wasp.silvios.me` é gerenciado em **Azure DNS**, não no Route 53:
-
-| Campo | Valor |
-|---|---|
-| **Subscription** | `wasp-sandbox` |
-| **Resource Group** | `wasp-foundation` |
-| **Zone** | `wasp.silvios.me` |
-
-Scripts que criam registros DNS usam `az network dns record-set` em vez de `aws route53`.
-
-### Registro A no apex (`wasp.silvios.me`)
-
-O Cognito exige que o domínio pai do custom domain (`wasp.silvios.me`) tenha um registro A para validação DNS. Como CNAME no apex não é permitido pelo padrão DNS e o ALB não tem IPs fixos, o registro A foi criado manualmente com os IPs resolvidos do ALB no momento do provisionamento — **esses IPs são rotativos e podem mudar**.
-
-**Solução definitiva (opcional):** criar `scripts/07b-configure-global-accelerator` que provisiona um Global Accelerator apontando para o ALB. O Global Accelerator fornece dois IPs anycast estáticos que:
-- Substituem os A records frágeis do apex
-- Habilitam roteamento global para múltiplas regiões (alinhado com a arquitetura do `fluxo-autenticacao-multitenant.md`)
-- Eliminam a necessidade de atualizar DNS manualmente após cada reprovisionamento
+O domínio `wasp.silvios.me` é gerenciado em **Azure DNS** (subscription `wasp-sandbox`, resource group `wasp-foundation`), não no Route 53. Scripts usam `az network dns record-set` em vez de `aws route53`.
 
 ---
 
-## Tagging AWS
-
-Todos os recursos têm:
-- `project: eks-lab`
-- `env: lab`
-
----
-
-## Issues de segurança documentadas (SEC-*)
-
-| ID | Severidade | Problema |
-|---|---|---|
-| SEC-002 | Médio | IAM policy baixada sem verificação de hash |
-| SEC-003 | Baixo | Imagem do container sem digest fixo |
-| SEC-004 | Médio | Permissão cluster-admin sem escopo de namespace |
-| SEC-005 | Baixo | Sem Security Groups dedicados para o ALB |
-| SEC-006 | Médio | IMDSv1 habilitado nos nodes |
-| SEC-007 | Baixo | WAF sem rate limiting |
-
----
-
-## Fluxo de autenticação multi-tenant
-
-Plano detalhado em `docs/plano-autenticacao-multitenant.md`.
-
-- **Email de teste:** `smsilva@gmail.com`
-- **Tenant esperado:** `customer1.wasp.silvios.me`
-- **IdP:** Google SSO via Cognito
-- **Fluxo:** `wasp.silvios.me` → discovery → `idp.wasp.silvios.me` (Cognito) → `auth.wasp.silvios.me` (callback) → tenant subdomain
-
-### Subdomínios e roteamento
+## Subdomínios e roteamento
 
 | Subdomínio | Destino | Via |
 |---|---|---|
@@ -183,7 +83,9 @@ Plano detalhado em `docs/plano-autenticacao-multitenant.md`.
 | `discovery.wasp.silvios.me` | discovery service (ns: `discovery`) | ALB → Istio |
 | `customer1.wasp.silvios.me` | httpbin / app tenant (ns: `customer1`) | ALB → Istio |
 
-### Credenciais — variáveis de ambiente obrigatórias
+---
+
+## Credenciais — variáveis de ambiente obrigatórias
 
 Scripts 11 e 13 requerem env vars (não entram no `env.conf`):
 
@@ -194,310 +96,68 @@ Scripts 11 e 13 requerem env vars (não entram no `env.conf`):
 | `COGNITO_CLIENT_SECRET` | `13-deploy-services` | `aws cognito-idp describe-user-pool-client --query UserPoolClient.ClientSecret` |
 | `STATE_JWT_SECRET` | `13-deploy-services` | `openssl rand -hex 32` |
 
-Google redirect URI obrigatório no Google Cloud Console: `https://idp.wasp.silvios.me/oauth2/idpresponse`
+Google redirect URI obrigatório: `https://idp.wasp.silvios.me/oauth2/idpresponse` em **Authorized redirect URIs** (não em JavaScript origins — nosso flow é server-side redirect).
 
-> **Atenção ao provisionar:** Adicionar o URI em **Authorized redirect URIs** (não em Authorized JavaScript origins — esta seção é exclusiva para flows com SDK JS; o nosso flow é server-side redirect). Mudanças levam até 5 minutos para propagar.
+---
 
-### Cognito
+## Serviços Python (`services/`)
 
-| Recurso | Valor |
-|---|---|
-| **User Pool** | `wasp-platform` |
-| **Custom domain** | `idp.wasp.silvios.me` |
-| **App Client** | `customer1` |
-| **Callback URL** | `https://auth.wasp.silvios.me/callback` |
-| **Pre-Token Lambda** | `wasp-pre-token-generation` — injeta `custom:tenant_id` no JWT via DynamoDB GSI |
-| **Lambda IAM Role** | `wasp-pre-token-lambda-role` |
+Stack: Python 3.12 + FastAPI + Jinja2 + PyJWT + httpx. Cada serviço tem `.venv` próprio.
 
-### IRSA — discovery
+```bash
+cd lab/aws/eks/services/<serviço>
+python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+.venv/bin/pytest tests/ -v
+```
 
-| Recurso | Valor |
-|---|---|
-| **IAM Role** | `wasp-discovery-irsa` |
-| **Service Account** | `discovery/discovery` |
-| **Permissões** | `dynamodb:GetItem`, `dynamodb:Query` em `tenant-registry` e seus índices |
+Imagens Docker Hub (build com `--platform linux/amd64`; tag = git short SHA, nunca `:latest`):
 
-### Imagens Docker Hub
-
-| Serviço | Base |
+| Serviço | Repositório |
 |---|---|
 | `discovery` | `silviosilva/wasp-discovery` |
 | `platform-frontend` | `silviosilva/wasp-platform-frontend` |
 | `callback-handler` | `silviosilva/wasp-callback-handler` |
 
-Build com `--platform linux/amd64` (nodes EKS são x86_64).
+---
 
-**Tag de imagem:** o script 13 usa o git short SHA como tag (`image_tag="$(git rev-parse --short HEAD)"`). Nunca usar `:latest` — Kubernetes pode não baixar a nova imagem se a tag já estiver nos nodes.
+## Issues de segurança documentadas (SEC-*)
 
-### Serviços implementados (`services/`)
-
-| Serviço | Porta | Testes | Status |
-|---|---|---|---|
-| `discovery` | 8000 | 6/6 | committed |
-| `platform-frontend` | 8000 | 5/5 | committed |
-| `callback-handler` | 8000 | 10/10 | committed |
-
-Cada serviço tem: `app/`, `tests/`, `requirements.txt`, `requirements-dev.txt`, `Dockerfile`, `.gitignore`.
-
-**Stack:** Python 3.12 + FastAPI + Jinja2 + PyJWT + httpx  
-**Frontend:** Material Design 3, Roboto, dark mode via `data-theme` + `localStorage`  
-**Testes:** pytest + `TestClient` + `app.dependency_overrides`
+| ID | Severidade | Problema |
+|---|---|---|
+| [SEC-002](docs/security-issues/sec-002.md) | Médio | IAM policy baixada sem verificação de hash |
+| [SEC-003](docs/security-issues/sec-003.md) | Baixo | Imagem do container sem digest fixo |
+| [SEC-004](docs/security-issues/sec-004.md) | Médio | Permissão cluster-admin sem escopo de namespace |
+| [SEC-005](docs/security-issues/sec-005.md) | Baixo | Sem Security Groups dedicados para o ALB |
+| [SEC-006](docs/security-issues/sec-006.md) | Médio | IMDSv1 habilitado nos nodes |
 
 ---
 
-## Lições aprendidas — AWS CLI
+## Gotchas operacionais
 
-### DynamoDB CLI — `--expression-attribute-values` recebe um único JSON
+### `tenants.json` deve ter valores reais do Cognito
 
-O parâmetro `--expression-attribute-values` espera um **único objeto JSON** com todos os valores. Passar múltiplos argumentos separados causa `Unknown options`:
+`services/discovery/app/data/tenants.json` é fonte de dados estática. Ao reprovisionar o Cognito, atualizar `client_id` e `cognito_pool_id` antes do build, fazer commit e rebuild com nova tag SHA.
 
-```bash
-# ERRADO — dois argumentos separados
---expression-attribute-values \
-  ":cid={\"S\": \"val1\"}" \
-  ":pid={\"S\": \"val2\"}"
+### `COGNITO_DOMAIN` sem `https://`
 
-# CORRETO — um único JSON; usar variável com envsubst para interpolar
-attr_values=$(cat <<EOF | envsubst
-{":cid":{"S":"${var1}"},":pid":{"S":"${var2}"}}
-EOF
-)
---expression-attribute-values "${attr_values}"
-```
+No ConfigMap `platform-frontend-config`, o campo `COGNITO_DOMAIN` deve ser só o hostname (`idp.wasp.silvios.me`). O código em `auth.py` já adiciona o scheme — colocar a URL completa gera `https://https://idp...`.
 
-### DynamoDB CLI — palavras reservadas em `--update-expression`
+### DynamoDB — palavras reservadas em `--update-expression`
 
-Nomes de atributos que coincidem com palavras reservadas do DynamoDB (ex: `auth`, `name`, `status`) causam `ValidationException` em `--update-expression`. Usar `--expression-attribute-names` para criar um alias com `#`:
+Atributos com nomes reservados (ex: `auth`, `name`, `status`) causam `ValidationException`. Usar `--expression-attribute-names` com alias `#`:
 
 ```bash
-# ERRADO — "auth" é palavra reservada
---update-expression 'SET auth.field = :val'
-
-# CORRETO — alias #auth via --expression-attribute-names
 --update-expression 'SET #auth.field = :val' \
 --expression-attribute-names '{"#auth": "auth"}'
 ```
 
-### Python heredoc — conflito entre pipe e heredoc no stdin
-
-Pipe (`|`) e heredoc (`<<EOF`) disputam o stdin do processo. O heredoc vence — o conteúdo do pipe nunca chega ao Python. **Usar `<<'EOF'` não resolve**: aspas no delimitador afetam apenas interpolação de variáveis bash dentro do heredoc, não o comportamento do stdin.
+### WAFv2 — `--id` exige UUID, não name
 
 ```bash
-# QUEBRADO — json.load(sys.stdin) lê o heredoc, não o JSON do pipe
-echo "${json_var}" | python3 - <<EOF
-import sys, json
-d = json.load(sys.stdin)   # lê o EOF, não o pipe
-EOF
-
-# CORRETO — gravar em arquivo temporário e ler via open()
-tmp=$(mktemp)
-echo "${json_var}" > "${tmp}"
-python3 <<EOF
-import json
-with open("${tmp}") as f:
-    d = json.load(f)
-EOF
-rm -f "${tmp}"
-```
-
-### discovery — `tenants.json` deve ter valores reais
-
-O serviço `discovery` usa `services/discovery/app/data/tenants.json` como fonte de dados (não consulta DynamoDB em runtime). Ao reprovisionar o Cognito, atualizar os campos `client_id` e `cognito_pool_id` com os valores reais antes do build:
-
-```json
-{
-  "domain": "gmail.com",
-  "tenant_id": "customer1",
-  "client_id": "<valor real do cognito_app_client_id>",
-  "cognito_pool_id": "<valor real do cognito_user_pool_id>"
-}
-```
-
-Após atualizar, fazer commit e rebuild da imagem com nova tag SHA.
-
-### ConfigMap platform-frontend — `COGNITO_DOMAIN` sem `https://`
-
-O campo `COGNITO_DOMAIN` no ConfigMap `platform-frontend-config` deve conter **apenas o hostname**, sem `https://`. O código em `auth.py` já adiciona o scheme:
-
-```bash
-# CORRETO
-COGNITO_DOMAIN: idp.wasp.silvios.me
-
-# ERRADO — gera URL duplicada https://https://idp...
-COGNITO_DOMAIN: https://idp.wasp.silvios.me
-```
-
-### WAFv2 — formato do ARN e parâmetro `--id`
-
-O ARN de um WebACL tem o formato:
-```
-arn:aws:wafv2:<region>:<account>:regional/webacl/<name>/<uuid>
-```
-
-O parâmetro `--id` do `aws wafv2 get-web-acl` (e outros comandos WAFv2) exige o **UUID** (último segmento), não o `name`. Usar `$(NF-1)` com `awk -F'/'` retorna o `name` — o correto é `$NF`:
-
-```bash
-# CORRETO — extrai o UUID
+# CORRETO — $NF extrai o UUID (último segmento do ARN)
 web_acl_id="$(echo "${web_acl_arn}" | awk -F'/' '{print $NF}')"
-
-# ERRADO — extrai o name, causa ValidationException
-web_acl_id="$(echo "${web_acl_arn}" | awk -F'/' '{print $(NF-1)}')"
 ```
 
----
+### Pipe + heredoc Python — conflito de stdin
 
-## Lições aprendidas — Azure / Microsoft OIDC
-
-### Microsoft OIDC issuer para contas pessoais (MSA)
-
-O endpoint `consumers` funciona para autorização, mas o issuer nos tokens emitidos **não é** `consumers` — é um GUID fixo do tenant MSA:
-
-```
-# ERRADO — Cognito rejeita com "Bad id_token issuer"
-oidc_issuer="https://login.microsoftonline.com/consumers/v2.0"
-
-# CORRETO — GUID fixo para todas as contas pessoais Microsoft
-oidc_issuer="https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0"
-```
-
-Esse GUID (`9188040d-6c67-4c5b-b112-36a304b66dad`) é o tenant ID permanente da Microsoft para contas pessoais (MSN, Hotmail, Outlook.com). Usar o `consumers` no Cognito causa `Bad id_token issuer` no callback.
-
-### Verificar o appId do App Registration pelo Manifest
-
-O `client_id` exibido na UI do portal Azure pode ter typos. Confirmar sempre pelo Manifest (campo `appId`) antes de configurar o IdP no Cognito:
-
-**portal.azure.com → App registrations → \<app\> → Manifest**
-
-```json
-{
-  "appId": "69d4a26d-c1b2-4b56-8551-fbec0e0a03c7"  ← usar este valor
-}
-```
-
-### Supported account types para contas MSA
-
-Para suportar contas pessoais Microsoft (MSN, Hotmail, Outlook.com), o App Registration deve ter:
-
-**Authentication → Supported accounts → Personal accounts only**
-
-Alternativamente, verificar no Manifest: `"signInAudience": "PersonalMicrosoftAccount"`.
-
----
-
-## Lições aprendidas — serviços Python/FastAPI
-
-### Starlette TemplateResponse — API nova (≥0.36)
-
-A assinatura mudou. Usar sempre com keyword arguments:
-
-```python
-# CORRETO
-templates.TemplateResponse(
-    request=request,
-    name="login.html",
-    context={"error": error, "email": email},  # request NÃO entra no context
-)
-
-# ERRADO — causa TypeError: unhashable type: 'dict'
-templates.TemplateResponse("login.html", {"request": request, "error": error})
-```
-
-### Starlette — casing do SameSite cookie
-
-Starlette serializa `samesite="lax"` como `SameSite=lax` (minúsculo). Testar com lowercase:
-
-```python
-assert "SameSite=lax" in cookie   # correto
-assert "SameSite=Lax" in cookie   # falha
-```
-
-### TDD com FastAPI — padrão de dependency injection
-
-Todas as dependências externas (repositório, cliente HTTP, Cognito) são injetadas via `Depends()` e substituídas nos testes com `app.dependency_overrides`:
-
-```python
-# conftest.py
-@pytest.fixture
-def api_client(mock_repository):
-    app.dependency_overrides[get_repository] = lambda: mock_repository
-    yield TestClient(app)
-    app.dependency_overrides.clear()
-```
-
-O `TestClient` nunca faz chamadas de rede reais. Fixtures de mock substituem apenas o que cada teste precisa.
-
-### .gitignore por serviço
-
-Cada serviço tem `.gitignore` próprio com:
-```
-.venv/
-__pycache__/
-*.pyc
-.pytest_cache/
-```
-
-Sem isso, `git add .` captura o `.venv/` inteiro (3000+ arquivos).
-
-### CSS em arquivo separado
-
-CSS nunca inline no template HTML. Servir via `StaticFiles`:
-
-```python
-app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
-```
-
-Template referencia com `<link rel="stylesheet" href="/static/login.css">`.
-
-### State JWT — proteção CSRF no OAuth flow
-
-O parâmetro `state` do OAuth é um JWT assinado (HS256) contendo:
-
-```python
-{
-    "tenant_id": "customer1",
-    "return_url": "https://customer1.wasp.silvios.me",
-    "nonce": secrets.token_urlsafe(16),
-    "exp": now + timedelta(minutes=10),
-}
-```
-
-Segredo compartilhado via env var `STATE_JWT_SECRET` entre `platform-frontend` e `callback-handler`.
-
-### Como rodar os testes dos serviços Python
-
-Cada serviço (`discovery`, `platform-frontend`, `callback-handler`) tem seu próprio `.venv`. Não há `python` no PATH — usar sempre `python3`. O `pytest` não está instalado globalmente — deve ser chamado via `.venv`.
-
-```bash
-# Primeira vez (ou após clonar o repo)
-cd lab/aws/eks/services/<serviço>
-python3 -m venv .venv
-.venv/bin/pip install -r requirements-dev.txt
-
-# Rodar testes (sempre a partir do diretório do serviço)
-cd lab/aws/eks/services/<serviço>
-.venv/bin/pytest tests/ -v
-```
-
-Erros comuns:
-- `python: command not found` → usar `python3`
-- `No module named pytest` → venv não criado ou pip não rodado; seguir os passos acima
-
-### Dados de teste — conftest vs JSON de produção
-
-Os dados de `conftest.py` são **fixos e controlados** para os testes. Não carregar o JSON de produção (`app/data/tenants.json`) no conftest — os testes devem ser independentes de dados de seed.
-
-```python
-# conftest.py — dados explícitos, previsíveis
-CUSTOMER1 = TenantConfig(tenant_id="customer1", tenant_url="customer1.wasp.silvios.me", ...)
-```
-
-### Próximos passos (docs/plano-autenticacao-multitenant.md)
-
-- [x] **10.1** Cognito User Pool + App Client + Google IdP → `scripts/11-create-cognito`
-- [x] **10.2** DNS do Cognito Hosted UI (`idp.wasp.silvios.me`) → `scripts/12-configure-dns-cognito`
-- [x] **10.3** DynamoDB `tenant-registry` → `scripts/10-create-dynamodb`
-- [x] **10.7** Deployments Kubernetes para os três serviços → `scripts/13-deploy-services`
-- [x] **10.8** Istio `RequestAuthentication` (validar JWT Cognito) → `scripts/14-configure-istio-auth`
-- [x] **10.9** Istio `AuthorizationPolicy` (bloquear sem JWT válido) → `scripts/14-configure-istio-auth`
-- [x] **10.10** WAF rate limiting → `scripts/15-configure-waf-ratelimit`
-- [x] **10.11** Teste end-to-end com `smsilva@gmail.com`
+Pipe (`|`) e heredoc (`<<EOF`) disputam o stdin. O heredoc vence. Gravar a variável em arquivo temporário e ler via `open()`.
