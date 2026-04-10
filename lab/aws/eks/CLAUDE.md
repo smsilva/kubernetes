@@ -85,6 +85,7 @@ Internet → ALB (TLS termination, ACM cert)
 | `docs/fluxo-autenticacao-multitenant.md` | Arquitetura do fluxo de autenticação multi-tenant |
 | `docs/plano-autenticacao-multitenant.md` | Plano de implementação com checklist de passos |
 | `docs/decisoes-tecnicas.md` | Decisões de design, trade-offs e itens adiados conscientemente |
+| `docs/onboarding-novo-customer.md` | Passos para cadastrar novo tenant: IdP, DynamoDB, K8s, domínios compartilhados |
 
 ---
 

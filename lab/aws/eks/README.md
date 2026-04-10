@@ -79,6 +79,7 @@ O design do fluxo de login, incluindo suporte a múltiplos IdPs por tenant (Goog
 - **[Arquitetura de Autenticação Multi-tenant](docs/fluxo-autenticacao-multitenant.md)**
 - **[Plano de Implementação](docs/plano-autenticacao-multitenant.md)**
 - **[Decisões Técnicas e Trade-offs](docs/decisoes-tecnicas.md)**
+- **[Onboarding de Novo Customer](docs/onboarding-novo-customer.md)**
 
 **Ferramentas:** 
 
