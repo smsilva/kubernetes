@@ -48,7 +48,19 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
+    # Wildcard cobre todos os subdomínios exceto o apex
     - host: "*.${domain}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: istio-ingressgateway
+                port:
+                  number: 80
+    # Apex deve ser declarado explicitamente — *.domain não cobre domain
+    - host: "${domain}"
       http:
         paths:
           - path: /
