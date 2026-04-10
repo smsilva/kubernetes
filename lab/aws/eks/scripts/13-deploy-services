@@ -246,7 +246,7 @@ metadata:
   namespace: platform
 data:
   DISCOVERY_URL: "https://discovery.${domain}"
-  COGNITO_DOMAIN: "https://idp.${domain}"
+  COGNITO_DOMAIN: "idp.${domain}"
   COGNITO_CLIENT_ID: "${cognito_app_client_id}"
   CALLBACK_URL: "https://auth.${domain}/callback"
 ---
@@ -364,7 +364,7 @@ metadata:
   name: callback-handler-config
   namespace: auth
 data:
-  COGNITO_DOMAIN: "https://idp.${domain}"
+  COGNITO_DOMAIN: "idp.${domain}"
   COGNITO_CLIENT_ID: "${cognito_app_client_id}"
   CALLBACK_URL: "https://auth.${domain}/callback"
   SESSION_COOKIE_DOMAIN: ".${domain}"
