@@ -432,4 +432,4 @@ CUSTOMER1 = TenantConfig(tenant_id="customer1", tenant_url="customer1.wasp.silvi
 - [x] **10.8** Istio `RequestAuthentication` (validar JWT Cognito) → `scripts/14-configure-istio-auth`
 - [x] **10.9** Istio `AuthorizationPolicy` (bloquear sem JWT válido) → `scripts/14-configure-istio-auth`
 - [x] **10.10** WAF rate limiting → `scripts/15-configure-waf-ratelimit`
-- [ ] **10.11** Teste end-to-end com `smsilva@gmail.com`
+- [x] **10.11** Teste end-to-end com `smsilva@gmail.com`
