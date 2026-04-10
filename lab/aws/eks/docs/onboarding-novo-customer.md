@@ -118,23 +118,28 @@ Cada domínio de e-mail recebe um item no `tenant-registry`. A chave primária �
 tenant_domain="<domínio do e-mail>"      # ex: empresa.com
 tenant_url="${tenant_id}.${domain}"       # ex: customer3.wasp.silvios.me
 
+item=$(cat <<EOF
+{
+  "pk":                    {"S": "domain#${tenant_domain}"},
+  "tenant_id":             {"S": "${tenant_id}"},
+  "url":                   {"S": "${tenant_url}"},
+  "regions":               {"L": [{"S": "${aws_region}"}]},
+  "cognito_app_client_id": {"S": "${app_client_id}"},
+  "auth": {"M": {
+    "type":                  {"S": "oidc"},
+    "cognito_user_pool_id":  {"S": "${cognito_user_pool_id}"},
+    "cognito_app_client_id": {"S": "${app_client_id}"},
+    "cognito_idp_name":      {"S": "${idp_name}"}
+  }},
+  "status": {"S": "active"}
+}
+EOF
+)
+
 aws dynamodb put-item \
   --region "${aws_region}" \
   --table-name "tenant-registry" \
-  --item "{
-    \"pk\":                    {\"S\": \"domain#${tenant_domain}\"},
-    \"tenant_id\":             {\"S\": \"${tenant_id}\"},
-    \"url\":                   {\"S\": \"${tenant_url}\"},
-    \"regions\":               {\"L\": [{\"S\": \"${aws_region}\"}]},
-    \"cognito_app_client_id\": {\"S\": \"${app_client_id}\"},
-    \"auth\": {\"M\": {
-      \"type\":                  {\"S\": \"oidc\"},
-      \"cognito_user_pool_id\":  {\"S\": \"${cognito_user_pool_id}\"},
-      \"cognito_app_client_id\": {\"S\": \"${app_client_id}\"},
-      \"cognito_idp_name\":      {\"S\": \"${idp_name}\"}
-    }},
-    \"status\": {\"S\": \"active\"}
-  }"
+  --item "${item}"
 ```
 
 ### Verificar
@@ -264,23 +269,28 @@ novo_dominio="<segundo domínio>"         # ex: subsidiaria.com
 tenant_id_existente="<tenant existente>" # ex: customer3
 app_client_id_existente="<client_id>"
 
+item=$(cat <<EOF
+{
+  "pk":                    {"S": "domain#${novo_dominio}"},
+  "tenant_id":             {"S": "${tenant_id_existente}"},
+  "url":                   {"S": "${tenant_id_existente}.${domain}"},
+  "regions":               {"L": [{"S": "${aws_region}"}]},
+  "cognito_app_client_id": {"S": "${app_client_id_existente}"},
+  "auth": {"M": {
+    "type":                  {"S": "oidc"},
+    "cognito_user_pool_id":  {"S": "${cognito_user_pool_id}"},
+    "cognito_app_client_id": {"S": "${app_client_id_existente}"},
+    "cognito_idp_name":      {"S": "<idp_name do tenant existente>"}
+  }},
+  "status": {"S": "active"}
+}
+EOF
+)
+
 aws dynamodb put-item \
   --region "${aws_region}" \
   --table-name "tenant-registry" \
-  --item "{
-    \"pk\":                    {\"S\": \"domain#${novo_dominio}\"},
-    \"tenant_id\":             {\"S\": \"${tenant_id_existente}\"},
-    \"url\":                   {\"S\": \"${tenant_id_existente}.${domain}\"},
-    \"regions\":               {\"L\": [{\"S\": \"${aws_region}\"}]},
-    \"cognito_app_client_id\": {\"S\": \"${app_client_id_existente}\"},
-    \"auth\": {\"M\": {
-      \"type\":                  {\"S\": \"oidc\"},
-      \"cognito_user_pool_id\":  {\"S\": \"${cognito_user_pool_id}\"},
-      \"cognito_app_client_id\": {\"S\": \"${app_client_id_existente}\"},
-      \"cognito_idp_name\":      {\"S\": \"<idp_name do tenant existente>\"}
-    }},
-    \"status\": {\"S\": \"active\"}
-  }"
+  --item "${item}"
 ```
 
 ### Resultado
