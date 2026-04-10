@@ -1,0 +1,246 @@
+#!/bin/bash
+# Passo 17: Build/push das imagens atualizadas, atualiza o callback-handler com
+#           secrets multi-tenant e faz deploy do namespace customer2 com Istio auth
+#
+# Pré-requisitos:
+#   1. Script 16 executado (IdP Microsoft + App Client customer2 + DynamoDB)
+#   2. Exportar antes de executar:
+#        export COGNITO_CLIENT_SECRET=<secret do customer1>
+#        export COGNITO_CUSTOMER2_CLIENT_SECRET=<secret do customer2>
+#        export STATE_JWT_SECRET=<mesmo valor usado no script 13>
+#
+#   Recuperar os secrets com:
+#     aws cognito-idp describe-user-pool-client \
+#       --region us-east-1 --user-pool-id <pool-id> --client-id <client-id> \
+#       --query UserPoolClient.ClientSecret --output text
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+scripts_dir="$(cd "$(dirname "$0")" && pwd)"
+services_dir="${scripts_dir}/../services"
+
+image_tag="$(git -C "${services_dir}" rev-parse --short HEAD)"
+container_image_platform_frontend="silviosilva/wasp-platform-frontend:${image_tag}"
+container_image_callback_handler="silviosilva/wasp-callback-handler:${image_tag}"
+
+# =============================================================================
+# Validação
+# =============================================================================
+for var in COGNITO_CLIENT_SECRET COGNITO_CUSTOMER2_CLIENT_SECRET STATE_JWT_SECRET; do
+  if [[ -z "${!var:-}" ]]; then
+    echo "Erro: variável de ambiente ${var} não definida"
+    exit 1
+  fi
+done
+
+customer2_app_client_id=$(
+  aws cognito-idp list-user-pool-clients \
+    --region "${aws_region}" \
+    --user-pool-id "${cognito_user_pool_id}" \
+    --query "UserPoolClients[?ClientName=='customer2'].ClientId" \
+    --output text
+)
+
+if [[ -z "${customer2_app_client_id}" ]]; then
+  echo "Erro: App Client 'customer2' não encontrado no User Pool '${cognito_user_pool_id}'"
+  echo "  Execute scripts/16-add-microsoft-idp primeiro"
+  exit 1
+fi
+
+echo "customer2 App Client ID: ${customer2_app_client_id}"
+
+# =============================================================================
+# Build e push das imagens atualizadas
+# Apenas platform-frontend e callback-handler mudaram (discovery não alterado)
+# =============================================================================
+for svc in platform-frontend callback-handler; do
+  echo "Build: ${svc}..."
+  docker build \
+    --platform linux/amd64 \
+    -t "silviosilva/wasp-${svc}:${image_tag}" \
+    "${services_dir}/${svc}"
+
+  echo "Push: silviosilva/wasp-${svc}:${image_tag}..."
+  docker push "silviosilva/wasp-${svc}:${image_tag}"
+done
+
+# =============================================================================
+# Atualiza callback-handler: Secret multi-tenant + nova imagem
+# Substitui COGNITO_CLIENT_SECRET (hardcoded) por COGNITO_CLIENT_SECRET_<TENANT>
+# STATE_JWT_SECRET deve ser idêntico em todos os clusters regionais — ver docs/decisoes-tecnicas.md
+# =============================================================================
+echo "Atualizando Secret do callback-handler..."
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: callback-handler-secret
+  namespace: auth
+type: Opaque
+stringData:
+  COGNITO_CLIENT_SECRET_CUSTOMER1: "${COGNITO_CLIENT_SECRET}"
+  COGNITO_CLIENT_SECRET_CUSTOMER2: "${COGNITO_CUSTOMER2_CLIENT_SECRET}"
+  STATE_JWT_SECRET: "${STATE_JWT_SECRET}"
+EOF
+
+echo "Atualizando imagem do callback-handler..."
+kubectl -n auth set image deployment/callback-handler \
+  callback-handler="${container_image_callback_handler}"
+
+echo "Atualizando imagem do platform-frontend..."
+kubectl -n platform set image deployment/platform-frontend \
+  platform-frontend="${container_image_platform_frontend}"
+
+echo "Aguardando rollout do callback-handler..."
+kubectl -n auth rollout status deployment/callback-handler --timeout=180s
+
+echo "Aguardando rollout do platform-frontend..."
+kubectl -n platform rollout status deployment/platform-frontend --timeout=180s
+
+# =============================================================================
+# Deploy: customer2 (httpbin como app de teste)
+# =============================================================================
+echo "Deploying: customer2..."
+
+jwt_issuer="https://cognito-idp.${aws_region}.amazonaws.com/${cognito_user_pool_id}"
+jwks_uri="${jwt_issuer}/.well-known/jwks.json"
+
+kubectl apply -f - <<EOF
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: customer2
+  labels:
+    istio-injection: enabled
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+  namespace: customer2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpbin
+  template:
+    metadata:
+      labels:
+        app: httpbin
+    spec:
+      containers:
+        - name: httpbin
+          image: kennethreitz/httpbin
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+  namespace: customer2
+spec:
+  selector:
+    app: httpbin
+  ports:
+    - port: 8000
+      targetPort: 80
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: customer2-gateway
+  namespace: customer2
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "customer2.${domain}"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: customer2
+  namespace: customer2
+spec:
+  hosts:
+    - "customer2.${domain}"
+  gateways:
+    - customer2-gateway
+  http:
+    - route:
+        - destination:
+            host: httpbin
+            port:
+              number: 8000
+---
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: cognito-jwt
+  namespace: customer2
+spec:
+  jwtRules:
+    - issuer: "${jwt_issuer}"
+      jwksUri: "${jwks_uri}"
+      forwardOriginalToken: true
+      fromCookies:
+        - session
+      fromHeaders:
+        - name: Authorization
+          prefix: "Bearer "
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: require-tenant-jwt
+  namespace: customer2
+spec:
+  action: ALLOW
+  rules:
+    - when:
+        - key: request.auth.claims[custom:tenant_id]
+          values: ["customer2"]
+EOF
+
+# =============================================================================
+# Aguarda deployment ficar pronto
+# =============================================================================
+echo "Aguardando deployment customer2/httpbin..."
+kubectl -n customer2 wait deployment/httpbin \
+  --for condition=Available \
+  --timeout=180s
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo ""
+echo "Namespace customer2:"
+kubectl -n customer2 get deployment,svc,gateway,virtualservice,requestauthentication,authorizationpolicy
+
+echo ""
+echo "Pods:"
+kubectl get pods -A -l 'app in (platform-frontend,callback-handler,httpbin)'
+
+echo ""
+echo "--- Próximos passos ---"
+echo ""
+echo "1. Teste de isolamento (sem JWT → 403):"
+echo "   curl -s -o /dev/null -w '%{http_code}' https://customer2.${domain}/get"
+echo ""
+echo "2. Teste end-to-end:"
+echo "   https://${domain} → digitar silvio_silva@msn.com → Microsoft login → customer2.${domain}"
+echo ""
+echo "3. Teste de isolamento cruzado (JWT do customer2 rejeitado no customer1):"
+echo "   curl -b 'session=<JWT-customer2>' https://customer1.${domain}/get  # esperado: 403"

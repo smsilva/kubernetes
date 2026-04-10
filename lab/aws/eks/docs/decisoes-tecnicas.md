@@ -67,3 +67,27 @@ stringData:
 O callback-handler chama Secrets Manager diretamente usando `tenant_id` como chave. Zero redeployment ao adicionar tenant. Desvantagem: latência extra no caminho crítico do login.
 
 **Quando revisar:** ao escalar além de ~5 tenants ou ao colocar em produção.
+
+---
+
+## STATE_JWT_SECRET em deployments multi-região
+
+**Status:** decisão tomada; implementação da rotação adiada
+
+### Contexto
+
+O `STATE_JWT_SECRET` é o segredo compartilhado entre `platform-frontend` e `callback-handler` para assinar e verificar o state JWT do OAuth flow (proteção CSRF). O Cognito é uma instância global única — o callback retorna para `auth.wasp.silvios.me`, que o Global Accelerator pode rotear para **qualquer** cluster regional.
+
+### Decisão: segredo idêntico em todos os clusters
+
+Se o state JWT foi assinado em `us-east-1` mas o callback cai em `eu-central-1`, o `callback-handler` nessa região precisa verificar a assinatura. Portanto o `STATE_JWT_SECRET` deve ser o mesmo em todos os clusters regionais.
+
+### Implicações
+
+- **Provisionamento:** o segredo deve ser replicado para todas as regiões. Com ESO + Secrets Manager com replicação cross-region, isso é automático.
+- **Rotação:** precisa ser coordenada — todos os clusters devem receber o novo segredo simultaneamente, ou aceitar dois segredos durante uma janela de transição (exigiria suporte a múltiplos segredos no `decode_state_token`).
+- **Comprometimento:** se o segredo vazar, um atacante pode forjar state JWTs válidos. A expiração curta (10 minutos) limita a janela de exploração — rotation imediata invalida todos os states em voo (usuários precisam reiniciar o login).
+
+### Solução ótima para rotação (adiada)
+
+Suporte a dois segredos simultâneos no `decode_state_token` (tenta verificar com o novo; se falhar, tenta com o anterior). Permite rotação sem downgrade de UX. Implementar junto com a migração para ESO + Secrets Manager.
