@@ -185,6 +185,8 @@ Scripts 11 e 13 requerem env vars (não entram no `env.conf`):
 
 Google redirect URI obrigatório no Google Cloud Console: `https://idp.wasp.silvios.me/oauth2/idpresponse`
 
+> **Atenção ao provisionar:** Adicionar o URI em **Authorized redirect URIs** (não em Authorized JavaScript origins — esta seção é exclusiva para flows com SDK JS; o nosso flow é server-side redirect). Mudanças levam até 5 minutos para propagar.
+
 ### Cognito
 
 | Recurso | Valor |
@@ -206,13 +208,15 @@ Google redirect URI obrigatório no Google Cloud Console: `https://idp.wasp.silv
 
 ### Imagens Docker Hub
 
-| Serviço | Imagem |
+| Serviço | Base |
 |---|---|
-| `discovery` | `silviosilva/wasp-discovery:latest` |
-| `platform-frontend` | `silviosilva/wasp-platform-frontend:latest` |
-| `callback-handler` | `silviosilva/wasp-callback-handler:latest` |
+| `discovery` | `silviosilva/wasp-discovery` |
+| `platform-frontend` | `silviosilva/wasp-platform-frontend` |
+| `callback-handler` | `silviosilva/wasp-callback-handler` |
 
 Build com `--platform linux/amd64` (nodes EKS são x86_64).
+
+**Tag de imagem:** o script 13 usa o git short SHA como tag (`image_tag="$(git rev-parse --short HEAD)"`). Nunca usar `:latest` — Kubernetes pode não baixar a nova imagem se a tag já estiver nos nodes.
 
 ### Serviços implementados (`services/`)
 
@@ -283,6 +287,33 @@ with open("${tmp}") as f:
     d = json.load(f)
 EOF
 rm -f "${tmp}"
+```
+
+### discovery — `tenants.json` deve ter valores reais
+
+O serviço `discovery` usa `services/discovery/app/data/tenants.json` como fonte de dados (não consulta DynamoDB em runtime). Ao reprovisionar o Cognito, atualizar os campos `client_id` e `cognito_pool_id` com os valores reais antes do build:
+
+```json
+{
+  "domain": "gmail.com",
+  "tenant_id": "customer1",
+  "client_id": "<valor real do cognito_app_client_id>",
+  "cognito_pool_id": "<valor real do cognito_user_pool_id>"
+}
+```
+
+Após atualizar, fazer commit e rebuild da imagem com nova tag SHA.
+
+### ConfigMap platform-frontend — `COGNITO_DOMAIN` sem `https://`
+
+O campo `COGNITO_DOMAIN` no ConfigMap `platform-frontend-config` deve conter **apenas o hostname**, sem `https://`. O código em `auth.py` já adiciona o scheme:
+
+```bash
+# CORRETO
+COGNITO_DOMAIN: idp.wasp.silvios.me
+
+# ERRADO — gera URL duplicada https://https://idp...
+COGNITO_DOMAIN: https://idp.wasp.silvios.me
 ```
 
 ### WAFv2 — formato do ARN e parâmetro `--id`
