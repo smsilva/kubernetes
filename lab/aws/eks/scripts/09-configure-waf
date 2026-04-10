@@ -139,10 +139,13 @@ aws wafv2 get-web-acl-for-resource \
 
 echo ""
 echo "Regras da WebACL:"
+# ARN do WAFv2: arn:aws:wafv2:<region>:<account>:regional/webacl/<name>/<uuid>
+# --id exige o UUID (último segmento), não o name
+web_acl_id="$(echo "${web_acl_arn?}" | awk -F'/' '{print $NF}')"
 aws wafv2 get-web-acl \
   --region "${aws_region?}" \
   --scope REGIONAL \
-  --id "$(echo "${web_acl_arn?}" | awk -F'/' '{print $(NF-1)}')" \
+  --id "${web_acl_id}" \
   --name "${cluster_name}-web-acl" \
   --query 'WebACL.Rules[*].{Nome:Name,Prioridade:Priority}' \
   --output table

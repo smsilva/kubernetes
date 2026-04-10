@@ -59,3 +59,12 @@ aws eks list-associated-access-policies \
   --principal-arn "${caller_arn?}" \
   --query 'associatedAccessPolicies[*].{Policy:policyArn,Scope:accessScope.type}' \
   --output table
+
+echo ""
+echo "Addons instalados:"
+aws eks list-addons --cluster-name "${cluster_name?}" --region "${aws_region?}" --output table
+
+echo ""
+echo "OIDC Provider:"
+aws iam list-open-id-connect-providers \
+  --query 'OpenIDConnectProviderList[*].Arn' --output table

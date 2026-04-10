@@ -16,17 +16,17 @@ Este lab implanta um cluster EKS na AWS com ALB + Istio Gateway + WAF, acessíve
 | **Região** | `us-east-1` |
 | **Domínio** | `wasp.silvios.me` (wildcard `*.wasp.silvios.me`) |
 | **ACM Certificate ARN** | `arn:aws:acm:us-east-1:221047292361:certificate/f34e8fc8-fda5-42af-82e1-eee316f81d0e` |
-| **VPC ID** | `vpc-0c47e076a26889e60` |
+| **VPC ID** | `vpc-03cb9d83815b52ee1` |
 | **AWS Account ID** | `221047292361` |
 
 ### Rede (VPC 10.0.0.0/16)
 
 | Subnet | CIDR | AZ | Tipo |
 |---|---|---|---|
-| `subnet-0e4da8ae6ca110f91` | 10.0.1.0/24 | us-east-1a | Pública (ALB/NAT) |
-| `subnet-0f494b6a2308fae1c` | 10.0.2.0/24 | us-east-1b | Pública (ALB/NAT) |
-| `subnet-0d51cbb82316b5cf2` | 10.0.3.0/24 | us-east-1a | Privada (EKS nodes) |
-| `subnet-0be4e2518d4ce2448` | 10.0.4.0/24 | us-east-1b | Privada (EKS nodes) |
+| `subnet-0d11908e3d3ac35ba` | 10.0.1.0/24 | us-east-1a | Pública (ALB/NAT) |
+| `subnet-01b8a77128b10757f` | 10.0.2.0/24 | us-east-1b | Pública (ALB/NAT) |
+| `subnet-0f4bcf85d2c59f868` | 10.0.3.0/24 | us-east-1a | Privada (EKS nodes) |
+| `subnet-01a17ca1086c1e995` | 10.0.4.0/24 | us-east-1b | Privada (EKS nodes) |
 
 ---
 
@@ -213,6 +213,27 @@ Cada serviço tem: `app/`, `tests/`, `requirements.txt`, `requirements-dev.txt`,
 **Stack:** Python 3.12 + FastAPI + Jinja2 + PyJWT + httpx  
 **Frontend:** Material Design 3, Roboto, dark mode via `data-theme` + `localStorage`  
 **Testes:** pytest + `TestClient` + `app.dependency_overrides`
+
+---
+
+## Lições aprendidas — AWS CLI
+
+### WAFv2 — formato do ARN e parâmetro `--id`
+
+O ARN de um WebACL tem o formato:
+```
+arn:aws:wafv2:<region>:<account>:regional/webacl/<name>/<uuid>
+```
+
+O parâmetro `--id` do `aws wafv2 get-web-acl` (e outros comandos WAFv2) exige o **UUID** (último segmento), não o `name`. Usar `$(NF-1)` com `awk -F'/'` retorna o `name` — o correto é `$NF`:
+
+```bash
+# CORRETO — extrai o UUID
+web_acl_id="$(echo "${web_acl_arn}" | awk -F'/' '{print $NF}')"
+
+# ERRADO — extrai o name, causa ValidationException
+web_acl_id="$(echo "${web_acl_arn}" | awk -F'/' '{print $(NF-1)}')"
+```
 
 ---
 
