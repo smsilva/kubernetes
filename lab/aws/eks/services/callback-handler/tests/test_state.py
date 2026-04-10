@@ -10,6 +10,7 @@ from tests.conftest import SECRET
 def _make_token(overrides: dict = {}) -> str:
     payload = {
         "tenant_id": "customer1",
+        "client_id": "abc123client",
         "return_url": "https://customer1.wasp.silvios.me",
         "nonce": "abc123",
         "exp": int(time.time()) + 600,
@@ -45,6 +46,25 @@ def test_decode_raises_for_wrong_secret():
 
 def test_decode_raises_for_missing_required_claim():
     token = jwt.encode({"exp": int(time.time()) + 600}, SECRET, algorithm="HS256")
+
+    with pytest.raises(InvalidStateError):
+        decode_state_token(token, SECRET)
+
+
+def test_decode_exposes_client_id_from_token():
+    token = _make_token({"client_id": "abc123client"})
+
+    state = decode_state_token(token, SECRET)
+
+    assert state.client_id == "abc123client"
+
+
+def test_decode_raises_when_client_id_is_missing():
+    token = jwt.encode(
+        {"tenant_id": "customer1", "return_url": "https://x.me", "nonce": "n", "exp": int(time.time()) + 600},
+        SECRET,
+        algorithm="HS256",
+    )
 
     with pytest.raises(InvalidStateError):
         decode_state_token(token, SECRET)

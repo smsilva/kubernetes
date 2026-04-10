@@ -1,4 +1,19 @@
+import jwt
+
+from app.auth import build_state_token
 from tests.conftest import CUSTOMER1_TENANT
+
+
+def test_state_token_includes_client_id():
+    token = build_state_token(
+        tenant_id="customer1",
+        client_id="abc123client",
+        return_url="https://customer1.wasp.silvios.me",
+        secret="a-secret-key-long-enough-for-hmac",
+    )
+    payload = jwt.decode(token, "a-secret-key-long-enough-for-hmac", algorithms=["HS256"])
+
+    assert payload["client_id"] == "abc123client"
 
 
 def test_login_page_renders_email_form(api_client):

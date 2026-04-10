@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
 from .cognito import CognitoClient, CognitoTokenExchangeError
-from .state import InvalidStateError, decode_state_token
+from .state import InvalidStateError, LoginState, decode_state_token
 
 app = FastAPI(title="Callback Handler", version="1.0.0")
 
@@ -17,20 +17,25 @@ templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 
 
 def get_cognito_client() -> CognitoClient:
+    """Substituída em testes via app.dependency_overrides."""
+    raise NotImplementedError
+
+
+def _build_cognito_client(client_id: str, client_secret: str) -> CognitoClient:
     return CognitoClient(
         domain=os.getenv("COGNITO_DOMAIN", ""),
-        client_id=os.getenv("COGNITO_CLIENT_ID", ""),
-        client_secret=os.getenv("COGNITO_CLIENT_SECRET", ""),
+        client_id=client_id,
+        client_secret=client_secret,
         callback_url=os.getenv("CALLBACK_URL", ""),
     )
 
 
-def _render_error(request: Request, message: str):
+def _render_error(request: Request, message: str, status_code: int = 400):
     return templates.TemplateResponse(
         request=request,
         name="error.html",
         context={"message": message},
-        status_code=400,
+        status_code=status_code,
     )
 
 
@@ -44,12 +49,24 @@ def handle_callback(
     request: Request,
     code: str = Query(...),
     state: str = Query(...),
-    cognito: CognitoClient = Depends(get_cognito_client),
 ):
     try:
         login_state = decode_state_token(state, os.getenv("STATE_JWT_SECRET", ""))
     except InvalidStateError:
         return _render_error(request, "The authentication session is invalid or has expired.")
+
+    override = app.dependency_overrides.get(get_cognito_client)
+    try:
+        tenant_key = login_state.tenant_id.upper()
+        client_secret = os.environ[f"COGNITO_CLIENT_SECRET_{tenant_key}"]
+    except KeyError:
+        return _render_error(request, "Tenant not configured.", status_code=500)
+
+    if override:
+        cognito = override()
+        cognito.with_credentials(login_state.client_id, client_secret)
+    else:
+        cognito = _build_cognito_client(login_state.client_id, client_secret)
 
     try:
         tokens = cognito.exchange_code_for_tokens(code)

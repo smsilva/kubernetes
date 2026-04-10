@@ -6,6 +6,7 @@ import jwt
 @dataclass
 class LoginState:
     tenant_id: str
+    client_id: str
     return_url: str
     nonce: str
 
@@ -19,6 +20,7 @@ def decode_state_token(token: str, secret: str) -> LoginState:
         payload = jwt.decode(token, secret, algorithms=["HS256"])
         return LoginState(
             tenant_id=payload["tenant_id"],
+            client_id=payload["client_id"],
             return_url=payload["return_url"],
             nonce=payload["nonce"],
         )

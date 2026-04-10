@@ -1,0 +1,189 @@
+#!/bin/bash
+# Passo 16: Adiciona Microsoft como IdP no Cognito e registra customer2 no DynamoDB
+#
+# Pré-requisitos:
+#   1. App Registration criado em portal.azure.com (wasp-sso-customer2)
+#      Redirect URI: https://idp.<domain>/oauth2/idpresponse
+#      Supported account types: Personal Microsoft accounts (consumers)
+#   2. Exportar antes de executar:
+#        export AZURE_CLIENT_ID=<application-client-id>
+#        export AZURE_CLIENT_SECRET=<client-secret-value>
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+dynamodb_table="tenant-registry"
+user_pool_name="wasp-platform"
+idp_name="MicrosoftAD-Customer2"
+tenant_id="customer2"
+tenant_domain="msn.com"
+tenant_url="customer2.${domain}"
+
+# Contas pessoais Microsoft (MSN, Hotmail, Outlook.com) usam o endpoint consumers
+microsoft_oidc_issuer="https://login.microsoftonline.com/consumers/v2.0"
+
+# =============================================================================
+# Validação
+# =============================================================================
+for var in AZURE_CLIENT_ID AZURE_CLIENT_SECRET; do
+  if [[ -z "${!var:-}" ]]; then
+    echo "Erro: variável de ambiente ${var} não definida"
+    echo "  Crie o App Registration em portal.azure.com → Azure AD → App registrations"
+    echo "  Redirect URI obrigatória: https://idp.${domain}/oauth2/idpresponse"
+    exit 1
+  fi
+done
+
+# =============================================================================
+# Localiza o User Pool existente
+# =============================================================================
+echo "Localizando User Pool '${user_pool_name}'..."
+
+pool_id=$(
+  aws cognito-idp list-user-pools \
+    --region "${aws_region}" \
+    --max-results 60 \
+    --query "UserPools[?Name=='${user_pool_name}'].Id" \
+    --output text
+)
+
+if [[ -z "${pool_id}" ]]; then
+  echo "Erro: User Pool '${user_pool_name}' não encontrado — execute o script 11 primeiro"
+  exit 1
+fi
+
+echo "User Pool encontrado: ${pool_id}"
+
+# =============================================================================
+# IdP Microsoft OIDC
+# =============================================================================
+echo "Verificando IdP '${idp_name}'..."
+
+idp_exists=$(
+  aws cognito-idp describe-identity-provider \
+    --region "${aws_region}" \
+    --user-pool-id "${pool_id}" \
+    --provider-name "${idp_name}" \
+    --query 'IdentityProvider.ProviderName' \
+    --output text 2>/dev/null || echo ""
+)
+
+if [[ -z "${idp_exists}" ]]; then
+  echo "Criando IdP '${idp_name}'..."
+  aws cognito-idp create-identity-provider \
+    --region "${aws_region}" \
+    --user-pool-id "${pool_id}" \
+    --provider-name "${idp_name}" \
+    --provider-type OIDC \
+    --provider-details \
+      "client_id=${AZURE_CLIENT_ID},client_secret=${AZURE_CLIENT_SECRET},authorize_scopes=openid email profile,oidc_issuer=${microsoft_oidc_issuer},attributes_request_method=GET" \
+    --attribute-mapping \
+      "email=email,name=name" \
+    > /dev/null
+  echo "IdP criado: ${idp_name}"
+else
+  echo "IdP já existe: ${idp_name}"
+fi
+
+# =============================================================================
+# App Client customer2
+# =============================================================================
+echo "Verificando App Client '${tenant_id}'..."
+
+existing_client_id=$(
+  aws cognito-idp list-user-pool-clients \
+    --region "${aws_region}" \
+    --user-pool-id "${pool_id}" \
+    --query "UserPoolClients[?ClientName=='${tenant_id}'].ClientId" \
+    --output text
+)
+
+if [[ -z "${existing_client_id}" ]]; then
+  echo "Criando App Client '${tenant_id}'..."
+  app_client_id=$(
+    aws cognito-idp create-user-pool-client \
+      --region "${aws_region}" \
+      --user-pool-id "${pool_id}" \
+      --client-name "${tenant_id}" \
+      --generate-secret \
+      --supported-identity-providers "${idp_name}" \
+      --allowed-o-auth-flows code \
+      --allowed-o-auth-scopes openid email profile \
+      --callback-urls "https://auth.${domain}/callback" \
+      --logout-urls "https://${tenant_url}/logout" \
+      --allowed-o-auth-flows-user-pool-client \
+      --query 'UserPoolClient.ClientId' \
+      --output text
+  )
+  echo "App Client criado: ${app_client_id}"
+else
+  app_client_id="${existing_client_id}"
+  echo "App Client já existe: ${app_client_id}"
+fi
+
+# =============================================================================
+# DynamoDB — registro customer2
+# =============================================================================
+echo "Registrando tenant '${tenant_id}' no DynamoDB (domain: ${tenant_domain})..."
+
+item=$(cat <<EOF
+{
+  "pk":                    {"S": "domain#${tenant_domain}"},
+  "tenant_id":             {"S": "${tenant_id}"},
+  "url":                   {"S": "${tenant_url}"},
+  "regions":               {"L": [{"S": "${aws_region}"}]},
+  "cognito_app_client_id": {"S": "${app_client_id}"},
+  "auth": {"M": {
+    "type":                  {"S": "microsoft"},
+    "cognito_user_pool_id":  {"S": "${pool_id}"},
+    "cognito_app_client_id": {"S": "${app_client_id}"},
+    "cognito_idp_name":      {"S": "${idp_name}"}
+  }},
+  "status": {"S": "active"}
+}
+EOF
+)
+
+aws dynamodb put-item \
+  --region "${aws_region}" \
+  --table-name "${dynamodb_table}" \
+  --item "${item}"
+
+echo "Tenant registrado."
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo "IdP:"
+aws cognito-idp describe-identity-provider \
+  --region "${aws_region}" \
+  --user-pool-id "${pool_id}" \
+  --provider-name "${idp_name}" \
+  --query 'IdentityProvider.{Nome:ProviderName,Tipo:ProviderType}' \
+  --output table
+
+echo ""
+echo "DynamoDB:"
+aws dynamodb get-item \
+  --region "${aws_region}" \
+  --table-name "${dynamodb_table}" \
+  --key "{\"pk\": {\"S\": \"domain#${tenant_domain}\"}}" \
+  --output table
+
+echo ""
+echo "Teste discovery:"
+echo "  curl \"https://discovery.${domain}/tenant?domain=${tenant_domain}\""
+echo ""
+echo "--- Próximos passos ---"
+echo ""
+echo "1. Recupere o client secret do App Client customer2:"
+echo "   export COGNITO_CUSTOMER2_CLIENT_SECRET=\$(aws cognito-idp describe-user-pool-client \\"
+echo "     --region ${aws_region} \\"
+echo "     --user-pool-id ${pool_id} \\"
+echo "     --client-id ${app_client_id} \\"
+echo "     --query UserPoolClient.ClientSecret --output text)"
+echo ""
+echo "2. Execute: scripts/17-deploy-customer2"

@@ -5,9 +5,10 @@ from urllib.parse import urlencode
 import jwt
 
 
-def build_state_token(tenant_id: str, return_url: str, secret: str) -> str:
+def build_state_token(tenant_id: str, client_id: str, return_url: str, secret: str) -> str:
     payload = {
         "tenant_id": tenant_id,
+        "client_id": client_id,
         "return_url": return_url,
         "nonce": secrets.token_urlsafe(16),
         "exp": datetime.now(timezone.utc) + timedelta(minutes=10),
