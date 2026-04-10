@@ -286,7 +286,7 @@ Dados sensíveis do IdP, separados para controle de acesso IAM granular. Apenas 
 | **ALB + `*.wasp.silvios.me`** | Roteia `auth.wasp.silvios.me` e `discovery.wasp.silvios.me` sem alteração no Ingress |
 | **Istio `VirtualService`** | Configura CORS para chamadas cross-origin entre subdomínios |
 | **Istio `RequestAuthentication`** | Valida JWT Cognito — JWKS único independente do IdP upstream |
-| **Istio `AuthorizationPolicy`** | Bloqueia requisições sem JWT válido **e** rejeita JWTs de outros tenants via claim `tenant_id` |
+| **Istio `AuthorizationPolicy`** | Bloqueia requisições sem JWT válido **e** rejeita JWTs de outros tenants via claim `custom:tenant_id` |
 | **WAF** | Rate limiting em `/login` e `/callback` (endereça [SEC-007](README.md#sec-007-waf-sem-rate-limiting--baixo)) |
 | **IRSA** | Discovery service com permissão de leitura no DynamoDB; callback handler com acesso ao Secrets Manager |
 
@@ -335,7 +335,7 @@ def handler(event, context):
 
     event['response']['claimsOverrideDetails'] = {
         'claimsToAddOrOverride': {
-            'tenant_id': tenant_id
+            'custom:tenant_id': tenant_id
         }
     }
     return event
@@ -356,8 +356,8 @@ spec:
   action: ALLOW
   rules:
     - when:
-        - key: request.auth.claims[tenant_id]
-          values: ["customer1"]  # só JWTs com tenant_id=customer1 são aceitos
+        - key: request.auth.claims[custom:tenant_id]
+          values: ["customer1"]  # só JWTs com custom:tenant_id=customer1 são aceitos
 ```
 
 ```yaml
@@ -371,7 +371,7 @@ spec:
   action: ALLOW
   rules:
     - when:
-        - key: request.auth.claims[tenant_id]
+        - key: request.auth.claims[custom:tenant_id]
           values: ["customer2"]
 ```
 

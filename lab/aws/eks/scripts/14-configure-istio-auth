@@ -1,0 +1,92 @@
+#!/bin/bash
+# Passo 14: Configura Istio RequestAuthentication e AuthorizationPolicy no namespace customer1
+# Etapa 10.8: valida JWT do Cognito (lido do cookie session)
+# Etapa 10.9: bloqueia requests sem custom:tenant_id == "customer1"
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+# =============================================================================
+# Validação
+# =============================================================================
+if [[ -z "${cognito_user_pool_id:-}" ]]; then
+  echo "Erro: cognito_user_pool_id não definido em env.conf — execute o passo 11 primeiro"
+  exit 1
+fi
+
+jwt_issuer="https://cognito-idp.${aws_region}.amazonaws.com/${cognito_user_pool_id}"
+jwks_uri="${jwt_issuer}/.well-known/jwks.json"
+
+echo "Issuer : ${jwt_issuer}"
+echo "JWKS   : ${jwks_uri}"
+
+# =============================================================================
+# Etapa 10.8 — RequestAuthentication
+# Valida assinatura e expiração do JWT emitido pelo Cognito.
+# fromCookies: lê o JWT do cookie "session" emitido pelo callback-handler.
+# forwardOriginalToken: propaga o JWT nos headers para que a app possa ler claims.
+# =============================================================================
+echo ""
+echo "Aplicando RequestAuthentication (namespace: customer1)..."
+
+kubectl apply -f - <<EOF
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: cognito-jwt
+  namespace: customer1
+spec:
+  jwtRules:
+    - issuer: "${jwt_issuer}"
+      jwksUri: "${jwks_uri}"
+      forwardOriginalToken: true
+      fromCookies:
+        - session
+EOF
+
+# =============================================================================
+# Etapa 10.9 — AuthorizationPolicy
+# Permite apenas requests com custom:tenant_id == "customer1".
+# Quando existe pelo menos uma AuthorizationPolicy no namespace, o Istio nega
+# tudo que não for explicitamente permitido (deny-by-default).
+# Resultado: sem JWT válido ou tenant_id errado → HTTP 403.
+# =============================================================================
+echo "Aplicando AuthorizationPolicy (namespace: customer1)..."
+
+kubectl apply -f - <<EOF
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: require-tenant-jwt
+  namespace: customer1
+spec:
+  action: ALLOW
+  rules:
+    - when:
+        - key: request.auth.claims[custom:tenant_id]
+          values: ["customer1"]
+EOF
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo ""
+echo "RequestAuthentication:"
+kubectl -n customer1 get requestauthentication cognito-jwt -o yaml
+
+echo ""
+echo "AuthorizationPolicy:"
+kubectl -n customer1 get authorizationpolicy require-tenant-jwt -o yaml
+
+echo ""
+echo "Comportamento esperado:"
+echo "  JWT válido com custom:tenant_id=customer1  → HTTP 200"
+echo "  JWT válido com tenant_id de outro tenant   → HTTP 403"
+echo "  Sem cookie session                         → HTTP 403"
+echo "  JWT expirado ou assinatura inválida        → HTTP 401"
+echo ""
+echo "Próximo passo: scripts/15-configure-waf-ratelimit"
+echo "  Adiciona rate limiting ao WAF para /login e /callback (SEC-007)"

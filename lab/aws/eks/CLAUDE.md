@@ -48,7 +48,7 @@ Este lab implanta um cluster EKS na AWS com ALB + Istio Gateway + WAF, acessíve
 - **Namespace:** `istio-ingress`
 - **Host pattern:** `*.wasp.silvios.me`
 - **Backend:** `istio-ingressgateway:80`
-- **TLS:** terminado no ALB via ACM
+- **TLS:** terminado no ALB via ACM — certificado wildcard `*.wasp.silvios.me` cobre todos os subdomínios; um único CNAME `*.wasp.silvios.me → ALB hostname` no Azure DNS é suficiente. Exceção: `idp.wasp.silvios.me` aponta para o CloudFront do Cognito (script 12).
 - **HTTP→HTTPS redirect:** habilitado
 - **Target type:** `ip` (aponta direto para pods)
 

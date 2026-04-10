@@ -11,6 +11,11 @@ if [[ -z "${cert_arn}" ]]; then
   exit 1
 fi
 
+# O certificado ACM é wildcard (*.wasp.silvios.me), então cobre todos os subdomínios
+# automaticamente. Não é necessário criar entradas DNS individuais por subdomínio —
+# basta um registro CNAME *.wasp.silvios.me → ALB hostname no Azure DNS.
+# Exceção: idp.wasp.silvios.me aponta para o CloudFront do Cognito (script 12).
+
 # =============================================================================
 # IngressClass + Ingress
 # =============================================================================
