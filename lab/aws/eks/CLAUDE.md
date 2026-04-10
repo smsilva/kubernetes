@@ -15,7 +15,7 @@ Este lab implanta um cluster EKS na AWS com ALB + Istio Gateway + WAF, acessíve
 | **Cluster EKS** | `wasp-calm-crow-ndx4` |
 | **Região** | `us-east-1` |
 | **Domínio** | `wasp.silvios.me` (wildcard `*.wasp.silvios.me`) |
-| **ACM Certificate ARN** | `arn:aws:acm:us-east-1:221047292361:certificate/f34e8fc8-fda5-42af-82e1-eee316f81d0e` |
+| **ACM Certificate ARN** | `arn:aws:acm:us-east-1:221047292361:certificate/59ab7614-fa1b-4dba-9f43-7c775cfa5bac` |
 | **VPC ID** | `vpc-03cb9d83815b52ee1` |
 | **AWS Account ID** | `221047292361` |
 
@@ -48,7 +48,7 @@ Este lab implanta um cluster EKS na AWS com ALB + Istio Gateway + WAF, acessíve
 - **Namespace:** `istio-ingress`
 - **Host pattern:** `*.wasp.silvios.me`
 - **Backend:** `istio-ingressgateway:80`
-- **TLS:** terminado no ALB via ACM — certificado wildcard `*.wasp.silvios.me` cobre todos os subdomínios; um único CNAME `*.wasp.silvios.me → ALB hostname` no Azure DNS é suficiente. Exceção: `idp.wasp.silvios.me` aponta para o CloudFront do Cognito (script 12).
+- **TLS:** terminado no ALB via ACM — certificado SAN `*.wasp.silvios.me` + `wasp.silvios.me` (apex) cobre todos os subdomínios e o apex; um único CNAME `*.wasp.silvios.me → ALB hostname` no Azure DNS é suficiente. Exceção: `idp.wasp.silvios.me` aponta para o CloudFront do Cognito (script 12).
 - **HTTP→HTTPS redirect:** habilitado
 - **Target type:** `ip` (aponta direto para pods)
 

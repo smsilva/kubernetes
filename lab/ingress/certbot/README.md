@@ -23,7 +23,7 @@ mkdir --parents "${HOME}/certificates/"
 
 ```bash
 cat <<'EOF' > /tmp/certbot.env
-base_domain="sandbox.wasp.silvios.me"
+base_domain="wasp.silvios.me"
 lets_encrypt_server_staging="acme-staging-v02"
 lets_encrypt_server_production="acme-v02"
 lets_encrypt_server=${lets_encrypt_server_staging?}
@@ -51,8 +51,8 @@ certbot certonly \
   --email "${lets_encrypt_alert_email?}" \
   --no-eff-email \
   --server "https://${lets_encrypt_server?}.api.letsencrypt.org/directory" \
+  -d ${base_domain?} \
   -d *.${base_domain?} \
-  -d *.services.${base_domain?} \
   --config-dir "${HOME}/certificates/config" \
   --work-dir "${HOME}/certificates/work" \
   --logs-dir "${HOME}/certificates/logs"
