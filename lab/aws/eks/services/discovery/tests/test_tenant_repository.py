@@ -67,6 +67,20 @@ def test_dynamodb_repository_returns_none_when_domain_does_not_exist():
     assert tenant is None
 
 
+def test_dynamodb_repository_is_case_insensitive_for_domain():
+    dynamodb_client = MagicMock()
+    dynamodb_client.get_item.return_value = {"Item": CUSTOMER1_DYNAMODB_ITEM}
+
+    repository = DynamoDBTenantRepository(client=dynamodb_client, table_name="tenant-registry")
+    tenant = repository.find_by_domain("Gmail.COM")
+
+    assert tenant == CUSTOMER1
+    dynamodb_client.get_item.assert_called_once_with(
+        TableName="tenant-registry",
+        Key={"pk": {"S": "domain#gmail.com"}},
+    )
+
+
 def test_dynamodb_repository_propagates_client_error():
     dynamodb_client = MagicMock()
     dynamodb_client.get_item.side_effect = ClientError(

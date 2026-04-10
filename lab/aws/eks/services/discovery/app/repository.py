@@ -17,7 +17,7 @@ class DynamoDBTenantRepository:
     def find_by_domain(self, domain: str) -> TenantConfig | None:
         response = self._client.get_item(
             TableName=self._table_name,
-            Key={"pk": {"S": f"domain#{domain}"}},
+            Key={"pk": {"S": f"domain#{domain.lower()}"}},
         )
         item = response.get("Item")
         if not item:

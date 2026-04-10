@@ -1,9 +1,41 @@
 from unittest.mock import MagicMock, patch
 
 from botocore.exceptions import ClientError
+from fastapi.testclient import TestClient
 
 from app.repository import DynamoDBTenantRepository
 from tests.conftest import CUSTOMER1, CUSTOMER2
+
+
+def test_get_repository_raises_when_env_vars_are_missing():
+    import os
+    import pytest
+    from app.main import get_repository
+    get_repository.cache_clear()
+
+    env_without_aws = {k: v for k, v in os.environ.items() if k not in ("AWS_REGION", "DYNAMODB_TABLE")}
+    with patch.dict("os.environ", env_without_aws, clear=True):
+        with pytest.raises(KeyError):
+            get_repository()
+
+    get_repository.cache_clear()
+
+
+def test_get_repository_returns_same_instance_on_repeated_calls():
+    from app.main import get_repository
+    get_repository.cache_clear()
+
+    with patch("app.main.boto3") as mock_boto3, \
+         patch.dict("os.environ", {"AWS_REGION": "us-east-1", "DYNAMODB_TABLE": "tenant-registry"}):
+        mock_boto3.client.return_value = MagicMock()
+
+        repo1 = get_repository()
+        repo2 = get_repository()
+
+        assert repo1 is repo2
+        mock_boto3.client.assert_called_once()
+
+    get_repository.cache_clear()
 
 
 def test_get_repository_returns_dynamodb_repository_using_env_vars():
@@ -60,3 +92,28 @@ def test_health_check_returns_200(api_client):
     response = api_client.get("/health")
 
     assert response.status_code == 200
+
+
+def test_get_tenant_returns_404_for_empty_domain(api_client):
+    response = api_client.get("/tenant?domain=")
+
+    assert response.status_code == 404
+
+
+def test_get_tenant_returns_500_when_dynamodb_raises_client_error():
+    from app.main import app, get_repository
+    from app.repository import DynamoDBTenantRepository
+
+    broken_repository = MagicMock(spec=DynamoDBTenantRepository)
+    broken_repository.find_by_domain.side_effect = ClientError(
+        {"Error": {"Code": "ResourceNotFoundException", "Message": "Table not found"}},
+        "GetItem",
+    )
+
+    app.dependency_overrides[get_repository] = lambda: broken_repository
+    client = TestClient(app, raise_server_exceptions=False)
+
+    response = client.get("/tenant?domain=gmail.com")
+
+    app.dependency_overrides.clear()
+    assert response.status_code == 500
