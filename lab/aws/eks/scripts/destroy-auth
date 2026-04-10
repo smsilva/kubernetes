@@ -1,0 +1,190 @@
+#!/bin/bash
+# Destrói os recursos de autenticação criados pelos scripts 10–17
+#
+# Ordem de deleção:
+#  1. Cognito: App Clients, Identity Providers, Lambda trigger, custom domain, User Pool
+#  2. Lambda: função wasp-pre-token-generation e IAM role
+#  3. IAM: role wasp-discovery-irsa
+#  4. DynamoDB: tabela tenant-registry
+#  5. DNS: CNAME idp.<domain> no Azure DNS
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+user_pool_name="wasp-platform"
+lambda_function_name="wasp-pre-token-generation"
+lambda_role_name="wasp-pre-token-lambda-role"
+discovery_role_name="wasp-discovery-irsa"
+dynamodb_table="tenant-registry"
+azure_resource_group="wasp-foundation"
+azure_dns_zone="${domain}"
+
+# =============================================================================
+# Localiza o User Pool
+# =============================================================================
+pool_id=$(
+  aws cognito-idp list-user-pools \
+    --region "${aws_region}" \
+    --max-results 60 \
+    --query "UserPools[?Name=='${user_pool_name}'].Id" \
+    --output text
+)
+
+if [[ -z "${pool_id}" || "${pool_id}" == "None" ]]; then
+  echo "User Pool '${user_pool_name}' não encontrado — pulando recursos Cognito."
+else
+  echo "User Pool encontrado: ${pool_id}"
+
+  # ===========================================================================
+  # 1a. Remove trigger Lambda do User Pool
+  # ===========================================================================
+  echo "Removendo Lambda trigger do User Pool..."
+  aws cognito-idp update-user-pool \
+    --region "${aws_region}" \
+    --user-pool-id "${pool_id}" \
+    --lambda-config '{}' 2>/dev/null || true
+
+  # ===========================================================================
+  # 1b. App Clients
+  # ===========================================================================
+  echo "Removendo App Clients..."
+  client_ids=$(
+    aws cognito-idp list-user-pool-clients \
+      --region "${aws_region}" \
+      --user-pool-id "${pool_id}" \
+      --query 'UserPoolClients[].ClientId' \
+      --output text
+  )
+  for client_id in ${client_ids}; do
+    echo "  Deletando App Client: ${client_id}"
+    aws cognito-idp delete-user-pool-client \
+      --region "${aws_region}" \
+      --user-pool-id "${pool_id}" \
+      --client-id "${client_id}"
+  done
+
+  # ===========================================================================
+  # 1c. Identity Providers
+  # ===========================================================================
+  echo "Removendo Identity Providers..."
+  idp_names=$(
+    aws cognito-idp list-identity-providers \
+      --region "${aws_region}" \
+      --user-pool-id "${pool_id}" \
+      --query 'Providers[].ProviderName' \
+      --output text
+  )
+  for idp_name in ${idp_names}; do
+    echo "  Deletando IdP: ${idp_name}"
+    aws cognito-idp delete-identity-provider \
+      --region "${aws_region}" \
+      --user-pool-id "${pool_id}" \
+      --provider-name "${idp_name}"
+  done
+
+  # ===========================================================================
+  # 1d. Custom domain (Cognito Hosted UI — idp.<domain>)
+  # ===========================================================================
+  echo "Removendo custom domain do Cognito..."
+  cognito_subdomain="idp"
+  aws cognito-idp delete-user-pool-domain \
+    --region "${aws_region}" \
+    --user-pool-id "${pool_id}" \
+    --domain "${cognito_subdomain}.${domain}" 2>/dev/null || true
+
+  # ===========================================================================
+  # 1e. User Pool
+  # ===========================================================================
+  echo "Deletando User Pool '${user_pool_name}'..."
+  aws cognito-idp delete-user-pool \
+    --region "${aws_region}" \
+    --user-pool-id "${pool_id}"
+  echo "User Pool deletado."
+fi
+
+# =============================================================================
+# 2. Lambda
+# =============================================================================
+echo "Removendo Lambda '${lambda_function_name}'..."
+aws lambda delete-function \
+  --region "${aws_region}" \
+  --function-name "${lambda_function_name}" 2>/dev/null || echo "  Lambda não encontrado."
+
+echo "Removendo IAM role '${lambda_role_name}'..."
+# Desanexar policies antes de deletar a role
+policy_arns=$(
+  aws iam list-attached-role-policies \
+    --role-name "${lambda_role_name}" \
+    --query 'AttachedPolicies[].PolicyArn' \
+    --output text 2>/dev/null || echo ""
+)
+for policy_arn in ${policy_arns}; do
+  aws iam detach-role-policy \
+    --role-name "${lambda_role_name}" \
+    --policy-arn "${policy_arn}"
+done
+# Remover inline policies
+inline_policies=$(
+  aws iam list-role-policies \
+    --role-name "${lambda_role_name}" \
+    --query 'PolicyNames[]' \
+    --output text 2>/dev/null || echo ""
+)
+for policy_name in ${inline_policies}; do
+  aws iam delete-role-policy \
+    --role-name "${lambda_role_name}" \
+    --policy-name "${policy_name}"
+done
+aws iam delete-role \
+  --role-name "${lambda_role_name}" 2>/dev/null || echo "  IAM role Lambda não encontrada."
+
+# =============================================================================
+# 3. IAM role IRSA — discovery
+# =============================================================================
+echo "Removendo IAM role IRSA '${discovery_role_name}'..."
+policy_arns=$(
+  aws iam list-attached-role-policies \
+    --role-name "${discovery_role_name}" \
+    --query 'AttachedPolicies[].PolicyArn' \
+    --output text 2>/dev/null || echo ""
+)
+for policy_arn in ${policy_arns}; do
+  aws iam detach-role-policy \
+    --role-name "${discovery_role_name}" \
+    --policy-arn "${policy_arn}"
+done
+inline_policies=$(
+  aws iam list-role-policies \
+    --role-name "${discovery_role_name}" \
+    --query 'PolicyNames[]' \
+    --output text 2>/dev/null || echo ""
+)
+for policy_name in ${inline_policies}; do
+  aws iam delete-role-policy \
+    --role-name "${discovery_role_name}" \
+    --policy-name "${policy_name}"
+done
+aws iam delete-role \
+  --role-name "${discovery_role_name}" 2>/dev/null || echo "  IAM role IRSA não encontrada."
+
+# =============================================================================
+# 4. DynamoDB
+# =============================================================================
+echo "Removendo tabela DynamoDB '${dynamodb_table}'..."
+aws dynamodb delete-table \
+  --region "${aws_region}" \
+  --table-name "${dynamodb_table}" 2>/dev/null || echo "  Tabela não encontrada."
+
+# =============================================================================
+# 5. DNS — CNAME idp.<domain> no Azure DNS
+# =============================================================================
+echo "Removendo CNAME idp no Azure DNS..."
+az network dns record-set cname delete \
+  --resource-group "${azure_resource_group}" \
+  --zone-name "${azure_dns_zone}" \
+  --name "idp" \
+  --yes 2>/dev/null || echo "  CNAME idp não encontrado."
+
+echo ""
+echo "Recursos de autenticação removidos."
+echo "Atenção: imagens no Docker Hub (silviosilva/wasp-*) não foram removidas."
