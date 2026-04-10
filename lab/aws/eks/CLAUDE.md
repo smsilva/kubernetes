@@ -80,22 +80,22 @@ Internet → ALB (TLS termination, ACM cert)
 
 ## Estrutura dos scripts
 
-Cada etapa é um diretório numerado com script(s) e README próprio:
+Scripts em `scripts/`, documentos em `docs/`.
 
-| Diretório | O que faz |
+| Script | O que faz |
 |---|---|
-| `01-create-vpc` | VPC, subnets, IGW, NAT Gateway, route tables |
-| `02-create-cluster` | Cluster EKS + node group via eksctl |
-| `03-configure-access` | EKS Access API + AmazonEKSClusterAdminPolicy |
-| `04-install-alb-controller` | Helm + IRSA para ALB Controller |
-| `05-install-istio` | Helm: istio/base + istiod + gateway |
-| `06-import-certificate-acm` | Importa cert Let's Encrypt no ACM |
-| `07-configure-alb-ingress` | Ingress resource + IngressClass |
-| `08-deploy-sample-app` | httpbin no namespace `sample` |
-| `09-configure-waf` | WAF WebACL + regras gerenciadas + associação ao ALB |
-| `destroy` | Destrói tudo na ordem inversa (ACM deve ser removido manualmente) |
+| `scripts/01-create-vpc` | VPC, subnets, IGW, NAT Gateway, route tables |
+| `scripts/02-create-cluster` | Cluster EKS + node group via eksctl |
+| `scripts/03-configure-access` | EKS Access API + AmazonEKSClusterAdminPolicy |
+| `scripts/04-install-alb-controller` | Helm + IRSA para ALB Controller |
+| `scripts/05-install-istio` | Helm: istio/base + istiod + gateway |
+| `scripts/06-import-certificate-acm` | Importa cert Let's Encrypt no ACM |
+| `scripts/07-configure-alb-ingress` | Ingress resource + IngressClass |
+| `scripts/08-deploy-sample-app` | httpbin no namespace `sample` |
+| `scripts/09-configure-waf` | WAF WebACL + regras gerenciadas + associação ao ALB |
+| `scripts/destroy` | Destrói tudo na ordem inversa (ACM deve ser removido manualmente) |
 
-Configurações globais em `env.conf`.
+Configurações globais em `scripts/env.conf`.
 
 ---
 
@@ -122,7 +122,7 @@ Todos os recursos têm:
 
 ## Fluxo de autenticação multi-tenant
 
-Plano detalhado em `plano-autenticacao-multitenant.md`.
+Plano detalhado em `docs/plano-autenticacao-multitenant.md`.
 
 - **Email de teste:** `smsilva@gmail.com`
 - **Tenant esperado:** `customer1.wasp.silvios.me`
@@ -233,7 +233,7 @@ Os dados de `conftest.py` são **fixos e controlados** para os testes. Não carr
 CUSTOMER1 = TenantConfig(tenant_id="customer1", tenant_url="customer1.wasp.silvios.me", ...)
 ```
 
-### Próximos passos (plano-autenticacao-multitenant.md)
+### Próximos passos (docs/plano-autenticacao-multitenant.md)
 
 - [ ] **10.1** Cognito User Pool + App Client + Google IdP
 - [ ] **10.2** DNS do Cognito Hosted UI (`auth.wasp.silvios.me`)
