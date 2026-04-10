@@ -78,6 +78,16 @@ Internet → ALB (TLS termination, ACM cert)
 
 ---
 
+## Documentação de referência
+
+| Documento | Conteúdo |
+|---|---|
+| `docs/fluxo-autenticacao-multitenant.md` | Arquitetura do fluxo de autenticação multi-tenant |
+| `docs/plano-autenticacao-multitenant.md` | Plano de implementação com checklist de passos |
+| `docs/decisoes-tecnicas.md` | Decisões de design, trade-offs e itens adiados conscientemente |
+
+---
+
 ## Estrutura dos scripts
 
 Scripts em `scripts/`, documentos em `docs/`.
