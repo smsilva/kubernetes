@@ -1,26 +1,21 @@
-import json
 import os
 from functools import lru_cache
-from pathlib import Path
 
+import boto3
 from fastapi import Depends, FastAPI, HTTPException, Query
 
 from .models import TenantConfig
-from .repository import InMemoryTenantRepository
+from .repository import DynamoDBTenantRepository
 
 app = FastAPI(title="Discovery Service", version="1.0.0")
 
-_DATA_FILE = Path(__file__).parent / "data" / "tenants.json"
-
 
 @lru_cache
-def get_repository() -> InMemoryTenantRepository:
-    entries = json.loads(_DATA_FILE.read_text())
-    tenants = {
-        entry["domain"]: TenantConfig(**{k: v for k, v in entry.items() if k != "domain"})
-        for entry in entries
-    }
-    return InMemoryTenantRepository(tenants=tenants)
+def get_repository() -> DynamoDBTenantRepository:
+    region = os.environ["AWS_REGION"]
+    table_name = os.environ["DYNAMODB_TABLE"]
+    client = boto3.client("dynamodb", region_name=region)
+    return DynamoDBTenantRepository(client=client, table_name=table_name)
 
 
 @app.get("/health")
@@ -31,7 +26,7 @@ def health_check():
 @app.get("/tenant", response_model=TenantConfig)
 def get_tenant_by_domain(
     domain: str = Query(..., description="Email domain to look up (e.g. gmail.com)"),
-    repository: InMemoryTenantRepository = Depends(get_repository),
+    repository: DynamoDBTenantRepository = Depends(get_repository),
 ):
     tenant = repository.find_by_domain(domain)
     if not tenant:

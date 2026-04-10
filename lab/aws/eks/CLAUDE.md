@@ -414,6 +414,25 @@ O parâmetro `state` do OAuth é um JWT assinado (HS256) contendo:
 
 Segredo compartilhado via env var `STATE_JWT_SECRET` entre `platform-frontend` e `callback-handler`.
 
+### Como rodar os testes dos serviços Python
+
+Cada serviço (`discovery`, `platform-frontend`, `callback-handler`) tem seu próprio `.venv`. Não há `python` no PATH — usar sempre `python3`. O `pytest` não está instalado globalmente — deve ser chamado via `.venv`.
+
+```bash
+# Primeira vez (ou após clonar o repo)
+cd lab/aws/eks/services/<serviço>
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+
+# Rodar testes (sempre a partir do diretório do serviço)
+cd lab/aws/eks/services/<serviço>
+.venv/bin/pytest tests/ -v
+```
+
+Erros comuns:
+- `python: command not found` → usar `python3`
+- `No module named pytest` → venv não criado ou pip não rodado; seguir os passos acima
+
 ### Dados de teste — conftest vs JSON de produção
 
 Os dados de `conftest.py` são **fixos e controlados** para os testes. Não carregar o JSON de produção (`app/data/tenants.json`) no conftest — os testes devem ser independentes de dados de seed.

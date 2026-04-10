@@ -1,4 +1,25 @@
+from unittest.mock import MagicMock, patch
+
+from botocore.exceptions import ClientError
+
+from app.repository import DynamoDBTenantRepository
 from tests.conftest import CUSTOMER1, CUSTOMER2
+
+
+def test_get_repository_returns_dynamodb_repository_using_env_vars():
+    from app.main import get_repository
+    get_repository.cache_clear()
+
+    with patch("app.main.boto3") as mock_boto3, \
+         patch.dict("os.environ", {"AWS_REGION": "us-east-1", "DYNAMODB_TABLE": "tenant-registry"}):
+        mock_boto3.client.return_value = MagicMock()
+
+        repository = get_repository()
+
+        assert isinstance(repository, DynamoDBTenantRepository)
+        mock_boto3.client.assert_called_once_with("dynamodb", region_name="us-east-1")
+
+    get_repository.cache_clear()
 
 
 def test_get_tenant_returns_200_and_config_for_registered_domain(api_client):
