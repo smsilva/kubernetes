@@ -63,10 +63,17 @@ else
   # SearchString é blob no WAFv2: deve ser base64-encoded no JSON
   # /login  → L2xvZ2lu
   # /callback → L2NhbGxiYWNr
-  updated_rules=$(echo "${web_acl_state}" | python3 - <<PYEOF
-import sys, json, base64
+  #
+  # Nota: pipe (|) e heredoc (<<) disputam o stdin do Python — heredoc vence e o JSON
+  # do pipe nunca chega. Solução: gravar o JSON em arquivo temporário e ler via open().
+  tmp_waf=$(mktemp)
+  echo "${web_acl_state}" > "${tmp_waf}"
 
-d = json.load(sys.stdin)
+  updated_rules=$(python3 <<PYEOF
+import json, base64
+
+with open("${tmp_waf}") as f:
+    d = json.load(f)
 existing = d['WebACL']['Rules']
 
 def search_b64(path):
@@ -126,6 +133,7 @@ rate_rules = [
 print(json.dumps(existing + rate_rules))
 PYEOF
 )
+  rm -f "${tmp_waf}"
 
   aws wafv2 update-web-acl \
     --region "${aws_region?}" \

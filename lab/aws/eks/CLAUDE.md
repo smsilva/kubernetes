@@ -263,6 +263,28 @@ Nomes de atributos que coincidem com palavras reservadas do DynamoDB (ex: `auth`
 --expression-attribute-names '{"#auth": "auth"}'
 ```
 
+### Python heredoc — conflito entre pipe e heredoc no stdin
+
+Pipe (`|`) e heredoc (`<<EOF`) disputam o stdin do processo. O heredoc vence — o conteúdo do pipe nunca chega ao Python. **Usar `<<'EOF'` não resolve**: aspas no delimitador afetam apenas interpolação de variáveis bash dentro do heredoc, não o comportamento do stdin.
+
+```bash
+# QUEBRADO — json.load(sys.stdin) lê o heredoc, não o JSON do pipe
+echo "${json_var}" | python3 - <<EOF
+import sys, json
+d = json.load(sys.stdin)   # lê o EOF, não o pipe
+EOF
+
+# CORRETO — gravar em arquivo temporário e ler via open()
+tmp=$(mktemp)
+echo "${json_var}" > "${tmp}"
+python3 <<EOF
+import json
+with open("${tmp}") as f:
+    d = json.load(f)
+EOF
+rm -f "${tmp}"
+```
+
 ### WAFv2 — formato do ARN e parâmetro `--id`
 
 O ARN de um WebACL tem o formato:
