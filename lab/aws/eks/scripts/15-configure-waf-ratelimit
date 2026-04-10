@@ -1,0 +1,170 @@
+#!/bin/bash
+# Passo 15: Adiciona rate limiting ao WAF para /login e /callback (endereça SEC-007)
+#
+# Rate-based rules bloqueiam por IP quando o limite é excedido em qualquer janela de 5 minutos.
+# Limite mínimo suportado pelo WAFv2: 100 req/5min por IP.
+# Prioridades 10 e 11 — após as managed rules existentes (prioridades 1, 2, 3).
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+web_acl_name="${cluster_name}-web-acl"
+login_rate_limit=100
+callback_rate_limit=100
+
+# =============================================================================
+# Obtém o WebACL existente
+# =============================================================================
+echo "Obtendo WebACL '${web_acl_name}'..."
+
+web_acl_entry=$(
+  aws wafv2 list-web-acls \
+    --region "${aws_region?}" \
+    --scope REGIONAL \
+    --query "WebACLs[?Name=='${web_acl_name}']|[0]" \
+    --output json
+)
+
+web_acl_id=$(echo "${web_acl_entry}" | python3 -c "import sys,json; print(json.load(sys.stdin)['Id'])")
+
+if [[ -z "${web_acl_id}" || "${web_acl_id}" == "None" ]]; then
+  echo "Erro: WebACL '${web_acl_name}' não encontrado. Execute o passo 09 primeiro."
+  exit 1
+fi
+
+echo "WebACL ID: ${web_acl_id}"
+
+web_acl_state=$(
+  aws wafv2 get-web-acl \
+    --region "${aws_region?}" \
+    --scope REGIONAL \
+    --id "${web_acl_id}" \
+    --name "${web_acl_name}" \
+    --output json
+)
+
+lock_token=$(echo "${web_acl_state}" | python3 -c "import sys,json; print(json.load(sys.stdin)['LockToken'])")
+
+# =============================================================================
+# Verifica se as regras já existem (idempotência)
+# =============================================================================
+already_exists=$(echo "${web_acl_state}" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+names = {r['Name'] for r in d['WebACL']['Rules']}
+print('yes' if {'RateLimitLogin', 'RateLimitCallback'} & names else 'no')
+")
+
+if [[ "${already_exists}" == "yes" ]]; then
+  echo "Regras de rate limiting já existem — nenhuma alteração necessária."
+else
+  echo "Adicionando regras de rate limiting..."
+
+  # SearchString é blob no WAFv2: deve ser base64-encoded no JSON
+  # /login  → L2xvZ2lu
+  # /callback → L2NhbGxiYWNr
+  updated_rules=$(echo "${web_acl_state}" | python3 - <<PYEOF
+import sys, json, base64
+
+d = json.load(sys.stdin)
+existing = d['WebACL']['Rules']
+
+def search_b64(path):
+    return base64.b64encode(path.encode()).decode()
+
+rate_rules = [
+  {
+    "Name": "RateLimitLogin",
+    "Priority": 10,
+    "Statement": {
+      "RateBasedStatement": {
+        "Limit": ${login_rate_limit},
+        "AggregateKeyType": "IP",
+        "ScopeDownStatement": {
+          "ByteMatchStatement": {
+            "SearchString": search_b64("/login"),
+            "FieldToMatch": {"UriPath": {}},
+            "TextTransformations": [{"Priority": 0, "Type": "NONE"}],
+            "PositionalConstraint": "STARTS_WITH"
+          }
+        }
+      }
+    },
+    "Action": {"Block": {}},
+    "VisibilityConfig": {
+      "SampledRequestsEnabled": True,
+      "CloudWatchMetricsEnabled": True,
+      "MetricName": "RateLimitLogin"
+    }
+  },
+  {
+    "Name": "RateLimitCallback",
+    "Priority": 11,
+    "Statement": {
+      "RateBasedStatement": {
+        "Limit": ${callback_rate_limit},
+        "AggregateKeyType": "IP",
+        "ScopeDownStatement": {
+          "ByteMatchStatement": {
+            "SearchString": search_b64("/callback"),
+            "FieldToMatch": {"UriPath": {}},
+            "TextTransformations": [{"Priority": 0, "Type": "NONE"}],
+            "PositionalConstraint": "STARTS_WITH"
+          }
+        }
+      }
+    },
+    "Action": {"Block": {}},
+    "VisibilityConfig": {
+      "SampledRequestsEnabled": True,
+      "CloudWatchMetricsEnabled": True,
+      "MetricName": "RateLimitCallback"
+    }
+  }
+]
+
+print(json.dumps(existing + rate_rules))
+PYEOF
+)
+
+  aws wafv2 update-web-acl \
+    --region "${aws_region?}" \
+    --scope REGIONAL \
+    --id "${web_acl_id}" \
+    --name "${web_acl_name}" \
+    --lock-token "${lock_token}" \
+    --default-action Allow={} \
+    --visibility-config "SampledRequestsEnabled=true,CloudWatchMetricsEnabled=true,MetricName=${web_acl_name}" \
+    --rules "${updated_rules}" \
+    > /dev/null
+
+  echo "Regras de rate limiting adicionadas."
+fi
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo "Regras da WebACL:"
+aws wafv2 get-web-acl \
+  --region "${aws_region?}" \
+  --scope REGIONAL \
+  --id "${web_acl_id}" \
+  --name "${web_acl_name}" \
+  --query 'WebACL.Rules[*].{Nome:Name,Prioridade:Priority,Acao:Action}' \
+  --output table
+
+echo ""
+echo "Rate limiting ativo:"
+echo "  /login    — bloqueio após ${login_rate_limit} req/5min por IP    (RateLimitLogin)"
+echo "  /callback — bloqueio após ${callback_rate_limit} req/5min por IP (RateLimitCallback)"
+echo ""
+echo "SEC-007 endereçado."
+echo ""
+echo "Próximo passo: teste end-to-end (10.11)"
+echo "  1. Acesse https://${domain}"
+echo "  2. Digite smsilva@gmail.com"
+echo "  3. Autentique com Google"
+echo "  4. Verifique redirect para https://customer1.${domain}"

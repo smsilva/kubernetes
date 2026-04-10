@@ -31,12 +31,12 @@ FastAPI foi escolhido por ser o framework Python mais popular para APIs, ter sup
 [10.1] Cognito User Pool + App Client (customer1 → Google)
 [10.2] Cognito Hosted UI em auth.wasp.silvios.me
 [10.3] DynamoDB tenant-registry (gmail.com → customer1)
-[10.4] Discovery Service              ← services/discovery/
-[10.5] Callback Handler               ← services/callback-handler/
-[10.6] Platform Frontend              ← services/platform-frontend/
+[10.4] Discovery Service ← services/discovery/
+[10.5] Callback Handler  ← services/callback-handler/
+[10.6] Platform Frontend ← services/platform-frontend/
 [10.7] Namespace customer1 + aplicação de teste (httpbin)
 [10.8] Istio RequestAuthentication (JWKS do Cognito)
-[10.9] Istio AuthorizationPolicy por namespace (tenant_id claim)
+[10.9] Istio AuthorizationPolicy por namespace (custom:tenant_id claim)
 [10.10] WAF rate limiting em /login e /callback
 [10.11] Teste end-to-end do fluxo completo
 ```
@@ -460,15 +460,16 @@ spec:
 
 ## Etapa 10.10 — WAF rate limiting em /login e /callback
 
-Complementa o SEC-007 documentado. Adicionar rate-based rule ao WebACL existente (`wasp-calm-crow-ndx4-web-acl`):
+Complementa o SEC-007 documentado. Adiciona rate-based rules ao WebACL existente (`wasp-calm-crow-ndx4-web-acl`) implementadas em `scripts/15-configure-waf-ratelimit`.
 
-- `/login`: 100 req/5min por IP
-- `/callback`: 50 req/5min por IP
+O limite mínimo suportado pelo WAFv2 é **100 req/5min por IP**. Quando excedido, o WAF bloqueia o IP pelo restante da janela de 5 minutos.
 
-```bash
-# Adicionar rule ao WebACL existente via AWS CLI
-# (detalhar no script quando chegarmos aqui)
-```
+| Endpoint | Limite | Objetivo |
+|---|---|---|
+| `/login` | 100 req/5min por IP | Previne enumeração de tenants (testando domínios de e-mail) e geração massiva de authorization requests no Cognito |
+| `/callback` | 100 req/5min por IP | Previne tentativas de replay ou força bruta de authorization codes no intervalo de validade (1 min no Cognito) |
+
+**Nota:** como o login é sempre via Google SSO, não há risco de brute force de credenciais na plataforma. O rate limiting cobre o **abuso do fluxo OAuth** em si — enumeração, replay e esgotamento de recursos.
 
 ---
 
