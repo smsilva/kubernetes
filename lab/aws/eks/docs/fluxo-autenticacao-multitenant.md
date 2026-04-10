@@ -442,7 +442,4 @@ O token é criptograficamente válido — mas o `tenant_id` errado o torna inút
 
 ## Decisões em aberto
 
-1. **User Pool único compartilhado vs um por tier/região** — um pool por região (alinhado ao Global Accelerator) simplifica a latência do token validation pelo Istio
-2. **Keycloak self-hosted** — exige definir SLA de disponibilidade acoplado à infra do customer; recomendado documentar como risco contratual explícito
-3. **Onboarding de tenant** — o processo de provisionamento (App Client no Cognito + DynamoDB + DNS) precisa de uma API ou runbook documentado
-4. **Sessão cross-region por tenant** — tokens JWT são stateless e funcionam em qualquer região; se refresh tokens forem necessários, DynamoDB Global Table também os armazena
+Ver [decisoes-tecnicas.md](decisoes-tecnicas.md) para o registro detalhado de cada decisão pendente e os trade-offs considerados.

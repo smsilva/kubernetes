@@ -247,19 +247,7 @@ lab/aws/eks/
 
 ## Decisões técnicas e backlog
 
-### Gateway API — pendente de validação
-
-O ALB Controller v3.x adicionou suporte à Kubernetes Gateway API (`GatewayClass`, `Gateway`, `HTTPRoute`) a partir da v3.0. Este lab utiliza intencionalmente os recursos clássicos `Ingress` e `IngressClass` por ser mais estável e amplamente validado.
-
-**Por que não usar Gateway API agora:**
-
-A issue [kubernetes-sigs/aws-load-balancer-controller#4674](https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/4674) (aberta em abril de 2026) reporta que o upgrade de `v3.1.0` para `v3.2.1` quebra instalações onde a Gateway API **não está habilitada**, pois os CRDs de `ListenerSet` ficam ausentes. Enquanto esse tipo de problema de compatibilidade não estiver estabilizado, manter `Ingress`/`IngressClass` é a escolha conservadora.
-
-**Quando revisitar:**
-
-- Aguardar resolução da issue #4674 e de outros bugs de compatibilidade na série v3.x
-- Avaliar o suporte a `HTTPRoute` → ALB para substituir o `Ingress` atual (`07-configure-alb-ingress`)
-- O Istio `Gateway` + `VirtualService` (passo 08) é um recurso do próprio Istio e **não** é afetado por essa limitação do ALB Controller
+Ver [docs/decisoes-tecnicas.md](docs/decisoes-tecnicas.md) para o registro completo de decisões de design, trade-offs e itens adiados conscientemente.
 
 ---
 
