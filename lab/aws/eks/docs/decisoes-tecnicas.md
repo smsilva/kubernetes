@@ -70,6 +70,37 @@ O callback-handler chama Secrets Manager diretamente usando `tenant_id` como cha
 
 ---
 
+## Cache no discovery service
+
+**Status:** adiado; sem cache hoje
+
+### Contexto
+
+O discovery service é chamado **duas vezes por login**: uma pelo `platform-frontend` (ao submeter o e-mail) e outra pelo `callback-handler` (para validar que o domínio do e-mail autenticado pertence ao tenant esperado). Cada chamada consulta o DynamoDB. Fora do fluxo de login, o Istio valida o JWT diretamente via JWKS — o discovery não é envolvido.
+
+Para o volume típico de um sistema de login, a latência do DynamoDB é aceitável. O risco real é de **disponibilidade**: se o DynamoDB ou o discovery service ficar indisponível, o login falha.
+
+### Opções avaliadas
+
+**A — Cache em memória com TTL no processo (recomendada)**
+Dict com timestamp por domínio. Domínio não encontrado ou expirado vai ao DynamoDB. TTL de 5 minutos elimina a quase totalidade das chamadas (domínios mudam raramente). Zero infra adicional.
+
+**B — ElastiCache (Redis/Memcached)**
+Cache compartilhado entre pods e regiões. Útil se o número de pods do discovery crescer muito. Adiciona infra, custo e complexidade operacional — não justifica no estágio atual.
+
+**C — DynamoDB DAX**
+Cache gerenciado na frente do DynamoDB, latência de microssegundos. Custo elevado para o padrão de acesso (logins, não queries contínuas). Não justifica.
+
+### Decisão
+
+Opção A avaliada como suficiente para o volume esperado. Implementação adiada até que a latência do DynamoDB se prove um problema real em produção.
+
+### Quando revisar
+
+Ao observar p99 de latência no login acima de 500 ms, ou ao escalar o número de pods do discovery (onde o cache em memória por pod se torna ineficiente).
+
+---
+
 ## STATE_JWT_SECRET em deployments multi-região
 
 **Status:** decisão tomada; implementação da rotação adiada

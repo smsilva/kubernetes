@@ -3,7 +3,7 @@ import time
 import jwt
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.main import app, get_cognito_client, get_domain_validator
 from tests.conftest import SAMPLE_STATE, SECRET
 
 
@@ -86,3 +86,34 @@ def test_callback_returns_500_when_tenant_secret_not_configured(api_client, mock
     response = client.get(f"/callback?code=valid-code&state={state}")
 
     assert response.status_code == 500
+
+
+def test_callback_rejects_when_authenticated_email_domain_not_registered(api_client):
+    from app.cognito import CognitoTokens
+    from app.domain_validator import DomainValidationError
+    from tests.conftest import MISMATCHED_ID_TOKEN, MockCognitoClient, MockDomainValidator
+
+    tokens = CognitoTokens(id_token=MISMATCHED_ID_TOKEN, access_token="a", refresh_token="r")
+    app.dependency_overrides[get_cognito_client] = lambda: MockCognitoClient(tokens=tokens)
+    app.dependency_overrides[get_domain_validator] = lambda: MockDomainValidator(
+        raises=DomainValidationError("Domain 'other-company.com' is not registered")
+    )
+
+    response = api_client.get(f"/callback?code=valid-code&state={SAMPLE_STATE}")
+
+    assert response.status_code == 400
+    app.dependency_overrides.clear()
+
+
+def test_callback_rejects_when_authenticated_email_domain_belongs_to_different_tenant(api_client):
+    from app.cognito import CognitoTokens
+    from tests.conftest import MISMATCHED_ID_TOKEN, MockCognitoClient, MockDomainValidator
+
+    tokens = CognitoTokens(id_token=MISMATCHED_ID_TOKEN, access_token="a", refresh_token="r")
+    app.dependency_overrides[get_cognito_client] = lambda: MockCognitoClient(tokens=tokens)
+    app.dependency_overrides[get_domain_validator] = lambda: MockDomainValidator(tenant_id="customer2")
+
+    response = api_client.get(f"/callback?code=valid-code&state={SAMPLE_STATE}")
+
+    assert response.status_code == 403
+    app.dependency_overrides.clear()
