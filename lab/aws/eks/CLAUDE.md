@@ -345,6 +345,44 @@ web_acl_id="$(echo "${web_acl_arn}" | awk -F'/' '{print $(NF-1)}')"
 
 ---
 
+## Lições aprendidas — Azure / Microsoft OIDC
+
+### Microsoft OIDC issuer para contas pessoais (MSA)
+
+O endpoint `consumers` funciona para autorização, mas o issuer nos tokens emitidos **não é** `consumers` — é um GUID fixo do tenant MSA:
+
+```
+# ERRADO — Cognito rejeita com "Bad id_token issuer"
+oidc_issuer="https://login.microsoftonline.com/consumers/v2.0"
+
+# CORRETO — GUID fixo para todas as contas pessoais Microsoft
+oidc_issuer="https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0"
+```
+
+Esse GUID (`9188040d-6c67-4c5b-b112-36a304b66dad`) é o tenant ID permanente da Microsoft para contas pessoais (MSN, Hotmail, Outlook.com). Usar o `consumers` no Cognito causa `Bad id_token issuer` no callback.
+
+### Verificar o appId do App Registration pelo Manifest
+
+O `client_id` exibido na UI do portal Azure pode ter typos. Confirmar sempre pelo Manifest (campo `appId`) antes de configurar o IdP no Cognito:
+
+**portal.azure.com → App registrations → \<app\> → Manifest**
+
+```json
+{
+  "appId": "69d4a26d-c1b2-4b56-8551-fbec0e0a03c7"  ← usar este valor
+}
+```
+
+### Supported account types para contas MSA
+
+Para suportar contas pessoais Microsoft (MSN, Hotmail, Outlook.com), o App Registration deve ter:
+
+**Authentication → Supported accounts → Personal accounts only**
+
+Alternativamente, verificar no Manifest: `"signInAudience": "PersonalMicrosoftAccount"`.
+
+---
+
 ## Lições aprendidas — serviços Python/FastAPI
 
 ### Starlette TemplateResponse — API nova (≥0.36)
