@@ -61,7 +61,6 @@ Scripts em `scripts/`, documentos em `docs/`. Configurações globais em `script
 | Documento | Conteúdo |
 |---|---|
 | `docs/fluxo-autenticacao-multitenant.md` | Arquitetura do fluxo de autenticação multi-tenant |
-| `docs/plano-autenticacao-multitenant.md` | Plano de implementação com checklist de passos |
 | `docs/decisoes-tecnicas.md` | Decisões de design, trade-offs e itens adiados conscientemente |
 | `docs/onboarding-novo-customer.md` | Passos para cadastrar novo tenant: IdP, DynamoDB, K8s, domínios compartilhados |
 
@@ -109,6 +108,19 @@ cd lab/aws/eks/services/<serviço>
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 .venv/bin/pytest tests/ -v
 ```
+
+### Variáveis de ambiente por serviço
+
+| Serviço | Variável | Valor |
+|---|---|---|
+| `callback-handler` | `COGNITO_DOMAIN` | `idp.wasp.silvios.me` (só hostname, sem `https://`) |
+| `callback-handler` | `COGNITO_CLIENT_ID` | App Client ID do tenant (ConfigMap) |
+| `callback-handler` | `COGNITO_CLIENT_SECRET` | Via Secret `callback-handler-secret` |
+| `callback-handler` | `STATE_JWT_SECRET` | Chave compartilhada com `platform-frontend` |
+| `platform-frontend` | `COGNITO_DOMAIN` | `idp.wasp.silvios.me` (só hostname, sem `https://`) |
+| `platform-frontend` | `DISCOVERY_URL` | `https://discovery.wasp.silvios.me` |
+| `platform-frontend` | `CALLBACK_URL` | `https://auth.wasp.silvios.me/callback` |
+| `platform-frontend` | `STATE_JWT_SECRET` | Chave compartilhada com `callback-handler` |
 
 Imagens Docker Hub (build com `--platform linux/amd64`; tag = git short SHA, nunca `:latest`):
 

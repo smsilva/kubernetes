@@ -440,6 +440,47 @@ O token é criptograficamente válido — mas o `tenant_id` errado o torna inút
 
 ---
 
+## Contratos de API
+
+### Discovery Service — `GET /tenant`
+
+```
+GET /tenant?domain=gmail.com
+
+200 OK
+{
+  "tenant_id": "customer1",
+  "tenant_url": "customer1.wasp.silvios.me",
+  "client_id": "<cognito-app-client-id>",
+  "idp_name": "Google",
+  "cognito_pool_id": "<pool-id>"
+}
+
+404 Not Found
+{
+  "detail": "Tenant not found for domain: gmail.com"
+}
+```
+
+### Callback Handler — `GET /callback`
+
+```
+GET /callback?code=<code>&state=<state-jwt>
+
+1. Decodifica state JWT → { tenant_id, nonce, return_url }
+2. POST https://idp.wasp.silvios.me/oauth2/token
+     grant_type=authorization_code
+     code=<code>
+     client_id=<app-client-id>
+     redirect_uri=https://auth.wasp.silvios.me/callback
+3. Recebe id_token (JWT Cognito com custom:tenant_id)
+4. Valida que token.tenant_id == state.tenant_id
+5. Set-Cookie: session=<id_token>; Domain=.wasp.silvios.me; HttpOnly; Secure; SameSite=Lax
+6. 302 → https://<return_url>
+```
+
+---
+
 ## Decisões em aberto
 
 Ver [decisoes-tecnicas.md](decisoes-tecnicas.md) para o registro detalhado de cada decisão pendente e os trade-offs considerados.
