@@ -1,0 +1,125 @@
+#!/bin/bash
+# Passo 12: Cria custom domain do Cognito Hosted UI (idp.wasp.silvios.me) e registro DNS no Azure
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+cognito_domain="idp.${domain}"
+
+# =============================================================================
+# Validação
+# =============================================================================
+if [[ -z "${cognito_user_pool_id:-}" ]]; then
+  echo "Erro: cognito_user_pool_id não definido em env.conf — execute o passo 11 primeiro"
+  exit 1
+fi
+
+if [[ -z "${cert_arn:-}" ]]; then
+  echo "Erro: cert_arn não definido em env.conf — execute o passo 06 primeiro"
+  exit 1
+fi
+
+# =============================================================================
+# Custom domain no Cognito
+# =============================================================================
+echo "Verificando custom domain '${cognito_domain}' no Cognito..."
+
+domain_status=$(
+  aws cognito-idp describe-user-pool-domain \
+    --region "${aws_region?}" \
+    --domain "${cognito_domain}" \
+    --query 'DomainDescription.Status' \
+    --output text 2>/dev/null || echo "NOT_FOUND"
+)
+
+if [[ "${domain_status}" == "NOT_FOUND" || "${domain_status}" == "None" ]]; then
+  echo "Criando custom domain '${cognito_domain}'..."
+  aws cognito-idp create-user-pool-domain \
+    --region "${aws_region?}" \
+    --domain "${cognito_domain}" \
+    --user-pool-id "${cognito_user_pool_id}" \
+    --custom-domain-config "CertificateArn=${cert_arn}"
+
+  echo "Aguardando custom domain ficar ativo (pode levar até 15 minutos)..."
+  for i in $(seq 1 60); do
+    domain_status=$(
+      aws cognito-idp describe-user-pool-domain \
+        --region "${aws_region?}" \
+        --domain "${cognito_domain}" \
+        --query 'DomainDescription.Status' \
+        --output text
+    )
+    echo "  Status: ${domain_status} (${i}/60)"
+    if [[ "${domain_status}" == "ACTIVE" ]]; then
+      break
+    fi
+    sleep 15
+  done
+
+  if [[ "${domain_status}" != "ACTIVE" ]]; then
+    echo "Erro: timeout aguardando custom domain ficar ativo."
+    exit 1
+  fi
+else
+  echo "Custom domain já existe (status: ${domain_status})."
+fi
+
+# Obtém o CloudFront domain gerado pelo Cognito
+cloudfront_domain=$(
+  aws cognito-idp describe-user-pool-domain \
+    --region "${aws_region?}" \
+    --domain "${cognito_domain}" \
+    --query 'DomainDescription.CloudFrontDistribution' \
+    --output text
+)
+
+echo "CloudFront domain: ${cloudfront_domain}"
+
+sed -i "s|^cognito_cloudfront_domain=.*|cognito_cloudfront_domain=\"${cloudfront_domain}\"|" "$(dirname "$0")/env.conf"
+
+# =============================================================================
+# Registro DNS no Azure (wasp.silvios.me está na Azure DNS)
+# =============================================================================
+az_subscription="wasp-sandbox"
+az_resource_group="wasp-foundation"
+az_zone="${domain}"
+az_record_name="idp" # idp.wasp.silvios.me
+
+echo "Criando registro CNAME ${cognito_domain} → ${cloudfront_domain} no Azure DNS..."
+
+az network dns record-set cname set-record \
+  --subscription "${az_subscription}" \
+  --resource-group "${az_resource_group}" \
+  --zone-name "${az_zone}" \
+  --record-set-name "${az_record_name}" \
+  --ttl 300 \
+  --cname "${cloudfront_domain}"
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo "Custom domain Cognito:"
+aws cognito-idp describe-user-pool-domain \
+  --region "${aws_region?}" \
+  --domain "${cognito_domain}" \
+  --query 'DomainDescription.{Domain:Domain,Status:Status,CloudFront:CloudFrontDistribution}' \
+  --output table
+
+echo ""
+echo "Registro DNS:"
+az network dns record-set cname show \
+  --subscription "${az_subscription}" \
+  --resource-group "${az_resource_group}" \
+  --zone-name "${az_zone}" \
+  --name "${az_record_name}" \
+  --query '{Nome:fqdn,CNAME:CNAMERecord.cname}' \
+  --output table
+
+echo ""
+echo "Teste do endpoint (pode demorar alguns minutos para propagar):"
+echo "  curl -sI https://${cognito_domain}/oauth2/authorize | head -5"
+echo ""
+echo "Próximo passo: scripts/13-deploy-services"

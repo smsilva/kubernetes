@@ -93,9 +93,28 @@ Scripts em `scripts/`, documentos em `docs/`.
 | `scripts/07-configure-alb-ingress` | Ingress resource + IngressClass |
 | `scripts/08-deploy-sample-app` | httpbin no namespace `sample` |
 | `scripts/09-configure-waf` | WAF WebACL + regras gerenciadas + associação ao ALB |
+| `scripts/10-create-dynamodb` | Tabela DynamoDB `tenant-registry` + item customer1 |
+| `scripts/11-create-cognito` | User Pool, Google IdP, App Client, Lambda Pre-Token Generation |
+| `scripts/12-configure-dns-cognito` | Custom domain Cognito (`idp.wasp.silvios.me`) + CNAME no Azure DNS |
+| `scripts/13-deploy-services` | Build/push Docker Hub, IRSA discovery, deploy K8s dos 4 namespaces |
 | `scripts/destroy` | Destrói tudo na ordem inversa (ACM deve ser removido manualmente) |
 
-Configurações globais em `scripts/env.conf`.
+Configurações globais em `scripts/env.conf`. Variáveis preenchidas automaticamente pelos scripts:
+- `cert_arn` (script 06), `cognito_user_pool_id`, `cognito_app_client_id`, `cognito_cloudfront_domain` (scripts 11/12)
+
+---
+
+## DNS
+
+O domínio `wasp.silvios.me` é gerenciado em **Azure DNS**, não no Route 53:
+
+| Campo | Valor |
+|---|---|
+| **Subscription** | `wasp-sandbox` |
+| **Resource Group** | `wasp-foundation` |
+| **Zone** | `wasp.silvios.me` |
+
+Scripts que criam registros DNS usam `az network dns record-set` em vez de `aws route53`.
 
 ---
 
@@ -127,7 +146,59 @@ Plano detalhado em `docs/plano-autenticacao-multitenant.md`.
 - **Email de teste:** `smsilva@gmail.com`
 - **Tenant esperado:** `customer1.wasp.silvios.me`
 - **IdP:** Google SSO via Cognito
-- **Fluxo:** `wasp.silvios.me` → discovery → Cognito Hosted UI → callback → tenant subdomain
+- **Fluxo:** `wasp.silvios.me` → discovery → `idp.wasp.silvios.me` (Cognito) → `auth.wasp.silvios.me` (callback) → tenant subdomain
+
+### Subdomínios e roteamento
+
+| Subdomínio | Destino | Via |
+|---|---|---|
+| `wasp.silvios.me` | platform-frontend (ns: `platform`) | ALB → Istio |
+| `idp.wasp.silvios.me` | Cognito Hosted UI | CloudFront (Azure DNS CNAME) |
+| `auth.wasp.silvios.me` | callback-handler (ns: `auth`) | ALB → Istio |
+| `discovery.wasp.silvios.me` | discovery service (ns: `discovery`) | ALB → Istio |
+| `customer1.wasp.silvios.me` | httpbin / app tenant (ns: `customer1`) | ALB → Istio |
+
+### Credenciais — variáveis de ambiente obrigatórias
+
+Scripts 11 e 13 requerem env vars (não entram no `env.conf`):
+
+| Variável | Usado em | Como obter |
+|---|---|---|
+| `GOOGLE_CLIENT_ID` | `11-create-cognito` | Google Cloud Console → OAuth 2.0 credentials |
+| `GOOGLE_CLIENT_SECRET` | `11-create-cognito` | Google Cloud Console → OAuth 2.0 credentials |
+| `COGNITO_CLIENT_SECRET` | `13-deploy-services` | `aws cognito-idp describe-user-pool-client --query UserPoolClient.ClientSecret` |
+| `STATE_JWT_SECRET` | `13-deploy-services` | `openssl rand -hex 32` |
+
+Google redirect URI obrigatório no Google Cloud Console: `https://idp.wasp.silvios.me/oauth2/idpresponse`
+
+### Cognito
+
+| Recurso | Valor |
+|---|---|
+| **User Pool** | `wasp-platform` |
+| **Custom domain** | `idp.wasp.silvios.me` |
+| **App Client** | `customer1` |
+| **Callback URL** | `https://auth.wasp.silvios.me/callback` |
+| **Pre-Token Lambda** | `wasp-pre-token-generation` — injeta `custom:tenant_id` no JWT via DynamoDB GSI |
+| **Lambda IAM Role** | `wasp-pre-token-lambda-role` |
+
+### IRSA — discovery
+
+| Recurso | Valor |
+|---|---|
+| **IAM Role** | `wasp-discovery-irsa` |
+| **Service Account** | `discovery/discovery` |
+| **Permissões** | `dynamodb:GetItem`, `dynamodb:Query` em `tenant-registry` e seus índices |
+
+### Imagens Docker Hub
+
+| Serviço | Imagem |
+|---|---|
+| `discovery` | `silviosilva/wasp-discovery:latest` |
+| `platform-frontend` | `silviosilva/wasp-platform-frontend:latest` |
+| `callback-handler` | `silviosilva/wasp-callback-handler:latest` |
+
+Build com `--platform linux/amd64` (nodes EKS são x86_64).
 
 ### Serviços implementados (`services/`)
 
@@ -235,11 +306,11 @@ CUSTOMER1 = TenantConfig(tenant_id="customer1", tenant_url="customer1.wasp.silvi
 
 ### Próximos passos (docs/plano-autenticacao-multitenant.md)
 
-- [ ] **10.1** Cognito User Pool + App Client + Google IdP
-- [ ] **10.2** DNS do Cognito Hosted UI (`auth.wasp.silvios.me`)
-- [ ] **10.3** DynamoDB `tenant-registry` (substituir in-memory)
-- [ ] **10.7** Deployments Kubernetes para os três serviços
-- [ ] **10.8** Istio `RequestAuthentication` (validar JWT Cognito)
-- [ ] **10.9** Istio `AuthorizationPolicy` (bloquear sem JWT válido)
-- [ ] **10.10** WAF rate limiting
+- [x] **10.1** Cognito User Pool + App Client + Google IdP → `scripts/11-create-cognito`
+- [x] **10.2** DNS do Cognito Hosted UI (`idp.wasp.silvios.me`) → `scripts/12-configure-dns-cognito`
+- [x] **10.3** DynamoDB `tenant-registry` → `scripts/10-create-dynamodb`
+- [x] **10.7** Deployments Kubernetes para os três serviços → `scripts/13-deploy-services`
+- [ ] **10.8** Istio `RequestAuthentication` (validar JWT Cognito) → `scripts/14-configure-istio-auth`
+- [ ] **10.9** Istio `AuthorizationPolicy` (bloquear sem JWT válido) → `scripts/14-configure-istio-auth`
+- [ ] **10.10** WAF rate limiting → `scripts/15-configure-waf-ratelimit`
 - [ ] **10.11** Teste end-to-end com `smsilva@gmail.com`

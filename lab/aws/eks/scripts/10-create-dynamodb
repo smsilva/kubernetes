@@ -1,0 +1,98 @@
+#!/bin/bash
+# Passo 10: Cria tabela DynamoDB tenant-registry e insere registro do customer1
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+dynamodb_table="tenant-registry"
+
+# =============================================================================
+# Tabela DynamoDB
+# =============================================================================
+echo "Verificando tabela DynamoDB '${dynamodb_table}'..."
+
+table_status=$(
+  aws dynamodb describe-table \
+    --region "${aws_region?}" \
+    --table-name "${dynamodb_table}" \
+    --query 'Table.TableStatus' \
+    --output text 2>/dev/null || echo "NOT_FOUND"
+)
+
+if [[ "${table_status}" == "NOT_FOUND" ]]; then
+  echo "Criando tabela '${dynamodb_table}'..."
+  aws dynamodb create-table \
+    --region "${aws_region?}" \
+    --table-name "${dynamodb_table}" \
+    --attribute-definitions \
+      AttributeName=pk,AttributeType=S \
+      AttributeName=cognito_app_client_id,AttributeType=S \
+    --key-schema \
+      AttributeName=pk,KeyType=HASH \
+    --global-secondary-indexes '[
+      {
+        "IndexName": "client-id-index",
+        "KeySchema": [{"AttributeName":"cognito_app_client_id","KeyType":"HASH"}],
+        "Projection": {"ProjectionType":"ALL"},
+        "ProvisionedThroughput": {"ReadCapacityUnits":5,"WriteCapacityUnits":5}
+      }
+    ]' \
+    --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+    --tags \
+      Key=project,Value="${tag_project}" \
+      Key=env,Value="${tag_env}" \
+    > /dev/null
+
+  echo "Aguardando tabela ficar ativa..."
+  aws dynamodb wait table-exists \
+    --region "${aws_region?}" \
+    --table-name "${dynamodb_table}"
+else
+  echo "Tabela já existe (status: ${table_status})."
+fi
+
+# =============================================================================
+# Item customer1 (cognito_app_client_id preenchido no passo 11)
+# =============================================================================
+echo "Inserindo registro customer1 (gmail.com → customer1.wasp.silvios.me)..."
+
+aws dynamodb put-item \
+  --region "${aws_region?}" \
+  --table-name "${dynamodb_table}" \
+  --item '{
+    "pk":                    {"S": "domain#gmail.com"},
+    "tenant_id":             {"S": "customer1"},
+    "url":                   {"S": "customer1.wasp.silvios.me"},
+    "regions":               {"L": [{"S": "us-east-1"}]},
+    "cognito_app_client_id": {"S": "PLACEHOLDER"},
+    "auth": {"M": {
+      "type":                  {"S": "google_sso"},
+      "cognito_user_pool_id":  {"S": "PLACEHOLDER"},
+      "cognito_app_client_id": {"S": "PLACEHOLDER"},
+      "cognito_idp_name":      {"S": "Google"}
+    }},
+    "status": {"S": "active"}
+  }'
+
+echo "Registro inserido. Os campos PLACEHOLDER serão atualizados no passo 11."
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo "Tabela:"
+aws dynamodb describe-table \
+  --region "${aws_region?}" \
+  --table-name "${dynamodb_table}" \
+  --query 'Table.{Nome:TableName,Status:TableStatus,GSIs:GlobalSecondaryIndexes[*].IndexName}' \
+  --output table
+
+echo ""
+echo "Item customer1:"
+aws dynamodb get-item \
+  --region "${aws_region?}" \
+  --table-name "${dynamodb_table}" \
+  --key '{"pk": {"S": "domain#gmail.com"}}' \
+  --output table

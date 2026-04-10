@@ -1,0 +1,325 @@
+#!/bin/bash
+# Passo 11: Cria Cognito User Pool, Google IdP, App Client e Pre-Token Lambda
+# Pré-requisito: exportar GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET antes de executar
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+dynamodb_table="tenant-registry"
+user_pool_name="wasp-platform"
+lambda_function_name="wasp-pre-token-generation"
+lambda_role_name="wasp-pre-token-lambda-role"
+aws_account_id=$(aws sts get-caller-identity --query Account --output text)
+
+# =============================================================================
+# Validação das credenciais Google
+# =============================================================================
+if [[ -z "${GOOGLE_CLIENT_ID:-}" ]]; then
+  echo "Erro: variável de ambiente GOOGLE_CLIENT_ID não definida"
+  echo "  Obtenha as credenciais em https://console.cloud.google.com/apis/credentials"
+  echo "  Redirect URI obrigatório: https://idp.${domain}/oauth2/idpresponse"
+  exit 1
+fi
+
+if [[ -z "${GOOGLE_CLIENT_SECRET:-}" ]]; then
+  echo "Erro: variável de ambiente GOOGLE_CLIENT_SECRET não definida"
+  exit 1
+fi
+
+# =============================================================================
+# User Pool
+# =============================================================================
+echo "Verificando User Pool '${user_pool_name}'..."
+
+pool_id=$(
+  aws cognito-idp list-user-pools \
+    --region "${aws_region?}" \
+    --max-results 60 \
+    --query "UserPools[?Name=='${user_pool_name}'].Id" \
+    --output text
+)
+
+if [[ -z "${pool_id}" ]]; then
+  echo "Criando User Pool '${user_pool_name}'..."
+  pool_id=$(
+    aws cognito-idp create-user-pool \
+      --region "${aws_region?}" \
+      --pool-name "${user_pool_name}" \
+      --schema '[
+        {
+          "Name": "tenant_id",
+          "AttributeDataType": "String",
+          "Mutable": false,
+          "Required": false,
+          "StringAttributeConstraints": {"MinLength": "1", "MaxLength": "64"}
+        }
+      ]' \
+      --auto-verified-attributes email \
+      --username-attributes email \
+      --user-pool-tags "project=${tag_project},env=${tag_env}" \
+      --query 'UserPool.Id' \
+      --output text
+  )
+  echo "User Pool criado: ${pool_id}"
+else
+  echo "User Pool já existe: ${pool_id}"
+fi
+
+sed -i "s|^cognito_user_pool_id=.*|cognito_user_pool_id=\"${pool_id}\"|" "$(dirname "$0")/env.conf"
+
+# =============================================================================
+# IAM Role para a Lambda
+# =============================================================================
+echo "Verificando IAM role '${lambda_role_name}'..."
+
+lambda_role_arn="arn:aws:iam::${aws_account_id}:role/${lambda_role_name}"
+
+if ! aws iam get-role --role-name "${lambda_role_name}" > /dev/null 2>&1; then
+  echo "Criando IAM role '${lambda_role_name}'..."
+  aws iam create-role \
+    --role-name "${lambda_role_name}" \
+    --assume-role-policy-document '{
+      "Version": "2012-10-17",
+      "Statement": [{
+        "Effect": "Allow",
+        "Principal": {"Service": "lambda.amazonaws.com"},
+        "Action": "sts:AssumeRole"
+      }]
+    }' > /dev/null
+
+  aws iam attach-role-policy \
+    --role-name "${lambda_role_name}" \
+    --policy-arn "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
+  aws iam put-role-policy \
+    --role-name "${lambda_role_name}" \
+    --policy-name "DynamoDBTenantRegistry" \
+    --policy-document "{
+      \"Version\": \"2012-10-17\",
+      \"Statement\": [{
+        \"Effect\": \"Allow\",
+        \"Action\": [\"dynamodb:Query\"],
+        \"Resource\": \"arn:aws:dynamodb:${aws_region}:${aws_account_id}:table/${dynamodb_table}/index/client-id-index\"
+      }]
+    }"
+
+  echo "Aguardando propagação da role IAM..."
+  sleep 10
+else
+  echo "IAM role já existe."
+fi
+
+# =============================================================================
+# Lambda Pre-Token Generation
+# =============================================================================
+echo "Criando pacote da Lambda..."
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "${tmp_dir}"' EXIT
+
+cat > "${tmp_dir}/lambda_function.py" << 'PYEOF'
+import boto3
+
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('tenant-registry')
+
+def handler(event, context):
+    client_id = event['callerContext']['clientId']
+
+    response = table.query(
+        IndexName='client-id-index',
+        KeyConditionExpression='cognito_app_client_id = :cid',
+        ExpressionAttributeValues={':cid': client_id}
+    )
+
+    if not response['Items']:
+        raise Exception(f"No tenant found for client_id: {client_id}")
+
+    tenant_id = response['Items'][0]['tenant_id']
+
+    event['response']['claimsOverrideDetails'] = {
+        'claimsToAddOrOverride': {
+            'custom:tenant_id': tenant_id
+        }
+    }
+    return event
+PYEOF
+
+(cd "${tmp_dir}" && zip lambda.zip lambda_function.py > /dev/null)
+
+echo "Verificando Lambda '${lambda_function_name}'..."
+if ! aws lambda get-function \
+  --region "${aws_region?}" \
+  --function-name "${lambda_function_name}" > /dev/null 2>&1; then
+
+  echo "Criando Lambda '${lambda_function_name}'..."
+  lambda_arn=$(
+    aws lambda create-function \
+      --region "${aws_region?}" \
+      --function-name "${lambda_function_name}" \
+      --runtime python3.12 \
+      --role "${lambda_role_arn}" \
+      --handler lambda_function.handler \
+      --zip-file "fileb://${tmp_dir}/lambda.zip" \
+      --timeout 5 \
+      --memory-size 128 \
+      --environment "Variables={DYNAMODB_TABLE=${dynamodb_table}}" \
+      --tags "project=${tag_project},env=${tag_env}" \
+      --query 'FunctionArn' \
+      --output text
+  )
+  echo "Lambda criada: ${lambda_arn}"
+else
+  echo "Lambda já existe. Atualizando código..."
+  lambda_arn=$(
+    aws lambda update-function-code \
+      --region "${aws_region?}" \
+      --function-name "${lambda_function_name}" \
+      --zip-file "fileb://${tmp_dir}/lambda.zip" \
+      --query 'FunctionArn' \
+      --output text
+  )
+fi
+
+# Permissão para o Cognito invocar a Lambda
+aws lambda add-permission \
+  --region "${aws_region?}" \
+  --function-name "${lambda_function_name}" \
+  --statement-id "CognitoPreTokenGeneration" \
+  --action lambda:InvokeFunction \
+  --principal cognito-idp.amazonaws.com \
+  --source-arn "arn:aws:cognito-idp:${aws_region}:${aws_account_id}:userpool/${pool_id}" \
+  > /dev/null 2>&1 || true  # ignora se permissão já existir
+
+echo "Configurando trigger Pre-Token Generation no User Pool..."
+aws cognito-idp update-user-pool \
+  --region "${aws_region?}" \
+  --user-pool-id "${pool_id}" \
+  --lambda-config "PreTokenGeneration=${lambda_arn}"
+
+# =============================================================================
+# Google Identity Provider
+# =============================================================================
+echo "Verificando Identity Provider Google..."
+
+idp_exists=$(
+  aws cognito-idp describe-identity-provider \
+    --region "${aws_region?}" \
+    --user-pool-id "${pool_id}" \
+    --provider-name Google \
+    --query 'IdentityProvider.ProviderName' \
+    --output text 2>/dev/null || echo "NOT_FOUND"
+)
+
+if [[ "${idp_exists}" == "NOT_FOUND" ]]; then
+  echo "Criando Identity Provider Google..."
+  aws cognito-idp create-identity-provider \
+    --region "${aws_region?}" \
+    --user-pool-id "${pool_id}" \
+    --provider-name Google \
+    --provider-type Google \
+    --provider-details \
+      "client_id=${GOOGLE_CLIENT_ID},client_secret=${GOOGLE_CLIENT_SECRET},authorize_scopes=openid email profile" \
+    --attribute-mapping \
+      "email=email,name=name" \
+    > /dev/null
+  echo "Identity Provider Google criado."
+else
+  echo "Identity Provider Google já existe."
+fi
+
+# =============================================================================
+# App Client customer1
+# =============================================================================
+echo "Verificando App Client 'customer1'..."
+
+app_client_id=$(
+  aws cognito-idp list-user-pool-clients \
+    --region "${aws_region?}" \
+    --user-pool-id "${pool_id}" \
+    --query "UserPoolClients[?ClientName=='customer1'].ClientId" \
+    --output text
+)
+
+if [[ -z "${app_client_id}" ]]; then
+  echo "Criando App Client 'customer1'..."
+  app_client_id=$(
+    aws cognito-idp create-user-pool-client \
+      --region "${aws_region?}" \
+      --user-pool-id "${pool_id}" \
+      --client-name customer1 \
+      --generate-secret \
+      --supported-identity-providers Google \
+      --allowed-o-auth-flows code \
+      --allowed-o-auth-scopes openid email profile \
+      --allowed-o-auth-flows-user-pool-client \
+      --callback-urls "https://auth.${domain?}/callback" \
+      --logout-urls "https://customer1.${domain?}/logout" \
+      --query 'UserPoolClient.ClientId' \
+      --output text
+  )
+  echo "App Client criado: ${app_client_id}"
+else
+  echo "App Client já existe: ${app_client_id}"
+fi
+
+sed -i "s|^cognito_app_client_id=.*|cognito_app_client_id=\"${app_client_id}\"|" "$(dirname "$0")/env.conf"
+
+# Recupera o client secret para exibição
+app_client_secret=$(
+  aws cognito-idp describe-user-pool-client \
+    --region "${aws_region?}" \
+    --user-pool-id "${pool_id}" \
+    --client-id "${app_client_id}" \
+    --query 'UserPoolClient.ClientSecret' \
+    --output text
+)
+
+# =============================================================================
+# Atualiza DynamoDB com IDs reais do Cognito
+# =============================================================================
+echo "Atualizando DynamoDB com pool_id e app_client_id..."
+
+aws dynamodb update-item \
+  --region "${aws_region?}" \
+  --table-name "${dynamodb_table}" \
+  --key '{"pk": {"S": "domain#gmail.com"}}' \
+  --update-expression \
+    "SET cognito_app_client_id = :cid, auth.cognito_user_pool_id = :pid, auth.cognito_app_client_id = :cid" \
+  --expression-attribute-values \
+    ":cid={\"S\": \"${app_client_id}\"}" \
+    ":pid={\"S\": \"${pool_id}\"}"
+
+echo "DynamoDB atualizado."
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo "User Pool:"
+aws cognito-idp describe-user-pool \
+  --region "${aws_region?}" \
+  --user-pool-id "${pool_id}" \
+  --query 'UserPool.{Id:Id,Nome:Name,Lambda:LambdaConfig.PreTokenGeneration}' \
+  --output table
+
+echo ""
+echo "App Client:"
+aws cognito-idp describe-user-pool-client \
+  --region "${aws_region?}" \
+  --user-pool-id "${pool_id}" \
+  --client-id "${app_client_id}" \
+  --query 'UserPoolClient.{ClientId:ClientId,Nome:ClientName,Callbacks:CallbackURLs,IdPs:SupportedIdentityProviders}' \
+  --output table
+
+echo ""
+echo "============================================================"
+echo "ATENÇÃO: guarde o client secret — necessário no passo 13"
+echo "  COGNITO_CLIENT_SECRET=${app_client_secret}"
+echo "============================================================"
+echo ""
+echo "Próximo passo: scripts/12-configure-dns-cognito"
+echo "  Antes: anote o CloudFront domain do Cognito Hosted UI"
+echo "  Execute: aws cognito-idp describe-user-pool-domain \\"
+echo "    --region ${aws_region} --domain idp.${domain} --query 'DomainDescription.CloudFrontDistribution'"
