@@ -279,15 +279,20 @@ app_client_secret=$(
 # =============================================================================
 echo "Atualizando DynamoDB com pool_id e app_client_id..."
 
+attr_values=$(cat <<EOF | envsubst
+{":cid":{"S":"${app_client_id}"},":pid":{"S":"${pool_id}"}}
+EOF
+)
+
+# "auth" é palavra reservada no DynamoDB — usar #auth como alias
 aws dynamodb update-item \
   --region "${aws_region?}" \
   --table-name "${dynamodb_table}" \
   --key '{"pk": {"S": "domain#gmail.com"}}' \
   --update-expression \
-    "SET cognito_app_client_id = :cid, auth.cognito_user_pool_id = :pid, auth.cognito_app_client_id = :cid" \
-  --expression-attribute-values \
-    ":cid={\"S\": \"${app_client_id}\"}" \
-    ":pid={\"S\": \"${pool_id}\"}"
+    'SET cognito_app_client_id = :cid, #auth.cognito_user_pool_id = :pid, #auth.cognito_app_client_id = :cid' \
+  --expression-attribute-names '{"#auth": "auth"}' \
+  --expression-attribute-values "${attr_values}"
 
 echo "DynamoDB atualizado."
 

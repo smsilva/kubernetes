@@ -97,7 +97,12 @@ Scripts em `scripts/`, documentos em `docs/`.
 | `scripts/11-create-cognito` | User Pool, Google IdP, App Client, Lambda Pre-Token Generation |
 | `scripts/12-configure-dns-cognito` | Custom domain Cognito (`idp.wasp.silvios.me`) + CNAME no Azure DNS |
 | `scripts/13-deploy-services` | Build/push Docker Hub, IRSA discovery, deploy K8s dos 4 namespaces |
+| `scripts/14-configure-istio-auth` | Istio `RequestAuthentication` + `AuthorizationPolicy` no namespace `customer1` |
+| `scripts/15-configure-waf-ratelimit` | Rate limiting WAF para `/login` e `/callback` (endereça SEC-007) |
 | `scripts/destroy` | Destrói tudo na ordem inversa (ACM deve ser removido manualmente) |
+
+**Script pendente (sessão futura):** `scripts/07b-configure-global-accelerator`
+Deve ser criado e executado **entre os scripts 07 e 08**. O Global Accelerator provisiona dois IPs anycast estáticos que substituem os A records frágeis de `wasp.silvios.me` (IPs do ALB mudam). Ver seção DNS abaixo.
 
 Configurações globais em `scripts/env.conf`. Variáveis preenchidas automaticamente pelos scripts:
 - `cert_arn` (script 06), `cognito_user_pool_id`, `cognito_app_client_id`, `cognito_cloudfront_domain` (scripts 11/12)
@@ -115,6 +120,15 @@ O domínio `wasp.silvios.me` é gerenciado em **Azure DNS**, não no Route 53:
 | **Zone** | `wasp.silvios.me` |
 
 Scripts que criam registros DNS usam `az network dns record-set` em vez de `aws route53`.
+
+### Registro A no apex (`wasp.silvios.me`)
+
+O Cognito exige que o domínio pai do custom domain (`wasp.silvios.me`) tenha um registro A para validação DNS. Como CNAME no apex não é permitido pelo padrão DNS e o ALB não tem IPs fixos, o registro A foi criado manualmente com os IPs resolvidos do ALB no momento do provisionamento — **esses IPs são rotativos e podem mudar**.
+
+**Solução definitiva (opcional):** criar `scripts/07b-configure-global-accelerator` que provisiona um Global Accelerator apontando para o ALB. O Global Accelerator fornece dois IPs anycast estáticos que:
+- Substituem os A records frágeis do apex
+- Habilitam roteamento global para múltiplas regiões (alinhado com a arquitetura do `fluxo-autenticacao-multitenant.md`)
+- Eliminam a necessidade de atualizar DNS manualmente após cada reprovisionamento
 
 ---
 
@@ -217,6 +231,37 @@ Cada serviço tem: `app/`, `tests/`, `requirements.txt`, `requirements-dev.txt`,
 ---
 
 ## Lições aprendidas — AWS CLI
+
+### DynamoDB CLI — `--expression-attribute-values` recebe um único JSON
+
+O parâmetro `--expression-attribute-values` espera um **único objeto JSON** com todos os valores. Passar múltiplos argumentos separados causa `Unknown options`:
+
+```bash
+# ERRADO — dois argumentos separados
+--expression-attribute-values \
+  ":cid={\"S\": \"val1\"}" \
+  ":pid={\"S\": \"val2\"}"
+
+# CORRETO — um único JSON; usar variável com envsubst para interpolar
+attr_values=$(cat <<EOF | envsubst
+{":cid":{"S":"${var1}"},":pid":{"S":"${var2}"}}
+EOF
+)
+--expression-attribute-values "${attr_values}"
+```
+
+### DynamoDB CLI — palavras reservadas em `--update-expression`
+
+Nomes de atributos que coincidem com palavras reservadas do DynamoDB (ex: `auth`, `name`, `status`) causam `ValidationException` em `--update-expression`. Usar `--expression-attribute-names` para criar um alias com `#`:
+
+```bash
+# ERRADO — "auth" é palavra reservada
+--update-expression 'SET auth.field = :val'
+
+# CORRETO — alias #auth via --expression-attribute-names
+--update-expression 'SET #auth.field = :val' \
+--expression-attribute-names '{"#auth": "auth"}'
+```
 
 ### WAFv2 — formato do ARN e parâmetro `--id`
 

@@ -1,5 +1,12 @@
 #!/bin/bash
 # Passo 12: Cria custom domain do Cognito Hosted UI (idp.wasp.silvios.me) e registro DNS no Azure
+#
+# PRÉ-REQUISITO: o domínio pai (wasp.silvios.me) deve ter um registro A para que o Cognito
+# aceite o custom domain. Como o ALB não tem IPs fixos, os A records são criados manualmente
+# com os IPs resolvidos no momento do provisionamento — são frágeis e podem mudar.
+#
+# SOLUÇÃO DEFINITIVA (TODO): criar scripts/07b-configure-global-accelerator entre os passos 07
+# e 08. O Global Accelerator provisiona IPs anycast estáticos que substituem esses A records.
 
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
