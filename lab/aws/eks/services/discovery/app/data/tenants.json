@@ -3,9 +3,9 @@
     "domain": "gmail.com",
     "tenant_id": "customer1",
     "tenant_url": "customer1.wasp.silvios.me",
-    "client_id": "<cognito-app-client-id-customer1>",
+    "client_id": "7gpvghsvdd3f4s7k1v461adb7g",
     "idp_name": "Google",
-    "cognito_pool_id": "<cognito-pool-id>"
+    "cognito_pool_id": "us-east-1_waQAyhZ0E"
   },
   {
     "domain": "customer2.com",

@@ -8,9 +8,10 @@ scripts_dir="$(cd "$(dirname "$0")" && pwd)"
 services_dir="${scripts_dir}/../services"
 aws_account_id=$(aws sts get-caller-identity --query Account --output text)
 
-container_image_discovery="silviosilva/wasp-discovery:latest"
-container_image_platform_frontend="silviosilva/wasp-platform-frontend:latest"
-container_image_callback_handler="silviosilva/wasp-callback-handler:latest"
+image_tag="$(git -C "${services_dir}" rev-parse --short HEAD)"
+container_image_discovery="silviosilva/wasp-discovery:${image_tag}"
+container_image_platform_frontend="silviosilva/wasp-platform-frontend:${image_tag}"
+container_image_callback_handler="silviosilva/wasp-callback-handler:${image_tag}"
 
 # =============================================================================
 # Validação
