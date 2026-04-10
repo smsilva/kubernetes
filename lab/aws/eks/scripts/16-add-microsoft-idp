@@ -19,8 +19,11 @@ tenant_id="customer2"
 tenant_domain="msn.com"
 tenant_url="customer2.${domain}"
 
-# Contas pessoais Microsoft (MSN, Hotmail, Outlook.com) usam o endpoint consumers
-microsoft_oidc_issuer="https://login.microsoftonline.com/consumers/v2.0"
+# Contas pessoais Microsoft (MSN, Hotmail, Outlook.com):
+# - Endpoint de autorização aceita "consumers" como alias
+# - Mas o issuer nos tokens emitidos usa o GUID fixo do tenant MSA
+# Usar o GUID garante que o Cognito valide o issuer corretamente
+microsoft_oidc_issuer="https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0"
 
 # =============================================================================
 # Validação
