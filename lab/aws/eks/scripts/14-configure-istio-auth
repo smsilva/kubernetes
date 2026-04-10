@@ -1,6 +1,6 @@
 #!/bin/bash
 # Passo 14: Configura Istio RequestAuthentication e AuthorizationPolicy no namespace customer1
-# Etapa 10.8: valida JWT do Cognito (lido do cookie session)
+# Etapa 10.8: valida JWT do Cognito (cookie session ou Authorization: Bearer)
 # Etapa 10.9: bloqueia requests sem custom:tenant_id == "customer1"
 
 set -euo pipefail
@@ -23,7 +23,8 @@ echo "JWKS   : ${jwks_uri}"
 # =============================================================================
 # Etapa 10.8 — RequestAuthentication
 # Valida assinatura e expiração do JWT emitido pelo Cognito.
-# fromCookies: lê o JWT do cookie "session" emitido pelo callback-handler.
+# fromCookies:  lê o JWT do cookie "session" emitido pelo callback-handler (browser flow).
+# fromHeaders:  lê o JWT do header "Authorization: Bearer <token>" (API/CLI flow).
 # forwardOriginalToken: propaga o JWT nos headers para que a app possa ler claims.
 # =============================================================================
 echo ""
@@ -42,6 +43,9 @@ spec:
       forwardOriginalToken: true
       fromCookies:
         - session
+      fromHeaders:
+        - name: Authorization
+          prefix: "Bearer "
 EOF
 
 # =============================================================================
@@ -85,7 +89,7 @@ echo ""
 echo "Comportamento esperado:"
 echo "  JWT válido com custom:tenant_id=customer1  → HTTP 200"
 echo "  JWT válido com tenant_id de outro tenant   → HTTP 403"
-echo "  Sem cookie session                         → HTTP 403"
+echo "  Sem cookie session e sem Bearer token      → HTTP 403"
 echo "  JWT expirado ou assinatura inválida        → HTTP 401"
 echo ""
 echo "Próximo passo: scripts/15-configure-waf-ratelimit"
