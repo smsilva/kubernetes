@@ -1,0 +1,42 @@
+---
+kind: tenant
+name: wasp
+spec:
+  domain: wasp.silvios.me
+
+  regions:
+    - name: us-east-1
+      endpoint: platform-wasp-0aaecca4.elb.us-east-1.amazonaws.com
+
+    - name: sa-east-1
+      endpoint: platform-wasp-5c5e5049.elb.sa-east-1.amazonaws.com
+
+    - name: ap-northeast-1
+      endpoint: platform-wasp-d9c8e5b0.elb.ap-northeast-1.amazonaws.com
+
+  services:
+    - name: auth
+    - name: discovery
+    - name: callback
+    - name: portal
+---
+kind: tenant
+name: wayland
+spec:
+  domain: wayland.wasp.silvios.me
+
+  regions:
+    - name: ap-northeast-1
+      endpoint: wasp-wayland-58015491.elb.ap-northeast-1.amazonaws.com
+
+    - name: ap-southeast-1
+      endpoint: wasp-wayland-26934e62.elb.ap-southeast-1.amazonaws.com
+---
+kind: tenant
+name: demo
+spec:
+  domain: demo.wasp.silvios.me
+
+  regions:
+    - name: us-east-1
+      endpoint: wasp-demo-0aaecca4.elb.us-east-1.amazonaws.com
