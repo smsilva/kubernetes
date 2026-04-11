@@ -29,7 +29,7 @@ Antes de começar, responda:
 | IdP novo (credenciais próprias) | Executar todos os passos abaixo |
 | IdP compartilhado (mesmo Client ID já cadastrado) | Pular o Passo 1; registrar apenas o domínio adicional no DynamoDB apontando para o App Client existente |
 
-O caso de IdP compartilhado está detalhado na seção [Múltiplos domínios no mesmo IdP](#múltiplos-domínios-no-mesmo-idp).
+O caso de IdP compartilhado está detalhado na seção [Múltiplos domínios no mesmo IdP](#multiplos-dominios-no-mesmo-idp).
 
 ---
 

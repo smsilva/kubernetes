@@ -1,0 +1,97 @@
+site_name: EKS Lab — ALB + Istio + Autenticação Multi-tenant
+site_description: >
+  Laboratório de EKS com VPC, ALB, Istio Gateway, WAF, Cognito e DynamoDB.
+  Plataforma SaaS multi-tenant com autenticação federada via múltiplos IdPs.
+site_author: Silvio Silva
+
+docs_dir: docs
+
+theme:
+  name: material
+  language: pt-BR
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Mudar para tema escuro
+    - scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Mudar para tema claro
+  icon:
+    logo: material/cloud-braces
+
+plugins:
+  - search:
+      lang: pt
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+  - attr_list
+  - def_list
+  - toc:
+      permalink: true
+      title: Nesta página
+
+nav:
+  - Início: index.md
+
+  - Arquitetura:
+    - arquitetura/index.md
+    - Fluxo de Tráfego: arquitetura/fluxo-trafego.md
+    - Autenticação Multi-tenant: fluxo-autenticacao-multitenant.md
+    - Decisões Técnicas: decisoes-tecnicas.md
+
+  - Operações:
+    - operacoes/index.md
+    - Passo a Passo: operacoes/passo-a-passo.md
+    - Onboarding de Customer: onboarding-novo-customer.md
+    - Destruir o Lab: operacoes/destruir-lab.md
+
+  - Serviços:
+    - servicos/index.md
+    - Discovery: servicos/discovery.md
+    - Platform Frontend: servicos/platform-frontend.md
+    - Callback Handler: servicos/callback-handler.md
+
+  - Segurança:
+    - seguranca/index.md
+    - SEC-002 — IAM Policy sem hash: security-issues/sec-002.md
+    - SEC-003 — Imagem sem digest: security-issues/sec-003.md
+    - SEC-004 — cluster-admin irrestrito: security-issues/sec-004.md
+    - SEC-005 — Security Groups do ALB: security-issues/sec-005.md
+    - SEC-006 — IMDSv1 nos nodes: security-issues/sec-006.md
+    - SEC-007 — WAF sem rate limiting: security-issues/sec-007.md

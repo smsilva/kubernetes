@@ -1,2 +1,5 @@
 # IDs de recursos provisionados (gerado por 01-create-vpc)
 .vpc-ids
+
+# MkDocs build output
+site/

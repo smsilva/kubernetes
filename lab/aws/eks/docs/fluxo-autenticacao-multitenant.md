@@ -287,7 +287,7 @@ Dados sensíveis do IdP, separados para controle de acesso IAM granular. Apenas 
 | **Istio `VirtualService`** | Configura CORS para chamadas cross-origin entre subdomínios |
 | **Istio `RequestAuthentication`** | Valida JWT Cognito — JWKS único independente do IdP upstream |
 | **Istio `AuthorizationPolicy`** | Bloqueia requisições sem JWT válido **e** rejeita JWTs de outros tenants via claim `custom:tenant_id` |
-| **WAF** | Rate limiting em `/login` e `/callback` (endereça [SEC-007](README.md#sec-007-waf-sem-rate-limiting--baixo)) |
+| **WAF** | Rate limiting em `/login` e `/callback` (endereça [SEC-007](security-issues/sec-007.md)) |
 | **IRSA** | Discovery service com permissão de leitura no DynamoDB; callback handler com acesso ao Secrets Manager |
 
 ### Configuração do Istio RequestAuthentication
