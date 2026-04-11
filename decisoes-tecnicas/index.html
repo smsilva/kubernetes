@@ -1,0 +1,1868 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Laboratório de EKS com VPC, ALB, Istio Gateway, WAF, Cognito e DynamoDB. Plataforma SaaS multi-tenant com autenticação federada via múltiplos IdPs.
+">
+      
+      
+        <meta name="author" content="Silvio Silva">
+      
+      
+      
+        <link rel="prev" href="../fluxo-autenticacao-multitenant/">
+      
+      
+        <link rel="next" href="../operacoes/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Decisões Técnicas - EKS Lab — ALB + Istio + Autenticação Multi-tenant</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#decisoes-tecnicas-backlog-e-trade-offs" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href=".." title="EKS Lab — ALB + Istio + Autenticação Multi-tenant" class="md-header__button md-logo" aria-label="EKS Lab — ALB + Istio + Autenticação Multi-tenant" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.86 12.5A4.31 4.31 0 0 0 19 11c0-1.95-.68-3.6-2.04-4.96S13.95 4 12 4c-1.58 0-3 .47-4.25 1.43s-2.08 2.19-2.5 3.72c-1.25.28-2.29.93-3.08 1.95S1 13.28 1 14.58c0 1.51.54 2.8 1.61 3.85C3.69 19.5 5 20 6.5 20h12c1.25 0 2.31-.44 3.19-1.31.87-.88 1.31-1.94 1.31-3.19q0-1.725-1.14-3M10.5 10H9v1c0 1.11-.89 2-2 2a2 2 0 0 1 2 2v1h1.5v2H9a2 2 0 0 1-2-2v-1c0-.55-.45-1-1-1h-.5v-2H6c.55 0 1-.45 1-1v-1c0-1.1.9-2 2-2h1.5zm8 4H18c-.55 0-1 .45-1 1v1c0 1.11-.89 2-2 2h-1.5v-2H15v-1c0-1.1.9-2 2-2a2 2 0 0 1-2-2v-1h-1.5V8H15a2 2 0 0 1 2 2v1c0 .55.45 1 1 1h.5z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            EKS Lab — ALB + Istio + Autenticação Multi-tenant
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Decisões Técnicas
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Mudar para tema escuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Mudar para tema escuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Mudar para tema claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Mudar para tema claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Abas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Início
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../arquitetura/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Arquitetura
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../operacoes/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Operações
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../servicos/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Serviços
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../seguranca/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Segurança
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="EKS Lab — ALB + Istio + Autenticação Multi-tenant" class="md-nav__button md-logo" aria-label="EKS Lab — ALB + Istio + Autenticação Multi-tenant" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.86 12.5A4.31 4.31 0 0 0 19 11c0-1.95-.68-3.6-2.04-4.96S13.95 4 12 4c-1.58 0-3 .47-4.25 1.43s-2.08 2.19-2.5 3.72c-1.25.28-2.29.93-3.08 1.95S1 13.28 1 14.58c0 1.51.54 2.8 1.61 3.85C3.69 19.5 5 20 6.5 20h12c1.25 0 2.31-.44 3.19-1.31.87-.88 1.31-1.94 1.31-3.19q0-1.725-1.14-3M10.5 10H9v1c0 1.11-.89 2-2 2a2 2 0 0 1 2 2v1h1.5v2H9a2 2 0 0 1-2-2v-1c0-.55-.45-1-1-1h-.5v-2H6c.55 0 1-.45 1-1v-1c0-1.1.9-2 2-2h1.5zm8 4H18c-.55 0-1 .45-1 1v1c0 1.11-.89 2-2 2h-1.5v-2H15v-1c0-1.1.9-2 2-2a2 2 0 0 1-2-2v-1h-1.5V8H15a2 2 0 0 1 2 2v1c0 .55.45 1 1 1h.5z"/></svg>
+
+    </a>
+    EKS Lab — ALB + Istio + Autenticação Multi-tenant
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../arquitetura/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Arquitetura
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../arquitetura/fluxo-trafego/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fluxo de Tráfego
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fluxo-autenticacao-multitenant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Autenticação Multi-tenant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisões Técnicas
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisões Técnicas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="Nesta página">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Nesta página
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#api-auth-options-for-external-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API auth options for external clients
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API auth options for external clients">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#opcoes-avaliadas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opções avaliadas
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#secrets-por-tenant-no-callback-handler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secrets por tenant no callback-handler
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Secrets por tenant no callback-handler">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solucao-atual-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solução atual (lab)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solucao-otima-para-producao-adiada" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solução ótima para produção (adiada)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cache-no-discovery-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cache no discovery service
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cache no discovery service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contexto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opcoes-avaliadas_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opções avaliadas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decisao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisão
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-revisar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando revisar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-pool-unico-compartilhado-vs-um-por-tierregiao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User Pool único compartilhado vs um por tier/região
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="User Pool único compartilhado vs um por tier/região">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contexto_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opcoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opções
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-decidir" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando decidir
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keycloak-self-hosted-risco-de-sla-acoplado-ao-customer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keycloak self-hosted — risco de SLA acoplado ao customer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Keycloak self-hosted — risco de SLA acoplado ao customer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contexto_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opcoes-de-mitigacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opções de mitigação
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decisao-recomendada" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisão recomendada
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sessao-cross-region-tokens-jwt-stateless" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sessão cross-region — tokens JWT stateless
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sessão cross-region — tokens JWT stateless">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contexto_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decisao_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisão
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#microsoft-msa-vs-azure-ad-corporativo-no-cognito" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Microsoft MSA vs Azure AD corporativo no Cognito
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Microsoft MSA vs Azure AD corporativo no Cognito">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contexto_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decisao_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisão
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gateway-api-vs-ingress-classico-no-alb-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gateway API vs Ingress clássico no ALB Controller
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Gateway API vs Ingress clássico no ALB Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contexto_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decisao-manter-ingressingressclass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisão: manter Ingress/IngressClass
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-revisitar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando revisitar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#state_jwt_secret-em-deployments-multi-regiao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STATE_JWT_SECRET em deployments multi-região
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="STATE_JWT_SECRET em deployments multi-região">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contexto_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decisao-segredo-identico-em-todos-os-clusters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisão: segredo idêntico em todos os clusters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implicacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implicações
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solucao-otima-para-rotacao-adiada" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solução ótima para rotação (adiada)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../operacoes/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operações
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operações
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operacoes/passo-a-passo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Passo a Passo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../onboarding-novo-customer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Onboarding de Customer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operacoes/destruir-lab/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Destruir o Lab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../servicos/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serviços
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Serviços
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../servicos/discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../servicos/platform-frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Frontend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../servicos/callback-handler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Callback Handler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../seguranca/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segurança
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Segurança
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-002/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-002 — IAM Policy sem hash
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-003/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-003 — Imagem sem digest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-004/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-004 — cluster-admin irrestrito
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-005/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-005 — Security Groups do ALB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-006/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-006 — IMDSv1 nos nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-007/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-007 — WAF sem rate limiting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="decisoes-tecnicas-backlog-e-trade-offs">Decisões técnicas — backlog e trade-offs<a class="headerlink" href="#decisoes-tecnicas-backlog-e-trade-offs" title="Permanent link">&para;</a></h1>
+<p>Registro de decisões de design tomadas durante o desenvolvimento do lab, com o raciocínio por trás de cada escolha e o que foi adiado conscientemente.</p>
+<hr />
+<h2 id="api-auth-options-for-external-clients">API auth options for external clients<a class="headerlink" href="#api-auth-options-for-external-clients" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> pendente de decisão</p>
+<p>Como autenticar chamadas de <code>curl</code>/scripts à API sem passar pelo browser SSO flow.</p>
+<h3 id="opcoes-avaliadas">Opções avaliadas<a class="headerlink" href="#opcoes-avaliadas" title="Permanent link">&para;</a></h3>
+<p><strong>A — Service account token (Kubernetes Secret)</strong>
+Criar um <code>ServiceAccount</code> dedicado com permissões limitadas e usar o token gerado automaticamente. Simples, sem dependência de AWS, mas token de longa duração (sem expiração por padrão antes do Kubernetes 1.24).</p>
+<p><strong>B — AWS SigV4 (IAM)</strong>
+Assinar as requisições com credenciais IAM via <code>aws-sigv4</code>. Requer que o API Gateway ou o proxy valide a assinatura. Integra bem com IRSA para workloads no cluster, mas adiciona complexidade no cliente.</p>
+<p><strong>C — Cognito client credentials flow (OAuth 2.0 machine-to-machine)</strong>
+Criar um App Client Cognito sem usuário, usar <code>grant_type=client_credentials</code> para obter um access token. Token de curta duração, auditável, sem browser. É o padrão para M2M em OAuth 2.0.</p>
+<p><strong>Decisão:</strong> Opção C avaliada como mais alinhada ao padrão OAuth 2.0 para M2M. Implementação adiada — nenhuma opção escolhida ainda.</p>
+<hr />
+<h2 id="secrets-por-tenant-no-callback-handler">Secrets por tenant no callback-handler<a class="headerlink" href="#secrets-por-tenant-no-callback-handler" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> solução temporária em produção no lab; solução ótima documentada e adiada</p>
+<h3 id="problema">Problema<a class="headerlink" href="#problema" title="Permanent link">&para;</a></h3>
+<p>O <code>callback-handler</code> precisa do <code>client_secret</code> de cada App Client Cognito para trocar o authorization code por token. Com múltiplos tenants, cada um tem seu próprio App Client com secret diferente.</p>
+<h3 id="solucao-atual-lab">Solução atual (lab)<a class="headerlink" href="#solucao-atual-lab" title="Permanent link">&para;</a></h3>
+<p>Env vars nomeadas por convenção: <code>COGNITO_CLIENT_SECRET_&lt;TENANT_ID_UPPERCASE&gt;</code>.
+Injetadas via Kubernetes Secret criado/atualizado pelo script de deploy.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">tenant_key</span> <span class="o">=</span> <span class="n">login_state</span><span class="o">.</span><span class="n">tenant_id</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>   <span class="c1"># &quot;customer1&quot; → &quot;CUSTOMER1&quot;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">client_secret</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;COGNITO_CLIENT_SECRET_</span><span class="si">{</span><span class="n">tenant_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+</code></pre></div>
+<p>Secret Kubernetes com uma chave por tenant:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">stringData</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">COGNITO_CLIENT_SECRET_CUSTOMER1</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;secret1&gt;&quot;</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">COGNITO_CLIENT_SECRET_CUSTOMER2</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;secret2&gt;&quot;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">STATE_JWT_SECRET</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;jwt-secret&gt;&quot;</span>
+</code></pre></div>
+<p><strong>Limitação:</strong> adicionar tenant = editar o Secret + rollout do callback-handler. Secrets em base64 no etcd sem encryption at rest por padrão.</p>
+<h3 id="solucao-otima-para-producao-adiada">Solução ótima para produção (adiada)<a class="headerlink" href="#solucao-otima-para-producao-adiada" title="Permanent link">&para;</a></h3>
+<p><strong>External Secrets Operator + AWS Secrets Manager</strong></p>
+<ul>
+<li>ESO sincroniza automaticamente Secrets Manager → K8s Secret</li>
+<li>Rotation gerenciada pela AWS</li>
+<li>Adicionar tenant = criar secret no Secrets Manager, sem tocar no deployment</li>
+<li>Padrão de facto para EKS em produção nessa stack (ESO + ArgoCD)</li>
+</ul>
+<p><strong>Alternativa — SDK call em runtime:</strong>
+O callback-handler chama Secrets Manager diretamente usando <code>tenant_id</code> como chave. Zero redeployment ao adicionar tenant. Desvantagem: latência extra no caminho crítico do login.</p>
+<p><strong>Quando revisar:</strong> ao escalar além de ~5 tenants ou ao colocar em produção.</p>
+<hr />
+<h2 id="cache-no-discovery-service">Cache no discovery service<a class="headerlink" href="#cache-no-discovery-service" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> adiado; sem cache hoje</p>
+<h3 id="contexto">Contexto<a class="headerlink" href="#contexto" title="Permanent link">&para;</a></h3>
+<p>O discovery service é chamado <strong>duas vezes por login</strong>: uma pelo <code>platform-frontend</code> (ao submeter o e-mail) e outra pelo <code>callback-handler</code> (para validar que o domínio do e-mail autenticado pertence ao tenant esperado). Cada chamada consulta o DynamoDB. Fora do fluxo de login, o Istio valida o JWT diretamente via JWKS — o discovery não é envolvido.</p>
+<p>Para o volume típico de um sistema de login, a latência do DynamoDB é aceitável. O risco real é de <strong>disponibilidade</strong>: se o DynamoDB ou o discovery service ficar indisponível, o login falha.</p>
+<h3 id="opcoes-avaliadas_1">Opções avaliadas<a class="headerlink" href="#opcoes-avaliadas_1" title="Permanent link">&para;</a></h3>
+<p><strong>A — Cache em memória com TTL no processo (recomendada)</strong>
+Dict com timestamp por domínio. Domínio não encontrado ou expirado vai ao DynamoDB. TTL de 5 minutos elimina a quase totalidade das chamadas (domínios mudam raramente). Zero infra adicional.</p>
+<p><strong>B — ElastiCache (Redis/Memcached)</strong>
+Cache compartilhado entre pods e regiões. Útil se o número de pods do discovery crescer muito. Adiciona infra, custo e complexidade operacional — não justifica no estágio atual.</p>
+<p><strong>C — DynamoDB DAX</strong>
+Cache gerenciado na frente do DynamoDB, latência de microssegundos. Custo elevado para o padrão de acesso (logins, não queries contínuas). Não justifica.</p>
+<h3 id="decisao">Decisão<a class="headerlink" href="#decisao" title="Permanent link">&para;</a></h3>
+<p>Opção A avaliada como suficiente para o volume esperado. Implementação adiada até que a latência do DynamoDB se prove um problema real em produção.</p>
+<h3 id="quando-revisar">Quando revisar<a class="headerlink" href="#quando-revisar" title="Permanent link">&para;</a></h3>
+<p>Ao observar p99 de latência no login acima de 500 ms, ou ao escalar o número de pods do discovery (onde o cache em memória por pod se torna ineficiente).</p>
+<hr />
+<h2 id="user-pool-unico-compartilhado-vs-um-por-tierregiao">User Pool único compartilhado vs um por tier/região<a class="headerlink" href="#user-pool-unico-compartilhado-vs-um-por-tierregiao" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> pendente de decisão</p>
+<h3 id="contexto_1">Contexto<a class="headerlink" href="#contexto_1" title="Permanent link">&para;</a></h3>
+<p>O Cognito User Pool é uma instância global única no lab atual (<code>us-east-1</code>). Em uma topologia multi-região com Global Accelerator, o callback pode retornar para qualquer cluster regional — todos precisam validar o JWT emitido pelo mesmo pool.</p>
+<h3 id="opcoes">Opções<a class="headerlink" href="#opcoes" title="Permanent link">&para;</a></h3>
+<p><strong>A — User Pool único global</strong>
+Simples, todos os clusters validam o mesmo JWKS. Latência de validação depende do JWKS endpoint do Cognito (geralmente baixa, com cache). Limite de 300 IdPs externos por pool.</p>
+<p><strong>B — Um User Pool por região (alinhado ao Global Accelerator)</strong>
+Cada região tem seu pool; o frontend usa o pool da região mais próxima. Elimina dependência cross-region no caminho de autenticação. Adiciona complexidade: o <code>client_id</code> por tenant precisa ser replicado por região, e o callback precisa saber para qual pool redirecionar.</p>
+<h3 id="quando-decidir">Quando decidir<a class="headerlink" href="#quando-decidir" title="Permanent link">&para;</a></h3>
+<p>Ao planejar a expansão multi-região. Para o lab de cluster único, User Pool único é suficiente.</p>
+<hr />
+<h2 id="keycloak-self-hosted-risco-de-sla-acoplado-ao-customer">Keycloak self-hosted — risco de SLA acoplado ao customer<a class="headerlink" href="#keycloak-self-hosted-risco-de-sla-acoplado-ao-customer" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> risco documentado; decisão de aceitar ou mitigar pendente de caso real</p>
+<h3 id="contexto_2">Contexto<a class="headerlink" href="#contexto_2" title="Permanent link">&para;</a></h3>
+<p>Quando um tenant usa Keycloak self-hosted, o Cognito precisa de conectividade de rede para o servidor Keycloak do customer durante o login. Se o Keycloak do customer ficar indisponível, o login do tenant inteiro quebra.</p>
+<h3 id="opcoes-de-mitigacao">Opções de mitigação<a class="headerlink" href="#opcoes-de-mitigacao" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Opção</th>
+<th>Trade-off</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Customer expõe Keycloak publicamente com TLS</td>
+<td>Mais simples; expõe infra do customer</td>
+</tr>
+<tr>
+<td>AWS PrivateLink + VPN site-to-site</td>
+<td>Mais seguro; complexidade operacional alta</td>
+</tr>
+<tr>
+<td>Customer migra para Keycloak Cloud (managed)</td>
+<td>Elimina o problema; depende de decisão do customer</td>
+</tr>
+<tr>
+<td>Documentar como risco contratual explícito</td>
+<td>Zero custo técnico; SLA da plataforma fica degradado para esse tenant</td>
+</tr>
+</tbody>
+</table>
+<h3 id="decisao-recomendada">Decisão recomendada<a class="headerlink" href="#decisao-recomendada" title="Permanent link">&para;</a></h3>
+<p>Documentar como risco contratual explícito para qualquer tenant com Keycloak self-hosted. Exigir SLA de disponibilidade do Keycloak como pré-requisito para onboarding ou oferecer tier diferenciado.</p>
+<hr />
+<h2 id="sessao-cross-region-tokens-jwt-stateless">Sessão cross-region — tokens JWT stateless<a class="headerlink" href="#sessao-cross-region-tokens-jwt-stateless" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> decisão tomada para o caso de tokens de acesso; refresh tokens requerem atenção</p>
+<h3 id="contexto_3">Contexto<a class="headerlink" href="#contexto_3" title="Permanent link">&para;</a></h3>
+<p>No Global Accelerator com múltiplos clusters regionais, um usuário pode começar o login em <code>us-east-1</code> e ter o callback processado em <code>eu-central-1</code>. O JWT emitido pelo Cognito é stateless — qualquer cluster com acesso ao JWKS do Cognito consegue validar.</p>
+<h3 id="decisao_1">Decisão<a class="headerlink" href="#decisao_1" title="Permanent link">&para;</a></h3>
+<p>Tokens JWT de acesso funcionam sem estado compartilhado entre regiões. Cada cluster valida o JWT localmente contra o JWKS do Cognito (com cache local).</p>
+<p>Refresh tokens emitidos pelo Cognito são opacos e precisam ser trocados no mesmo User Pool que os emitiu — o Cognito lida com isso globalmente. Se a plataforma armazenar refresh tokens em DynamoDB para renovação transparente, a tabela deve ser uma <strong>DynamoDB Global Table</strong> para acesso local em qualquer região.</p>
+<hr />
+<h2 id="microsoft-msa-vs-azure-ad-corporativo-no-cognito">Microsoft MSA vs Azure AD corporativo no Cognito<a class="headerlink" href="#microsoft-msa-vs-azure-ad-corporativo-no-cognito" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> decisão tomada</p>
+<h3 id="contexto_4">Contexto<a class="headerlink" href="#contexto_4" title="Permanent link">&para;</a></h3>
+<p>O Cognito suporta dois tipos de issuer para contas Microsoft, e a distinção é necessária antes de criar o IdP:</p>
+<table>
+<thead>
+<tr>
+<th>Tipo de conta</th>
+<th><code>oidc_issuer</code></th>
+<th>Quando usar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Contas pessoais Microsoft (MSA, Hotmail, Outlook.com)</td>
+<td><code>https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0</code></td>
+<td>GUID fixo para MSA — não é um tenant ID real</td>
+</tr>
+<tr>
+<td>Azure AD corporativo / Google Workspace federado via Azure AD</td>
+<td><code>https://login.microsoftonline.com/&lt;azure-tenant-id&gt;/v2.0</code></td>
+<td>Usar o tenant ID real da organização no Azure</td>
+</tr>
+</tbody>
+</table>
+<h3 id="decisao_2">Decisão<a class="headerlink" href="#decisao_2" title="Permanent link">&para;</a></h3>
+<p>Registrar o IdP no Cognito com o <code>oidc_issuer</code> correspondente ao tipo de conta. A confusão mais comum é usar o GUID de MSA para contas corporativas (ou vice-versa), resultando em falha silenciosa na autenticação.</p>
+<p>Para tenants SaaS corporativos, o caso esperado é <strong>Azure AD com tenant ID real</strong>. MSA é relevante apenas se a plataforma aceitar contas pessoais Microsoft.</p>
+<hr />
+<h2 id="gateway-api-vs-ingress-classico-no-alb-controller">Gateway API vs Ingress clássico no ALB Controller<a class="headerlink" href="#gateway-api-vs-ingress-classico-no-alb-controller" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> decisão tomada; revisitar quando a série v3.x do ALB Controller estabilizar</p>
+<h3 id="contexto_5">Contexto<a class="headerlink" href="#contexto_5" title="Permanent link">&para;</a></h3>
+<p>O AWS Load Balancer Controller v3.x adicionou suporte à Kubernetes Gateway API (<code>GatewayClass</code>, <code>Gateway</code>, <code>HTTPRoute</code>) a partir da v3.0. Este lab utiliza intencionalmente os recursos clássicos <code>Ingress</code> e <code>IngressClass</code>.</p>
+<h3 id="decisao-manter-ingressingressclass">Decisão: manter Ingress/IngressClass<a class="headerlink" href="#decisao-manter-ingressingressclass" title="Permanent link">&para;</a></h3>
+<p>A issue <a href="https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/4674">kubernetes-sigs/aws-load-balancer-controller#4674</a> (aberta em abril de 2026) reporta que o upgrade de <code>v3.1.0</code> para <code>v3.2.1</code> quebra instalações onde a Gateway API <strong>não está habilitada</strong>, pois os CRDs de <code>ListenerSet</code> ficam ausentes. Enquanto esse tipo de problema de compatibilidade não estiver estabilizado, manter <code>Ingress</code>/<code>IngressClass</code> é a escolha conservadora.</p>
+<p>O Istio <code>Gateway</code> + <code>VirtualService</code> (passo 08) é um recurso do próprio Istio e <strong>não</strong> é afetado por essa limitação do ALB Controller.</p>
+<h3 id="quando-revisitar">Quando revisitar<a class="headerlink" href="#quando-revisitar" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Resolução da issue #4674 e de outros bugs de compatibilidade na série v3.x</li>
+<li>Avaliar <code>HTTPRoute</code> → ALB para substituir o <code>Ingress</code> atual (<code>07-configure-alb-ingress</code>)</li>
+</ul>
+<hr />
+<h2 id="state_jwt_secret-em-deployments-multi-regiao">STATE_JWT_SECRET em deployments multi-região<a class="headerlink" href="#state_jwt_secret-em-deployments-multi-regiao" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> decisão tomada; implementação da rotação adiada</p>
+<h3 id="contexto_6">Contexto<a class="headerlink" href="#contexto_6" title="Permanent link">&para;</a></h3>
+<p>O <code>STATE_JWT_SECRET</code> é o segredo compartilhado entre <code>platform-frontend</code> e <code>callback-handler</code> para assinar e verificar o state JWT do OAuth flow (proteção CSRF). O Cognito é uma instância global única — o callback retorna para <code>auth.wasp.silvios.me</code>, que o Global Accelerator pode rotear para <strong>qualquer</strong> cluster regional.</p>
+<h3 id="decisao-segredo-identico-em-todos-os-clusters">Decisão: segredo idêntico em todos os clusters<a class="headerlink" href="#decisao-segredo-identico-em-todos-os-clusters" title="Permanent link">&para;</a></h3>
+<p>Se o state JWT foi assinado em <code>us-east-1</code> mas o callback cai em <code>eu-central-1</code>, o <code>callback-handler</code> nessa região precisa verificar a assinatura. Portanto o <code>STATE_JWT_SECRET</code> deve ser o mesmo em todos os clusters regionais.</p>
+<h3 id="implicacoes">Implicações<a class="headerlink" href="#implicacoes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Provisionamento:</strong> o segredo deve ser replicado para todas as regiões. Com ESO + Secrets Manager com replicação cross-region, isso é automático.</li>
+<li><strong>Rotação:</strong> precisa ser coordenada — todos os clusters devem receber o novo segredo simultaneamente, ou aceitar dois segredos durante uma janela de transição (exigiria suporte a múltiplos segredos no <code>decode_state_token</code>).</li>
+<li><strong>Comprometimento:</strong> se o segredo vazar, um atacante pode forjar state JWTs válidos. A expiração curta (10 minutos) limita a janela de exploração — rotation imediata invalida todos os states em voo (usuários precisam reiniciar o login).</li>
+</ul>
+<h3 id="solucao-otima-para-rotacao-adiada">Solução ótima para rotação (adiada)<a class="headerlink" href="#solucao-otima-para-rotacao-adiada" title="Permanent link">&para;</a></h3>
+<p>Suporte a dois segredos simultâneos no <code>decode_state_token</code> (tenta verificar com o novo; se falhar, tenta com o anterior). Permite rotação sem downgrade de UX. Implementar junto com a migração para ESO + Secrets Manager.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Voltar para o topo
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

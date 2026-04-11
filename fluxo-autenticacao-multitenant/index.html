@@ -1,0 +1,2144 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Laboratório de EKS com VPC, ALB, Istio Gateway, WAF, Cognito e DynamoDB. Plataforma SaaS multi-tenant com autenticação federada via múltiplos IdPs.
+">
+      
+      
+        <meta name="author" content="Silvio Silva">
+      
+      
+      
+        <link rel="prev" href="../arquitetura/fluxo-trafego/">
+      
+      
+        <link rel="next" href="../decisoes-tecnicas/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Autenticação Multi-tenant - EKS Lab — ALB + Istio + Autenticação Multi-tenant</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#arquitetura-de-autenticacao-multi-tenant" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href=".." title="EKS Lab — ALB + Istio + Autenticação Multi-tenant" class="md-header__button md-logo" aria-label="EKS Lab — ALB + Istio + Autenticação Multi-tenant" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.86 12.5A4.31 4.31 0 0 0 19 11c0-1.95-.68-3.6-2.04-4.96S13.95 4 12 4c-1.58 0-3 .47-4.25 1.43s-2.08 2.19-2.5 3.72c-1.25.28-2.29.93-3.08 1.95S1 13.28 1 14.58c0 1.51.54 2.8 1.61 3.85C3.69 19.5 5 20 6.5 20h12c1.25 0 2.31-.44 3.19-1.31.87-.88 1.31-1.94 1.31-3.19q0-1.725-1.14-3M10.5 10H9v1c0 1.11-.89 2-2 2a2 2 0 0 1 2 2v1h1.5v2H9a2 2 0 0 1-2-2v-1c0-.55-.45-1-1-1h-.5v-2H6c.55 0 1-.45 1-1v-1c0-1.1.9-2 2-2h1.5zm8 4H18c-.55 0-1 .45-1 1v1c0 1.11-.89 2-2 2h-1.5v-2H15v-1c0-1.1.9-2 2-2a2 2 0 0 1-2-2v-1h-1.5V8H15a2 2 0 0 1 2 2v1c0 .55.45 1 1 1h.5z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            EKS Lab — ALB + Istio + Autenticação Multi-tenant
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Autenticação Multi-tenant
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Mudar para tema escuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Mudar para tema escuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Mudar para tema claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Mudar para tema claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Abas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Início
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../arquitetura/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Arquitetura
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../operacoes/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Operações
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../servicos/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Serviços
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../seguranca/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Segurança
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="EKS Lab — ALB + Istio + Autenticação Multi-tenant" class="md-nav__button md-logo" aria-label="EKS Lab — ALB + Istio + Autenticação Multi-tenant" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.86 12.5A4.31 4.31 0 0 0 19 11c0-1.95-.68-3.6-2.04-4.96S13.95 4 12 4c-1.58 0-3 .47-4.25 1.43s-2.08 2.19-2.5 3.72c-1.25.28-2.29.93-3.08 1.95S1 13.28 1 14.58c0 1.51.54 2.8 1.61 3.85C3.69 19.5 5 20 6.5 20h12c1.25 0 2.31-.44 3.19-1.31.87-.88 1.31-1.94 1.31-3.19q0-1.725-1.14-3M10.5 10H9v1c0 1.11-.89 2-2 2a2 2 0 0 1 2 2v1h1.5v2H9a2 2 0 0 1-2-2v-1c0-.55-.45-1-1-1h-.5v-2H6c.55 0 1-.45 1-1v-1c0-1.1.9-2 2-2h1.5zm8 4H18c-.55 0-1 .45-1 1v1c0 1.11-.89 2-2 2h-1.5v-2H15v-1c0-1.1.9-2 2-2a2 2 0 0 1-2-2v-1h-1.5V8H15a2 2 0 0 1 2 2v1c0 .55.45 1 1 1h.5z"/></svg>
+
+    </a>
+    EKS Lab — ALB + Istio + Autenticação Multi-tenant
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../arquitetura/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Arquitetura
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../arquitetura/fluxo-trafego/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fluxo de Tráfego
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Autenticação Multi-tenant
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Autenticação Multi-tenant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="Nesta página">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Nesta página
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#visao-geral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visão geral
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#componentes-adicionais-ao-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Componentes adicionais ao lab
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arquitetura-do-cognito-como-idp-hub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arquitetura do Cognito como IdP hub
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#topologia-da-plataforma" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topologia da plataforma
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fluxo-de-autenticacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fluxo de autenticação
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fluxo de autenticação">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resumido" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resumido
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expandido" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expandido
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estrutura-de-dados-dynamodb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estrutura de dados — DynamoDB
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Estrutura de dados — DynamoDB">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tabela-tenant-registry-dynamodb-global-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabela tenant-registry (DynamoDB Global Table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabela-tenant-idp-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabela tenant-idp-config
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integracao-com-o-lab-existente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integração com o lab existente
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integração com o lab existente">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuracao-do-istio-requestauthentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuração do Istio RequestAuthentication
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#isolamento-de-tenant-via-jwt-claims" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Isolamento de tenant via JWT claims
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Isolamento de tenant via JWT claims">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-injecao-do-tenant_id-no-jwt-cognito-pre-token-generation-lambda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Injeção do tenant_id no JWT — Cognito Pre-Token Generation Lambda
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-enforcement-no-istio-authorizationpolicy-por-namespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Enforcement no Istio — AuthorizationPolicy por namespace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cenario-de-ataque-mitigado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cenário de ataque mitigado
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#defesa-em-profundidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defesa em profundidade
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#desafios-por-tipo-de-idp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Desafios por tipo de IdP
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Desafios por tipo de IdP">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#google-e-microsoft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Google e Microsoft
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#okta-e-auth0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Okta e Auth0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keycloak-self-hosted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keycloak self-hosted
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#desafios-e-resolucoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Desafios e resoluções
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contratos-de-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contratos de API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contratos de API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#discovery-service-get-tenant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discovery Service — GET /tenant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#callback-handler-get-callback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Callback Handler — GET /callback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decisoes-em-aberto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisões em aberto
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisoes-tecnicas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisões Técnicas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../operacoes/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operações
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operações
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operacoes/passo-a-passo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Passo a Passo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../onboarding-novo-customer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Onboarding de Customer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operacoes/destruir-lab/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Destruir o Lab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../servicos/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serviços
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Serviços
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../servicos/discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../servicos/platform-frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Frontend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../servicos/callback-handler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Callback Handler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../seguranca/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segurança
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Segurança
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-002/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-002 — IAM Policy sem hash
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-003/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-003 — Imagem sem digest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-004/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-004 — cluster-admin irrestrito
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-005/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-005 — Security Groups do ALB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-006/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-006 — IMDSv1 nos nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-007/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-007 — WAF sem rate limiting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="arquitetura-de-autenticacao-multi-tenant">Arquitetura de Autenticação Multi-tenant<a class="headerlink" href="#arquitetura-de-autenticacao-multi-tenant" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Status:</strong> Em revisão<br />
+<strong>Contexto:</strong> Complementa o lab EKS com ALB + Istio Gateway (<code>README.md</code>), descrevendo o design do fluxo de login para uma plataforma SaaS multi-tenant com suporte a múltiplos provedores de identidade (IdP).</p>
+</blockquote>
+<hr />
+<h2 id="visao-geral">Visão geral<a class="headerlink" href="#visao-geral" title="Permanent link">&para;</a></h2>
+<p>A plataforma <code>wasp.silvios.me</code> serve múltiplos tenants, cada um com seu próprio subdomínio e, potencialmente, seu próprio método de autenticação. O desafio central é: <strong>como emitir um token padronizado para a plataforma independente de qual IdP o tenant usa?</strong></p>
+<p><strong>Solução:</strong> Cognito como camada de federação e normalização. Toda autenticação passa pelo Cognito, que federa com o IdP do tenant (Google, Microsoft, Okta, Auth0, Keycloak). A plataforma sempre recebe um JWT Cognito com claims padronizados — nunca o token do IdP upstream.</p>
+<hr />
+<h2 id="componentes-adicionais-ao-lab">Componentes adicionais ao lab<a class="headerlink" href="#componentes-adicionais-ao-lab" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Tipo</th>
+<th>Papel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS Cognito User Pool</td>
+<td>AWS</td>
+<td>Hub de federação e normalização de tokens</td>
+</tr>
+<tr>
+<td>Cognito App Client (por tenant)</td>
+<td>AWS</td>
+<td>Configuração do IdP por tenant</td>
+</tr>
+<tr>
+<td>Cognito Hosted UI</td>
+<td>AWS</td>
+<td>UI de login em <code>auth.wasp.silvios.me</code></td>
+</tr>
+<tr>
+<td>Cognito Pre-Token Generation Lambda</td>
+<td>AWS</td>
+<td>Injeta <code>tenant_id</code> no JWT com base no App Client — não pode ser forjado pelo cliente</td>
+</tr>
+<tr>
+<td>DynamoDB Global Table <code>tenant-registry</code></td>
+<td>AWS</td>
+<td>Lookup: domínio de e-mail → config do tenant</td>
+</tr>
+<tr>
+<td>DynamoDB Global Table <code>tenant-idp-config</code></td>
+<td>AWS</td>
+<td>Configuração sensível do IdP por tenant</td>
+</tr>
+<tr>
+<td>AWS Secrets Manager</td>
+<td>AWS</td>
+<td>Client secrets dos IdPs externos</td>
+</tr>
+<tr>
+<td>Discovery Service</td>
+<td>Kubernetes</td>
+<td>Microserviço que consulta o DynamoDB via IRSA</td>
+</tr>
+<tr>
+<td>Callback Handler</td>
+<td>Kubernetes/Lambda</td>
+<td>Troca code por tokens, emite cookie de sessão</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="arquitetura-do-cognito-como-idp-hub">Arquitetura do Cognito como IdP hub<a class="headerlink" href="#arquitetura-do-cognito-como-idp-hub" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>                    ┌─────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                    │         Cognito User Pool       │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                    │                                 │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>                    │  App Client: customer1  ────────┼──► Google OIDC
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                    │  App Client: customer2  ────────┼──► Microsoft OIDC/SAML
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                    │  App Client: customer3  ────────┼──► Okta OIDC
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                    │  App Client: customer4  ────────┼──► Auth0 OIDC
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                    │  App Client: customer5  ────────┼──► Keycloak OIDC/SAML
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>                    │  App Client: customer6  ────────┼──► Cognito nativo
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>                    └─────────────────────────────────┘
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>                                    │
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>                          JWT Cognito (normalizado)
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>                                    │
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>                    ┌───────────────▼──────────────────┐
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>                    │   Istio RequestAuthentication    │
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>                    │   JWKS: Cognito (único issuer)   │
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>                    └──────────────────────────────────┘
+</code></pre></div>
+<hr />
+<h2 id="topologia-da-plataforma">Topologia da plataforma<a class="headerlink" href="#topologia-da-plataforma" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>           sarah@customer1.com                        motoko@customer2.com
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>            (California, USA)                            (Tokyo, Japan)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>                    │                                          │
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>                    └─────────────────────┬────────────────────┘
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>                                          ▼
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>                                   wasp.silvios.me
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>                                          │
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>                                Global Accelerator
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>                                          │
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>                    ┌─────────────────────┴────────────────────┐
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>                    ▼                                          ▼
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>           platform-us-east-1                         platform-ap-south-1
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>                    │                                          │
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>                    ▼                                          ▼
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>            discovery-service                          discovery-service
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>                    │                                          │
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>                    ▼                                          ▼
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>       customer1.wasp.silvios.me                    customer2.wasp.silvios.me
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>                    │                                          │
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>         ┌──────────┴─────────┐                                │
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>         ▼                    ▼                                ▼
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>customer1-us-east-1  customer1-us-west-1             customer2-ap-northeast-1
+</code></pre></div>
+<hr />
+<h2 id="fluxo-de-autenticacao">Fluxo de autenticação<a class="headerlink" href="#fluxo-de-autenticacao" title="Permanent link">&para;</a></h2>
+<h3 id="resumido">Resumido<a class="headerlink" href="#resumido" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>motoko@customer1.com (Tokyo, Japan)
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>GET https://wasp.silvios.me                  - Global Accelerator
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  - platform-us-east-1.wasp.silvios.me       - US East (N. Virginia)
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  - platform-sa-east-1.wasp.silvios.me       - South America (São Paulo)
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  - platform-eu-central-1.wasp.silvios.me    - Europe (Frankfurt)
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  &gt; platform-ap-south-1.wasp.silvios.me      - Asia Pacific (Mumbai)
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>GET https://discovery.wasp.silvios.me/tenant?email=motoko@customer1.com
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>  - customer1.wasp.silvios.me
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>GET https://customer1.wasp.silvios.me        - Global Accelerator
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>  - customer1-ap-east-1.wasp.silvios.me      - Asia Pacific (Hong Kong)
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>  &gt; customer1-ap-northeast-1.wasp.silvios.me - Asia Pacific (Tokyo)
+</code></pre></div>
+<h3 id="expandido">Expandido<a class="headerlink" href="#expandido" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>1. GET https://wasp.silvios.me
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>   - Sem cookie → redirect /login
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>2. Usuário digita sarah@customer1.com
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>   - Frontend extrai domínio &quot;customer1.com&quot;
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>3. GET https://discovery.wasp.silvios.me/tenant?domain=customer1.com
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>   - DynamoDB lookup por &quot;domain#customer1.com&quot;
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>   - Retorna:
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>       {
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>         &quot;client_id&quot;: &quot;abc123&quot;,
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>         &quot;tenant_url&quot;: &quot;customer1.wasp.silvios.me&quot;,
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>         &quot;idp_name&quot;: &quot;Google&quot;,
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>         &quot;idp_issuer&quot;: &quot;https://accounts.google.com&quot;
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>       }
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>4. Frontend monta URL do Cognito Hosted UI:
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>   POST https://auth.wasp.silvios.me/oauth2/authorize
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>     ?client_id=abc123
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>     &amp;identity_provider=Google
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>     &amp;redirect_uri=https://auth.wasp.silvios.me/callback
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>     &amp;response_type=code
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>     &amp;scope=openid+email+profile
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>     &amp;state=&lt;JWT assinado: tenant_id + nonce + return_url&gt;
+<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>
+<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>
+<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>5. Cognito redireciona para o IdP configurado (Google/Microsoft/Okta/etc.)
+<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>
+<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>   - O usuário autentica no IdP dele (UI do próprio IdP)
+<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>
+<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>
+<a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a>6. IdP retorna para Cognito com code
+<a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a>
+<a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a>   - Cognito valida, mapeia atributos, emite tokens próprios
+<a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a>
+<a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a>   - Cognito redireciona para auth.wasp.silvios.me/callback?code=...
+<a id="__codelineno-3-46" name="__codelineno-3-46" href="#__codelineno-3-46"></a>
+<a id="__codelineno-3-47" name="__codelineno-3-47" href="#__codelineno-3-47"></a>
+<a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a>7. Callback handler:
+<a id="__codelineno-3-49" name="__codelineno-3-49" href="#__codelineno-3-49"></a>
+<a id="__codelineno-3-50" name="__codelineno-3-50" href="#__codelineno-3-50"></a>   - Troca code por tokens (POST /oauth2/token no Cognito)
+<a id="__codelineno-3-51" name="__codelineno-3-51" href="#__codelineno-3-51"></a>
+<a id="__codelineno-3-52" name="__codelineno-3-52" href="#__codelineno-3-52"></a>   - Decodifica state → extrai tenant_id e return_url
+<a id="__codelineno-3-53" name="__codelineno-3-53" href="#__codelineno-3-53"></a>
+<a id="__codelineno-3-54" name="__codelineno-3-54" href="#__codelineno-3-54"></a>   - set-cookie: session=&lt;JWT&gt; Domain=.wasp.silvios.me HttpOnly Secure SameSite=Lax
+<a id="__codelineno-3-55" name="__codelineno-3-55" href="#__codelineno-3-55"></a>
+<a id="__codelineno-3-56" name="__codelineno-3-56" href="#__codelineno-3-56"></a>   - redirect para customer1.wasp.silvios.me
+<a id="__codelineno-3-57" name="__codelineno-3-57" href="#__codelineno-3-57"></a>
+<a id="__codelineno-3-58" name="__codelineno-3-58" href="#__codelineno-3-58"></a>
+<a id="__codelineno-3-59" name="__codelineno-3-59" href="#__codelineno-3-59"></a>8. customer1.wasp.silvios.me recebe request com cookie
+<a id="__codelineno-3-60" name="__codelineno-3-60" href="#__codelineno-3-60"></a>
+<a id="__codelineno-3-61" name="__codelineno-3-61" href="#__codelineno-3-61"></a>   - Istio RequestAuthentication valida JWT (JWKS do Cognito)
+<a id="__codelineno-3-62" name="__codelineno-3-62" href="#__codelineno-3-62"></a>
+<a id="__codelineno-3-63" name="__codelineno-3-63" href="#__codelineno-3-63"></a>   - Istio AuthorizationPolicy exige JWT válido
+<a id="__codelineno-3-64" name="__codelineno-3-64" href="#__codelineno-3-64"></a>
+<a id="__codelineno-3-65" name="__codelineno-3-65" href="#__codelineno-3-65"></a>   - App recebe claims: sub, email, custom:tenant_id, custom:groups
+</code></pre></div>
+<hr />
+<h2 id="estrutura-de-dados-dynamodb">Estrutura de dados — DynamoDB<a class="headerlink" href="#estrutura-de-dados-dynamodb" title="Permanent link">&para;</a></h2>
+<h3 id="tabela-tenant-registry-dynamodb-global-table">Tabela <code>tenant-registry</code> (DynamoDB Global Table)<a class="headerlink" href="#tabela-tenant-registry-dynamodb-global-table" title="Permanent link">&para;</a></h3>
+<p>Lookup rápido de domínio de e-mail para configuração do tenant. Replicada em todas as regiões do Global Accelerator para leitura local com latência mínima.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// Google SSO</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">&quot;pk&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;domain#customer1.com&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">&quot;tenant_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer1&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer1.wasp.silvios.me&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nt">&quot;regions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;us-east-1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;us-west-1&quot;</span><span class="p">],</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nt">&quot;auth&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;google_sso&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">&quot;cognito_user_pool_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;us-east-1_XXXXXX&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="nt">&quot;cognito_app_client_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc123&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="nt">&quot;cognito_idp_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Google&quot;</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="p">}</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="c1">// Microsoft Azure AD</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="p">{</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">  </span><span class="nt">&quot;pk&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;domain#customer2.com&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">  </span><span class="nt">&quot;tenant_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer2&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">  </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer2.wasp.silvios.me&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">  </span><span class="nt">&quot;regions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;eu-central-1&quot;</span><span class="p">],</span>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="w">  </span><span class="nt">&quot;auth&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;microsoft&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="w">    </span><span class="nt">&quot;cognito_app_client_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;def456&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="w">    </span><span class="nt">&quot;cognito_idp_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MicrosoftAD-Customer2&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="w">    </span><span class="nt">&quot;idp_issuer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://login.microsoftonline.com/&lt;azure-tenant-id&gt;/v2.0&quot;</span>
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span>
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="p">}</span>
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="c1">// Okta</span>
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a><span class="p">{</span>
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="w">  </span><span class="nt">&quot;pk&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;domain#customer3.com&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="w">  </span><span class="nt">&quot;tenant_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer3&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="w">  </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer3.wasp.silvios.me&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a><span class="w">  </span><span class="nt">&quot;regions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;us-east-1&quot;</span><span class="p">],</span>
+<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a><span class="w">  </span><span class="nt">&quot;auth&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a><span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;okta&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="w">    </span><span class="nt">&quot;cognito_app_client_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ghi789&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a><span class="w">    </span><span class="nt">&quot;cognito_idp_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Okta-Customer3&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a><span class="w">    </span><span class="nt">&quot;idp_issuer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://customer3.okta.com&quot;</span>
+<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span>
+<a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a><span class="p">}</span>
+<a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>
+<a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a><span class="c1">// Auth0</span>
+<a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a><span class="p">{</span>
+<a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a><span class="w">  </span><span class="nt">&quot;pk&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;domain#customer4.com&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a><span class="w">  </span><span class="nt">&quot;tenant_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer4&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a><span class="w">  </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer4.wasp.silvios.me&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a><span class="w">  </span><span class="nt">&quot;regions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;us-east-1&quot;</span><span class="p">],</span>
+<a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a><span class="w">  </span><span class="nt">&quot;auth&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a><span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;auth0&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-54" name="__codelineno-4-54" href="#__codelineno-4-54"></a><span class="w">    </span><span class="nt">&quot;cognito_app_client_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;jkl012&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-55" name="__codelineno-4-55" href="#__codelineno-4-55"></a><span class="w">    </span><span class="nt">&quot;cognito_idp_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Auth0-Customer4&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-56" name="__codelineno-4-56" href="#__codelineno-4-56"></a><span class="w">    </span><span class="nt">&quot;idp_issuer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://customer4.us.auth0.com&quot;</span>
+<a id="__codelineno-4-57" name="__codelineno-4-57" href="#__codelineno-4-57"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-4-58" name="__codelineno-4-58" href="#__codelineno-4-58"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span>
+<a id="__codelineno-4-59" name="__codelineno-4-59" href="#__codelineno-4-59"></a><span class="p">}</span>
+<a id="__codelineno-4-60" name="__codelineno-4-60" href="#__codelineno-4-60"></a>
+<a id="__codelineno-4-61" name="__codelineno-4-61" href="#__codelineno-4-61"></a><span class="c1">// Keycloak self-hosted</span>
+<a id="__codelineno-4-62" name="__codelineno-4-62" href="#__codelineno-4-62"></a><span class="p">{</span>
+<a id="__codelineno-4-63" name="__codelineno-4-63" href="#__codelineno-4-63"></a><span class="w">  </span><span class="nt">&quot;pk&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;domain#customer5.com&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-64" name="__codelineno-4-64" href="#__codelineno-4-64"></a><span class="w">  </span><span class="nt">&quot;tenant_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer5&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-65" name="__codelineno-4-65" href="#__codelineno-4-65"></a><span class="w">  </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer5.wasp.silvios.me&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-66" name="__codelineno-4-66" href="#__codelineno-4-66"></a><span class="w">  </span><span class="nt">&quot;regions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;us-east-1&quot;</span><span class="p">],</span>
+<a id="__codelineno-4-67" name="__codelineno-4-67" href="#__codelineno-4-67"></a><span class="w">  </span><span class="nt">&quot;auth&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-68" name="__codelineno-4-68" href="#__codelineno-4-68"></a><span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;keycloak&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-69" name="__codelineno-4-69" href="#__codelineno-4-69"></a><span class="w">    </span><span class="nt">&quot;cognito_app_client_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mno345&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-70" name="__codelineno-4-70" href="#__codelineno-4-70"></a><span class="w">    </span><span class="nt">&quot;cognito_idp_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Keycloak-Customer5&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-71" name="__codelineno-4-71" href="#__codelineno-4-71"></a><span class="w">    </span><span class="nt">&quot;idp_issuer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://auth.customer5.com/realms/prod&quot;</span>
+<a id="__codelineno-4-72" name="__codelineno-4-72" href="#__codelineno-4-72"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-4-73" name="__codelineno-4-73" href="#__codelineno-4-73"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span>
+<a id="__codelineno-4-74" name="__codelineno-4-74" href="#__codelineno-4-74"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="tabela-tenant-idp-config">Tabela <code>tenant-idp-config</code><a class="headerlink" href="#tabela-tenant-idp-config" title="Permanent link">&para;</a></h3>
+<p>Dados sensíveis do IdP, separados para controle de acesso IAM granular. Apenas o callback handler tem permissão de leitura.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;pk&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tenant#customer3&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;okta&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">&quot;client_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0oaXXXXXXX&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nt">&quot;client_secret_arn&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;arn:aws:secretsmanager:us-east-1:XXXX:secret:customer3-okta-secret&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">&quot;scopes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;openid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;profile&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;groups&quot;</span><span class="p">],</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">&quot;attribute_mapping&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="nt">&quot;groups&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;custom:groups&quot;</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="integracao-com-o-lab-existente">Integração com o lab existente<a class="headerlink" href="#integracao-com-o-lab-existente" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Componente do lab</th>
+<th>Papel no fluxo de autenticação</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ALB + <code>*.wasp.silvios.me</code></strong></td>
+<td>Roteia <code>auth.wasp.silvios.me</code> e <code>discovery.wasp.silvios.me</code> sem alteração no Ingress</td>
+</tr>
+<tr>
+<td><strong>Istio <code>VirtualService</code></strong></td>
+<td>Configura CORS para chamadas cross-origin entre subdomínios</td>
+</tr>
+<tr>
+<td><strong>Istio <code>RequestAuthentication</code></strong></td>
+<td>Valida JWT Cognito — JWKS único independente do IdP upstream</td>
+</tr>
+<tr>
+<td><strong>Istio <code>AuthorizationPolicy</code></strong></td>
+<td>Bloqueia requisições sem JWT válido <strong>e</strong> rejeita JWTs de outros tenants via claim <code>custom:tenant_id</code></td>
+</tr>
+<tr>
+<td><strong>WAF</strong></td>
+<td>Rate limiting em <code>/login</code> e <code>/callback</code> (endereça <a href="../security-issues/sec-007/">SEC-007</a>)</td>
+</tr>
+<tr>
+<td><strong>IRSA</strong></td>
+<td>Discovery service com permissão de leitura no DynamoDB; callback handler com acesso ao Secrets Manager</td>
+</tr>
+</tbody>
+</table>
+<h3 id="configuracao-do-istio-requestauthentication">Configuração do Istio RequestAuthentication<a class="headerlink" href="#configuracao-do-istio-requestauthentication" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">security.istio.io/v1beta1</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RequestAuthentication</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nt">metadata</span><span class="p">:</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cognito-jwt</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">istio-ingress</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nt">spec</span><span class="p">:</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nt">jwtRules</span><span class="p">:</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">issuer</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://cognito-idp.us-east-1.amazonaws.com/&lt;pool-id&gt;&quot;</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">      </span><span class="nt">jwksUri</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://cognito-idp.us-east-1.amazonaws.com/&lt;pool-id&gt;/.well-known/jwks.json&quot;</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">      </span><span class="nt">forwardOriginalToken</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+<hr />
+<h2 id="isolamento-de-tenant-via-jwt-claims">Isolamento de tenant via JWT claims<a class="headerlink" href="#isolamento-de-tenant-via-jwt-claims" title="Permanent link">&para;</a></h2>
+<p>A validação da assinatura do JWT (<code>RequestAuthentication</code>) garante que o token é legítimo, mas <strong>não impede</strong> que um JWT válido de <code>customer2</code> seja usado para tentar acessar recursos de <code>customer1</code>. O isolamento real é aplicado em duas camadas complementares.</p>
+<h3 id="1-injecao-do-tenant_id-no-jwt-cognito-pre-token-generation-lambda">1. Injeção do <code>tenant_id</code> no JWT — Cognito Pre-Token Generation Lambda<a class="headerlink" href="#1-injecao-do-tenant_id-no-jwt-cognito-pre-token-generation-lambda" title="Permanent link">&para;</a></h3>
+<p>Cada App Client no Cognito está associado a exatamente um tenant. Um Lambda trigger de pré-geração de token injeta o <code>tenant_id</code> correto no JWT com base no <code>clientId</code> usado na autenticação — o cliente não tem como forjar esse valor:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span> <span class="nn">boto3</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">dynamodb</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span><span class="s1">&#39;dynamodb&#39;</span><span class="p">)</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">table</span> <span class="o">=</span> <span class="n">dynamodb</span><span class="o">.</span><span class="n">Table</span><span class="p">(</span><span class="s1">&#39;tenant-registry&#39;</span><span class="p">)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">def</span> <span class="nf">handler</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">client_id</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;callerContext&#39;</span><span class="p">][</span><span class="s1">&#39;clientId&#39;</span><span class="p">]</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="c1"># Busca tenant_id pelo App Client ID (GSI na tabela)</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    <span class="n">response</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>        <span class="n">IndexName</span><span class="o">=</span><span class="s1">&#39;client-id-index&#39;</span><span class="p">,</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>        <span class="n">KeyConditionExpression</span><span class="o">=</span><span class="s1">&#39;cognito_app_client_id = :cid&#39;</span><span class="p">,</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>        <span class="n">ExpressionAttributeValues</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;:cid&#39;</span><span class="p">:</span> <span class="n">client_id</span><span class="p">}</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    <span class="p">)</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>    <span class="n">tenant_id</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s1">&#39;Items&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;tenant_id&#39;</span><span class="p">]</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>    <span class="n">event</span><span class="p">[</span><span class="s1">&#39;response&#39;</span><span class="p">][</span><span class="s1">&#39;claimsOverrideDetails&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>        <span class="s1">&#39;claimsToAddOrOverride&#39;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>            <span class="s1">&#39;custom:tenant_id&#39;</span><span class="p">:</span> <span class="n">tenant_id</span>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>        <span class="p">}</span>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>    <span class="p">}</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>    <span class="k">return</span> <span class="n">event</span>
+</code></pre></div>
+<h3 id="2-enforcement-no-istio-authorizationpolicy-por-namespace">2. Enforcement no Istio — AuthorizationPolicy por namespace<a class="headerlink" href="#2-enforcement-no-istio-authorizationpolicy-por-namespace" title="Permanent link">&para;</a></h3>
+<p>Cada namespace de tenant tem sua própria <code>AuthorizationPolicy</code> que exige que o claim <code>tenant_id</code> do JWT corresponda ao tenant do namespace. Quando existe pelo menos uma <code>AuthorizationPolicy</code> num namespace, o Istio nega tudo que não for explicitamente permitido.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># namespace: customer1</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">security.istio.io/v1beta1</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AuthorizationPolicy</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nt">metadata</span><span class="p">:</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">require-tenant-jwt</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">customer1</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nt">spec</span><span class="p">:</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">  </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ALLOW</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">  </span><span class="nt">rules</span><span class="p">:</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">when</span><span class="p">:</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">request.auth.claims[custom:tenant_id]</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">          </span><span class="nt">values</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;customer1&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># só JWTs com custom:tenant_id=customer1 são aceitos</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># namespace: customer2 — mesma estrutura, valor diferente</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">security.istio.io/v1beta1</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AuthorizationPolicy</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nt">metadata</span><span class="p">:</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">require-tenant-jwt</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">customer2</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="nt">spec</span><span class="p">:</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">  </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ALLOW</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">  </span><span class="nt">rules</span><span class="p">:</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">when</span><span class="p">:</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">request.auth.claims[custom:tenant_id]</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">          </span><span class="nt">values</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;customer2&quot;</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<h3 id="cenario-de-ataque-mitigado">Cenário de ataque mitigado<a class="headerlink" href="#cenario-de-ataque-mitigado" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sarah@customer1.com autentica → recebe JWT com tenant_id=customer1
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>Tentativa de acesso cruzado:
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>  GET https://customer2.wasp.silvios.me/api/data
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>  Cookie: session=&lt;JWT de customer1&gt;
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>Camadas de defesa:
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>  1. ALB roteia customer2.wasp.silvios.me → Istio IngressGateway  ✓
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>  2. RequestAuthentication valida assinatura do JWT               ✓ (JWT é válido)
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>  3. AuthorizationPolicy verifica tenant_id == &quot;customer2&quot;        ✗ BLOQUEADO
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>     → HTTP 403
+</code></pre></div>
+<p>O token é criptograficamente válido — mas o <code>tenant_id</code> errado o torna inútil fora do namespace do próprio tenant.</p>
+<h3 id="defesa-em-profundidade">Defesa em profundidade<a class="headerlink" href="#defesa-em-profundidade" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Camada</th>
+<th>Mecanismo</th>
+<th>O que valida</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ALB</td>
+<td>Host-based routing</td>
+<td>Subdomínio correto chega ao cluster</td>
+</tr>
+<tr>
+<td>Istio IngressGateway</td>
+<td><code>VirtualService</code> por Host</td>
+<td>Roteamento para o namespace do tenant correto</td>
+</tr>
+<tr>
+<td>Istio <code>RequestAuthentication</code></td>
+<td>JWKS do Cognito</td>
+<td>Assinatura e expiração do JWT</td>
+</tr>
+<tr>
+<td>Istio <code>AuthorizationPolicy</code></td>
+<td>Claim <code>tenant_id</code></td>
+<td>JWT pertence ao tenant dono do namespace</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="desafios-por-tipo-de-idp">Desafios por tipo de IdP<a class="headerlink" href="#desafios-por-tipo-de-idp" title="Permanent link">&para;</a></h2>
+<h3 id="google-e-microsoft">Google e Microsoft<a class="headerlink" href="#google-e-microsoft" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Configuração mais simples — suporte OIDC nativo no Cognito</li>
+<li>Microsoft: cada empresa tem seu próprio Azure AD tenant com <code>issuer</code> diferente (<code>https://login.microsoftonline.com/&lt;tenant-id&gt;/v2.0</code>) — cada App Client aponta para o issuer correto</li>
+</ul>
+<h3 id="okta-e-auth0">Okta e Auth0<a class="headerlink" href="#okta-e-auth0" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Funcionam como OIDC providers completos — Cognito os vê como IdP externo via OIDC federation</li>
+<li>Auth0 pode agregar outros IdPs internamente — o Cognito vê só o Auth0, não o IdP upstream</li>
+<li>Mapeamento de custom claims (grupos, roles) requer configuração de attribute mapping no Cognito</li>
+</ul>
+<h3 id="keycloak-self-hosted">Keycloak self-hosted<a class="headerlink" href="#keycloak-self-hosted" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Suporte OIDC ou SAML — OIDC é preferível</li>
+<li><strong>Risco crítico:</strong> requer conectividade de rede entre AWS e o servidor do customer</li>
+<li>Opção 1: Customer expõe Keycloak publicamente com TLS</li>
+<li>Opção 2: AWS PrivateLink + VPN site-to-site</li>
+<li>Opção 3: Customer migra para Keycloak Cloud (managed)</li>
+<li>Se o Keycloak do customer ficar indisponível, o login do tenant inteiro quebra — <strong>SLA da plataforma fica acoplado à infra do customer</strong></li>
+</ul>
+<hr />
+<h2 id="desafios-e-resolucoes">Desafios e resoluções<a class="headerlink" href="#desafios-e-resolucoes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Desafio</th>
+<th>Impacto</th>
+<th>Resolução</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CORS entre <code>wasp.silvios.me</code> e <code>customer1.wasp.silvios.me</code></td>
+<td>Requisições AJAX bloqueadas</td>
+<td>Redirecionamentos OAuth não sofrem CORS; para AJAX, configurar <code>Access-Control-Allow-Origin</code> no Istio <code>VirtualService</code></td>
+</tr>
+<tr>
+<td>Redirect URI do Google/Microsoft requer pré-cadastro</td>
+<td>Não escala com N tenants</td>
+<td>Callback centralizado <code>auth.wasp.silvios.me/callback</code> — única URI registrada em todos os IdPs</td>
+</tr>
+<tr>
+<td>Cognito: limite de 300 IdPs externos por User Pool</td>
+<td>Teto de ~300 tenants por pool</td>
+<td>Múltiplos User Pools por região ou tier</td>
+</tr>
+<tr>
+<td>Atributos customizados variam por IdP</td>
+<td>JWT com campos inconsistentes</td>
+<td>Attribute mapping no Cognito + schema fixo de claims na plataforma</td>
+</tr>
+<tr>
+<td>Renovação de tokens cross-domain</td>
+<td>Cookie <code>.wasp.silvios.me</code> expira, refresh transparente necessário</td>
+<td>Callback handler centralizado gerencia refresh; aplicação não precisa implementar</td>
+</tr>
+<tr>
+<td>Keycloak/IdP indisponível</td>
+<td>Login quebrado para o tenant</td>
+<td>Health check do IdP no discovery + página de erro contextualizada por tenant</td>
+</tr>
+<tr>
+<td>JWT de customer1 usado para acessar customer2</td>
+<td>Vazamento de dados entre tenants</td>
+<td><code>AuthorizationPolicy</code> por namespace valida <code>tenant_id</code> claim — JWT válido mas de tenant errado recebe HTTP 403</td>
+</tr>
+<tr>
+<td>Onboarding de novo tenant</td>
+<td>Criar App Client + configurar IdP + registrar no DynamoDB</td>
+<td>API de onboarding (Lambda + DynamoDB + Cognito SDK) — ponto mais operacional do sistema</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="contratos-de-api">Contratos de API<a class="headerlink" href="#contratos-de-api" title="Permanent link">&para;</a></h2>
+<h3 id="discovery-service-get-tenant">Discovery Service — <code>GET /tenant</code><a class="headerlink" href="#discovery-service-get-tenant" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>GET /tenant?domain=gmail.com
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>200 OK
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>{
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>  &quot;tenant_id&quot;: &quot;customer1&quot;,
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>  &quot;tenant_url&quot;: &quot;customer1.wasp.silvios.me&quot;,
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>  &quot;client_id&quot;: &quot;&lt;cognito-app-client-id&gt;&quot;,
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>  &quot;idp_name&quot;: &quot;Google&quot;,
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>  &quot;cognito_pool_id&quot;: &quot;&lt;pool-id&gt;&quot;
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>}
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>404 Not Found
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>{
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>  &quot;detail&quot;: &quot;Tenant not found for domain: gmail.com&quot;
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>}
+</code></pre></div>
+<h3 id="callback-handler-get-callback">Callback Handler — <code>GET /callback</code><a class="headerlink" href="#callback-handler-get-callback" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>GET /callback?code=&lt;code&gt;&amp;state=&lt;state-jwt&gt;
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>1. Decodifica state JWT → { tenant_id, nonce, return_url }
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>2. POST https://idp.wasp.silvios.me/oauth2/token
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>     grant_type=authorization_code
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>     code=&lt;code&gt;
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>     client_id=&lt;app-client-id&gt;
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>     redirect_uri=https://auth.wasp.silvios.me/callback
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>3. Recebe id_token (JWT Cognito com custom:tenant_id)
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>4. Valida que token.tenant_id == state.tenant_id
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>5. Set-Cookie: session=&lt;id_token&gt;; Domain=.wasp.silvios.me; HttpOnly; Secure; SameSite=Lax
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>6. 302 → https://&lt;return_url&gt;
+</code></pre></div>
+<hr />
+<h2 id="decisoes-em-aberto">Decisões em aberto<a class="headerlink" href="#decisoes-em-aberto" title="Permanent link">&para;</a></h2>
+<p>Ver <a href="../decisoes-tecnicas/">decisoes-tecnicas.md</a> para o registro detalhado de cada decisão pendente e os trade-offs considerados.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Voltar para o topo
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

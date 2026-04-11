@@ -1,0 +1,1816 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Laboratório de EKS com VPC, ALB, Istio Gateway, WAF, Cognito e DynamoDB. Plataforma SaaS multi-tenant com autenticação federada via múltiplos IdPs.
+">
+      
+      
+        <meta name="author" content="Silvio Silva">
+      
+      
+      
+        <link rel="prev" href="../operacoes/passo-a-passo/">
+      
+      
+        <link rel="next" href="../operacoes/destruir-lab/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Onboarding de Customer - EKS Lab — ALB + Istio + Autenticação Multi-tenant</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#onboarding-de-novo-customer" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href=".." title="EKS Lab — ALB + Istio + Autenticação Multi-tenant" class="md-header__button md-logo" aria-label="EKS Lab — ALB + Istio + Autenticação Multi-tenant" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.86 12.5A4.31 4.31 0 0 0 19 11c0-1.95-.68-3.6-2.04-4.96S13.95 4 12 4c-1.58 0-3 .47-4.25 1.43s-2.08 2.19-2.5 3.72c-1.25.28-2.29.93-3.08 1.95S1 13.28 1 14.58c0 1.51.54 2.8 1.61 3.85C3.69 19.5 5 20 6.5 20h12c1.25 0 2.31-.44 3.19-1.31.87-.88 1.31-1.94 1.31-3.19q0-1.725-1.14-3M10.5 10H9v1c0 1.11-.89 2-2 2a2 2 0 0 1 2 2v1h1.5v2H9a2 2 0 0 1-2-2v-1c0-.55-.45-1-1-1h-.5v-2H6c.55 0 1-.45 1-1v-1c0-1.1.9-2 2-2h1.5zm8 4H18c-.55 0-1 .45-1 1v1c0 1.11-.89 2-2 2h-1.5v-2H15v-1c0-1.1.9-2 2-2a2 2 0 0 1-2-2v-1h-1.5V8H15a2 2 0 0 1 2 2v1c0 .55.45 1 1 1h.5z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            EKS Lab — ALB + Istio + Autenticação Multi-tenant
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Onboarding de Customer
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Mudar para tema escuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Mudar para tema escuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Mudar para tema claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Mudar para tema claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Abas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Início
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../arquitetura/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Arquitetura
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../operacoes/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Operações
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../servicos/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Serviços
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../seguranca/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Segurança
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="EKS Lab — ALB + Istio + Autenticação Multi-tenant" class="md-nav__button md-logo" aria-label="EKS Lab — ALB + Istio + Autenticação Multi-tenant" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.86 12.5A4.31 4.31 0 0 0 19 11c0-1.95-.68-3.6-2.04-4.96S13.95 4 12 4c-1.58 0-3 .47-4.25 1.43s-2.08 2.19-2.5 3.72c-1.25.28-2.29.93-3.08 1.95S1 13.28 1 14.58c0 1.51.54 2.8 1.61 3.85C3.69 19.5 5 20 6.5 20h12c1.25 0 2.31-.44 3.19-1.31.87-.88 1.31-1.94 1.31-3.19q0-1.725-1.14-3M10.5 10H9v1c0 1.11-.89 2-2 2a2 2 0 0 1 2 2v1h1.5v2H9a2 2 0 0 1-2-2v-1c0-.55-.45-1-1-1h-.5v-2H6c.55 0 1-.45 1-1v-1c0-1.1.9-2 2-2h1.5zm8 4H18c-.55 0-1 .45-1 1v1c0 1.11-.89 2-2 2h-1.5v-2H15v-1c0-1.1.9-2 2-2a2 2 0 0 1-2-2v-1h-1.5V8H15a2 2 0 0 1 2 2v1c0 .55.45 1 1 1h.5z"/></svg>
+
+    </a>
+    EKS Lab — ALB + Istio + Autenticação Multi-tenant
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../arquitetura/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Arquitetura
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../arquitetura/fluxo-trafego/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fluxo de Tráfego
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fluxo-autenticacao-multitenant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Autenticação Multi-tenant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisoes-tecnicas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisões Técnicas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../operacoes/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operações
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operações
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operacoes/passo-a-passo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Passo a Passo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Onboarding de Customer
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Onboarding de Customer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="Nesta página">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Nesta página
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#visao-geral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visão geral
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decisao-inicial-idp-novo-ou-existente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisão inicial: IdP novo ou existente?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passo-1-configurar-o-idp-no-cognito" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 1 — Configurar o IdP no Cognito
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Passo 1 — Configurar o IdP no Cognito">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-determinar-o-tipo-de-idp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Determinar o tipo de IdP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-pre-requisitos-no-provedor-de-identidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Pré-requisitos no provedor de identidade
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-criar-o-idp-no-cognito" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Criar o IdP no Cognito
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-criar-o-app-client-no-cognito" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Criar o App Client no Cognito
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-recuperar-o-client-secret-do-app-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Recuperar o Client Secret do App Client
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passo-2-registrar-o-dominio-no-dynamodb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 2 — Registrar o domínio no DynamoDB
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Passo 2 — Registrar o domínio no DynamoDB">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verificar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verificar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passo-3-atualizar-o-callback-handler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 3 — Atualizar o callback-handler
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passo-4-deploy-do-namespace-do-tenant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passo 4 — Deploy do namespace do tenant
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verificacao-end-to-end" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verificação end-to-end
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multiplos-dominios-no-mesmo-idp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Múltiplos domínios no mesmo IdP
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Múltiplos domínios no mesmo IdP">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-muda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que muda
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registrar-o-dominio-adicional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registrar o domínio adicional
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resultado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resultado
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#referencia-rapida-checklist-de-onboarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Referência rápida — checklist de onboarding
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operacoes/destruir-lab/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Destruir o Lab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../servicos/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serviços
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Serviços
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../servicos/discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../servicos/platform-frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Frontend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../servicos/callback-handler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Callback Handler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../seguranca/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segurança
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Segurança
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-002/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-002 — IAM Policy sem hash
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-003/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-003 — Imagem sem digest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-004/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-004 — cluster-admin irrestrito
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-005/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-005 — Security Groups do ALB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-006/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-006 — IMDSv1 nos nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-issues/sec-007/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SEC-007 — WAF sem rate limiting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="onboarding-de-novo-customer">Onboarding de Novo Customer<a class="headerlink" href="#onboarding-de-novo-customer" title="Permanent link">&para;</a></h1>
+<p>Este documento descreve os passos para cadastrar um novo tenant na plataforma, incluindo a configuração do IdP no Cognito, o registro no DynamoDB e o deploy do namespace isolado no cluster.</p>
+<hr />
+<h2 id="visao-geral">Visão geral<a class="headerlink" href="#visao-geral" title="Permanent link">&para;</a></h2>
+<p>Cada tenant é identificado por um ou mais domínios de e-mail. Ao fazer login, o <code>platform-frontend</code> extrai o domínio do e-mail, consulta o <code>discovery service</code> (DynamoDB) e redireciona para o IdP correto via Cognito.</p>
+<p>O onboarding envolve três camadas:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>1. IdP no Cognito     — credenciais OAuth do provedor de identidade do customer
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>2. DynamoDB           — mapeamento domínio → tenant_id → App Client
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>3. Kubernetes         — namespace isolado com Istio auth (RequestAuthentication + AuthorizationPolicy)
+</code></pre></div>
+<hr />
+<h2 id="decisao-inicial-idp-novo-ou-existente">Decisão inicial: IdP novo ou existente?<a class="headerlink" href="#decisao-inicial-idp-novo-ou-existente" title="Permanent link">&para;</a></h2>
+<p>Antes de começar, responda:</p>
+<blockquote>
+<p><strong>O customer usa um IdP já cadastrado na plataforma (mesmo Client ID e Client Secret)?</strong></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Situação</th>
+<th>Caminho</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IdP novo (credenciais próprias)</td>
+<td>Executar todos os passos abaixo</td>
+</tr>
+<tr>
+<td>IdP compartilhado (mesmo Client ID já cadastrado)</td>
+<td>Pular o Passo 1; registrar apenas o domínio adicional no DynamoDB apontando para o App Client existente</td>
+</tr>
+</tbody>
+</table>
+<p>O caso de IdP compartilhado está detalhado na seção <a href="#multiplos-dominios-no-mesmo-idp">Múltiplos domínios no mesmo IdP</a>.</p>
+<hr />
+<h2 id="passo-1-configurar-o-idp-no-cognito">Passo 1 — Configurar o IdP no Cognito<a class="headerlink" href="#passo-1-configurar-o-idp-no-cognito" title="Permanent link">&para;</a></h2>
+<h3 id="11-determinar-o-tipo-de-idp">1.1 Determinar o tipo de IdP<a class="headerlink" href="#11-determinar-o-tipo-de-idp" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Tipo</th>
+<th><code>provider-type</code> na AWS CLI</th>
+<th>Quando usar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Google (conta pessoal / Workspace)</td>
+<td><code>OIDC</code> com <code>oidc_issuer=https://accounts.google.com</code></td>
+<td>Máximo um IdP do tipo <code>Google</code> (social) por User Pool — usar OIDC para os demais</td>
+</tr>
+<tr>
+<td>Microsoft (contas pessoais MSA)</td>
+<td><code>OIDC</code> com issuer GUID fixo <code>9188040d-6c67-4c5b-b112-36a304b66dad</code></td>
+<td>Ver <code>docs/decisoes-tecnicas.md</code></td>
+</tr>
+<tr>
+<td>Microsoft (Azure AD corporativo / Google Workspace federado via AD)</td>
+<td><code>OIDC</code> com <code>oidc_issuer=https://login.microsoftonline.com/&lt;tenant-id&gt;/v2.0</code></td>
+<td>Usar o tenant ID real da organização</td>
+</tr>
+<tr>
+<td>Qualquer outro provedor OIDC</td>
+<td><code>OIDC</code></td>
+<td>Okta, Auth0, Keycloak, etc.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-pre-requisitos-no-provedor-de-identidade">1.2 Pré-requisitos no provedor de identidade<a class="headerlink" href="#12-pre-requisitos-no-provedor-de-identidade" title="Permanent link">&para;</a></h3>
+<p>Antes de executar qualquer script, registrar a aplicação no console do provedor e obter:</p>
+<ul>
+<li><code>CLIENT_ID</code></li>
+<li><code>CLIENT_SECRET</code></li>
+<li>Redirect URI obrigatória: <code>https://idp.&lt;domain&gt;/oauth2/idpresponse</code></li>
+</ul>
+<blockquote>
+<p>Para Google, o redirect URI fica em <strong>Authorized redirect URIs</strong> (não em Authorized JavaScript origins). Mudanças levam até 5 minutos para propagar.</p>
+</blockquote>
+<h3 id="13-criar-o-idp-no-cognito">1.3 Criar o IdP no Cognito<a class="headerlink" href="#13-criar-o-idp-no-cognito" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CUSTOMER_CLIENT_ID</span><span class="o">=</span>&lt;client-id<span class="w"> </span><span class="k">do</span><span class="w"> </span>provedor&gt;
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CUSTOMER_CLIENT_SECRET</span><span class="o">=</span>&lt;client-secret&gt;
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nv">idp_name</span><span class="o">=</span><span class="s2">&quot;&lt;NomeIdP-CustomerN&gt;&quot;</span><span class="w">          </span><span class="c1"># ex: Google-Customer3, AzureAD-Customer4</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nv">oidc_issuer</span><span class="o">=</span><span class="s2">&quot;&lt;issuer do provedor&gt;&quot;</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nv">tenant_id</span><span class="o">=</span><span class="s2">&quot;customerN&quot;</span><span class="w">                    </span><span class="c1"># ex: customer3</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>aws<span class="w"> </span>cognito-idp<span class="w"> </span>create-identity-provider<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span>--region<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">aws_region</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span>--user-pool-id<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">cognito_user_pool_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span>--provider-name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">idp_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span>--provider-type<span class="w"> </span>OIDC<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span>--provider-details<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="s2">&quot;client_id=</span><span class="si">${</span><span class="nv">CUSTOMER_CLIENT_ID</span><span class="si">}</span><span class="s2">,client_secret=</span><span class="si">${</span><span class="nv">CUSTOMER_CLIENT_SECRET</span><span class="si">}</span><span class="s2">,authorize_scopes=openid email profile,oidc_issuer=</span><span class="si">${</span><span class="nv">oidc_issuer</span><span class="si">}</span><span class="s2">,attributes_request_method=GET&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span>--attribute-mapping<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="s2">&quot;email=email,name=name&quot;</span>
+</code></pre></div>
+<h3 id="14-criar-o-app-client-no-cognito">1.4 Criar o App Client no Cognito<a class="headerlink" href="#14-criar-o-app-client-no-cognito" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">app_client_id</span><span class="o">=</span><span class="k">$(</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>aws<span class="w"> </span>cognito-idp<span class="w"> </span>create-user-pool-client<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--region<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">aws_region</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--user-pool-id<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">cognito_user_pool_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span>--client-name<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">tenant_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span>--generate-secret<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span>--supported-identity-providers<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">idp_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span>--allowed-o-auth-flows<span class="w"> </span>code<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span>--allowed-o-auth-scopes<span class="w"> </span>openid<span class="w"> </span>email<span class="w"> </span>profile<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span>--callback-urls<span class="w"> </span><span class="s2">&quot;https://auth.</span><span class="si">${</span><span class="nv">domain</span><span class="si">}</span><span class="s2">/callback&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span>--logout-urls<span class="w"> </span><span class="s2">&quot;https://</span><span class="si">${</span><span class="nv">tenant_id</span><span class="si">}</span><span class="s2">.</span><span class="si">${</span><span class="nv">domain</span><span class="si">}</span><span class="s2">/logout&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span>--allowed-o-auth-flows-user-pool-client<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span>--query<span class="w"> </span><span class="s1">&#39;UserPoolClient.ClientId&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span>--output<span class="w"> </span>text
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="k">)</span>
+</code></pre></div>
+<h3 id="15-recuperar-o-client-secret-do-app-client">1.5 Recuperar o Client Secret do App Client<a class="headerlink" href="#15-recuperar-o-client-secret-do-app-client" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">COGNITO_CUSTOMERX_CLIENT_SECRET</span><span class="o">=</span><span class="k">$(</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>aws<span class="w"> </span>cognito-idp<span class="w"> </span>describe-user-pool-client<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--region<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">aws_region</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--user-pool-id<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">cognito_user_pool_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span>--client-id<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">app_client_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span>--query<span class="w"> </span>UserPoolClient.ClientSecret<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span>--output<span class="w"> </span>text
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="k">)</span>
+</code></pre></div>
+<hr />
+<h2 id="passo-2-registrar-o-dominio-no-dynamodb">Passo 2 — Registrar o domínio no DynamoDB<a class="headerlink" href="#passo-2-registrar-o-dominio-no-dynamodb" title="Permanent link">&para;</a></h2>
+<p>Cada domínio de e-mail recebe um item no <code>tenant-registry</code>. A chave primária é <code>domain#&lt;domínio&gt;</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">tenant_domain</span><span class="o">=</span><span class="s2">&quot;&lt;domínio do e-mail&gt;&quot;</span><span class="w">      </span><span class="c1"># ex: empresa.com</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">tenant_url</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">tenant_id</span><span class="si">}</span><span class="s2">.</span><span class="si">${</span><span class="nv">domain</span><span class="si">}</span><span class="s2">&quot;</span><span class="w">       </span><span class="c1"># ex: customer3.wasp.silvios.me</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nv">item</span><span class="o">=</span><span class="k">$(</span>cat<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="s">{</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="s">  &quot;pk&quot;:                    {&quot;S&quot;: &quot;domain#${tenant_domain}&quot;},</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="s">  &quot;tenant_id&quot;:             {&quot;S&quot;: &quot;${tenant_id}&quot;},</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="s">  &quot;url&quot;:                   {&quot;S&quot;: &quot;${tenant_url}&quot;},</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="s">  &quot;regions&quot;:               {&quot;L&quot;: [{&quot;S&quot;: &quot;${aws_region}&quot;}]},</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="s">  &quot;cognito_app_client_id&quot;: {&quot;S&quot;: &quot;${app_client_id}&quot;},</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="s">  &quot;auth&quot;: {&quot;M&quot;: {</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="s">    &quot;type&quot;:                  {&quot;S&quot;: &quot;oidc&quot;},</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="s">    &quot;cognito_user_pool_id&quot;:  {&quot;S&quot;: &quot;${cognito_user_pool_id}&quot;},</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="s">    &quot;cognito_app_client_id&quot;: {&quot;S&quot;: &quot;${app_client_id}&quot;},</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="s">    &quot;cognito_idp_name&quot;:      {&quot;S&quot;: &quot;${idp_name}&quot;}</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="s">  }},</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="s">  &quot;status&quot;: {&quot;S&quot;: &quot;active&quot;}</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="s">}</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="s">EOF</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="k">)</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>aws<span class="w"> </span>dynamodb<span class="w"> </span>put-item<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="w">  </span>--region<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">aws_region</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="w">  </span>--table-name<span class="w"> </span><span class="s2">&quot;tenant-registry&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="w">  </span>--item<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">item</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<h3 id="verificar">Verificar<a class="headerlink" href="#verificar" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>curl<span class="w"> </span><span class="s2">&quot;https://discovery.</span><span class="si">${</span><span class="nv">domain</span><span class="si">}</span><span class="s2">/tenant?domain=</span><span class="si">${</span><span class="nv">tenant_domain</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="passo-3-atualizar-o-callback-handler">Passo 3 — Atualizar o callback-handler<a class="headerlink" href="#passo-3-atualizar-o-callback-handler" title="Permanent link">&para;</a></h2>
+<p>O <code>callback-handler</code> precisa conhecer o Client Secret de cada tenant para trocar o code pelo token.</p>
+<p>Adicionar a nova chave ao Secret existente:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="s">apiVersion: v1</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s">kind: Secret</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s">metadata:</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="s">  name: callback-handler-secret</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="s">  namespace: auth</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="s">type: Opaque</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="s">stringData:</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="s">  COGNITO_CLIENT_SECRET_CUSTOMER1: &quot;${COGNITO_CLIENT_SECRET}&quot;</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="s">  COGNITO_CLIENT_SECRET_CUSTOMER2: &quot;${COGNITO_CUSTOMER2_CLIENT_SECRET}&quot;</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="s">  COGNITO_CLIENT_SECRET_CUSTOMERX: &quot;${COGNITO_CUSTOMERX_CLIENT_SECRET}&quot;   # novo</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="s">  STATE_JWT_SECRET: &quot;${STATE_JWT_SECRET}&quot;</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="s">EOF</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>auth<span class="w"> </span>rollout<span class="w"> </span>restart<span class="w"> </span>deployment/callback-handler
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>auth<span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deployment/callback-handler<span class="w"> </span>--timeout<span class="o">=</span>180s
+</code></pre></div>
+<hr />
+<h2 id="passo-4-deploy-do-namespace-do-tenant">Passo 4 — Deploy do namespace do tenant<a class="headerlink" href="#passo-4-deploy-do-namespace-do-tenant" title="Permanent link">&para;</a></h2>
+<p>Cada tenant tem um namespace isolado com Istio <code>RequestAuthentication</code> + <code>AuthorizationPolicy</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nv">jwt_issuer</span><span class="o">=</span><span class="s2">&quot;https://cognito-idp.</span><span class="si">${</span><span class="nv">aws_region</span><span class="si">}</span><span class="s2">.amazonaws.com/</span><span class="si">${</span><span class="nv">cognito_user_pool_id</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nv">jwks_uri</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">jwt_issuer</span><span class="si">}</span><span class="s2">/.well-known/jwks.json&quot;</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="s">---</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="s">apiVersion: v1</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="s">kind: Namespace</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="s">metadata:</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="s">  name: ${tenant_id}</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="s">  labels:</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="s">    istio-injection: enabled</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="s">---</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="s"># ... Deployment, Service, Gateway, VirtualService da aplicação do tenant ...</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="s">---</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="s">apiVersion: security.istio.io/v1beta1</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="s">kind: RequestAuthentication</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="s">metadata:</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="s">  name: cognito-jwt</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="s">  namespace: ${tenant_id}</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="s">spec:</span>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="s">  jwtRules:</span>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="s">    - issuer: &quot;${jwt_issuer}&quot;</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="s">      jwksUri: &quot;${jwks_uri}&quot;</span>
+<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="s">      forwardOriginalToken: true</span>
+<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="s">      fromCookies:</span>
+<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="s">        - session</span>
+<a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="s">      fromHeaders:</span>
+<a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a><span class="s">        - name: Authorization</span>
+<a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a><span class="s">          prefix: &quot;Bearer &quot;</span>
+<a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a><span class="s">---</span>
+<a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a><span class="s">apiVersion: security.istio.io/v1beta1</span>
+<a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a><span class="s">kind: AuthorizationPolicy</span>
+<a id="__codelineno-7-33" name="__codelineno-7-33" href="#__codelineno-7-33"></a><span class="s">metadata:</span>
+<a id="__codelineno-7-34" name="__codelineno-7-34" href="#__codelineno-7-34"></a><span class="s">  name: require-tenant-jwt</span>
+<a id="__codelineno-7-35" name="__codelineno-7-35" href="#__codelineno-7-35"></a><span class="s">  namespace: ${tenant_id}</span>
+<a id="__codelineno-7-36" name="__codelineno-7-36" href="#__codelineno-7-36"></a><span class="s">spec:</span>
+<a id="__codelineno-7-37" name="__codelineno-7-37" href="#__codelineno-7-37"></a><span class="s">  action: ALLOW</span>
+<a id="__codelineno-7-38" name="__codelineno-7-38" href="#__codelineno-7-38"></a><span class="s">  rules:</span>
+<a id="__codelineno-7-39" name="__codelineno-7-39" href="#__codelineno-7-39"></a><span class="s">    - when:</span>
+<a id="__codelineno-7-40" name="__codelineno-7-40" href="#__codelineno-7-40"></a><span class="s">        - key: request.auth.claims[custom:tenant_id]</span>
+<a id="__codelineno-7-41" name="__codelineno-7-41" href="#__codelineno-7-41"></a><span class="s">          values: [&quot;${tenant_id}&quot;]</span>
+<a id="__codelineno-7-42" name="__codelineno-7-42" href="#__codelineno-7-42"></a><span class="s">EOF</span>
+</code></pre></div>
+<p>O <code>AuthorizationPolicy</code> garante que um JWT emitido para outro tenant seja rejeitado com 403 neste namespace — isolamento cruzado por design.</p>
+<hr />
+<h2 id="verificacao-end-to-end">Verificação end-to-end<a class="headerlink" href="#verificacao-end-to-end" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># 1. Sem JWT → deve retornar 403</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>curl<span class="w"> </span>-s<span class="w"> </span>-o<span class="w"> </span>/dev/null<span class="w"> </span>-w<span class="w"> </span><span class="s1">&#39;%{http_code}&#39;</span><span class="w"> </span><span class="s2">&quot;https://</span><span class="si">${</span><span class="nv">tenant_id</span><span class="si">}</span><span class="s2">.</span><span class="si">${</span><span class="nv">domain</span><span class="si">}</span><span class="s2">/get&quot;</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># 2. JWT de outro tenant → deve retornar 403</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>curl<span class="w"> </span>-s<span class="w"> </span>-o<span class="w"> </span>/dev/null<span class="w"> </span>-w<span class="w"> </span><span class="s1">&#39;%{http_code}&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span>-b<span class="w"> </span><span class="s2">&quot;session=&lt;JWT de outro tenant&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span><span class="s2">&quot;https://</span><span class="si">${</span><span class="nv">tenant_id</span><span class="si">}</span><span class="s2">.</span><span class="si">${</span><span class="nv">domain</span><span class="si">}</span><span class="s2">/get&quot;</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="c1"># 3. Fluxo completo via browser</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1"># Acessar https://&lt;domain&gt; → digitar e-mail do novo domínio → autenticar → chegar em &lt;tenant_id&gt;.&lt;domain&gt;</span>
+</code></pre></div>
+<hr />
+<h2 id="multiplos-dominios-no-mesmo-idp">Múltiplos domínios no mesmo IdP<a class="headerlink" href="#multiplos-dominios-no-mesmo-idp" title="Permanent link">&para;</a></h2>
+<p>Quando dois ou mais domínios compartilham o mesmo provedor de identidade (mesmo Client ID e Client Secret — por exemplo, grupos empresariais onde todas as empresas estão no mesmo diretório corporativo), <strong>não é necessário criar um novo IdP nem um novo App Client no Cognito</strong>.</p>
+<p>Neste caso:</p>
+<h3 id="o-que-muda">O que muda<a class="headerlink" href="#o-que-muda" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Etapa</th>
+<th>Ação</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Passo 1 (IdP + App Client)</td>
+<td><strong>Pular</strong> — reaproveitar o App Client existente do tenant principal</td>
+</tr>
+<tr>
+<td>Passo 2 (DynamoDB)</td>
+<td><strong>Executar</strong> — registrar o novo domínio apontando para o <code>tenant_id</code> e <code>app_client_id</code> existentes</td>
+</tr>
+<tr>
+<td>Passo 3 (callback-handler)</td>
+<td><strong>Pular</strong> — o secret já existe</td>
+</tr>
+<tr>
+<td>Passo 4 (namespace)</td>
+<td>Depende: se o novo domínio pertence ao <strong>mesmo tenant</strong> (mesma aplicação), pular. Se for um tenant lógico separado com namespace próprio, executar com um novo <code>tenant_id</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="registrar-o-dominio-adicional">Registrar o domínio adicional<a class="headerlink" href="#registrar-o-dominio-adicional" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nv">novo_dominio</span><span class="o">=</span><span class="s2">&quot;&lt;segundo domínio&gt;&quot;</span><span class="w">         </span><span class="c1"># ex: subsidiaria.com</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nv">tenant_id_existente</span><span class="o">=</span><span class="s2">&quot;&lt;tenant existente&gt;&quot;</span><span class="w"> </span><span class="c1"># ex: customer3</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nv">app_client_id_existente</span><span class="o">=</span><span class="s2">&quot;&lt;client_id&gt;&quot;</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="nv">item</span><span class="o">=</span><span class="k">$(</span>cat<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="s">{</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="s">  &quot;pk&quot;:                    {&quot;S&quot;: &quot;domain#${novo_dominio}&quot;},</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="s">  &quot;tenant_id&quot;:             {&quot;S&quot;: &quot;${tenant_id_existente}&quot;},</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="s">  &quot;url&quot;:                   {&quot;S&quot;: &quot;${tenant_id_existente}.${domain}&quot;},</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="s">  &quot;regions&quot;:               {&quot;L&quot;: [{&quot;S&quot;: &quot;${aws_region}&quot;}]},</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="s">  &quot;cognito_app_client_id&quot;: {&quot;S&quot;: &quot;${app_client_id_existente}&quot;},</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="s">  &quot;auth&quot;: {&quot;M&quot;: {</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="s">    &quot;type&quot;:                  {&quot;S&quot;: &quot;oidc&quot;},</span>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="s">    &quot;cognito_user_pool_id&quot;:  {&quot;S&quot;: &quot;${cognito_user_pool_id}&quot;},</span>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="s">    &quot;cognito_app_client_id&quot;: {&quot;S&quot;: &quot;${app_client_id_existente}&quot;},</span>
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="s">    &quot;cognito_idp_name&quot;:      {&quot;S&quot;: &quot;&lt;idp_name do tenant existente&gt;&quot;}</span>
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="s">  }},</span>
+<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="s">  &quot;status&quot;: {&quot;S&quot;: &quot;active&quot;}</span>
+<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="s">}</span>
+<a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="s">EOF</span>
+<a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="k">)</span>
+<a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a>
+<a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a>aws<span class="w"> </span>dynamodb<span class="w"> </span>put-item<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a><span class="w">  </span>--region<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">aws_region</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a><span class="w">  </span>--table-name<span class="w"> </span><span class="s2">&quot;tenant-registry&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a><span class="w">  </span>--item<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">item</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<h3 id="resultado">Resultado<a class="headerlink" href="#resultado" title="Permanent link">&para;</a></h3>
+<p>Usuários de ambos os domínios (<code>empresa.com</code> e <code>subsidiaria.com</code>) são roteados para o mesmo App Client no Cognito, passam pelo mesmo IdP e chegam ao mesmo namespace de aplicação. A Lambda Pre-Token Generation injeta o <code>custom:tenant_id</code> baseado no App Client ID — ambos os domínios recebem o mesmo <code>tenant_id</code> no JWT.</p>
+<blockquote>
+<p><strong>Atenção:</strong> se os dois domínios precisarem de isolamento lógico (namespaces diferentes, AuthorizationPolicies diferentes), criar um App Client separado para cada tenant lógico, mesmo que compartilhem o IdP. O App Client é a unidade de isolamento no Cognito.</p>
+</blockquote>
+<hr />
+<h2 id="referencia-rapida-checklist-de-onboarding">Referência rápida — checklist de onboarding<a class="headerlink" href="#referencia-rapida-checklist-de-onboarding" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>[ ] Registrar a aplicação no console do provedor de identidade
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    [ ] Obter CLIENT_ID e CLIENT_SECRET
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    [ ] Adicionar redirect URI: https://idp.&lt;domain&gt;/oauth2/idpresponse
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>[ ] Passo 1 — Cognito (pular se IdP já existe)
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    [ ] Criar IdP (create-identity-provider)
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    [ ] Criar App Client (create-user-pool-client)
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    [ ] Salvar COGNITO_CUSTOMERX_CLIENT_SECRET
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>[ ] Passo 2 — DynamoDB
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    [ ] Registrar cada domínio de e-mail do tenant (put-item)
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>    [ ] Verificar: curl discovery/tenant?domain=&lt;domínio&gt;
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>[ ] Passo 3 — callback-handler
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>    [ ] Adicionar COGNITO_CLIENT_SECRET_CUSTOMERX ao Secret (pular se IdP compartilhado)
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>    [ ] Reiniciar deployment callback-handler
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a>
+<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>[ ] Passo 4 — Kubernetes
+<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>    [ ] Criar namespace com istio-injection: enabled
+<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>    [ ] Deploy da aplicação do tenant
+<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>    [ ] RequestAuthentication (validar JWT Cognito)
+<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a>    [ ] AuthorizationPolicy (custom:tenant_id == &quot;&lt;tenant_id&gt;&quot;)
+<a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a>
+<a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a>[ ] Verificação
+<a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a>    [ ] Sem JWT → 403
+<a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a>    [ ] JWT de outro tenant → 403
+<a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a>    [ ] Fluxo completo via browser
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Voltar para o topo
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
