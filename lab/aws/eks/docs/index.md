@@ -61,6 +61,10 @@ Aplicações  (namespaces com sidecar injection habilitado)
    customer1.wasp.silvios.me                 customer2.wasp.silvios.me
 ```
 
+## Projeto waspctl
+
+Este lab documenta a Fase 1 da plataforma WASP: cluster único, Auth Service customizado e autenticação multi-tenant manual via scripts. O projeto [`waspctl`](https://github.com/silviosilva/waspctl) está sendo desenvolvido como CLI para automatizar o provisionamento dessa mesma topologia em Fases 2 e 3 (platform-clusters separados + expansão multi-região com Global Accelerator).
+
 ## Navegação
 
 <div class="grid cards" markdown>

@@ -4,6 +4,105 @@ Registro de decisões de design tomadas durante o desenvolvimento do lab, com o 
 
 ---
 
+## Referências externas
+
+Artigos que serviram de base para a arquitetura deste lab:
+
+- [Building a Multi-Tenant SaaS Solution Using Amazon EKS](https://aws.amazon.com/pt/blogs/apn/building-a-multi-tenant-saas-solution-using-amazon-eks/) — Toby Buckley e Ranjith Raman (AWS APN Blog)
+- [Operating a multi-regional stateless application using Amazon EKS](https://aws.amazon.com/pt/blogs/containers/operating-a-multi-regional-stateless-application-using-amazon-eks/) — Re Alvarez-Parmar (AWS Containers Blog)
+- [Amazon EKS Blueprints for Terraform](https://aws-ia.github.io/terraform-aws-eks-blueprints/) — módulos Terraform de referência para EKS
+
+---
+
+## Roadmap de fases e waspctl
+
+**Status:** Fase 1 em execução; Fases 2 e 3 planejadas
+
+Este lab implementa manualmente a infraestrutura da Fase 1. Em paralelo, o projeto [`waspctl`](https://github.com/silviosilva/waspctl) está sendo desenvolvido como CLI para automatizar o provisionamento dessa mesma topologia.
+
+| Fase | Descrição | Estado |
+|---|---|---|
+| 1 | Cluster único + Auth Service simples (este lab) | em execução |
+| 2 | Platform-cluster separado dos customer-clusters | planejado |
+| 3 | Platform-clusters regionais + Global Accelerator + DynamoDB Global Table | planejado |
+
+O `waspctl` seguirá a mesma progressão de fases, abstraindo os scripts manuais em comandos declarativos:
+
+```bash
+waspctl sso login
+
+waspctl instance list
+
+NAME     DOMAIN            REGIONS               OWNER
+
+waspctl instance create \
+  --name wasp-x3b5 \
+  --region us-east-1 \
+  --region eu-north-1 \
+  --domain wasp.silvios.me
+
+waspctl instance list
+
+NAME      DOMAIN            REGIONS               OWNER
+wasp-x3b5  wasp.silvios.me  us-east-1,eu-north-1  administrators
+
+waspctl instance create \
+  --name wasp-i4dy \
+  --region us-east-1 \
+  --domain dev.wasp.silvios.me
+
+waspctl instance list
+
+NAME       DOMAIN               REGIONS               OWNER
+wasp-x3b5  wasp.silvios.me      us-east-1,eu-north-1  administrators
+wasp-i4dy  dev.wasp.silvios.me  us-east-1             administrators
+
+waspctl customer create \
+  --name customer1-us-east-1 \
+  --instance wasp-x3b5 \
+  --region us-east-1
+
+waspctl tenant create \
+  --name customer1 \
+  --domain customer1.com \
+  --gateway customer1-us-east-1-xt56.wasp.silvios.me
+
+waspctl tenant endpoint add \
+  --tenant customer1.com \
+  --endpoint customer1-eu-north-1-yh98.wasp.silvios.me
+```
+
+---
+
+## ALB Cognito native integration vs Auth Service customizado
+
+**Status:** decisão tomada; Auth Service customizado mantido por flexibilidade
+
+### Contexto
+
+O ALB tem integração nativa com Amazon Cognito: o próprio ALB executa o fluxo OIDC/OAuth e injeta os claims do JWT em headers HTTP antes de encaminhar a requisição ao backend. Isso eliminaria a necessidade do `platform-frontend` e do `callback-handler` como serviços separados.
+
+### Opções avaliadas
+
+**A — ALB Cognito native (OIDC authenticate action)**
+O ALB faz o redirect para o Cognito Hosted UI, troca o authorization code por token e injeta `X-Amzn-Oidc-Identity`, `X-Amzn-Oidc-Access-Token` e `X-Amzn-Oidc-Data` (JWT com claims) nos headers. Zero código de autenticação no backend.
+
+**B — Auth Service customizado (solução atual)**
+`platform-frontend` recebe o e-mail, resolve o tenant via discovery, constrói a URL de autorização para o Cognito IdP correto e redireciona. `callback-handler` recebe o código, troca por token, valida o tenant e seta o cookie de sessão.
+
+### Decisão: Auth Service customizado (Opção B)
+
+A integração nativa do ALB não oferece controle sobre a seleção dinâmica de IdP por tenant — o ALB autentica contra um único Cognito App Client fixo na listener rule. O Auth Service customizado permite:
+
+- Resolver o tenant pelo domínio do e-mail **antes** de iniciar o fluxo OAuth
+- Construir a URL de autorização com o `identity_provider` correto para o tenant
+- Validar que o domínio autenticado pertence ao tenant esperado (proteção anti-hijacking)
+- Injetar informações de tenant no state JWT para correlação no callback
+
+A integração nativa do ALB é adequada para casos onde todos os usuários autenticam pelo mesmo IdP. Para multi-tenant com IdPs distintos por tenant, o Auth Service customizado é necessário.
+
+---
+
 ## API auth options for external clients
 
 **Status:** pendente de decisão

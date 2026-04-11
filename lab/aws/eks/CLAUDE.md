@@ -17,6 +17,12 @@
 
 ---
 
+## Projeto relacionado: waspctl
+
+O projeto `waspctl` em `~/git/waspctl` é a CLI que vai automatizar o provisionamento desta mesma infraestrutura. Este lab documenta a **Fase 1** (cluster único + Auth Service manual). O waspctl cobre as fases 1-3, incluindo expansão multi-região com Global Accelerator. Consultar `~/git/waspctl/README.md` para referências externas (artigos AWS) e especificação completa da CLI.
+
+---
+
 ## Fluxo de tráfego
 
 ```

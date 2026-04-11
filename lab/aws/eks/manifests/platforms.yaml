@@ -1,0 +1,32 @@
+# Uma instância de plataforma vai estar distribuída em algumas regiões no mundo mas não em todas, talvez uma por continente.
+# A expansão para mais regiões pode atender a novos clientes ou melhorar a latência para os clientes existentes, mas tem um custo.
+# Inicialmente será o mínimo de regiões possível para atender bem os clientes.
+# Necessário ter métricas de latência e tráfego para avaliar a necessidade de expansão para mais regiões.
+# O Global Accelerator vai direcionar o tráfego para a região mais próxima do cliente.
+---
+kind: platform
+name: wasp
+spec:
+  domain: wasp.silvios.me
+
+  regions:
+    - name: us-east-1
+      endpoint: platform-wasp-0aaecca4.elb.us-east-1.amazonaws.com
+
+    - name: sa-east-1
+      endpoint: platform-wasp-5c5e5049.elb.sa-east-1.amazonaws.com
+
+    - name: ap-northeast-1
+      endpoint: platform-wasp-d9c8e5b0.elb.ap-northeast-1.amazonaws.com
+---
+kind: platform
+name: wasp-dev
+spec:
+  domain: dev.wasp.silvios.me
+
+  regions:
+    - name: us-east-1
+      endpoint: platform-wasp-dev-0aaecca4.elb.us-east-1.amazonaws.com
+
+    - name: sa-east-1
+      endpoint: platform-wasp-dev-5c5e5049.elb.sa-east-1.amazonaws.com
