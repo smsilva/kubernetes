@@ -10,6 +10,9 @@ on:
       - 'lab/aws/eks/docs/**'
       - 'lab/aws/eks/mkdocs.yml'
 
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
 permissions:
   contents: read
   pages: write
