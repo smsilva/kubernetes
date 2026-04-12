@@ -1,0 +1,223 @@
+#!/bin/bash
+# Passo 07b: Provisiona Global Accelerator → ALB e cria A records do apex no Azure DNS
+#
+# Por que Global Accelerator?
+# - O apex wasp.silvios.me não pode ter CNAME (restrição RFC 1034 / CNAME-at-apex).
+# - Azure DNS não suporta ALIAS records para ALBs externos (ao contrário do Route 53).
+# - O ALB tem IPs rotativos — A records fixos com IPs do ALB são frágeis.
+# - Global Accelerator provisiona dois IPs anycast estáticos que não mudam enquanto o
+#   accelerator existir, resolvendo o problema de forma permanente.
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+az_zone="${domain}"
+
+# =============================================================================
+# ALB ARN (necessário para criar o endpoint do accelerator)
+# =============================================================================
+alb_hostname=$(
+  kubectl --namespace istio-ingress get ingress alb-ingress \
+    --output jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+)
+
+if [[ -z "${alb_hostname}" ]]; then
+  echo "Erro: ALB hostname não encontrado — execute o passo 07 primeiro"
+  exit 1
+fi
+
+alb_arn=$(
+  aws elbv2 describe-load-balancers \
+    --region "${aws_region?}" \
+    --query "LoadBalancers[?DNSName=='${alb_hostname}'].LoadBalancerArn" \
+    --output text
+)
+
+if [[ -z "${alb_arn}" || "${alb_arn}" == "None" ]]; then
+  echo "Erro: não foi possível obter o ARN do ALB para hostname '${alb_hostname}'"
+  exit 1
+fi
+
+echo "ALB ARN: ${alb_arn}"
+
+# =============================================================================
+# Global Accelerator
+# =============================================================================
+accelerator_name="${instance_name}-ga"
+
+echo "Verificando Global Accelerator '${accelerator_name}'..."
+
+accelerator_arn=$(
+  aws globalaccelerator list-accelerators \
+    --region us-east-1 \
+    --query "Accelerators[?Name=='${accelerator_name}'].AcceleratorArn" \
+    --output text
+)
+
+if [[ -z "${accelerator_arn}" || "${accelerator_arn}" == "None" ]]; then
+  echo "Criando Global Accelerator '${accelerator_name}'..."
+  accelerator_arn=$(
+    aws globalaccelerator create-accelerator \
+      --region us-east-1 \
+      --name "${accelerator_name}" \
+      --ip-address-type IPV4 \
+      --enabled \
+      --tags "Key=project,Value=${tag_project}" "Key=env,Value=${tag_env}" \
+      --query 'Accelerator.AcceleratorArn' \
+      --output text
+  )
+  echo "Accelerator ARN: ${accelerator_arn}"
+else
+  echo "Global Accelerator já existe: ${accelerator_arn}"
+fi
+
+# Aguarda o accelerator ficar DEPLOYED
+echo "Aguardando Global Accelerator ficar disponível (pode levar alguns minutos)..."
+for i in $(seq 1 40); do
+  ga_status=$(
+    aws globalaccelerator describe-accelerator \
+      --region us-east-1 \
+      --accelerator-arn "${accelerator_arn}" \
+      --query 'Accelerator.Status' \
+      --output text
+  )
+  echo "  Status: ${ga_status} (${i}/40)"
+  if [[ "${ga_status}" == "DEPLOYED" ]]; then
+    break
+  fi
+  sleep 15
+done
+
+if [[ "${ga_status}" != "DEPLOYED" ]]; then
+  echo "Erro: timeout aguardando Global Accelerator ficar disponível."
+  exit 1
+fi
+
+# =============================================================================
+# Listener (HTTP + HTTPS)
+# =============================================================================
+listener_arn=$(
+  aws globalaccelerator list-listeners \
+    --region us-east-1 \
+    --accelerator-arn "${accelerator_arn}" \
+    --query 'Listeners[0].ListenerArn' \
+    --output text
+)
+
+if [[ -z "${listener_arn}" || "${listener_arn}" == "None" ]]; then
+  echo "Criando listener HTTP/HTTPS no Global Accelerator..."
+  listener_arn=$(
+    aws globalaccelerator create-listener \
+      --region us-east-1 \
+      --accelerator-arn "${accelerator_arn}" \
+      --protocol TCP \
+      --port-ranges "FromPort=80,ToPort=80" "FromPort=443,ToPort=443" \
+      --query 'Listener.ListenerArn' \
+      --output text
+  )
+  echo "Listener ARN: ${listener_arn}"
+else
+  echo "Listener já existe: ${listener_arn}"
+fi
+
+# =============================================================================
+# Endpoint Group (us-east-1 → ALB)
+# =============================================================================
+endpoint_group_arn=$(
+  aws globalaccelerator list-endpoint-groups \
+    --region us-east-1 \
+    --listener-arn "${listener_arn}" \
+    --query 'EndpointGroups[0].EndpointGroupArn' \
+    --output text
+)
+
+if [[ -z "${endpoint_group_arn}" || "${endpoint_group_arn}" == "None" ]]; then
+  echo "Criando endpoint group (us-east-1 → ALB)..."
+  endpoint_group_arn=$(
+    aws globalaccelerator create-endpoint-group \
+      --region us-east-1 \
+      --listener-arn "${listener_arn}" \
+      --endpoint-group-region "${aws_region?}" \
+      --endpoint-configurations "EndpointId=${alb_arn},Weight=128,ClientIPPreservationEnabled=true" \
+      --health-check-protocol HTTP \
+      --health-check-port 80 \
+      --health-check-path / \
+      --threshold-count 3 \
+      --query 'EndpointGroup.EndpointGroupArn' \
+      --output text
+  )
+  echo "Endpoint Group ARN: ${endpoint_group_arn}"
+else
+  echo "Endpoint Group já existe: ${endpoint_group_arn}"
+fi
+
+# =============================================================================
+# IPs estáticos do Global Accelerator
+# =============================================================================
+ga_ips=$(
+  aws globalaccelerator describe-accelerator \
+    --region us-east-1 \
+    --accelerator-arn "${accelerator_arn}" \
+    --query 'Accelerator.IpSets[0].IpAddresses' \
+    --output text
+)
+
+echo ""
+echo "IPs estáticos do Global Accelerator:"
+for ip in ${ga_ips}; do
+  echo "  ${ip}"
+done
+
+# Salva o ARN do accelerator no env.conf para uso pelo destroy
+sed -i "s|^global_accelerator_arn=.*|global_accelerator_arn=\"${accelerator_arn}\"|" "$(dirname "$0")/env.conf"
+
+# =============================================================================
+# A records no Azure DNS (apex wasp.silvios.me → IPs do Global Accelerator)
+# =============================================================================
+
+# Remove A records antigos do apex (se existirem de provisionamentos anteriores)
+echo "Removendo A records antigos do apex ${domain} no Azure DNS (se existirem)..."
+az network dns record-set a delete \
+  --subscription "${az_subscription}" \
+  --resource-group "${az_resource_group}" \
+  --zone-name "${az_zone}" \
+  --name "@" \
+  --yes 2>/dev/null || true
+
+echo "Criando A records ${domain} → IPs do Global Accelerator no Azure DNS..."
+for ip in ${ga_ips}; do
+  echo "  Adicionando A record ${domain} → ${ip}..."
+  az network dns record-set a add-record \
+    --subscription "${az_subscription}" \
+    --resource-group "${az_resource_group}" \
+    --zone-name "${az_zone}" \
+    --record-set-name "@" \
+    --ttl 300 \
+    --ipv4-address "${ip}"
+done
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo "Global Accelerator:"
+aws globalaccelerator describe-accelerator \
+  --region us-east-1 \
+  --accelerator-arn "${accelerator_arn}" \
+  --query 'Accelerator.{Nome:Name,Status:Status,IPs:IpSets[0].IpAddresses}' \
+  --output table
+
+echo ""
+echo "A records do apex ${domain}:"
+az network dns record-set a show \
+  --subscription "${az_subscription}" \
+  --resource-group "${az_resource_group}" \
+  --zone-name "${az_zone}" \
+  --name "@" \
+  --query '{Nome:fqdn,IPs:aRecords[*].ipv4Address}' \
+  --output table
+
+echo ""
+echo "Próximo passo: scripts/08-deploy-sample-app"
