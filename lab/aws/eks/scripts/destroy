@@ -3,16 +3,20 @@
 #
 # Ordem de deleção:
 #  1. Sample app (VirtualService, Gateway Istio, Service, Deployment, Namespace)
-#  2. WAF: desassocia WebACL do ALB e deleta a WebACL
-#  3. Ingress: alb-ingress (Ingress), alb (IngressClass)
-#  4. Istio: istio-ingressgateway, istiod, istio-base, namespaces
-#  5. ALB Controller: Helm, IAM service account, IAM policy
-#  6. Cluster EKS (eksctl — inclui node group e OIDC provider)
-#  7. VPC: route tables, NAT GW, EIP, IGW, subnets, VPC
+#  2. DNS Azure: CNAME wildcard *.domain e A records do apex
+#  3. Global Accelerator: endpoint group, listener, accelerator
+#  4. WAF: desassocia WebACL do ALB e deleta a WebACL
+#  5. Ingress: alb-ingress (Ingress), alb (IngressClass)
+#  6. Istio: istio-ingressgateway, istiod, istio-base, namespaces
+#  7. ALB Controller: Helm, IAM service account, IAM policy
+#  8. Cluster EKS (eksctl — inclui node group e OIDC provider)
+#  9. VPC: route tables, NAT GW, EIP, IGW, subnets, VPC
 
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
 . "$(dirname "$0")/.vpc-ids"
+
+az_zone="${domain}"
 
 # =============================================================================
 # 1. Sample app
@@ -21,7 +25,72 @@ echo "Removendo sample app..."
 kubectl delete namespace sample --ignore-not-found
 
 # =============================================================================
-# 2. WAF
+# 2. DNS Azure — CNAME wildcard e A records do apex
+# =============================================================================
+echo "Removendo registro CNAME *.${domain} do Azure DNS..."
+az network dns record-set cname delete \
+  --subscription "${az_subscription}" \
+  --resource-group "${az_resource_group}" \
+  --zone-name "${az_zone}" \
+  --name "*" \
+  --yes 2>/dev/null || true
+
+echo "Removendo A records do apex ${domain} do Azure DNS..."
+az network dns record-set a delete \
+  --subscription "${az_subscription}" \
+  --resource-group "${az_resource_group}" \
+  --zone-name "${az_zone}" \
+  --name "@" \
+  --yes 2>/dev/null || true
+
+# =============================================================================
+# 3. Global Accelerator
+# =============================================================================
+if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]; then
+  echo "Removendo Global Accelerator..."
+
+  listener_arn=$(
+    aws globalaccelerator list-listeners \
+      --region us-east-1 \
+      --accelerator-arn "${global_accelerator_arn}" \
+      --query 'Listeners[0].ListenerArn' \
+      --output text 2>/dev/null || echo ""
+  )
+
+  if [[ -n "${listener_arn}" && "${listener_arn}" != "None" ]]; then
+    endpoint_group_arn=$(
+      aws globalaccelerator list-endpoint-groups \
+        --region us-east-1 \
+        --listener-arn "${listener_arn}" \
+        --query 'EndpointGroups[0].EndpointGroupArn' \
+        --output text 2>/dev/null || echo ""
+    )
+
+    if [[ -n "${endpoint_group_arn}" && "${endpoint_group_arn}" != "None" ]]; then
+      aws globalaccelerator delete-endpoint-group \
+        --region us-east-1 \
+        --endpoint-group-arn "${endpoint_group_arn}"
+    fi
+
+    aws globalaccelerator delete-listener \
+      --region us-east-1 \
+      --listener-arn "${listener_arn}"
+  fi
+
+  aws globalaccelerator update-accelerator \
+    --region us-east-1 \
+    --accelerator-arn "${global_accelerator_arn}" \
+    --no-enabled
+
+  aws globalaccelerator delete-accelerator \
+    --region us-east-1 \
+    --accelerator-arn "${global_accelerator_arn}"
+
+  echo "Global Accelerator removido."
+fi
+
+# =============================================================================
+# 4. WAF
 # =============================================================================
 echo "Removendo WAF..."
 alb_arn=$(
@@ -66,14 +135,14 @@ if [[ -n "${web_acl_id}" && "${web_acl_id}" != "None" ]]; then
 fi
 
 # =============================================================================
-# 3. Ingress + IngressClass
+# 5. Ingress + IngressClass
 # =============================================================================
 echo "Removendo Ingress e IngressClass..."
 kubectl --namespace istio-ingress delete ingress alb-ingress --ignore-not-found
 kubectl delete ingressclass alb --ignore-not-found
 
 # =============================================================================
-# 4. Istio
+# 6. Istio
 # =============================================================================
 echo "Removendo Istio..."
 helm uninstall istio-ingressgateway --namespace istio-ingress 2>/dev/null || true
@@ -87,7 +156,7 @@ kubectl delete namespace istio-ingress --ignore-not-found
 kubectl delete namespace istio-system --ignore-not-found
 
 # =============================================================================
-# 5. ALB Controller
+# 7. ALB Controller
 # =============================================================================
 echo "Removendo ALB Controller..."
 helm uninstall aws-load-balancer-controller --namespace kube-system 2>/dev/null || true
@@ -109,7 +178,7 @@ if [[ -n "${policy_arn}" && "${policy_arn}" != "None" ]]; then
 fi
 
 # =============================================================================
-# 6. Cluster EKS
+# 8. Cluster EKS
 # =============================================================================
 echo "Removendo cluster EKS (aguarde vários minutos)..."
 eksctl delete cluster \
@@ -118,7 +187,7 @@ eksctl delete cluster \
   --wait
 
 # =============================================================================
-# 7. VPC
+# 9. VPC
 # =============================================================================
 echo "Removendo recursos de rede..."
 

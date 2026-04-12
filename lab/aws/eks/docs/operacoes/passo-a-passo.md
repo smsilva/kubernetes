@@ -14,10 +14,15 @@ Edite `scripts/env.conf` antes de executar qualquer script:
 
 ```bash
 aws_region="us-east-1"
-cluster_name="wasp-calm-crow-ndx4"
+instance_name="wasp"           # nome lógico da instância — usado por recursos globais (Global Accelerator, etc.)
+cluster_name="wasp-calm-crow-ndx4"  # nome do cluster EKS — usado por recursos provisionados para este cluster
 domain="wasp.silvios.me"
+az_subscription="wasp-sandbox"    # subscription Azure onde está a DNS zone
+az_resource_group="wasp-foundation" # resource group Azure da DNS zone
 cert_arn=""  # preencher no passo 06, após importar o cert no ACM
 ```
+
+Use `scripts/env.conf.example` como ponto de partida.
 
 ---
 
@@ -106,14 +111,31 @@ Cria o ALB via Ingress clássico do Kubernetes:
 - `Ingress` com redirecionamento HTTP→HTTPS, TLS terminado via ACM
 - Roteamento de `*.wasp.silvios.me` para o Istio IngressGateway
 
-Ao final, imprime o hostname do ALB para configurar o CNAME no DNS:
+Ao final, cria automaticamente o registro CNAME wildcard no Azure DNS:
 
 ```
 *.wasp.silvios.me → <alb-hostname>.us-east-1.elb.amazonaws.com
 ```
 
+!!! info "Apex não é coberto pelo wildcard"
+    O registro do apex `wasp.silvios.me` é criado no passo 07b com IPs estáticos do Global Accelerator (CNAME no apex é inválido pelo RFC 1034; Azure DNS não suporta ALIAS para ALBs externos).
+
 !!! warning "SEC-005"
     Security Groups do ALB criados automaticamente pelo controller, sem restrição de IP de origem. Ver [SEC-005](../security-issues/sec-005.md).
+
+## 07b. Configurar Global Accelerator
+
+```bash
+./scripts/07b-configure-global-accelerator
+```
+
+Provisiona o Global Accelerator (`${instance_name}-ga`) apontando para o ALB e cria os A records do apex no Azure DNS:
+
+```
+wasp.silvios.me → <ip1>, <ip2>  (IPs anycast estáticos do Global Accelerator)
+```
+
+O nome do accelerator usa `instance_name` (não `cluster_name`) pois é um recurso global — pode sobreviver a trocas de cluster e, futuramente, servir múltiplas regiões. O ARN é salvo automaticamente em `env.conf` para uso pelo `destroy`.
 
 ## 08. Deploy da app de exemplo
 

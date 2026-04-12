@@ -170,6 +170,18 @@ Instala o Istio via Helm na ordem correta:
 
 Importa o certificado Let's Encrypt de `~/certificates/config/live/wasp.silvios.me/` no AWS Certificate Manager e atualiza automaticamente o `cert_arn` em `env.conf`.
 
+Para este lab, garanta que:
+ - O certificado inclui o domínio APEX `wasp.silvios.me` para:
+   - Hostname do Global Accelerator
+   - Cognito Custom Domain
+ - O certificado inclui a SAN `*.wasp.silvios.me` para cobrir o hostname do ALB que será criado no próximo passo e se 
+
+Como verificar:
+
+```shell
+openssl x509 -in ~/certificates/config/live/wasp.silvios.me/cert.pem -text -noout | grep -E 'DNS:wasp.silvios.me|DNS:\*\.wasp\.silvios\.me'
+```
+
 ### 07. Configurar ALB via Ingress
 
 ```bash
@@ -181,10 +193,26 @@ Cria o ALB usando Ingress clássico do Kubernetes:
 - `Ingress` com redirecionamento HTTP→HTTPS, TLS terminado via ACM
 - Roteamento de `*.wasp.silvios.me` para o Istio IngressGateway
 
-Ao final, imprime o hostname do ALB para configurar o CNAME no DNS:
+Ao final, cria automaticamente o registro CNAME wildcard no Azure DNS:
 ```
 *.wasp.silvios.me → <alb-hostname>.us-east-1.elb.amazonaws.com
 ```
+
+> **Nota:** o apex `wasp.silvios.me` não pode ser CNAME. O registro A do apex é criado no passo 07b com os IPs estáticos do Global Accelerator.
+
+### 07b. Configurar Global Accelerator
+
+```bash
+./07b-configure-global-accelerator
+```
+
+Provisiona um Global Accelerator com dois IPs anycast estáticos apontando para o ALB e cria os A records do apex no Azure DNS:
+
+```
+wasp.silvios.me → <ip1>, <ip2>  (IPs fixos do Global Accelerator)
+```
+
+O nome do accelerator usa `instance_name` (não `cluster_name`) pois é um recurso global — pode sobreviver a trocas de cluster e servir múltiplas regiões no futuro.
 
 ### 08. Deploy da app de exemplo
 
@@ -238,7 +266,8 @@ lab/aws/eks/
 ├── 04-install-alb-controller  # AWS LBC com IRSA
 ├── 05-install-istio           # istio-base, istiod, istio-ingressgateway
 ├── 06-import-certificate-acm  # importa cert Let's Encrypt no ACM
-├── 07-configure-alb-ingress   # Ingress clássico (IngressClass + Ingress → ALB)
+├── 07-configure-alb-ingress   # Ingress clássico (IngressClass + Ingress → ALB) + CNAME wildcard Azure DNS
+├── 07b-configure-global-accelerator  # Global Accelerator → ALB + A records apex Azure DNS
 ├── 08-deploy-sample-app       # httpbin + Istio Gateway + VirtualService
 ├── 09-configure-waf           # WAF WebACL + associação ao ALB
 └── destroy                    # deleção na ordem inversa

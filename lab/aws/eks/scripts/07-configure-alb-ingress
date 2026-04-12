@@ -86,7 +86,21 @@ alb_hostname=$(
 
 echo ""
 echo "ALB hostname: ${alb_hostname}"
-echo "Aponte *.${domain} para este hostname no seu DNS (CNAME)"
+
+# =============================================================================
+# Registro DNS no Azure (${domain} está na Azure DNS)
+# =============================================================================
+az_zone="${domain}"
+
+echo "Criando registro CNAME *.${domain} → ${alb_hostname} no Azure DNS..."
+
+az network dns record-set cname set-record \
+  --subscription "${az_subscription}" \
+  --resource-group "${az_resource_group}" \
+  --zone-name "${az_zone}" \
+  --record-set-name "*" \
+  --ttl 300 \
+  --cname "${alb_hostname}"
 
 # =============================================================================
 # Verificação
@@ -114,3 +128,17 @@ aws elbv2 describe-listeners \
   --region "${aws_region?}" \
   --query 'Listeners[*].{Porta:Port,Protocolo:Protocol,AcaoDefault:DefaultActions[0].Type}' \
   --output table
+
+echo ""
+echo "Registro DNS wildcard:"
+az network dns record-set cname show \
+  --subscription "${az_subscription}" \
+  --resource-group "${az_resource_group}" \
+  --zone-name "${az_zone}" \
+  --name "*" \
+  --query '{Nome:fqdn,CNAME:CNAMERecord.cname}' \
+  --output table
+
+echo ""
+echo "Nota: o apex ${domain} ainda não tem registro — será configurado no passo 07b (Global Accelerator)."
+echo "Próximo passo: scripts/07b-configure-global-accelerator"

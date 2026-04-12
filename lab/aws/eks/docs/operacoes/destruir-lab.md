@@ -33,6 +33,8 @@ Para remover somente a stack de autenticação (Cognito, DynamoDB, serviços K8s
 | 17 → 10 | Namespaces de tenant, Istio auth policies, WAF rate limiting |
 | 9 | WAF WebACL (desassocia do ALB antes de deletar) |
 | 8 | Namespace `sample` e app httpbin |
+| 7b | DNS Azure: CNAME wildcard `*.domain` e A records do apex |
+| 7b | Global Accelerator: endpoint group, listener, accelerator |
 | 7 | Recurso `Ingress` (ALB é deletado pelo controller) |
 | 6 | Certificado ACM **não é removido** — ver aviso acima |
 | 5 | Istio (istiod, istio-base, istio-ingressgateway) |

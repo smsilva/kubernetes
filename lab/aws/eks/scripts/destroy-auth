@@ -16,8 +16,7 @@ lambda_function_name="wasp-pre-token-generation"
 lambda_role_name="wasp-pre-token-lambda-role"
 discovery_role_name="wasp-discovery-irsa"
 dynamodb_table="tenant-registry"
-azure_resource_group="wasp-foundation"
-azure_dns_zone="${domain}"
+az_zone="${domain}"
 
 # =============================================================================
 # Localiza o User Pool
@@ -180,8 +179,9 @@ aws dynamodb delete-table \
 # =============================================================================
 echo "Removendo CNAME idp no Azure DNS..."
 az network dns record-set cname delete \
-  --resource-group "${azure_resource_group}" \
-  --zone-name "${azure_dns_zone}" \
+  --subscription "${az_subscription}" \
+  --resource-group "${az_resource_group}" \
+  --zone-name "${az_zone}" \
   --name "idp" \
   --yes 2>/dev/null || echo "  CNAME idp não encontrado."
 

@@ -87,8 +87,6 @@ sed -i "s|^cognito_cloudfront_domain=.*|cognito_cloudfront_domain=\"${cloudfront
 # =============================================================================
 # Registro DNS no Azure (wasp.silvios.me está na Azure DNS)
 # =============================================================================
-az_subscription="wasp-sandbox"
-az_resource_group="wasp-foundation"
 az_zone="${domain}"
 az_record_name="idp" # idp.wasp.silvios.me
 
