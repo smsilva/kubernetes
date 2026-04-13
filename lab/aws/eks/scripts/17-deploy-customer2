@@ -4,10 +4,8 @@
 #
 # Pré-requisitos:
 #   1. Script 16 executado (IdP Microsoft + App Client customer2 + DynamoDB)
-#   2. Exportar antes de executar:
-#        export COGNITO_CLIENT_SECRET=<secret do customer1>
-#        export COGNITO_CUSTOMER2_CLIENT_SECRET=<secret do customer2>
-#        export STATE_JWT_SECRET=<mesmo valor usado no script 13>
+#   2. As secrets são carregadas automaticamente de env.secrets se o arquivo existir.
+#      Variáveis necessárias: COGNITO_CLIENT_SECRET_CUSTOMER1, COGNITO_CLIENT_SECRET_CUSTOMER2, STATE_JWT_SECRET
 #
 #   Recuperar os secrets com:
 #     aws cognito-idp describe-user-pool-client \
@@ -18,6 +16,11 @@ set -euo pipefail
 . "$(dirname "$0")/env.conf"
 
 scripts_dir="$(cd "$(dirname "$0")" && pwd)"
+secrets_file="${scripts_dir}/env.secrets"
+if [[ -f "${secrets_file}" ]]; then
+  # shellcheck source=/dev/null
+  . "${secrets_file}"
+fi
 services_dir="${scripts_dir}/../services"
 
 image_tag="$(git -C "${services_dir}" rev-parse --short HEAD)"
@@ -27,7 +30,7 @@ container_image_callback_handler="silviosilva/wasp-callback-handler:${image_tag}
 # =============================================================================
 # Validação
 # =============================================================================
-for var in COGNITO_CLIENT_SECRET COGNITO_CUSTOMER2_CLIENT_SECRET STATE_JWT_SECRET; do
+for var in COGNITO_CLIENT_SECRET_CUSTOMER1 COGNITO_CLIENT_SECRET_CUSTOMER2 STATE_JWT_SECRET; do
   if [[ -z "${!var:-}" ]]; then
     echo "Erro: variável de ambiente ${var} não definida"
     exit 1
@@ -80,8 +83,8 @@ metadata:
   namespace: auth
 type: Opaque
 stringData:
-  COGNITO_CLIENT_SECRET_CUSTOMER1: "${COGNITO_CLIENT_SECRET}"
-  COGNITO_CLIENT_SECRET_CUSTOMER2: "${COGNITO_CUSTOMER2_CLIENT_SECRET}"
+  COGNITO_CLIENT_SECRET_CUSTOMER1: "${COGNITO_CLIENT_SECRET_CUSTOMER1}"
+  COGNITO_CLIENT_SECRET_CUSTOMER2: "${COGNITO_CLIENT_SECRET_CUSTOMER2}"
   STATE_JWT_SECRET: "${STATE_JWT_SECRET}"
 EOF
 
@@ -93,6 +96,9 @@ echo "Atualizando imagem do platform-frontend..."
 kubectl -n platform set image deployment/platform-frontend \
   platform-frontend="${container_image_platform_frontend}"
 
+# Força restart para garantir que o pod pegue o Secret atualizado
+# (necessário quando a tag de imagem não muda e kubectl set image não dispara rollout)
+kubectl -n auth rollout restart deployment/callback-handler
 echo "Aguardando rollout do callback-handler..."
 kubectl -n auth rollout status deployment/callback-handler --timeout=180s
 

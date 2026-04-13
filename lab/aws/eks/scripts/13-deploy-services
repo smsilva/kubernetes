@@ -5,6 +5,13 @@ set -euo pipefail
 . "$(dirname "$0")/env.conf"
 
 scripts_dir="$(cd "$(dirname "$0")" && pwd)"
+secrets_file="${scripts_dir}/env.secrets"
+
+# Carrega env.secrets se existir (fonte de COGNITO_CLIENT_SECRET e STATE_JWT_SECRET)
+if [[ -f "${secrets_file}" ]]; then
+  # shellcheck source=/dev/null
+  . "${secrets_file}"
+fi
 services_dir="${scripts_dir}/../services"
 aws_account_id=$(aws sts get-caller-identity --query Account --output text)
 
@@ -23,8 +30,8 @@ for var in cognito_user_pool_id cognito_app_client_id; do
   fi
 done
 
-if [[ -z "${COGNITO_CLIENT_SECRET:-}" ]]; then
-  echo "Erro: variável de ambiente COGNITO_CLIENT_SECRET não definida"
+if [[ -z "${COGNITO_CLIENT_SECRET_CUSTOMER1:-}" ]]; then
+  echo "Erro: variável de ambiente COGNITO_CLIENT_SECRET_CUSTOMER1 não definida"
   echo "  Recupere com:"
   echo "  aws cognito-idp describe-user-pool-client \\"
   echo "    --region ${aws_region} \\"
@@ -35,9 +42,10 @@ if [[ -z "${COGNITO_CLIENT_SECRET:-}" ]]; then
 fi
 
 if [[ -z "${STATE_JWT_SECRET:-}" ]]; then
-  echo "Erro: variável de ambiente STATE_JWT_SECRET não definida"
-  echo "  Gere com: export STATE_JWT_SECRET=\$(openssl rand -hex 32)"
-  exit 1
+  echo "STATE_JWT_SECRET não definido — gerando e salvando em env.secrets..."
+  STATE_JWT_SECRET="$(openssl rand -hex 32)"
+  sed -i "s|^STATE_JWT_SECRET=.*|STATE_JWT_SECRET=\"${STATE_JWT_SECRET}\"|" "${secrets_file}"
+  echo "STATE_JWT_SECRET salvo em env.secrets"
 fi
 
 # =============================================================================
@@ -377,7 +385,7 @@ metadata:
   namespace: auth
 type: Opaque
 stringData:
-  COGNITO_CLIENT_SECRET: "${COGNITO_CLIENT_SECRET}"
+  COGNITO_CLIENT_SECRET_CUSTOMER1: "${COGNITO_CLIENT_SECRET_CUSTOMER1}"
   STATE_JWT_SECRET: "${STATE_JWT_SECRET}"
 ---
 apiVersion: apps/v1

@@ -49,7 +49,7 @@ echo "Verificando Global Accelerator '${accelerator_name}'..."
 
 accelerator_arn=$(
   aws globalaccelerator list-accelerators \
-    --region us-east-1 \
+    --region us-west-2 \
     --query "Accelerators[?Name=='${accelerator_name}'].AcceleratorArn" \
     --output text
 )
@@ -58,7 +58,7 @@ if [[ -z "${accelerator_arn}" || "${accelerator_arn}" == "None" ]]; then
   echo "Criando Global Accelerator '${accelerator_name}'..."
   accelerator_arn=$(
     aws globalaccelerator create-accelerator \
-      --region us-east-1 \
+      --region us-west-2 \
       --name "${accelerator_name}" \
       --ip-address-type IPV4 \
       --enabled \
@@ -76,7 +76,7 @@ echo "Aguardando Global Accelerator ficar disponível (pode levar alguns minutos
 for i in $(seq 1 40); do
   ga_status=$(
     aws globalaccelerator describe-accelerator \
-      --region us-east-1 \
+      --region us-west-2 \
       --accelerator-arn "${accelerator_arn}" \
       --query 'Accelerator.Status' \
       --output text
@@ -98,7 +98,7 @@ fi
 # =============================================================================
 listener_arn=$(
   aws globalaccelerator list-listeners \
-    --region us-east-1 \
+    --region us-west-2 \
     --accelerator-arn "${accelerator_arn}" \
     --query 'Listeners[0].ListenerArn' \
     --output text
@@ -108,7 +108,7 @@ if [[ -z "${listener_arn}" || "${listener_arn}" == "None" ]]; then
   echo "Criando listener HTTP/HTTPS no Global Accelerator..."
   listener_arn=$(
     aws globalaccelerator create-listener \
-      --region us-east-1 \
+      --region us-west-2 \
       --accelerator-arn "${accelerator_arn}" \
       --protocol TCP \
       --port-ranges "FromPort=80,ToPort=80" "FromPort=443,ToPort=443" \
@@ -125,7 +125,7 @@ fi
 # =============================================================================
 endpoint_group_arn=$(
   aws globalaccelerator list-endpoint-groups \
-    --region us-east-1 \
+    --region us-west-2 \
     --listener-arn "${listener_arn}" \
     --query 'EndpointGroups[0].EndpointGroupArn' \
     --output text
@@ -135,7 +135,7 @@ if [[ -z "${endpoint_group_arn}" || "${endpoint_group_arn}" == "None" ]]; then
   echo "Criando endpoint group (us-east-1 → ALB)..."
   endpoint_group_arn=$(
     aws globalaccelerator create-endpoint-group \
-      --region us-east-1 \
+      --region us-west-2 \
       --listener-arn "${listener_arn}" \
       --endpoint-group-region "${aws_region?}" \
       --endpoint-configurations "EndpointId=${alb_arn},Weight=128,ClientIPPreservationEnabled=true" \
@@ -156,7 +156,7 @@ fi
 # =============================================================================
 ga_ips=$(
   aws globalaccelerator describe-accelerator \
-    --region us-east-1 \
+    --region us-west-2 \
     --accelerator-arn "${accelerator_arn}" \
     --query 'Accelerator.IpSets[0].IpAddresses' \
     --output text
@@ -204,7 +204,7 @@ echo "--- Verificação ---"
 
 echo "Global Accelerator:"
 aws globalaccelerator describe-accelerator \
-  --region us-east-1 \
+  --region us-west-2 \
   --accelerator-arn "${accelerator_arn}" \
   --query 'Accelerator.{Nome:Name,Status:Status,IPs:IpSets[0].IpAddresses}' \
   --output table

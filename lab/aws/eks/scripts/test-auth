@@ -1,0 +1,113 @@
+#!/bin/bash
+# Testa isolamento multi-tenant via JWT (cookie session).
+# JWTs lidos de env.secrets: JWT_CUSTOMER1 e JWT_CUSTOMER2.
+# Uso: scripts/test-auth
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+secrets_file="$(dirname "$0")/env.secrets"
+if [[ -f "${secrets_file}" ]]; then
+  # shellcheck source=/dev/null
+  . "${secrets_file}"
+fi
+
+# =============================================================================
+# Helpers
+# =============================================================================
+pass=0
+fail=0
+
+check() {
+  local description="${1}"
+  local expected="${2}"
+  local jwt="${3}"
+  local url="${4}"
+
+  if [[ -n "${jwt}" ]]; then
+    actual=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+      --cookie "session=${jwt}" "${url}")
+  else
+    actual=$(curl --silent --output /dev/null --write-out '%{http_code}' "${url}")
+  fi
+
+  if [[ "${actual}" == "${expected}" ]]; then
+    echo "  PASS  ${description} → ${actual}"
+    (( pass++ )) || true
+  else
+    echo "  FAIL  ${description} → esperado ${expected}, obtido ${actual}"
+    (( fail++ )) || true
+  fi
+}
+
+jwt_tenant_id() {
+  local jwt="${1}"
+  python3 -c "
+import base64, json, sys
+payload = '${jwt}'.split('.')[1]
+pad = payload + '=' * (4 - len(payload) % 4)
+c = json.loads(base64.b64decode(pad))
+print(c.get('custom:tenant_id', '?'))
+" 2>/dev/null || echo "?"
+}
+
+# =============================================================================
+# Validação dos JWTs
+# =============================================================================
+echo "Lendo JWTs de env.secrets..."
+
+if [[ -z "${JWT_CUSTOMER1:-}" ]]; then
+  echo "  AVISO: JWT_CUSTOMER1 não definido — testes do customer1 serão pulados"
+fi
+
+if [[ -z "${JWT_CUSTOMER2:-}" ]]; then
+  echo "  AVISO: JWT_CUSTOMER2 não definido — testes do customer2 serão pulados"
+fi
+
+[[ -n "${JWT_CUSTOMER1:-}" ]] && echo "  JWT_CUSTOMER1: tenant=$(jwt_tenant_id "${JWT_CUSTOMER1}")"
+[[ -n "${JWT_CUSTOMER2:-}" ]] && echo "  JWT_CUSTOMER2: tenant=$(jwt_tenant_id "${JWT_CUSTOMER2}")"
+
+echo ""
+
+# =============================================================================
+# Testes: acesso sem JWT
+# =============================================================================
+echo "--- Sem JWT (esperado: 403) ---"
+check "Sem JWT → customer1" "403" "" "https://customer1.${domain}/get"
+check "Sem JWT → customer2" "403" "" "https://customer2.${domain}/get"
+echo ""
+
+# =============================================================================
+# Testes: JWT válido no próprio tenant
+# =============================================================================
+echo "--- JWT válido no próprio tenant (esperado: 200) ---"
+if [[ -n "${JWT_CUSTOMER1:-}" ]]; then
+  check "JWT customer1 → customer1" "200" "${JWT_CUSTOMER1}" "https://customer1.${domain}/get"
+fi
+if [[ -n "${JWT_CUSTOMER2:-}" ]]; then
+  check "JWT customer2 → customer2" "200" "${JWT_CUSTOMER2}" "https://customer2.${domain}/get"
+fi
+echo ""
+
+# =============================================================================
+# Testes: isolamento cruzado
+# =============================================================================
+echo "--- Isolamento cruzado (esperado: 403) ---"
+if [[ -n "${JWT_CUSTOMER1:-}" ]]; then
+  check "JWT customer1 → customer2" "403" "${JWT_CUSTOMER1}" "https://customer2.${domain}/get"
+fi
+if [[ -n "${JWT_CUSTOMER2:-}" ]]; then
+  check "JWT customer2 → customer1" "403" "${JWT_CUSTOMER2}" "https://customer1.${domain}/get"
+fi
+echo ""
+
+# =============================================================================
+# Resultado final
+# =============================================================================
+total=$(( pass + fail ))
+echo "---"
+echo "Resultado: ${pass}/${total} passou"
+
+if [[ "${fail}" -gt 0 ]]; then
+  exit 1
+fi

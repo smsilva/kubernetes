@@ -9,7 +9,6 @@ from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 
 from .cognito import CognitoClient, CognitoTokenExchangeError
-from .domain_validator import DomainValidationError, DomainValidator
 from .state import InvalidStateError, decode_state_token
 
 app = FastAPI(title="Callback Handler", version="1.0.0")
@@ -23,11 +22,6 @@ def get_cognito_client() -> CognitoClient:
     raise NotImplementedError
 
 
-def get_domain_validator() -> DomainValidator:
-    """Substituída em testes via app.dependency_overrides."""
-    raise NotImplementedError
-
-
 def _build_cognito_client(client_id: str, client_secret: str) -> CognitoClient:
     return CognitoClient(
         domain=os.getenv("COGNITO_DOMAIN", ""),
@@ -35,10 +29,6 @@ def _build_cognito_client(client_id: str, client_secret: str) -> CognitoClient:
         client_secret=client_secret,
         callback_url=os.getenv("CALLBACK_URL", ""),
     )
-
-
-def _build_domain_validator() -> DomainValidator:
-    return DomainValidator(discovery_url=os.getenv("DISCOVERY_URL", ""))
 
 
 def _render_error(request: Request, message: str, status_code: int = 400):
@@ -50,7 +40,8 @@ def _render_error(request: Request, message: str, status_code: int = 400):
     )
 
 
-def _extract_email_domain(id_token: str) -> str | None:
+def _extract_tenant_id(id_token: str) -> str | None:
+    """Extrai custom:tenant_id injetado pelo Pre-Token Generation Lambda do Cognito."""
     try:
         claims = pyjwt.decode(
             id_token,
@@ -59,10 +50,7 @@ def _extract_email_domain(id_token: str) -> str | None:
         )
     except pyjwt.DecodeError:
         return None
-    email = claims.get("email", "")
-    if "@" not in email:
-        return None
-    return email.split("@")[-1]
+    return claims.get("custom:tenant_id")
 
 
 @app.get("/health")
@@ -99,17 +87,9 @@ def handle_callback(
     except CognitoTokenExchangeError:
         return _render_error(request, "Could not complete authentication. Please try again.")
 
-    actual_domain = _extract_email_domain(tokens.id_token)
-    if not actual_domain:
-        return _render_error(request, "Could not determine account domain from authentication token.")
-
-    validator_override = app.dependency_overrides.get(get_domain_validator)
-    validator = validator_override() if validator_override else _build_domain_validator()
-
-    try:
-        actual_tenant = validator.get_tenant_for_domain(actual_domain)
-    except DomainValidationError:
-        return _render_error(request, "Your account domain is not authorized for this platform.")
+    actual_tenant = _extract_tenant_id(tokens.id_token)
+    if not actual_tenant:
+        return _render_error(request, "Could not determine tenant from authentication token.")
 
     if actual_tenant != login_state.tenant_id:
         return _render_error(

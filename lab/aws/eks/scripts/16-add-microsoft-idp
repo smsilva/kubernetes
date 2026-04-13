@@ -12,6 +12,12 @@
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
 
+secrets_file="$(dirname "$0")/env.secrets"
+if [[ -f "${secrets_file}" ]]; then
+  # shellcheck source=/dev/null
+  . "${secrets_file}"
+fi
+
 dynamodb_table="tenant-registry"
 user_pool_name="wasp-platform"
 idp_name="MicrosoftAD-Customer2"
@@ -155,6 +161,20 @@ aws dynamodb put-item \
 echo "Tenant registrado."
 
 # =============================================================================
+# Salva client secret do customer2 em env.secrets
+# =============================================================================
+app_client_secret=$(
+  aws cognito-idp describe-user-pool-client \
+    --region "${aws_region}" \
+    --user-pool-id "${pool_id}" \
+    --client-id "${app_client_id}" \
+    --query 'UserPoolClient.ClientSecret' \
+    --output text
+)
+sed -i "s|^COGNITO_CLIENT_SECRET_CUSTOMER2=.*|COGNITO_CLIENT_SECRET_CUSTOMER2=\"${app_client_secret}\"|" "${secrets_file}"
+echo "COGNITO_CLIENT_SECRET_CUSTOMER2 salvo em env.secrets"
+
+# =============================================================================
 # Verificação
 # =============================================================================
 echo ""
@@ -182,11 +202,5 @@ echo "  curl \"https://discovery.${domain}/tenant?domain=${tenant_domain}\""
 echo ""
 echo "--- Próximos passos ---"
 echo ""
-echo "1. Recupere o client secret do App Client customer2:"
-echo "   export COGNITO_CUSTOMER2_CLIENT_SECRET=\$(aws cognito-idp describe-user-pool-client \\"
-echo "     --region ${aws_region} \\"
-echo "     --user-pool-id ${pool_id} \\"
-echo "     --client-id ${app_client_id} \\"
-echo "     --query UserPoolClient.ClientSecret --output text)"
-echo ""
-echo "2. Execute: scripts/17-deploy-customer2"
+echo "1. Execute: scripts/17-deploy-customer2"
+echo "   (COGNITO_CLIENT_SECRET_CUSTOMER2 já salvo em env.secrets)"
