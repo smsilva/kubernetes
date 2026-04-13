@@ -132,7 +132,7 @@ GET https://customer1.wasp.silvios.me        - Global Accelerator
 
 4. Frontend monta URL do Cognito Hosted UI:
 
-   POST https://auth.wasp.silvios.me/oauth2/authorize
+   GET https://idp.wasp.silvios.me/oauth2/authorize
      ?client_id=abc123
      &identity_provider=Google
      &redirect_uri=https://auth.wasp.silvios.me/callback
