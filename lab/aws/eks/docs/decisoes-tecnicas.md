@@ -303,6 +303,67 @@ O Istio `Gateway` + `VirtualService` (passo 08) é um recurso do próprio Istio 
 
 ---
 
+## DNS por tenant — CNAME vs Global Accelerator
+
+**Status:** decisão tomada; implementação no waspctl planejada para Fase 3
+
+### Contexto
+
+O apex `wasp.silvios.me` exige Global Accelerator porque CNAME-at-apex é proibido pelo RFC 1034 e o Azure DNS não suporta ALIAS records para ALBs externos. Subdomínios como `customer1.wasp.silvios.me` não têm essa restrição — CNAME direto para o hostname do ALB funciona normalmente.
+
+O Global Accelerator foi testado no lab para o apex. A questão é como tratar subdomínios de tenant que precisam de failover regional (ex: `customer1.wasp.silvios.me` → `us-east-1` com failover para `eu-west-1`) sem criar um accelerator por tenant.
+
+### Opções avaliadas
+
+**A — Um Global Accelerator por tenant com failover**
+Cada tenant premium tem seus próprios IPs anycast estáticos. Permite configuração de failover completamente independente (região de destino, threshold de health check). Custo: ~$18/mês por accelerator. Limite padrão: 20 accelerators por conta AWS.
+
+**B — Global Accelerator compartilhado por perfil de failover**
+Tenants que precisam do mesmo par de regiões (ex: `us-east-1 → eu-west-1`) compartilham um único accelerator. O roteamento por tenant acontece no host header (ALB → Istio VirtualService) — os IPs anycast são os mesmos para todos no grupo. Custo dividido por N tenants no mesmo perfil.
+
+**C — CNAME direto (sem failover)**
+Para tenants sem requisito de failover, CNAME para o hostname do ALB. Zero custo de infra adicional. Sem IPs estáticos, mas isso não é problema para subdomínios.
+
+### Decisão: modelo de dois tiers
+
+| Tier | DNS | Infraestrutura | Failover |
+|---|---|---|---|
+| Padrão | `CNAME → alb-hostname.amazonaws.com` | nenhuma | nenhum |
+| Premium | `A record → IPs do GA compartilhado` | GA por par de regiões | regional simultâneo para todos no GA |
+
+GA dedicado por tenant (Opção A) só se justifica quando o tenant exige **configuração de failover diferente** dos demais no mesmo par de regiões — ex: threshold distinto, região de destino exclusiva, ou SLA que exige isolamento total.
+
+### Modelo de dados para o waspctl
+
+O campo `failover_tier` no registro do tenant determina o comportamento de DNS:
+
+```json
+{
+  "tenant_id": "customer1",
+  "failover_tier": "us-east-1-to-eu-west-1",
+  "dns_type": "accelerator"
+}
+```
+
+```json
+{
+  "tenant_id": "customer2",
+  "failover_tier": null,
+  "dns_type": "cname"
+}
+```
+
+O `waspctl tenant create` consultaria `failover_tier` para decidir se:
+1. Cria um novo GA (primeiro tenant daquele par de regiões)
+2. Reutiliza um GA existente (tenants adicionais no mesmo par)
+3. Cria apenas um CNAME (tenants sem failover)
+
+### Limitação do GA compartilhado
+
+O failover trigger (health check no endpoint group) é **compartilhado** — se o ALB de `us-east-1` falhar, todos os tenants no mesmo GA fazem failover simultaneamente. Esse comportamento é aceitável quando a causa do failover é infraestrutura compartilhada (o próprio ALB/cluster). Se tenants precisam de failover independente por razões de SLA ou de blast radius contido, GA dedicado é necessário.
+
+---
+
 ## STATE_JWT_SECRET em deployments multi-região
 
 **Status:** decisão tomada; implementação da rotação adiada
