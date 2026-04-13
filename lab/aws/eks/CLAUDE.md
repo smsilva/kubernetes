@@ -35,6 +35,19 @@ Internet → ALB (TLS termination, ACM cert)
 
 ---
 
+## Regra: sempre adicionar entrada de destroy ao criar recurso novo
+
+Toda vez que um script de provisionamento criar um recurso AWS ou Azure, **a entrada correspondente de deleção deve ser adicionada ao `scripts/destroy` na mesma sessão**, na posição correta da ordem inversa. A ordem deve respeitar dependências (ex: Cognito custom domain antes do User Pool) — se houver conflito com ordem de custo, a ordem de dependência prevalece.
+
+Checklist ao adicionar um recurso:
+1. Identificar o comando de deleção (`aws <serviço> delete-*` ou `az ... delete`)
+2. Determinar a posição correta no `destroy` (ordem inversa da criação, respeitando dependências)
+3. Usar `|| true` ou verificação de existência para tornar idempotente
+4. Atualizar o comentário de ordem no cabeçalho do `destroy`
+5. Marcar o item como `[x]` no backlog de `docs/notes.md` se havia pendência registrada
+
+---
+
 ## Antes de criar ou destruir recursos
 
 Sempre execute o `bootstrap` primeiro para validar pré-requisitos:

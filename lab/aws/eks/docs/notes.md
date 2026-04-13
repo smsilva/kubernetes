@@ -111,7 +111,7 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 ### P1 — Quick wins (fácil + alto valor)
 
 - [ ] **Completar script destroy**: os recursos abaixo são criados pelos scripts mas não são removidos pelo `destroy`
-  - [ ] Cognito: custom domain `idp.wasp.silvios.me` (deve ser removido antes do User Pool)
+  - [x] Cognito: custom domain `idp.wasp.silvios.me` (deve ser removido antes do User Pool)
   - [ ] Cognito: User Pool `wasp-platform` (inclui IdPs Google/Microsoft e App Clients)
   - [x] Azure DNS: CNAME `idp.wasp.silvios.me` → CloudFront (o destroy remove `*` e `@`, mas não `idp`)
   - [ ] Lambda: função `wasp-pre-token-generation`

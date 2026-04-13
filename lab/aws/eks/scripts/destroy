@@ -4,13 +4,14 @@
 # Ordem de deleção:
 #  1. Sample app (VirtualService, Gateway Istio, Service, Deployment, Namespace)
 #  2. DNS Azure: CNAME wildcard *.domain, A records do apex e CNAME idp (Cognito)
-#  3. Global Accelerator: endpoint group, listener, accelerator
-#  4. WAF: desassocia WebACL do ALB e deleta a WebACL
-#  5. Ingress: alb-ingress (Ingress), alb (IngressClass)
-#  6. Istio: istio-ingressgateway, istiod, istio-base, namespaces
-#  7. ALB Controller: Helm, IAM service account, IAM policy
-#  8. Cluster EKS (eksctl — inclui node group e OIDC provider)
-#  9. VPC: route tables, NAT GW, EIP, IGW, subnets, VPC
+#  3. Cognito: custom domain idp.domain (deleta CloudFront distribution — pode levar minutos)
+#  4. Global Accelerator: endpoint group, listener, accelerator
+#  5. WAF: desassocia WebACL do ALB e deleta a WebACL
+#  6. Ingress: alb-ingress (Ingress), alb (IngressClass)
+#  7. Istio: istio-ingressgateway, istiod, istio-base, namespaces
+#  8. ALB Controller: Helm, IAM service account, IAM policy
+#  9. Cluster EKS (eksctl — inclui node group e OIDC provider)
+# 10. VPC: route tables, NAT GW, EIP, IGW, subnets, VPC
 
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
@@ -52,7 +53,49 @@ az network dns record-set cname delete \
   --yes 2>/dev/null || true
 
 # =============================================================================
-# 3. Global Accelerator
+# 3. Cognito — custom domain idp.domain
+# =============================================================================
+cognito_domain="idp.${domain}"
+
+if [[ -n "${cognito_user_pool_id:-}" && "${cognito_user_pool_id}" != '""' ]]; then
+  domain_status=$(
+    aws cognito-idp describe-user-pool-domain \
+      --region "${aws_region?}" \
+      --domain "${cognito_domain}" \
+      --query 'DomainDescription.Status' \
+      --output text 2>/dev/null || echo "NOT_FOUND"
+  )
+
+  if [[ "${domain_status}" != "NOT_FOUND" && "${domain_status}" != "None" && -n "${domain_status}" ]]; then
+    echo "Removendo Cognito custom domain '${cognito_domain}' (deleta CloudFront distribution — aguarde)..."
+    aws cognito-idp delete-user-pool-domain \
+      --region "${aws_region?}" \
+      --domain "${cognito_domain}" \
+      --user-pool-id "${cognito_user_pool_id}"
+
+    for i in $(seq 1 40); do
+      domain_status=$(
+        aws cognito-idp describe-user-pool-domain \
+          --region "${aws_region?}" \
+          --domain "${cognito_domain}" \
+          --query 'DomainDescription.Status' \
+          --output text 2>/dev/null || echo "NOT_FOUND"
+      )
+      echo "  Status: ${domain_status} (${i}/40)"
+      if [[ "${domain_status}" == "NOT_FOUND" || "${domain_status}" == "None" || -z "${domain_status}" ]]; then
+        break
+      fi
+      sleep 15
+    done
+
+    echo "Cognito custom domain removido."
+  else
+    echo "Cognito custom domain '${cognito_domain}' não encontrado — ignorando."
+  fi
+fi
+
+# =============================================================================
+# 4. Global Accelerator
 # =============================================================================
 if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]; then
   echo "Removendo Global Accelerator..."
@@ -117,7 +160,7 @@ if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]
 fi
 
 # =============================================================================
-# 4. WAF
+# 5. WAF
 # =============================================================================
 echo "Removendo WAF..."
 alb_arn=$(
@@ -162,14 +205,14 @@ if [[ -n "${web_acl_id}" && "${web_acl_id}" != "None" ]]; then
 fi
 
 # =============================================================================
-# 5. Ingress + IngressClass
+# 6. Ingress + IngressClass
 # =============================================================================
 echo "Removendo Ingress e IngressClass..."
 kubectl --namespace istio-ingress delete ingress alb-ingress --ignore-not-found
 kubectl delete ingressclass alb --ignore-not-found
 
 # =============================================================================
-# 6. Istio
+# 7. Istio
 # =============================================================================
 echo "Removendo Istio..."
 helm uninstall istio-ingressgateway --namespace istio-ingress 2>/dev/null || true
@@ -183,7 +226,7 @@ kubectl delete namespace istio-ingress --ignore-not-found
 kubectl delete namespace istio-system --ignore-not-found
 
 # =============================================================================
-# 7. ALB Controller
+# 8. ALB Controller
 # =============================================================================
 echo "Removendo ALB Controller..."
 helm uninstall aws-load-balancer-controller --namespace kube-system 2>/dev/null || true
@@ -205,7 +248,7 @@ if [[ -n "${policy_arn}" && "${policy_arn}" != "None" ]]; then
 fi
 
 # =============================================================================
-# 8. Cluster EKS
+# 9. Cluster EKS
 # =============================================================================
 echo "Removendo cluster EKS (aguarde vários minutos)..."
 eksctl delete cluster \
@@ -214,7 +257,7 @@ eksctl delete cluster \
   --wait
 
 # =============================================================================
-# 9. VPC
+# 10. VPC
 # =============================================================================
 echo "Removendo recursos de rede..."
 
