@@ -1,5 +1,46 @@
 # Notas sobre a última execução
 
+## Tempos de execução — 2026-04-13
+
+| Script | Tempo |
+|---|---|
+| `bootstrap` (pre-check) | ~5s |
+| `01-create-vpc` | 2m50s |
+| `02-create-cluster` | 14m47s |
+| `03-configure-access` | 19s |
+| `04-install-alb-controller` | 1m19s |
+| `05-install-istio` | 1m15s |
+| `06-import-certificate-acm` | 3s |
+| `07-configure-alb-ingress` | 25s |
+| `07b-configure-global-accelerator` | 1m07s |
+| `08-deploy-sample-app` | 24s |
+| `09-configure-waf` | 46s |
+| `10-create-dynamodb` | 7s |
+| `11-create-cognito` | 22s |
+| `12-configure-dns-cognito` | 8s |
+| `13-deploy-services` | 1m14s |
+| `14-configure-istio-auth` | 11s |
+| `15-configure-waf-ratelimit` | 7s |
+| `16-add-microsoft-idp` | 10s |
+| `17-deploy-customer2` | 1m01s |
+| **Total** | **~26min** |
+
+Gargalos: `02-create-cluster` (~15min, dominado pelo CloudFormation do eksctl) e `01-create-vpc` (~3min, aguardando NAT Gateway).
+
+## Observação — aviso vpc-cni OIDC no `02-create-cluster`
+
+O eksctl emitiu um aviso durante a criação do cluster:
+
+```
+[!] recommended policies were found for "vpc-cni" addon, but since OIDC is disabled on the cluster,
+eksctl cannot configure the requested permissions; the recommended way to provide IAM permissions
+for "vpc-cni" addon is via pod identity associations
+```
+
+O script `03-configure-access` cria o OIDC provider logo depois e o eksctl atualiza o addon `vpc-cni` com o CloudFormation stack `eksctl-...-addon-vpc-cni` automaticamente. Na prática não causou problema nesta execução. Monitorar se em versões futuras do eksctl o addon `vpc-cni` precisar de intervenção manual.
+
+---
+
 ## Global Accelerator requer `--region us-west-2`
 
 O serviço AWS Global Accelerator é global e seu endpoint de API é exclusivamente `globalaccelerator.amazonaws.com` — sem sufixo regional. Ao passar `--region us-east-1`, a AWS CLI tenta `globalaccelerator.us-east-1.amazonaws.com`, que não existe, resultando em:
@@ -116,3 +157,15 @@ image_tag="$(git -C "${services_dir}" rev-parse --short HEAD)"
 
 - Como melhorar o DEBUG em casos de erro? 
   - Como saber o motivo do erro "Authentication failed: Tenant not configured."? Verificar logs do Lambda de Pre-Token Generation, do Cognito, e do serviço de autenticação no EKS?
+
+- Acrescentar links para os scripts no mkdocs.
+
+- Verificar se o Cognito user pool está sendo destruído no script destroy.
+
+- Verificar se as tabelas DynamoDB estão sendo destruídas no script destroy.
+
+- Fazer build das imagens como pré-requisitos para os scripts de configuração, para evitar erros de imagem não encontrada.
+
+- Limpar valores das secrets geradas no env.secrets antes de recriar os recursos.
+
+- Verificar nos Services possíveis erros 500 não tratados como no caso da falta de Policy IAM para acessar o DynamoDB.

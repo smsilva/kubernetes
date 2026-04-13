@@ -35,30 +35,50 @@ Internet → ALB (TLS termination, ACM cert)
 
 ---
 
+## Antes de criar ou destruir recursos
+
+Sempre execute o `bootstrap` primeiro para validar pré-requisitos:
+
+```bash
+# antes de criar
+./scripts/bootstrap --create
+
+# antes de destruir
+./scripts/bootstrap --destroy
+```
+
+O script verifica: CLIs instaladas (`aws`, `eksctl`, `kubectl`, `helm`, `istioctl`, `docker`, `az`), credenciais AWS ativas na conta correta (`221047292361`), Azure CLI autenticada na subscription `wasp-sandbox`, Docker daemon rodando e secrets obrigatórias definidas (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `STATE_JWT_SECRET`).
+
+---
+
 ## Estrutura dos scripts
 
 Scripts em `scripts/`, documentos em `docs/`. Configurações globais em `scripts/env.conf`.
 
-| Script | O que faz |
-|---|---|
-| `scripts/01-create-vpc` | VPC, subnets, IGW, NAT Gateway, route tables |
-| `scripts/02-create-cluster` | Cluster EKS + node group via eksctl |
-| `scripts/03-configure-access` | EKS Access API + AmazonEKSClusterAdminPolicy |
-| `scripts/04-install-alb-controller` | Helm + IRSA para ALB Controller |
-| `scripts/05-install-istio` | Helm: istio/base + istiod + gateway |
-| `scripts/06-import-certificate-acm` | Importa cert Let's Encrypt no ACM |
-| `scripts/07-configure-alb-ingress` | Ingress resource + IngressClass |
-| `scripts/08-deploy-sample-app` | httpbin no namespace `sample` |
-| `scripts/09-configure-waf` | WAF WebACL + regras gerenciadas + associação ao ALB |
-| `scripts/10-create-dynamodb` | Tabela DynamoDB `tenant-registry` + item customer1 |
-| `scripts/11-create-cognito` | User Pool, Google IdP, App Client, Lambda Pre-Token Generation |
-| `scripts/12-configure-dns-cognito` | Custom domain Cognito (`idp.wasp.silvios.me`) + CNAME no Azure DNS |
-| `scripts/13-deploy-services` | Build/push Docker Hub, IRSA discovery, deploy K8s dos 4 namespaces |
-| `scripts/14-configure-istio-auth` | Istio `RequestAuthentication` + `AuthorizationPolicy` no namespace `customer1` |
-| `scripts/15-configure-waf-ratelimit` | Rate limiting WAF para `/login` e `/callback` |
-| `scripts/destroy` | Destrói tudo na ordem inversa (ACM deve ser removido manualmente) |
+| Script | O que faz | Tempo |
+|---|---|---|
+| `scripts/bootstrap` | Valida pré-requisitos antes de criar ou destruir recursos | ~5s |
+| `scripts/01-create-vpc` | VPC, subnets, IGW, NAT Gateway, route tables | ~3min |
+| `scripts/02-create-cluster` | Cluster EKS + node group via eksctl | ~15min |
+| `scripts/03-configure-access` | EKS Access API + AmazonEKSClusterAdminPolicy | ~20s |
+| `scripts/04-install-alb-controller` | Helm + IRSA para ALB Controller | ~1min20s |
+| `scripts/05-install-istio` | Helm: istio/base + istiod + gateway | ~1min15s |
+| `scripts/06-import-certificate-acm` | Importa cert Let's Encrypt no ACM | ~5s |
+| `scripts/07-configure-alb-ingress` | Ingress resource + IngressClass | ~25s |
+| `scripts/07b-configure-global-accelerator` | Global Accelerator → ALB, IPs estáticos, A records no Azure DNS | ~1min |
+| `scripts/08-deploy-sample-app` | httpbin no namespace `sample` | ~25s |
+| `scripts/09-configure-waf` | WAF WebACL + regras gerenciadas + associação ao ALB | ~45s |
+| `scripts/10-create-dynamodb` | Tabela DynamoDB `tenant-registry` + item customer1 | ~10s |
+| `scripts/11-create-cognito` | User Pool, Google IdP, App Client, Lambda Pre-Token Generation | ~25s |
+| `scripts/12-configure-dns-cognito` | Custom domain Cognito (`idp.wasp.silvios.me`) + CNAME no Azure DNS | ~10s |
+| `scripts/13-deploy-services` | Build/push Docker Hub, IRSA discovery, deploy K8s dos 4 namespaces | ~1min15s |
+| `scripts/14-configure-istio-auth` | Istio `RequestAuthentication` + `AuthorizationPolicy` no namespace `customer1` | ~10s |
+| `scripts/15-configure-waf-ratelimit` | Rate limiting WAF para `/login` e `/callback` | ~10s |
+| `scripts/16-add-microsoft-idp` | IdP Microsoft OIDC + App Client customer2 + DynamoDB | ~10s |
+| `scripts/17-deploy-customer2` | Build/push + deploy namespace customer2 + rollout callback-handler | ~1min |
+| `scripts/destroy` | Destrói tudo na ordem inversa (ACM deve ser removido manualmente) | ~20-30min |
 
-**Script pendente:** `scripts/07b-configure-global-accelerator` — deve ser criado entre os scripts 07 e 08. Provisiona dois IPs anycast estáticos (Global Accelerator → ALB) para substituir os A records frágeis do apex `wasp.silvios.me`, cujos IPs de ALB são rotativos.
+**Tempo total de criação: ~26min** (dominado pelo `02-create-cluster` ~15min via CloudFormation).
 
 ---
 
