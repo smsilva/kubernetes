@@ -53,6 +53,57 @@ waspctl network proxy \
 
 - Criar página de Profile
 
+---
+
+## Naming convention para secrets multi-tenant
+
+Adotar `COGNITO_CLIENT_SECRET_<TENANT_ID em maiúsculas>` (ex: `COGNITO_CLIENT_SECRET_CUSTOMER1`, `COGNITO_CLIENT_SECRET_CUSTOMER2`) em vez de um único `COGNITO_CLIENT_SECRET`.
+
+**Motivação:** o `callback-handler` atende múltiplos tenants em um único pod. Ao processar o callback, ele precisa da secret do tenant específico. A convenção permite lookup dinâmico via `os.environ[f"COGNITO_CLIENT_SECRET_{tenant_key}"]` sem hardcode ou listas.
+
+**Impacto:** o K8s Secret `callback-handler-secret` no namespace `auth` deve conter uma chave por tenant. Scripts 13 e 17 constroem esse Secret com todas as chaves antes de reiniciar o deployment.
+
+---
+
+## Validação de tenant por `custom:tenant_id`, não por domínio de e-mail
+
+A primeira implementação do `callback-handler` derivava o tenant a partir do domínio do e-mail do usuário (ex: `@empresa.com` → `customer1`). Isso quebrou com contas Microsoft pessoais (MSA):
+
+- Usuário `silvio_silva@msn.com` se autentica via Microsoft OIDC
+- O claim `email` no token Cognito contém `smsilva@gmail.com` (e-mail principal da conta Microsoft)
+- O discovery service retornou `customer1` para `gmail.com`, mas o usuário pertence ao `customer2`
+
+**Correção:** usar o claim `custom:tenant_id` injetado pelo **Pre-Token Generation Lambda** do Cognito. O Lambda recebe o `client_id` do App Client e injeta o tenant correto diretamente no token — independente de qual IdP foi usado ou qual e-mail foi retornado.
+
+```python
+def _extract_tenant_id(id_token: str) -> str | None:
+    claims = pyjwt.decode(id_token, options={"verify_signature": False}, algorithms=["RS256", "HS256"])
+    return claims.get("custom:tenant_id")
+```
+
+**Princípio:** identidade de tenant deve vir de uma fonte autoritativa server-side (Lambda/Cognito), não de dados federados do IdP externo que podem variar ou ser manipulados.
+
+---
+
+## env.secrets como fonte única de verdade para credenciais do lab
+
+O arquivo `scripts/env.secrets` concentra todas as credenciais sensíveis. Scripts que geram secrets dinamicamente (ex: `STATE_JWT_SECRET`, `COGNITO_CLIENT_SECRET_*`) devem:
+
+1. Verificar se a variável já está definida antes de gerar
+2. Persistir o valor em `env.secrets` com `sed -i` para que sessões futuras não regenerem
+3. Carregar `env.secrets` no início (bloco padrão):
+
+```bash
+secrets_file="$(dirname "$0")/env.secrets"
+if [[ -f "${secrets_file}" ]]; then
+  . "${secrets_file}"
+fi
+```
+
+Isso evita que secrets geradas em uma sessão se percam e causem inconsistência (ex: `STATE_JWT_SECRET` diferente entre `platform-frontend` e `callback-handler` em clusters distintos).
+
+---
+
 - Sempre que atualizar build das imagens, não usar a mesma tag. Atualizar CLAUDE.md do lab para recomendar usar o hash do commit como tag, para garantir que o rollout do Kubernetes detecte a mudança de imagem e reinicie os pods. Exemplo:
 
 ```bash
@@ -60,6 +111,8 @@ image_tag="$(git -C "${services_dir}" rev-parse --short HEAD)"
 ```
 
   **Causa técnica:** com `imagePullPolicy: IfNotPresent` (padrão para tags que não são `:latest`), o Kubernetes não re-faz o pull se a tag já está em cache no node — mesmo após `rollout restart`. Trocar a tag é a única forma de garantir que o novo código seja carregado sem alterar a política de pull.
+
+  **Atenção:** `rollout restart` *é* necessário quando apenas o conteúdo de um `Secret` ou `ConfigMap` muda sem troca de imagem (ex: adicionar `COGNITO_CLIENT_SECRET_CUSTOMER2` ao Secret `callback-handler-secret`). Nesse caso o restart força os pods a remontarem os volumes/env vars atualizados. Script 17 já faz isso explicitamente após aplicar o Secret.
 
 - Como melhorar o DEBUG em casos de erro? 
   - Como saber o motivo do erro "Authentication failed: Tenant not configured."? Verificar logs do Lambda de Pre-Token Generation, do Cognito, e do serviço de autenticação no EKS?
