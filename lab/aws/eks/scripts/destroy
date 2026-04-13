@@ -49,9 +49,12 @@ az network dns record-set a delete \
 if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]; then
   echo "Removendo Global Accelerator..."
 
+  # Global Accelerator usa us-west-2 como região de controle (padrão do serviço)
+  ga_opts=(--region us-west-2)
+
   listener_arn=$(
     aws globalaccelerator list-listeners \
-      --region us-east-1 \
+      "${ga_opts[@]}" \
       --accelerator-arn "${global_accelerator_arn}" \
       --query 'Listeners[0].ListenerArn' \
       --output text 2>/dev/null || echo ""
@@ -60,7 +63,7 @@ if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]
   if [[ -n "${listener_arn}" && "${listener_arn}" != "None" ]]; then
     endpoint_group_arn=$(
       aws globalaccelerator list-endpoint-groups \
-        --region us-east-1 \
+        "${ga_opts[@]}" \
         --listener-arn "${listener_arn}" \
         --query 'EndpointGroups[0].EndpointGroupArn' \
         --output text 2>/dev/null || echo ""
@@ -68,22 +71,38 @@ if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]
 
     if [[ -n "${endpoint_group_arn}" && "${endpoint_group_arn}" != "None" ]]; then
       aws globalaccelerator delete-endpoint-group \
-        --region us-east-1 \
+        "${ga_opts[@]}" \
         --endpoint-group-arn "${endpoint_group_arn}"
     fi
 
     aws globalaccelerator delete-listener \
-      --region us-east-1 \
+      "${ga_opts[@]}" \
       --listener-arn "${listener_arn}"
   fi
 
   aws globalaccelerator update-accelerator \
-    --region us-east-1 \
+    "${ga_opts[@]}" \
     --accelerator-arn "${global_accelerator_arn}" \
     --no-enabled
 
+  echo "Aguardando Global Accelerator ser desabilitado (pode levar alguns minutos)..."
+  for i in $(seq 1 40); do
+    ga_status=$(
+      aws globalaccelerator describe-accelerator \
+        "${ga_opts[@]}" \
+        --accelerator-arn "${global_accelerator_arn}" \
+        --query 'Accelerator.Status' \
+        --output text
+    )
+    echo "  Status: ${ga_status} (${i}/40)"
+    if [[ "${ga_status}" == "DEPLOYED" ]]; then
+      break
+    fi
+    sleep 15
+  done
+
   aws globalaccelerator delete-accelerator \
-    --region us-east-1 \
+    "${ga_opts[@]}" \
     --accelerator-arn "${global_accelerator_arn}"
 
   echo "Global Accelerator removido."
