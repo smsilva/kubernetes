@@ -81,6 +81,7 @@ nav:
     - Passo a Passo: operacoes/passo-a-passo.md
     - Onboarding de Customer: onboarding-novo-customer.md
     - Destruir o Lab: operacoes/destruir-lab.md
+    - Notas de Sessão: notes.md
 
   - Serviços:
     - servicos/index.md
