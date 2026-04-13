@@ -7,13 +7,14 @@
 #  3. Cognito: custom domain idp.domain (deleta CloudFront distribution — pode levar minutos)
 #  4. Cognito: User Pool wasp-platform (inclui IdPs e App Clients)
 #  5. Lambda: wasp-pre-token-generation + IAM role wasp-pre-token-lambda-role
-#  6. Global Accelerator: endpoint group, listener, accelerator
-#  7. WAF: desassocia WebACL do ALB e deleta a WebACL
-#  8. Ingress: alb-ingress (Ingress), alb (IngressClass)
-#  9. Istio: istio-ingressgateway, istiod, istio-base, namespaces
-# 10. ALB Controller: Helm, IAM service account, IAM policy
-# 11. Cluster EKS (eksctl — inclui node group e OIDC provider)
-# 12. VPC: route tables, NAT GW, EIP, IGW, subnets, VPC
+#  6. IAM role wasp-discovery-irsa + DynamoDB tenant-registry
+#  7. Global Accelerator: endpoint group, listener, accelerator
+#  8. WAF: desassocia WebACL do ALB e deleta a WebACL
+#  9. Ingress: alb-ingress (Ingress), alb (IngressClass)
+# 10. Istio: istio-ingressgateway, istiod, istio-base, namespaces
+# 11. ALB Controller: Helm, IAM service account, IAM policy
+# 12. Cluster EKS (eksctl — inclui node group e OIDC provider)
+# 13. VPC: route tables, NAT GW, EIP, IGW, subnets, VPC
 
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
@@ -147,7 +148,28 @@ aws iam delete-role \
 echo "Lambda e IAM role removidos."
 
 # =============================================================================
-# 6. Global Accelerator
+# 6. IAM role wasp-discovery-irsa + DynamoDB tenant-registry
+# =============================================================================
+discovery_irsa_role="wasp-discovery-irsa"
+dynamodb_table="tenant-registry"
+
+echo "Removendo IAM role '${discovery_irsa_role}'..."
+aws iam delete-role-policy \
+  --role-name "${discovery_irsa_role}" \
+  --policy-name "DynamoDBTenantRegistryRead" 2>/dev/null || true
+
+aws iam delete-role \
+  --role-name "${discovery_irsa_role}" 2>/dev/null || true
+
+echo "Removendo tabela DynamoDB '${dynamodb_table}'..."
+aws dynamodb delete-table \
+  --region "${aws_region?}" \
+  --table-name "${dynamodb_table}" 2>/dev/null || true
+
+echo "IAM role discovery e DynamoDB removidos."
+
+# =============================================================================
+# 7. Global Accelerator
 # =============================================================================
 if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]; then
   echo "Removendo Global Accelerator..."
@@ -264,7 +286,7 @@ kubectl --namespace istio-ingress delete ingress alb-ingress --ignore-not-found
 kubectl delete ingressclass alb --ignore-not-found
 
 # =============================================================================
-# 9. Istio
+# 10. Istio
 # =============================================================================
 echo "Removendo Istio..."
 helm uninstall istio-ingressgateway --namespace istio-ingress 2>/dev/null || true
@@ -278,7 +300,7 @@ kubectl delete namespace istio-ingress --ignore-not-found
 kubectl delete namespace istio-system --ignore-not-found
 
 # =============================================================================
-# 10. ALB Controller
+# 11. ALB Controller
 # =============================================================================
 echo "Removendo ALB Controller..."
 helm uninstall aws-load-balancer-controller --namespace kube-system 2>/dev/null || true
@@ -300,7 +322,7 @@ if [[ -n "${policy_arn}" && "${policy_arn}" != "None" ]]; then
 fi
 
 # =============================================================================
-# 11. Cluster EKS
+# 12. Cluster EKS
 # =============================================================================
 echo "Removendo cluster EKS (aguarde vários minutos)..."
 eksctl delete cluster \
@@ -309,7 +331,7 @@ eksctl delete cluster \
   --wait
 
 # =============================================================================
-# 12. VPC
+# 13. VPC
 # =============================================================================
 echo "Removendo recursos de rede..."
 

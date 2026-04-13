@@ -116,8 +116,8 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
   - [x] Azure DNS: CNAME `idp.wasp.silvios.me` → CloudFront (o destroy remove `*` e `@`, mas não `idp`)
   - [x] Lambda: função `wasp-pre-token-generation`
   - [x] IAM: role `wasp-pre-token-lambda-role` (com inline policy `DynamoDBTenantRegistry`)
-  - [ ] IAM: role `wasp-discovery-irsa` (com inline policy `DynamoDBTenantRegistryRead`)
-  - [ ] DynamoDB: tabela `tenant-registry`
+  - [x] IAM: role `wasp-discovery-irsa` (com inline policy `DynamoDBTenantRegistryRead`)
+  - [x] DynamoDB: tabela `tenant-registry`
 - [ ] **Verificar propagação DNS pós Global Accelerator**: o script `07b` já mostra os A records
   configurados no Azure DNS, mas não confirma resolução real. Acrescentar ao final:
   `dig +short wasp.silvios.me @8.8.8.8` e comparar com os IPs retornados pelo Global Accelerator.
