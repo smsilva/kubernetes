@@ -27,7 +27,11 @@
 
 Gargalos: `02-create-cluster` (~15min, dominado pelo CloudFormation do eksctl) e `01-create-vpc` (~3min, aguardando NAT Gateway).
 
-## Observação — aviso vpc-cni OIDC no `02-create-cluster`
+---
+
+## Observações operacionais
+
+### Aviso vpc-cni OIDC no `02-create-cluster`
 
 O eksctl emitiu um aviso durante a criação do cluster:
 
@@ -39,9 +43,7 @@ for "vpc-cni" addon is via pod identity associations
 
 O script `03-configure-access` cria o OIDC provider logo depois e o eksctl atualiza o addon `vpc-cni` com o CloudFormation stack `eksctl-...-addon-vpc-cni` automaticamente. Na prática não causou problema nesta execução. Monitorar se em versões futuras do eksctl o addon `vpc-cni` precisar de intervenção manual.
 
----
-
-## Global Accelerator requer `--region us-west-2`
+### Global Accelerator requer `--region us-west-2`
 
 O serviço AWS Global Accelerator é global e seu endpoint de API é exclusivamente `globalaccelerator.amazonaws.com` — sem sufixo regional. Ao passar `--region us-east-1`, a AWS CLI tenta `globalaccelerator.us-east-1.amazonaws.com`, que não existe, resultando em:
 
@@ -51,52 +53,15 @@ aws: [ERROR]: Could not connect to the endpoint URL: "https://globalaccelerator.
 
 **Correção:** usar `--region us-west-2` em todos os comandos `aws globalaccelerator` (a AWS CLI roteia para o endpoint global a partir dessa região). O script `07b-configure-global-accelerator` foi corrigido.
 
----
+### `rollout restart` em mudanças de Secret/ConfigMap sem troca de imagem
 
-- Lembrar de tentar gerar vpcs, subnets, nat gateways, e internet gateways com nomes mais expressivos, para facilitar a identificação depois.
-
-- Explorar a ideia do waspctl provisionar uma instancia de cluster eks com tudo que ele precisa para receber tráfego e obter informacoes dele para configurar posteriormente com o global accelerator. Talvez possa ser algo como:
-
-```bash
-waspctl network proxy list
-
-NAME      TYPE
-global    global
-regional  regional
-
-waspctl network proxy \
-  --name global \
-  --add--cluster my-cluster-1
-```
-
-- Atualmente concedendo cluster-admin para o usuário atual. Investigar a melhor forma de criar uma Policy e associar ao usuário para limitar os privilégios.
-
-- Testar DynamoDB multiregion (Global). Uma região para cada cluster EKS.
-
-- Obter informações do domínio wasp.silvios.me após configurar o Global Accelerator, para verificar se o CNAME aponta para o endpoint do Global Accelerator. Acrescentar esse passo no final do script `07b-configure-global-accelerator`.
-  - usar dig e nslookup para verificar o CNAME e o endpoint do Global Accelerator.
-
-- Senhas externas: já deixar em um AWS Secret Manager? (Talvez um Azure Key Vault não gera custos para o Lab).
-
-- Aumentar o nível de logging dos serviços para DEBUG, para facilitar a identificação de problemas.
-
-- Quando ocorre erro de logon "Authentication failed: Tenant not configured.", ao clicar em "Try Again" no wasp.silvios.me, deve redirecionar para a página d login novamente. Atualmente redireciona para auth.wasp.silvios.me e mostra:
-
-```json
-{
-"detail": "Not Found"
-}
-```
-
-- Melhorar a interface mostrando que o usuário logou e colocando links para chamar /get que cai no httpbin
-
-- Criar link para logoff
-
-- Criar página de Profile
+Quando apenas o conteúdo de um `Secret` ou `ConfigMap` muda (ex: adicionar `COGNITO_CLIENT_SECRET_CUSTOMER2` ao Secret `callback-handler-secret`), `rollout restart` é necessário para que os pods remontem os volumes/env vars atualizados. Script 17 já faz isso explicitamente após aplicar o Secret.
 
 ---
 
-## Naming convention para secrets multi-tenant
+## Decisões de design
+
+### Naming convention para secrets multi-tenant
 
 Adotar `COGNITO_CLIENT_SECRET_<TENANT_ID em maiúsculas>` (ex: `COGNITO_CLIENT_SECRET_CUSTOMER1`, `COGNITO_CLIENT_SECRET_CUSTOMER2`) em vez de um único `COGNITO_CLIENT_SECRET`.
 
@@ -104,9 +69,7 @@ Adotar `COGNITO_CLIENT_SECRET_<TENANT_ID em maiúsculas>` (ex: `COGNITO_CLIENT_S
 
 **Impacto:** o K8s Secret `callback-handler-secret` no namespace `auth` deve conter uma chave por tenant. Scripts 13 e 17 constroem esse Secret com todas as chaves antes de reiniciar o deployment.
 
----
-
-## Validação de tenant por `custom:tenant_id`, não por domínio de e-mail
+### Validação de tenant por `custom:tenant_id`, não por domínio de e-mail
 
 A primeira implementação do `callback-handler` derivava o tenant a partir do domínio do e-mail do usuário (ex: `@empresa.com` → `customer1`). Isso quebrou com contas Microsoft pessoais (MSA):
 
@@ -124,9 +87,7 @@ def _extract_tenant_id(id_token: str) -> str | None:
 
 **Princípio:** identidade de tenant deve vir de uma fonte autoritativa server-side (Lambda/Cognito), não de dados federados do IdP externo que podem variar ou ser manipulados.
 
----
-
-## env.secrets como fonte única de verdade para credenciais do lab
+### `env.secrets` como fonte única de verdade para credenciais do lab
 
 O arquivo `scripts/env.secrets` concentra todas as credenciais sensíveis. Scripts que geram secrets dinamicamente (ex: `STATE_JWT_SECRET`, `COGNITO_CLIENT_SECRET_*`) devem:
 
@@ -145,27 +106,76 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 
 ---
 
-- Sempre que atualizar build das imagens, não usar a mesma tag. Atualizar CLAUDE.md do lab para recomendar usar o hash do commit como tag, para garantir que o rollout do Kubernetes detecte a mudança de imagem e reinicie os pods. Exemplo:
+## Backlog — por prioridade
 
-```bash
-image_tag="$(git -C "${services_dir}" rev-parse --short HEAD)"
-```
+### P1 — Quick wins (fácil + alto valor)
 
-  **Causa técnica:** com `imagePullPolicy: IfNotPresent` (padrão para tags que não são `:latest`), o Kubernetes não re-faz o pull se a tag já está em cache no node — mesmo após `rollout restart`. Trocar a tag é a única forma de garantir que o novo código seja carregado sem alterar a política de pull.
+- [ ] **Completar script destroy**: os recursos abaixo são criados pelos scripts mas não são removidos pelo `destroy`
+  - [ ] Cognito: custom domain `idp.wasp.silvios.me` (deve ser removido antes do User Pool)
+  - [ ] Cognito: User Pool `wasp-platform` (inclui IdPs Google/Microsoft e App Clients)
+  - [ ] Azure DNS: CNAME `idp.wasp.silvios.me` → CloudFront (o destroy remove `*` e `@`, mas não `idp`)
+  - [ ] Lambda: função `wasp-pre-token-generation`
+  - [ ] IAM: role `wasp-pre-token-lambda-role` (com inline policy `DynamoDBTenantRegistry`)
+  - [ ] IAM: role `wasp-discovery-irsa` (com inline policy `DynamoDBTenantRegistryRead`)
+  - [ ] DynamoDB: tabela `tenant-registry`
+- [ ] **Verificar propagação DNS pós Global Accelerator**: o script `07b` já mostra os A records
+  configurados no Azure DNS, mas não confirma resolução real. Acrescentar ao final:
+  `dig +short wasp.silvios.me @8.8.8.8` e comparar com os IPs retornados pelo Global Accelerator.
+- [ ] **Limpar IDs gerados antes de recriar recursos**: evita que valores de uma sessão anterior
+  causem erros silenciosos em outra. Limpar antes de rodar os scripts do zero:
+  - `env.secrets`: `STATE_JWT_SECRET`, `COGNITO_CLIENT_SECRET_CUSTOMER1`, `COGNITO_CLIENT_SECRET_CUSTOMER2`, `JWT_CUSTOMER1`, `JWT_CUSTOMER2`
+  - `env.conf`: `cognito_user_pool_id`, `cognito_app_client_id`, `cognito_cloudfront_domain`, `global_accelerator_arn`
+- [ ] **Fix redirect "Try Again"**: `error.html:45` tem `href="/"` que aponta para a raiz do
+  `callback-handler` (`auth.wasp.silvios.me/`), que retorna `{"detail": "Not Found"}`.
+  Fix: passar `login_url` no contexto do `_render_error` e usar `href="{{ login_url }}"` no template.
+  O valor deve ser `https://wasp.silvios.me` (lido de env var `PLATFORM_URL` ou equivalente).
 
-  **Atenção:** `rollout restart` *é* necessário quando apenas o conteúdo de um `Secret` ou `ConfigMap` muda sem troca de imagem (ex: adicionar `COGNITO_CLIENT_SECRET_CUSTOMER2` ao Secret `callback-handler-secret`). Nesse caso o restart força os pods a remontarem os volumes/env vars atualizados. Script 17 já faz isso explicitamente após aplicar o Secret.
+### P2 — Melhorias importantes (médio esforço)
 
-- Como melhorar o DEBUG em casos de erro? 
-  - Como saber o motivo do erro "Authentication failed: Tenant not configured."? Verificar logs do Lambda de Pre-Token Generation, do Cognito, e do serviço de autenticação no EKS?
+- [ ] **Build como pré-requisito — discovery**: scripts 13 e 17 já integram build+push+deploy em
+  sequência (`set -euo pipefail` garante que falha de build aborta o deploy). Gap específico: script
+  17 reconstrói apenas `platform-frontend` e `callback-handler`. Se `discovery` for modificado,
+  é necessário re-executar o script 13 — isso não é óbvio. Documentar no CLAUDE.md.
+- [ ] **Logging DEBUG**: nenhum dos 3 serviços configura logging explicitamente (usam padrão uvicorn INFO).
+  Adicionar `LOG_LEVEL` env var nos ConfigMaps e configurar `logging.basicConfig` em cada `main.py`.
+  Caminho de diagnóstico para "Authentication failed: Tenant not configured.":
+  1. `kubectl logs -n auth deploy/callback-handler`
+  2. CloudWatch Logs: `/aws/lambda/wasp-pre-token-generation`
+  3. Cognito User Pool → Logging (requer configuração de log group no CloudWatch)
+- [ ] **Erros 500 não tratados**: o `discovery` faz chamadas boto3 ao DynamoDB sem try/except — se a
+  IAM policy `DynamoDBTenantRegistryRead` estiver ausente na role `wasp-discovery-irsa`, o serviço
+  retorna 500 genérico sem log útil. Envolver chamadas DynamoDB em tratamento de `ClientError`
+  e retornar mensagem de erro estruturada.
+- [ ] **UI — melhorias de UX**: após login bem-sucedido, o usuário é redirecionado direto para o
+  httpbin do tenant (`customer1.wasp.silvios.me`). Não há página de boas-vindas. Melhorias:
+  criar landing page por tenant com nome do usuário (claim `name` do JWT no cookie `session`),
+  link para `/get` e link de logout. Requer novo template ou serviço por namespace de tenant.
+- [ ] **Nomes expressivos para recursos de rede**: script 01 já nomeia todos os recursos com prefixo
+  `${cluster_name}` (ex: `wasp-calm-crow-ndx4-vpc`). O problema é o sufixo aleatório gerado pelo
+  eksctl, que muda a cada recriação do cluster. Avaliar usar `cluster_name` fixo em `env.conf`
+  (ex: `wasp-eks-lab`) para que VPC e subnets tenham nome estável entre sessões.
 
-- Acrescentar links para os scripts no mkdocs.
+### P3 — Exploração / futuro
 
-- Verificar se o Cognito user pool está sendo destruído no script destroy.
-
-- Verificar se as tabelas DynamoDB estão sendo destruídas no script destroy.
-
-- Fazer build das imagens como pré-requisitos para os scripts de configuração, para evitar erros de imagem não encontrada.
-
-- Limpar valores das secrets geradas no env.secrets antes de recriar os recursos.
-
-- Verificar nos Services possíveis erros 500 não tratados como no caso da falta de Policy IAM para acessar o DynamoDB.
+- [ ] **cluster-admin → escopo mínimo (SEC-004)**: script 03 usa `AmazonEKSClusterAdminPolicy` com
+  `--access-scope type=cluster`. O EKS Access API suporta `type=namespace` para restringir por
+  namespace. Para o lab (deploy em múltiplos namespaces), o caminho prático é criar uma política
+  customizada via `aws eks create-access-policy` ou usar RBAC K8s com `ClusterRole` menos permissivo.
+- [ ] **DynamoDB multiregion (Global Tables)**: criar a tabela `tenant-registry` em múltiplas regiões
+  e habilitar replicação. Cada cluster EKS apontaria para sua região local, com replicação automática
+  entre elas. Pré-requisito para o cenário multi-cluster do `waspctl`.
+- [ ] **Credenciais externas em SSM Parameter Store**: AWS SSM Parameter Store (SecureString) é
+  gratuito para parâmetros standard e já está disponível na conta. Alternativa sem custo ao
+  Secrets Manager ($0.40/secret/mês). Azure Key Vault também tem tier gratuito. Avaliar migrar
+  `GOOGLE_CLIENT_SECRET`, `AZURE_CLIENT_SECRET` do `env.secrets` para SSM.
+- [ ] **`waspctl network proxy`**: explorar comando para provisionar cluster EKS completo e
+  integrá-lo ao Global Accelerator. Conceito:
+  ```
+  waspctl network proxy list          # lista proxies (global, regional)
+  waspctl network proxy \
+    --name global \
+    --add-cluster my-cluster-1        # associa cluster ao proxy global
+  ```
+- [ ] **Links para scripts no mkdocs**: `operacoes/passo-a-passo.md` é o lugar natural para
+  acrescentar links diretos aos scripts em `scripts/`. Atualmente o mkdocs não referencia
+  os arquivos de script.
