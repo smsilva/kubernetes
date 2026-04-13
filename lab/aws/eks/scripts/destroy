@@ -18,7 +18,10 @@
 
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
-. "$(dirname "$0")/.vpc-ids"
+vpc_ids_file="$(dirname "$0")/.vpc-ids"
+if [[ -f "${vpc_ids_file}" ]]; then
+  . "${vpc_ids_file}"
+fi
 
 az_zone="${domain}"
 
@@ -26,7 +29,7 @@ az_zone="${domain}"
 # 1. Sample app
 # =============================================================================
 echo "Removendo sample app..."
-kubectl delete namespace sample --ignore-not-found
+kubectl delete namespace sample --ignore-not-found 2>/dev/null || true
 
 # =============================================================================
 # 2. DNS Azure — CNAME wildcard e A records do apex
