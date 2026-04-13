@@ -6,13 +6,14 @@
 #  2. DNS Azure: CNAME wildcard *.domain, A records do apex e CNAME idp (Cognito)
 #  3. Cognito: custom domain idp.domain (deleta CloudFront distribution — pode levar minutos)
 #  4. Cognito: User Pool wasp-platform (inclui IdPs e App Clients)
-#  5. Global Accelerator: endpoint group, listener, accelerator
-#  6. WAF: desassocia WebACL do ALB e deleta a WebACL
-#  7. Ingress: alb-ingress (Ingress), alb (IngressClass)
-#  8. Istio: istio-ingressgateway, istiod, istio-base, namespaces
-#  9. ALB Controller: Helm, IAM service account, IAM policy
-# 10. Cluster EKS (eksctl — inclui node group e OIDC provider)
-# 11. VPC: route tables, NAT GW, EIP, IGW, subnets, VPC
+#  5. Lambda: wasp-pre-token-generation + IAM role wasp-pre-token-lambda-role
+#  6. Global Accelerator: endpoint group, listener, accelerator
+#  7. WAF: desassocia WebACL do ALB e deleta a WebACL
+#  8. Ingress: alb-ingress (Ingress), alb (IngressClass)
+#  9. Istio: istio-ingressgateway, istiod, istio-base, namespaces
+# 10. ALB Controller: Helm, IAM service account, IAM policy
+# 11. Cluster EKS (eksctl — inclui node group e OIDC provider)
+# 12. VPC: route tables, NAT GW, EIP, IGW, subnets, VPC
 
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
@@ -119,7 +120,34 @@ if [[ -n "${cognito_user_pool_id:-}" && "${cognito_user_pool_id}" != '""' ]]; th
 fi
 
 # =============================================================================
-# 5. Global Accelerator
+# 5. Lambda — wasp-pre-token-generation + IAM role wasp-pre-token-lambda-role
+# =============================================================================
+lambda_function_name="wasp-pre-token-generation"
+lambda_role_name="wasp-pre-token-lambda-role"
+aws_account_id=$(aws sts get-caller-identity --query Account --output text)
+
+echo "Removendo Lambda '${lambda_function_name}'..."
+aws lambda delete-function \
+  --region "${aws_region?}" \
+  --function-name "${lambda_function_name}" 2>/dev/null || true
+
+echo "Removendo IAM role '${lambda_role_name}'..."
+# Inline policies devem ser removidas antes da role
+aws iam delete-role-policy \
+  --role-name "${lambda_role_name}" \
+  --policy-name "DynamoDBTenantRegistry" 2>/dev/null || true
+
+aws iam detach-role-policy \
+  --role-name "${lambda_role_name}" \
+  --policy-arn "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole" 2>/dev/null || true
+
+aws iam delete-role \
+  --role-name "${lambda_role_name}" 2>/dev/null || true
+
+echo "Lambda e IAM role removidos."
+
+# =============================================================================
+# 6. Global Accelerator
 # =============================================================================
 if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]; then
   echo "Removendo Global Accelerator..."
@@ -184,7 +212,7 @@ if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]
 fi
 
 # =============================================================================
-# 6. WAF
+# 7. WAF
 # =============================================================================
 echo "Removendo WAF..."
 alb_arn=$(
@@ -229,14 +257,14 @@ if [[ -n "${web_acl_id}" && "${web_acl_id}" != "None" ]]; then
 fi
 
 # =============================================================================
-# 7. Ingress + IngressClass
+# 8. Ingress + IngressClass
 # =============================================================================
 echo "Removendo Ingress e IngressClass..."
 kubectl --namespace istio-ingress delete ingress alb-ingress --ignore-not-found
 kubectl delete ingressclass alb --ignore-not-found
 
 # =============================================================================
-# 8. Istio
+# 9. Istio
 # =============================================================================
 echo "Removendo Istio..."
 helm uninstall istio-ingressgateway --namespace istio-ingress 2>/dev/null || true
@@ -250,7 +278,7 @@ kubectl delete namespace istio-ingress --ignore-not-found
 kubectl delete namespace istio-system --ignore-not-found
 
 # =============================================================================
-# 9. ALB Controller
+# 10. ALB Controller
 # =============================================================================
 echo "Removendo ALB Controller..."
 helm uninstall aws-load-balancer-controller --namespace kube-system 2>/dev/null || true
@@ -272,7 +300,7 @@ if [[ -n "${policy_arn}" && "${policy_arn}" != "None" ]]; then
 fi
 
 # =============================================================================
-# 10. Cluster EKS
+# 11. Cluster EKS
 # =============================================================================
 echo "Removendo cluster EKS (aguarde vários minutos)..."
 eksctl delete cluster \
@@ -281,7 +309,7 @@ eksctl delete cluster \
   --wait
 
 # =============================================================================
-# 11. VPC
+# 12. VPC
 # =============================================================================
 echo "Removendo recursos de rede..."
 

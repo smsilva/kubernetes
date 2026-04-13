@@ -114,8 +114,8 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
   - [x] Cognito: custom domain `idp.wasp.silvios.me` (deve ser removido antes do User Pool)
   - [x] Cognito: User Pool `wasp-platform` (inclui IdPs Google/Microsoft e App Clients)
   - [x] Azure DNS: CNAME `idp.wasp.silvios.me` → CloudFront (o destroy remove `*` e `@`, mas não `idp`)
-  - [ ] Lambda: função `wasp-pre-token-generation`
-  - [ ] IAM: role `wasp-pre-token-lambda-role` (com inline policy `DynamoDBTenantRegistry`)
+  - [x] Lambda: função `wasp-pre-token-generation`
+  - [x] IAM: role `wasp-pre-token-lambda-role` (com inline policy `DynamoDBTenantRegistry`)
   - [ ] IAM: role `wasp-discovery-irsa` (com inline policy `DynamoDBTenantRegistryRead`)
   - [ ] DynamoDB: tabela `tenant-registry`
 - [ ] **Verificar propagação DNS pós Global Accelerator**: o script `07b` já mostra os A records
