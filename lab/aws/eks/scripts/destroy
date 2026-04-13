@@ -5,13 +5,14 @@
 #  1. Sample app (VirtualService, Gateway Istio, Service, Deployment, Namespace)
 #  2. DNS Azure: CNAME wildcard *.domain, A records do apex e CNAME idp (Cognito)
 #  3. Cognito: custom domain idp.domain (deleta CloudFront distribution — pode levar minutos)
-#  4. Global Accelerator: endpoint group, listener, accelerator
-#  5. WAF: desassocia WebACL do ALB e deleta a WebACL
-#  6. Ingress: alb-ingress (Ingress), alb (IngressClass)
-#  7. Istio: istio-ingressgateway, istiod, istio-base, namespaces
-#  8. ALB Controller: Helm, IAM service account, IAM policy
-#  9. Cluster EKS (eksctl — inclui node group e OIDC provider)
-# 10. VPC: route tables, NAT GW, EIP, IGW, subnets, VPC
+#  4. Cognito: User Pool wasp-platform (inclui IdPs e App Clients)
+#  5. Global Accelerator: endpoint group, listener, accelerator
+#  6. WAF: desassocia WebACL do ALB e deleta a WebACL
+#  7. Ingress: alb-ingress (Ingress), alb (IngressClass)
+#  8. Istio: istio-ingressgateway, istiod, istio-base, namespaces
+#  9. ALB Controller: Helm, IAM service account, IAM policy
+# 10. Cluster EKS (eksctl — inclui node group e OIDC provider)
+# 11. VPC: route tables, NAT GW, EIP, IGW, subnets, VPC
 
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
@@ -95,7 +96,30 @@ if [[ -n "${cognito_user_pool_id:-}" && "${cognito_user_pool_id}" != '""' ]]; th
 fi
 
 # =============================================================================
-# 4. Global Accelerator
+# 4. Cognito — User Pool wasp-platform
+# =============================================================================
+if [[ -n "${cognito_user_pool_id:-}" && "${cognito_user_pool_id}" != '""' ]]; then
+  pool_exists=$(
+    aws cognito-idp describe-user-pool \
+      --region "${aws_region?}" \
+      --user-pool-id "${cognito_user_pool_id}" \
+      --query 'UserPool.Id' \
+      --output text 2>/dev/null || echo "NOT_FOUND"
+  )
+
+  if [[ "${pool_exists}" != "NOT_FOUND" && -n "${pool_exists}" ]]; then
+    echo "Removendo User Pool '${cognito_user_pool_id}' (inclui IdPs e App Clients)..."
+    aws cognito-idp delete-user-pool \
+      --region "${aws_region?}" \
+      --user-pool-id "${cognito_user_pool_id}"
+    echo "User Pool removido."
+  else
+    echo "User Pool '${cognito_user_pool_id}' não encontrado — ignorando."
+  fi
+fi
+
+# =============================================================================
+# 5. Global Accelerator
 # =============================================================================
 if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]; then
   echo "Removendo Global Accelerator..."
@@ -160,7 +184,7 @@ if [[ -n "${global_accelerator_arn:-}" && "${global_accelerator_arn}" != '""' ]]
 fi
 
 # =============================================================================
-# 5. WAF
+# 6. WAF
 # =============================================================================
 echo "Removendo WAF..."
 alb_arn=$(
@@ -205,14 +229,14 @@ if [[ -n "${web_acl_id}" && "${web_acl_id}" != "None" ]]; then
 fi
 
 # =============================================================================
-# 6. Ingress + IngressClass
+# 7. Ingress + IngressClass
 # =============================================================================
 echo "Removendo Ingress e IngressClass..."
 kubectl --namespace istio-ingress delete ingress alb-ingress --ignore-not-found
 kubectl delete ingressclass alb --ignore-not-found
 
 # =============================================================================
-# 7. Istio
+# 8. Istio
 # =============================================================================
 echo "Removendo Istio..."
 helm uninstall istio-ingressgateway --namespace istio-ingress 2>/dev/null || true
@@ -226,7 +250,7 @@ kubectl delete namespace istio-ingress --ignore-not-found
 kubectl delete namespace istio-system --ignore-not-found
 
 # =============================================================================
-# 8. ALB Controller
+# 9. ALB Controller
 # =============================================================================
 echo "Removendo ALB Controller..."
 helm uninstall aws-load-balancer-controller --namespace kube-system 2>/dev/null || true
@@ -248,7 +272,7 @@ if [[ -n "${policy_arn}" && "${policy_arn}" != "None" ]]; then
 fi
 
 # =============================================================================
-# 9. Cluster EKS
+# 10. Cluster EKS
 # =============================================================================
 echo "Removendo cluster EKS (aguarde vários minutos)..."
 eksctl delete cluster \
@@ -257,7 +281,7 @@ eksctl delete cluster \
   --wait
 
 # =============================================================================
-# 10. VPC
+# 11. VPC
 # =============================================================================
 echo "Removendo recursos de rede..."
 

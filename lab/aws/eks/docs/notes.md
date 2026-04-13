@@ -112,7 +112,7 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 
 - [ ] **Completar script destroy**: os recursos abaixo são criados pelos scripts mas não são removidos pelo `destroy`
   - [x] Cognito: custom domain `idp.wasp.silvios.me` (deve ser removido antes do User Pool)
-  - [ ] Cognito: User Pool `wasp-platform` (inclui IdPs Google/Microsoft e App Clients)
+  - [x] Cognito: User Pool `wasp-platform` (inclui IdPs Google/Microsoft e App Clients)
   - [x] Azure DNS: CNAME `idp.wasp.silvios.me` → CloudFront (o destroy remove `*` e `@`, mas não `idp`)
   - [ ] Lambda: função `wasp-pre-token-generation`
   - [ ] IAM: role `wasp-pre-token-lambda-role` (com inline policy `DynamoDBTenantRegistry`)
