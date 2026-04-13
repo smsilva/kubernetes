@@ -3,7 +3,7 @@
 #
 # Ordem de deleção:
 #  1. Sample app (VirtualService, Gateway Istio, Service, Deployment, Namespace)
-#  2. DNS Azure: CNAME wildcard *.domain e A records do apex
+#  2. DNS Azure: CNAME wildcard *.domain, A records do apex e CNAME idp (Cognito)
 #  3. Global Accelerator: endpoint group, listener, accelerator
 #  4. WAF: desassocia WebACL do ALB e deleta a WebACL
 #  5. Ingress: alb-ingress (Ingress), alb (IngressClass)
@@ -41,6 +41,14 @@ az network dns record-set a delete \
   --resource-group "${az_resource_group}" \
   --zone-name "${az_zone}" \
   --name "@" \
+  --yes 2>/dev/null || true
+
+echo "Removendo CNAME idp.${domain} do Azure DNS..."
+az network dns record-set cname delete \
+  --subscription "${az_subscription}" \
+  --resource-group "${az_resource_group}" \
+  --zone-name "${az_zone}" \
+  --name "idp" \
   --yes 2>/dev/null || true
 
 # =============================================================================

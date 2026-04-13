@@ -113,7 +113,7 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 - [ ] **Completar script destroy**: os recursos abaixo são criados pelos scripts mas não são removidos pelo `destroy`
   - [ ] Cognito: custom domain `idp.wasp.silvios.me` (deve ser removido antes do User Pool)
   - [ ] Cognito: User Pool `wasp-platform` (inclui IdPs Google/Microsoft e App Clients)
-  - [ ] Azure DNS: CNAME `idp.wasp.silvios.me` → CloudFront (o destroy remove `*` e `@`, mas não `idp`)
+  - [x] Azure DNS: CNAME `idp.wasp.silvios.me` → CloudFront (o destroy remove `*` e `@`, mas não `idp`)
   - [ ] Lambda: função `wasp-pre-token-generation`
   - [ ] IAM: role `wasp-pre-token-lambda-role` (com inline policy `DynamoDBTenantRegistry`)
   - [ ] IAM: role `wasp-discovery-irsa` (com inline policy `DynamoDBTenantRegistryRead`)
@@ -154,6 +154,13 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
   `${cluster_name}` (ex: `wasp-calm-crow-ndx4-vpc`). O problema é o sufixo aleatório gerado pelo
   eksctl, que muda a cada recriação do cluster. Avaliar usar `cluster_name` fixo em `env.conf`
   (ex: `wasp-eks-lab`) para que VPC e subnets tenham nome estável entre sessões.
+
+### P3 — Exploração / futuro (DNS / failover)
+
+- [ ] **Subdomínios com Global Accelerator compartilhado por par de regiões**: decidido que tenants
+  sem failover usam CNAME direto para o ALB; tenants premium compartilham um GA por par de regiões
+  (ex: `us-east-1 → eu-west-1`). Ver decisão completa em `docs/decisoes-tecnicas.md` (seção
+  "DNS por tenant — CNAME vs Global Accelerator"). Implementação no `waspctl` Fase 3.
 
 ### P3 — Exploração / futuro
 
