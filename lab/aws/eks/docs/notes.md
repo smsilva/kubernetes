@@ -144,10 +144,11 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
   1. `kubectl logs -n auth deploy/callback-handler`
   2. CloudWatch Logs: `/aws/lambda/wasp-pre-token-generation`
   3. Cognito User Pool → Logging (requer configuração de log group no CloudWatch)
-- [ ] **Erros 500 não tratados**: o `discovery` faz chamadas boto3 ao DynamoDB sem try/except — se a
+- [x] **Erros 500 não tratados**: o `discovery` faz chamadas boto3 ao DynamoDB sem try/except — se a
   IAM policy `DynamoDBTenantRegistryRead` estiver ausente na role `wasp-discovery-irsa`, o serviço
-  retorna 500 genérico sem log útil. Envolver chamadas DynamoDB em tratamento de `ClientError`
-  e retornar mensagem de erro estruturada.
+  retornar mensagem de erro estruturada. `DynamoDBTenantRepository.find_by_domain` captura `ClientError`,
+  loga code+message e relança; rota `/tenant` converte em HTTP 503 com `detail: "DynamoDB error (<code>):
+  service temporarily unavailable"`. 24 testes passando.
 - [ ] **UI — melhorias de UX**: após login bem-sucedido, o usuário é redirecionado direto para o
   httpbin do tenant (`customer1.wasp.silvios.me`). Não há página de boas-vindas. Melhorias:
   criar landing page por tenant com nome do usuário (claim `name` do JWT no cookie `session`),
