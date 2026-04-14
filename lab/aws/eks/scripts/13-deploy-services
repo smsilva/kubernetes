@@ -535,7 +535,7 @@ metadata:
   name: tenant-frontend-config
   namespace: customer1
 data:
-  HTTPBIN_URL: "http://httpbin:8000"
+  HTTPBIN_URL: "https://httpbin.${domain}"
   PLATFORM_URL: "https://${domain}"
   LOG_LEVEL: "INFO"
 ---
