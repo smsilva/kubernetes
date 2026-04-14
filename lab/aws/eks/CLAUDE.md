@@ -8,11 +8,11 @@
 
 | Recurso | Valor |
 |---|---|
-| **Cluster EKS** | `wasp-calm-crow-ndx4` |
+| **Cluster EKS** | `wasp-cool-whale-7zr5` |
 | **Região** | `us-east-1` |
 | **Domínio** | `wasp.silvios.me` (wildcard `*.wasp.silvios.me`) |
-| **ACM Certificate ARN** | `arn:aws:acm:us-east-1:221047292361:certificate/59ab7614-fa1b-4dba-9f43-7c775cfa5bac` |
-| **VPC ID** | `vpc-03cb9d83815b52ee1` |
+| **ACM Certificate ARN** | `arn:aws:acm:us-east-1:221047292361:certificate/3b83625c-895c-461d-a18e-571166508123` |
+| **VPC ID** | — (gerado pelo 01-create-vpc) |
 | **AWS Account ID** | `221047292361` |
 
 ---
