@@ -32,10 +32,11 @@ def _build_cognito_client(client_id: str, client_secret: str) -> CognitoClient:
 
 
 def _render_error(request: Request, message: str, status_code: int = 400):
+    login_url = os.getenv("PLATFORM_URL", "/")
     return templates.TemplateResponse(
         request=request,
         name="error.html",
-        context={"message": message},
+        context={"message": message, "login_url": login_url},
         status_code=status_code,
     )
 

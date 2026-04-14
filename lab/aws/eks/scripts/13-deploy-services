@@ -376,6 +376,7 @@ data:
   COGNITO_DOMAIN: "idp.${domain}"
   COGNITO_CLIENT_ID: "${cognito_app_client_id}"
   CALLBACK_URL: "https://auth.${domain}/callback"
+  PLATFORM_URL: "https://${domain}"
   SESSION_COOKIE_DOMAIN: ".${domain}"
 ---
 apiVersion: v1
