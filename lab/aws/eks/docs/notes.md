@@ -136,9 +136,11 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
   sequência (`set -euo pipefail` garante que falha de build aborta o deploy). Gap específico: script
   17 reconstrói apenas `platform-frontend` e `callback-handler`. Se `discovery` for modificado,
   é necessário re-executar o script 13 — isso não é óbvio. Documentado no CLAUDE.md (Gotchas).
-- [ ] **Logging DEBUG**: nenhum dos 3 serviços configura logging explicitamente (usam padrão uvicorn INFO).
-  Adicionar `LOG_LEVEL` env var nos ConfigMaps e configurar `logging.basicConfig` em cada `main.py`.
-  Caminho de diagnóstico para "Authentication failed: Tenant not configured.":
+- [x] **Logging DEBUG**: nenhum dos 3 serviços configura logging explicitamente (usam padrão uvicorn INFO).
+  Adicionado `LOG_LEVEL=INFO` nos ConfigMaps (`discovery-config`, `platform-frontend-config`,
+  `callback-handler-config`) e `logging.basicConfig` + `setLevel` em cada `main.py`. Discovery
+  migrado para usar ConfigMap (antes usava env inline no Deployment). Caminho de diagnóstico para
+  "Authentication failed: Tenant not configured.":
   1. `kubectl logs -n auth deploy/callback-handler`
   2. CloudWatch Logs: `/aws/lambda/wasp-pre-token-generation`
   3. Cognito User Pool → Logging (requer configuração de log group no CloudWatch)

@@ -141,6 +141,16 @@ metadata:
     istio-injection: enabled
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: discovery-config
+  namespace: discovery
+data:
+  DYNAMODB_TABLE: "${dynamodb_table}"
+  AWS_REGION: "${aws_region}"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: discovery
@@ -169,11 +179,9 @@ spec:
           image: ${container_image_discovery}
           ports:
             - containerPort: 8000
-          env:
-            - name: DYNAMODB_TABLE
-              value: "${dynamodb_table}"
-            - name: AWS_REGION
-              value: "${aws_region}"
+          envFrom:
+            - configMapRef:
+                name: discovery-config
           readinessProbe:
             httpGet:
               path: /health
@@ -257,6 +265,7 @@ data:
   COGNITO_DOMAIN: "idp.${domain}"
   COGNITO_CLIENT_ID: "${cognito_app_client_id}"
   CALLBACK_URL: "https://auth.${domain}/callback"
+  LOG_LEVEL: "INFO"
 ---
 apiVersion: v1
 kind: Secret
@@ -378,6 +387,7 @@ data:
   CALLBACK_URL: "https://auth.${domain}/callback"
   PLATFORM_URL: "https://${domain}"
   SESSION_COOKIE_DOMAIN: ".${domain}"
+  LOG_LEVEL: "INFO"
 ---
 apiVersion: v1
 kind: Secret
