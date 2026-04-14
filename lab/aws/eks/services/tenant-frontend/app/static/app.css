@@ -362,6 +362,12 @@ body {
   margin-bottom: 12px;
 }
 
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .section-title {
   font-size: 14px;
   font-weight: 500;

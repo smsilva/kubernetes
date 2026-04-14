@@ -141,6 +141,38 @@ def test_test_page_includes_curl_commands(authenticated_client, httpx_mock: HTTP
     assert f"Bearer {SAMPLE_TOKEN}" in body
 
 
+def test_curl_command_uses_curl_i(authenticated_client, httpx_mock: HTTPXMock):
+    """curl commands must use -i (show headers+body) not -s -o /dev/null."""
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    body = response.text
+    assert "curl -i" in body
+    assert "curl -s" not in body
+
+
+def test_health_test_curl_commands_omit_jwt(authenticated_client, httpx_mock: HTTPXMock):
+    """Health endpoints are open — their curl commands must not carry a JWT."""
+    import re
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    body = response.text
+    # Extract the text inside each <pre id="curl-*"> block
+    curl_blocks = dict(re.findall(r'<pre class="curl-code" id="curl-([^"]+)">([^<]+)</pre>', body))
+    assert "Authorization" not in curl_blocks.get("customer1-health", "")
+    assert "Authorization" not in curl_blocks.get("customer2-health", "")
+    assert f"Bearer {SAMPLE_TOKEN}" in curl_blocks.get("httpbin", "")
+    assert f"Bearer {SAMPLE_TOKEN}" in curl_blocks.get("customer1-httpbin", "")
+    assert f"Bearer {SAMPLE_TOKEN}" in curl_blocks.get("customer2-httpbin", "")
+
+
+def test_test_page_has_collapse_all_button(authenticated_client, httpx_mock: HTTPXMock):
+    """Test page must have a Collapse all button next to Run all."""
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    body = response.text
+    assert "Collapse all" in body
+
+
 def test_test_page_has_results_summary(authenticated_client, httpx_mock: HTTPXMock):
     """Page must include a results summary section."""
     _mock_all_test_urls(httpx_mock)

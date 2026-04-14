@@ -87,14 +87,14 @@ async def test_page(request: Request):
         fetch_url(f"{CUSTOMER2_URL}/httpbin/get", headers=auth_headers),  # JWT forwarded
     )
 
-    def _build_curl(url: str) -> str:
-        parts = ["curl -s -o /dev/null -w '%{http_code}'"]
-        if session_token:
+    def _build_curl(url: str, *, with_jwt: bool = True) -> str:
+        parts = ["curl -i"]
+        if with_jwt and session_token:
             parts.append(f"  -H 'Authorization: Bearer {session_token}'")
         parts.append(f"  '{url}'")
         return " \\\n".join(parts)
 
-    def _entry(label, result, expected):
+    def _entry(label, result, expected, *, with_jwt: bool = True):
         return {
             "label":       label,
             "url":         result["url"],
@@ -103,13 +103,13 @@ async def test_page(request: Request):
             "result_json": result["result_json"],
             "error":       result["error"],
             "passed":      result["status_code"] == expected,
-            "curl_cmd":    _build_curl(result["url"]),
+            "curl_cmd":    _build_curl(result["url"], with_jwt=with_jwt),
         }
 
     test_results = [
         _entry("httpbin",           httpbin_r,  200),
-        _entry("customer1-health",  c1_health,  200),
-        _entry("customer2-health",  c2_health,  200),
+        _entry("customer1-health",  c1_health,  200, with_jwt=False),
+        _entry("customer2-health",  c2_health,  200, with_jwt=False),
         _entry("customer1-httpbin", c1_httpbin, 200 if tenant_id == "customer1" else 403),
         _entry("customer2-httpbin", c2_httpbin, 200 if tenant_id == "customer2" else 403),
     ]
