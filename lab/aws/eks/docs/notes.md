@@ -266,3 +266,5 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 - [ ] **Endpoints de health check do ALB**: atualmente o ALB é configurado com health check em `/` (raiz do `platform-frontend`), que retorna HTTP 200. Avaliar criar endpoint dedicado `/healthz` ou similar, para separar tráfego de health check do tráfego real de usuários. Ter Health Checks dos serviços sem precisar de jwt (avaliar se é risco de segurança ou se pode ser mitigado com regras de firewall/ALB).
 
 - [ ] **Acrescentar botão para colapsar o accordion do tests no tenant-frontend**: avalise se fica melhor ao lado do "Run all" um "Collapse all" que fecha os detalhes dos testes, para evitar que o JSON ocupe muito espaço na tela após rodar os testes.
+
+- [ ] **Unificar os scripts que criam os IDPs no Cognito para que os dois Providers atuais (Google e Microsoft) sejam criados em um único script**: atualmente o script 11 cria o IDP do Google e o script 16 cria o IDP da Microsoft. Avaliar unificar ambos em um único script (ex: `configure-idps`) para simplificar a estrutura dos scripts e evitar confusão sobre onde adicionar novos IDPs no futuro.

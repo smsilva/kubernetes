@@ -6,6 +6,7 @@ set -euo pipefail
 . "$(dirname "$0")/env.conf"
 
 dynamodb_table="tenant-registry"
+idp_name="Google-Customer1"
 user_pool_name="wasp-platform"
 lambda_function_name="wasp-pre-token-generation"
 lambda_role_name="wasp-pre-token-lambda-role"
@@ -205,26 +206,26 @@ idp_exists=$(
   aws cognito-idp describe-identity-provider \
     --region "${aws_region?}" \
     --user-pool-id "${pool_id}" \
-    --provider-name Google \
+    --provider-name "${idp_name}" \
     --query 'IdentityProvider.ProviderName' \
     --output text 2>/dev/null || echo "NOT_FOUND"
 )
 
 if [[ "${idp_exists}" == "NOT_FOUND" ]]; then
-  echo "Criando Identity Provider Google..."
+  echo "Criando Identity Provider ${idp_name}..."
   aws cognito-idp create-identity-provider \
     --region "${aws_region?}" \
     --user-pool-id "${pool_id}" \
-    --provider-name Google \
+    --provider-name "${idp_name}" \
     --provider-type Google \
     --provider-details \
       "client_id=${GOOGLE_CLIENT_ID},client_secret=${GOOGLE_CLIENT_SECRET},authorize_scopes=openid email profile" \
     --attribute-mapping \
       "email=email,name=name" \
     > /dev/null
-  echo "Identity Provider Google criado."
+  echo "Identity Provider "${idp_name}" criado."
 else
-  echo "Identity Provider Google já existe."
+  echo "Identity Provider ${idp_name} já existe."
 fi
 
 # =============================================================================
