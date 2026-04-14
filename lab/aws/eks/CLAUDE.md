@@ -214,6 +214,10 @@ web_acl_id="$(echo "${web_acl_arn}" | awk -F'/' '{print $NF}')"
 
 Pipe (`|`) e heredoc (`<<EOF`) disputam o stdin. O heredoc vence. Gravar a variável em arquivo temporário e ler via `open()`.
 
+### Script 17 não reconstrói o `discovery`
+
+O script `17-deploy-customer2` faz build/push apenas de `platform-frontend` e `callback-handler`. Se o serviço `discovery` for modificado, é necessário re-executar o script `13-deploy-services` para reconstruir e redesenhar a imagem do `discovery`.
+
 
 # Notas
 

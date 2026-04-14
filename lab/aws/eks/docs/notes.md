@@ -110,7 +110,7 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 
 ### P1 — Quick wins (fácil + alto valor)
 
-- [ ] **Completar script destroy**: os recursos abaixo são criados pelos scripts mas não são removidos pelo `destroy`
+- [x] **Completar script destroy**: os recursos abaixo são criados pelos scripts mas não são removidos pelo `destroy`
   - [x] Cognito: custom domain `idp.wasp.silvios.me` (deve ser removido antes do User Pool)
   - [x] Cognito: User Pool `wasp-platform` (inclui IdPs Google/Microsoft e App Clients)
   - [x] Azure DNS: CNAME `idp.wasp.silvios.me` → CloudFront (o destroy remove `*` e `@`, mas não `idp`)
@@ -132,10 +132,10 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 
 ### P2 — Melhorias importantes (médio esforço)
 
-- [ ] **Build como pré-requisito — discovery**: scripts 13 e 17 já integram build+push+deploy em
+- [x] **Build como pré-requisito — discovery**: scripts 13 e 17 já integram build+push+deploy em
   sequência (`set -euo pipefail` garante que falha de build aborta o deploy). Gap específico: script
   17 reconstrói apenas `platform-frontend` e `callback-handler`. Se `discovery` for modificado,
-  é necessário re-executar o script 13 — isso não é óbvio. Documentar no CLAUDE.md.
+  é necessário re-executar o script 13 — isso não é óbvio. Documentado no CLAUDE.md (Gotchas).
 - [ ] **Logging DEBUG**: nenhum dos 3 serviços configura logging explicitamente (usam padrão uvicorn INFO).
   Adicionar `LOG_LEVEL` env var nos ConfigMaps e configurar `logging.basicConfig` em cada `main.py`.
   Caminho de diagnóstico para "Authentication failed: Tenant not configured.":
