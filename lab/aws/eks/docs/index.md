@@ -22,44 +22,7 @@ Laboratório de EKS que provisiona uma plataforma SaaS multi-tenant completa: VP
 | DynamoDB | AWS | Tabela `tenant-registry` com configuração de tenants e IdPs |
 | Amazon Cognito | AWS | User Pool como hub de federação, custom domain no ACM |
 
-## Fluxo de tráfego
-
-```
-Internet
-   │
-   ▼
-AWS ALB  (subnets públicas, HTTPS terminado via ACM)
-   │       WAF WebACL: CRS + KnownBadInputs + IP Reputation + rate limiting
-   │       Shield Standard: ativo por padrão
-   ▼
-Istio IngressGateway  (namespace: istio-ingress, ClusterIP)
-   │       pods nas subnets privadas, tráfego via target-type ip
-   ▼
-Aplicações  (namespaces com sidecar injection habilitado)
-```
-
-## Topologia multi-região
-
-```
-       sara@customer1.com                        motoko@customer2.com
-                │                                          │
-                └─────────────────────┬────────────────────┘
-                                      ▼
-                               wasp.silvios.me
-                                      │
-                            Global Accelerator
-                                      │
-                ┌─────────────────────┴────────────────────┐
-                ▼                                          ▼
-     platform-us-east-1-wasp                  platform-eu-central-1-wasp
-          (us-east-1)                              (eu-central-1)
-                │                                          │
-                ▼                                          ▼
-        discovery-service                          discovery-service
-                │                                          │
-                ▼                                          ▼
-   customer1.wasp.silvios.me                 customer2.wasp.silvios.me
-```
+Para o fluxo de tráfego detalhado e a topologia multi-região, ver [Arquitetura](arquitetura/index.md).
 
 ## Projeto waspctl
 
