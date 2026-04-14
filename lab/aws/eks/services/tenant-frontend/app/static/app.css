@@ -370,6 +370,11 @@ body {
   text-transform: uppercase;
 }
 
+.url-text {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 /* ── Code / JSON viewer ───────────────────────── */
 .code-fence {
   background: var(--color-code-bg);

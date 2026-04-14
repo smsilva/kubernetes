@@ -110,6 +110,30 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 
 ### P1 — Quick wins (fácil + alto valor)
 
+- [ ] **Página de teste — URL em minúsculas**: o título da seção exibe `GET https://httpbin.wasp.silvios.me/get`
+  em maiúsculas por herdar o estilo `text-transform: uppercase` do `.section-title`. Fix: aplicar
+  `text-transform: none` ou trocar a classe no elemento que exibe a URL.
+
+- [ ] **Página de teste — testes cruzados entre tenants**: adicionar dois testes de isolamento além
+  do teste existente de `httpbin.wasp.silvios.me/get`. Escopo completo:
+  - **Test 1** (já existe): `GET https://httpbin.wasp.silvios.me/get` — espera HTTP 200 (rota pública)
+  - **Test 2** (novo): `GET https://customer1.wasp.silvios.me/httpbin/get` — espera HTTP 403 se o tenant do
+    usuário não for `customer1` (Istio AuthorizationPolicy), ou HTTP 200 se for
+  - **Test 3** (novo): `GET https://customer2.wasp.silvios.me/httpbin/get` — espera HTTP 403 se o tenant do
+    usuário não for `customer2`, ou HTTP 200 se for
+  - Cada teste tem seu próprio botão "Run" individual
+  - Botão "Run all" executa os 3 em paralelo e mostra os resultados lado a lado
+  - Área de resultado exibe: URL, status HTTP, resultado esperado e resultado obtido (pass/fail)
+  - Resultado individual também deve ser exibido de forma amigável quando chamado isoladamente
+
+  Subtasks de implementação (TDD — testes antes do código):
+  - [ ] **T1**: corrigir URL em minúsculas (template + CSS)
+  - [ ] **T2**: extrair lógica de chamada HTTP do `/test` para função reutilizável `fetch_url`
+  - [ ] **T3**: adicionar env vars `CUSTOMER1_URL` e `CUSTOMER2_URL` no ConfigMap e no `main.py`
+  - [ ] **T4**: refatorar rota `/test` para retornar lista de resultados (um por teste)
+  - [ ] **T5**: atualizar template `test.html` com 3 cards de resultado + botão "Run all"
+  - [ ] **T6**: deploy e validação end-to-end no cluster
+
 - [x] **Completar script destroy**: os recursos abaixo são criados pelos scripts mas não são removidos pelo `destroy`
   - [x] Cognito: custom domain `idp.wasp.silvios.me` (deve ser removido antes do User Pool)
   - [x] Cognito: User Pool `wasp-platform` (inclui IdPs Google/Microsoft e App Clients)
