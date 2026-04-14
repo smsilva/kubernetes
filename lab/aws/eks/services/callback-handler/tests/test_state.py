@@ -41,7 +41,7 @@ def test_decode_raises_for_wrong_secret():
     token = _make_token()
 
     with pytest.raises(InvalidStateError):
-        decode_state_token(token, "wrong-secret")
+        decode_state_token(token, "wrong-secret-long-enough-for-hs256-hmac-key")
 
 
 def test_decode_raises_for_missing_required_claim():

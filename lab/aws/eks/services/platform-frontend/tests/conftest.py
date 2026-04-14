@@ -25,7 +25,7 @@ class MockDiscoveryClient:
 def set_env_vars(monkeypatch):
     monkeypatch.setenv("COGNITO_DOMAIN", "auth.wasp.silvios.me")
     monkeypatch.setenv("CALLBACK_URL", "https://auth.wasp.silvios.me/callback")
-    monkeypatch.setenv("STATE_JWT_SECRET", "test-secret-key")
+    monkeypatch.setenv("STATE_JWT_SECRET", "test-secret-key-long-enough-for-hs256")
 
 
 @pytest.fixture

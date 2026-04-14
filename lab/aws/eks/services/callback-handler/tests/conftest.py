@@ -5,8 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.cognito import CognitoClient, CognitoTokens
-from app.domain_validator import DomainValidationError, DomainValidator
-from app.main import app, get_cognito_client, get_domain_validator
+from app.main import app, get_cognito_client
 
 SECRET = "test-secret-key-long-enough-for-hs256"
 COGNITO_DOMAIN = "auth.wasp.silvios.me"
@@ -26,13 +25,13 @@ SAMPLE_STATE = jwt.encode(
 
 SAMPLE_ID_TOKEN = jwt.encode(
     {"sub": "user-123", "email": "smsilva@gmail.com", "custom:tenant_id": "customer1"},
-    "any-secret",
+    "any-secret-long-enough-for-hs256-hmac-key",
     algorithm="HS256",
 )
 
 MISMATCHED_ID_TOKEN = jwt.encode(
     {"sub": "user-456", "email": "user@other-company.com", "custom:tenant_id": "customer1"},
-    "any-secret",
+    "any-secret-long-enough-for-hs256-hmac-key",
     algorithm="HS256",
 )
 
@@ -55,17 +54,6 @@ class MockCognitoClient:
         return self._tokens
 
 
-class MockDomainValidator:
-    def __init__(self, tenant_id: str | None = None, raises: Exception | None = None):
-        self._tenant_id = tenant_id
-        self._raises = raises
-
-    def get_tenant_for_domain(self, domain: str) -> str:
-        if self._raises:
-            raise self._raises
-        return self._tenant_id
-
-
 @pytest.fixture(autouse=True)
 def set_env_vars(monkeypatch):
     monkeypatch.setenv("COGNITO_DOMAIN", COGNITO_DOMAIN)
@@ -82,9 +70,7 @@ def mock_cognito_success():
         refresh_token="refresh-token",
     )
     client = MockCognitoClient(tokens=tokens)
-    validator = MockDomainValidator(tenant_id="customer1")
     app.dependency_overrides[get_cognito_client] = lambda: client
-    app.dependency_overrides[get_domain_validator] = lambda: validator
     yield client
     app.dependency_overrides.clear()
 
@@ -93,9 +79,7 @@ def mock_cognito_success():
 def mock_cognito_failure():
     from app.cognito import CognitoTokenExchangeError
     client = MockCognitoClient(raises=CognitoTokenExchangeError("invalid code"))
-    validator = MockDomainValidator(tenant_id="customer1")
     app.dependency_overrides[get_cognito_client] = lambda: client
-    app.dependency_overrides[get_domain_validator] = lambda: validator
     yield client
     app.dependency_overrides.clear()
 

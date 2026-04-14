@@ -3,7 +3,7 @@ import time
 import jwt
 from fastapi.testclient import TestClient
 
-from app.main import app, get_cognito_client, get_domain_validator
+from app.main import app, get_cognito_client
 from tests.conftest import SAMPLE_STATE, SECRET
 
 
@@ -88,32 +88,39 @@ def test_callback_returns_500_when_tenant_secret_not_configured(api_client, mock
     assert response.status_code == 500
 
 
-def test_callback_rejects_when_authenticated_email_domain_not_registered(api_client):
+def test_callback_returns_403_when_tenant_id_in_token_differs_from_state(api_client):
+    import jwt as _jwt
     from app.cognito import CognitoTokens
-    from app.domain_validator import DomainValidationError
-    from tests.conftest import MISMATCHED_ID_TOKEN, MockCognitoClient, MockDomainValidator
+    from tests.conftest import MockCognitoClient
 
-    tokens = CognitoTokens(id_token=MISMATCHED_ID_TOKEN, access_token="a", refresh_token="r")
-    app.dependency_overrides[get_cognito_client] = lambda: MockCognitoClient(tokens=tokens)
-    app.dependency_overrides[get_domain_validator] = lambda: MockDomainValidator(
-        raises=DomainValidationError("Domain 'other-company.com' is not registered")
+    wrong_tenant_token = _jwt.encode(
+        {"sub": "user-456", "email": "user@other.com", "custom:tenant_id": "customer2"},
+        "any-secret-long-enough-for-hs256-hmac-key",
+        algorithm="HS256",
     )
-
-    response = api_client.get(f"/callback?code=valid-code&state={SAMPLE_STATE}")
-
-    assert response.status_code == 400
-    app.dependency_overrides.clear()
-
-
-def test_callback_rejects_when_authenticated_email_domain_belongs_to_different_tenant(api_client):
-    from app.cognito import CognitoTokens
-    from tests.conftest import MISMATCHED_ID_TOKEN, MockCognitoClient, MockDomainValidator
-
-    tokens = CognitoTokens(id_token=MISMATCHED_ID_TOKEN, access_token="a", refresh_token="r")
+    tokens = CognitoTokens(id_token=wrong_tenant_token, access_token="a", refresh_token="r")
     app.dependency_overrides[get_cognito_client] = lambda: MockCognitoClient(tokens=tokens)
-    app.dependency_overrides[get_domain_validator] = lambda: MockDomainValidator(tenant_id="customer2")
 
     response = api_client.get(f"/callback?code=valid-code&state={SAMPLE_STATE}")
 
     assert response.status_code == 403
+    app.dependency_overrides.clear()
+
+
+def test_callback_returns_400_when_token_has_no_tenant_id(api_client):
+    import jwt as _jwt
+    from app.cognito import CognitoTokens
+    from tests.conftest import MockCognitoClient
+
+    no_tenant_token = _jwt.encode(
+        {"sub": "user-789", "email": "user@other.com"},
+        "any-secret-long-enough-for-hs256-hmac-key",
+        algorithm="HS256",
+    )
+    tokens = CognitoTokens(id_token=no_tenant_token, access_token="a", refresh_token="r")
+    app.dependency_overrides[get_cognito_client] = lambda: MockCognitoClient(tokens=tokens)
+
+    response = api_client.get(f"/callback?code=valid-code&state={SAMPLE_STATE}")
+
+    assert response.status_code == 400
     app.dependency_overrides.clear()
