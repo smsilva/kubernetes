@@ -1,3 +1,4 @@
+import logging
 import os
 from functools import lru_cache
 
@@ -6,6 +7,10 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 
 from .models import TenantConfig
 from .repository import DynamoDBTenantRepository
+
+_log_level = getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)
+logging.basicConfig(level=_log_level)
+logging.getLogger().setLevel(_log_level)
 
 app = FastAPI(title="Discovery Service", version="1.0.0")
 

@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -8,6 +9,10 @@ from fastapi.templating import Jinja2Templates
 
 from .auth import build_cognito_authorize_url, build_state_token
 from .discovery_client import DiscoveryClient, TenantInfo
+
+_log_level = getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)
+logging.basicConfig(level=_log_level)
+logging.getLogger().setLevel(_log_level)
 
 app = FastAPI(title="Platform Frontend", version="1.0.0")
 

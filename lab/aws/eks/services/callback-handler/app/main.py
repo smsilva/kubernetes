@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -10,6 +11,10 @@ from starlette.requests import Request
 
 from .cognito import CognitoClient, CognitoTokenExchangeError
 from .state import InvalidStateError, decode_state_token
+
+_log_level = getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)
+logging.basicConfig(level=_log_level)
+logging.getLogger().setLevel(_log_level)
 
 app = FastAPI(title="Callback Handler", version="1.0.0")
 
