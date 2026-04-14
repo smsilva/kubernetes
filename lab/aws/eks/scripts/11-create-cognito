@@ -275,7 +275,11 @@ app_client_secret=$(
 )
 
 secrets_file="$(dirname "$0")/env.secrets"
-sed -i "s|^COGNITO_CLIENT_SECRET_CUSTOMER1=.*|COGNITO_CLIENT_SECRET_CUSTOMER1=\"${app_client_secret}\"|" "${secrets_file}"
+if grep -q "^COGNITO_CLIENT_SECRET_CUSTOMER1=" "${secrets_file}"; then
+  sed -i "s|^COGNITO_CLIENT_SECRET_CUSTOMER1=.*|COGNITO_CLIENT_SECRET_CUSTOMER1=\"${app_client_secret}\"|" "${secrets_file}"
+else
+  echo "COGNITO_CLIENT_SECRET_CUSTOMER1=\"${app_client_secret}\"" >> "${secrets_file}"
+fi
 echo "COGNITO_CLIENT_SECRET_CUSTOMER1 salvo em env.secrets"
 
 # =============================================================================

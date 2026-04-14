@@ -104,7 +104,7 @@ fi
 if [[ "${mode}" == "--create" ]]; then
   section "Secrets (modo create)"
 
-  for var in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET STATE_JWT_SECRET; do
+  for var in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
     val="${!var:-}"
     if [[ -n "${val}" ]]; then
       ok "${var} definida"
@@ -112,6 +112,16 @@ if [[ "${mode}" == "--create" ]]; then
       fail "${var} não definida ou vazia — preencher em env.secrets"
     fi
   done
+
+  if [[ -z "${STATE_JWT_SECRET:-}" ]]; then
+    generated=$(openssl rand -hex 32)
+    export STATE_JWT_SECRET="${generated}"
+    echo "" >> "${secrets_file}"
+    echo "STATE_JWT_SECRET=\"${generated}\"" >> "${secrets_file}"
+    ok "STATE_JWT_SECRET gerada e persistida em env.secrets"
+  else
+    ok "STATE_JWT_SECRET definida"
+  fi
 fi
 
 # =============================================================================

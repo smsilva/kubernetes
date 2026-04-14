@@ -171,7 +171,11 @@ app_client_secret=$(
     --query 'UserPoolClient.ClientSecret' \
     --output text
 )
-sed -i "s|^COGNITO_CLIENT_SECRET_CUSTOMER2=.*|COGNITO_CLIENT_SECRET_CUSTOMER2=\"${app_client_secret}\"|" "${secrets_file}"
+if grep -q "^COGNITO_CLIENT_SECRET_CUSTOMER2=" "${secrets_file}"; then
+  sed -i "s|^COGNITO_CLIENT_SECRET_CUSTOMER2=.*|COGNITO_CLIENT_SECRET_CUSTOMER2=\"${app_client_secret}\"|" "${secrets_file}"
+else
+  echo "COGNITO_CLIENT_SECRET_CUSTOMER2=\"${app_client_secret}\"" >> "${secrets_file}"
+fi
 echo "COGNITO_CLIENT_SECRET_CUSTOMER2 salvo em env.secrets"
 
 # =============================================================================
