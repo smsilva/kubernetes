@@ -233,11 +233,33 @@ spec:
   gateways:
     - customer2-gateway
   http:
+    - match:
+        - uri:
+            prefix: /httpbin
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: httpbin
+            port:
+              number: 8000
     - route:
         - destination:
             host: tenant-frontend
             port:
               number: 8000
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-health-check
+  namespace: customer2
+spec:
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths: ["/health"]
 ---
 apiVersion: security.istio.io/v1beta1
 kind: RequestAuthentication
