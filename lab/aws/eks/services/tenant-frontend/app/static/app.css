@@ -614,8 +614,9 @@ body {
   letter-spacing: .3px;
   text-transform: uppercase;
 }
-.badge-ok   { background: #e6f4ea; color: #1e7e34; }
-.badge-deny { background: #fce8e6; color: #c5221f; }
+.badge-ok      { background: #e6f4ea; color: #1e7e34; }
+.badge-deny    { background: #fce8e6; color: #c5221f; }
+.badge-running { background: var(--color-surface-2); color: var(--color-secondary); }
 
 .result-pass {
   display: flex;
@@ -672,6 +673,23 @@ body {
 
 .copy-btn:hover { background: var(--color-outline-dim); color: var(--color-on-surface); }
 .copy-btn-ok { color: #34a853 !important; }
+
+/* ── Accordion group separator ───────────────── */
+.group-separator {
+  padding: 5px 16px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--color-outline);
+  background: var(--color-surface-2);
+  border-top: 1px solid var(--color-outline-dim);
+  user-select: none;
+}
+
+.group-separator:first-child {
+  border-top: none;
+}
 
 /* ── Results summary ──────────────────────────── */
 .results-summary {

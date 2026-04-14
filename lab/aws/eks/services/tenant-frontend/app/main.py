@@ -94,7 +94,7 @@ async def test_page(request: Request):
         parts.append(f"  '{url}'")
         return " \\\n".join(parts)
 
-    def _entry(label, result, expected, *, with_jwt: bool = True):
+    def _entry(label, result, expected, *, with_jwt: bool = True, group: str = ""):
         return {
             "label":       label,
             "url":         result["url"],
@@ -104,14 +104,15 @@ async def test_page(request: Request):
             "error":       result["error"],
             "passed":      result["status_code"] == expected,
             "curl_cmd":    _build_curl(result["url"], with_jwt=with_jwt),
+            "group":       group,
         }
 
     test_results = [
-        _entry("httpbin",           httpbin_r,  200),
-        _entry("customer1-health",  c1_health,  200, with_jwt=False),
-        _entry("customer2-health",  c2_health,  200, with_jwt=False),
-        _entry("customer1-httpbin", c1_httpbin, 200 if tenant_id == "customer1" else 403),
-        _entry("customer2-httpbin", c2_httpbin, 200 if tenant_id == "customer2" else 403),
+        _entry("httpbin",           httpbin_r,  200,                                       group="Own Tenant"),
+        _entry("customer1-health",  c1_health,  200, with_jwt=False,                       group="Own Tenant" if tenant_id == "customer1" else "Cross-Tenant"),
+        _entry("customer2-health",  c2_health,  200, with_jwt=False,                       group="Cross-Tenant" if tenant_id == "customer1" else "Own Tenant"),
+        _entry("customer1-httpbin", c1_httpbin, 200 if tenant_id == "customer1" else 403,  group="Own Tenant" if tenant_id == "customer1" else "Cross-Tenant"),
+        _entry("customer2-httpbin", c2_httpbin, 200 if tenant_id == "customer2" else 403,  group="Cross-Tenant" if tenant_id == "customer1" else "Own Tenant"),
     ]
 
     passed_count = sum(1 for t in test_results if t["passed"])

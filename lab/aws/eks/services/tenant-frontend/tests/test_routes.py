@@ -182,6 +182,36 @@ def test_test_page_has_results_summary(authenticated_client, httpx_mock: HTTPXMo
     assert "passed" in body
 
 
+def test_test_page_badge_has_id_for_dynamic_update(authenticated_client, httpx_mock: HTTPXMock):
+    """Each badge must have id='badge-<label>' so JS can update it after running."""
+    import re
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    body = response.text
+    badge_ids = re.findall(r'id="badge-([^"]+)"', body)
+    assert set(badge_ids) == {"httpbin", "customer1-health", "customer2-health", "customer1-httpbin", "customer2-httpbin"}
+
+
+def test_test_page_has_group_separators(authenticated_client, httpx_mock: HTTPXMock):
+    """Page must render group separator rows with Own Tenant and Cross-Tenant labels."""
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    body = response.text
+    assert "group-separator" in body
+    assert "Own Tenant" in body
+    assert "Cross-Tenant" in body
+
+
+def test_test_page_group_order(authenticated_client, httpx_mock: HTTPXMock):
+    """Own Tenant group must appear before Cross-Tenant group in the HTML."""
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    body = response.text
+    own_pos = body.index("Own Tenant")
+    cross_pos = body.index("Cross-Tenant")
+    assert own_pos < cross_pos
+
+
 def test_test_run_forwards_jwt_as_bearer(authenticated_client, httpx_mock: HTTPXMock):
     """GET /test/run must forward the session cookie as Authorization: Bearer to the target URL."""
     received_headers = {}
