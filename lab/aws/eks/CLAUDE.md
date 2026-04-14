@@ -220,3 +220,7 @@ Pipe (`|`) e heredoc (`<<EOF`) disputam o stdin. O heredoc vence. Gravar a vari�
 Durante a execução dos scripts do lab, faça anotações no arquivo lab/aws/eks/docs/notes.md para registrar aprendizados, decisões, problemas encontrados e soluções aplicadas. Essas notas serão valiosas para futuras sessões de desenvolvimento, troubleshooting e para enriquecer a documentação do projeto.
 
 Anote também sempre que precisar tirar uma dúvida durante a execução dos scripts, para que possamos discutir e esclarecer esses pontos em sessões futuras.
+
+Qualquer alteração no código ou nas configurações usadas pelos serviços, deve ser primeiramente coberta com testes automatizados.
+
+Alterações sempre com TDD.
