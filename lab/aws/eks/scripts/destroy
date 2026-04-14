@@ -26,8 +26,16 @@ fi
 az_zone="${domain}"
 
 # =============================================================================
-# 1. Sample app
+# 1. Tenant apps (customer1, customer2) + sample app
 # =============================================================================
+echo "Removendo tenant apps (tenant-frontend, httpbin) dos namespaces customer1 e customer2..."
+for ns in customer1 customer2; do
+  kubectl -n "${ns}" delete deployment tenant-frontend httpbin --ignore-not-found 2>/dev/null || true
+  kubectl -n "${ns}" delete service tenant-frontend httpbin --ignore-not-found 2>/dev/null || true
+  kubectl -n "${ns}" delete configmap tenant-frontend-config --ignore-not-found 2>/dev/null || true
+  kubectl delete namespace "${ns}" --ignore-not-found 2>/dev/null || true
+done
+
 echo "Removendo sample app..."
 kubectl delete namespace sample --ignore-not-found 2>/dev/null || true
 

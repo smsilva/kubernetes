@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Home — WASP Platform{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="home-hero">
+    <div class="avatar" aria-hidden="true">{{ name[0] | upper }}</div>
+    <h1 class="home-title">Welcome back, {{ name }}</h1>
+    <p class="home-subtitle">
+      Signed in to <strong>{{ tenant_id }}</strong>
+      {% if email %}&nbsp;·&nbsp;{{ email }}{% endif %}
+    </p>
+    <div class="home-actions">
+      <a href="/test"    class="btn-filled">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M8 5v14l11-7z" fill="currentColor"/>
+        </svg>
+        Run HTTP test
+      </a>
+      <a href="/profile" class="btn-outlined">View profile</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

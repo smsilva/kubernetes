@@ -1,5 +1,5 @@
 #!/bin/bash
-# Passo 13: Build, push para Docker Hub e deploy dos três serviços + namespace customer1
+# Passo 13: Build, push para Docker Hub e deploy dos três serviços + namespaces customer1 + tenant-frontend
 
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
@@ -19,6 +19,7 @@ image_tag="$(git -C "${services_dir}" rev-parse --short HEAD)"
 container_image_discovery="silviosilva/wasp-discovery:${image_tag}"
 container_image_platform_frontend="silviosilva/wasp-platform-frontend:${image_tag}"
 container_image_callback_handler="silviosilva/wasp-callback-handler:${image_tag}"
+container_image_tenant_frontend="silviosilva/wasp-tenant-frontend:${image_tag}"
 
 # =============================================================================
 # Validação
@@ -55,9 +56,10 @@ declare -A service_images=(
   [discovery]="${container_image_discovery}"
   [platform-frontend]="${container_image_platform_frontend}"
   [callback-handler]="${container_image_callback_handler}"
+  [tenant-frontend]="${container_image_tenant_frontend}"
 )
 
-for svc in discovery platform-frontend callback-handler; do
+for svc in discovery platform-frontend callback-handler tenant-frontend; do
   echo "Build: ${svc}..."
   docker build \
     --platform linux/amd64 \
@@ -479,7 +481,7 @@ spec:
 EOF
 
 # =============================================================================
-# Deploy: customer1 (httpbin como app de teste)
+# Deploy: customer1 (tenant-frontend + httpbin como backend interno)
 # =============================================================================
 echo "Deploying: customer1..."
 
@@ -492,6 +494,7 @@ metadata:
   labels:
     istio-injection: enabled
 ---
+# httpbin: backend interno acessado apenas pelo tenant-frontend via HTTPBIN_URL
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -525,6 +528,53 @@ spec:
     - port: 8000
       targetPort: 80
 ---
+# tenant-frontend: app principal exposta externamente
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenant-frontend-config
+  namespace: customer1
+data:
+  HTTPBIN_URL: "http://httpbin:8000"
+  PLATFORM_URL: "https://${domain}"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-frontend
+  namespace: customer1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tenant-frontend
+  template:
+    metadata:
+      labels:
+        app: tenant-frontend
+    spec:
+      containers:
+        - name: tenant-frontend
+          image: ${container_image_tenant_frontend}
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: tenant-frontend-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenant-frontend
+  namespace: customer1
+spec:
+  selector:
+    app: tenant-frontend
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
@@ -554,7 +604,7 @@ spec:
   http:
     - route:
         - destination:
-            host: httpbin
+            host: tenant-frontend
             port:
               number: 8000
 EOF
@@ -564,7 +614,7 @@ EOF
 # =============================================================================
 echo "Aguardando deployments..."
 
-for ns_deploy in discovery/discovery platform/platform-frontend auth/callback-handler customer1/httpbin; do
+for ns_deploy in discovery/discovery platform/platform-frontend auth/callback-handler customer1/httpbin customer1/tenant-frontend; do
   ns="${ns_deploy%%/*}"
   deploy="${ns_deploy##*/}"
   kubectl -n "${ns}" wait deployment/"${deploy}" \
@@ -587,14 +637,14 @@ done
 
 echo ""
 echo "Pods:"
-kubectl get pods -A -l 'app in (discovery,platform-frontend,callback-handler,httpbin)'
+kubectl get pods -A -l 'app in (discovery,platform-frontend,callback-handler,httpbin,tenant-frontend)'
 
 echo ""
 echo "Endpoints disponíveis:"
 echo "  https://${domain}                       → platform-frontend"
 echo "  https://discovery.${domain}/health      → discovery"
 echo "  https://auth.${domain}/health           → callback-handler"
-echo "  https://customer1.${domain}             → httpbin (requer JWT após passo 14)"
+echo "  https://customer1.${domain}             → tenant-frontend (requer JWT após passo 14)"
 echo ""
 echo "Próximo passo: scripts/14-configure-istio-auth"
 echo "  Configura RequestAuthentication e AuthorizationPolicy no namespace customer1"

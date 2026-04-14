@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Profile — WASP Platform{% endblock %}
+{% block nav_profile %}active{% endblock %}
+
+{% block content %}
+<div class="card">
+
+  <div class="section-header mb-24">
+    <span class="section-title">Identity claims</span>
+  </div>
+
+  <table class="claims-table">
+    <thead>
+      <tr>
+        <th>Claim</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for key, value in priority_claims %}
+      <tr class="claim-row-primary">
+        <td class="claim-key">{{ key }}</td>
+        <td class="claim-value">{{ value }}</td>
+      </tr>
+      {% endfor %}
+      {% for key, value in other_claims %}
+      <tr class="claim-row-other">
+        <td class="claim-key">{{ key }}</td>
+        <td class="claim-value">{{ value }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>
+{% endblock %}

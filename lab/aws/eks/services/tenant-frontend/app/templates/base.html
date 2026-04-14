@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}WASP Platform{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">
+      <svg width="32" height="32" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M22 3L40 13V31L22 41L4 31V13L22 3Z" fill="#1A73E8"/>
+        <path d="M13 16L17.5 28L22 19.5L26.5 28L31 16" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="navbar-brand-name">WASP Platform</span>
+      {% if tenant_id %}
+        <span class="navbar-brand-tenant">{{ tenant_id }}</span>
+      {% endif %}
+    </a>
+
+    <div class="navbar-links">
+      <a href="/"        class="nav-link {% block nav_home %}{% endblock %}">Home</a>
+      <a href="/test"    class="nav-link {% block nav_test %}{% endblock %}">Test</a>
+      <a href="/profile" class="nav-link {% block nav_profile %}{% endblock %}">Profile</a>
+      <div class="nav-divider"></div>
+      <a href="/logout" class="nav-logout">Logout</a>
+    </div>
+
+    <!-- Theme toggle -->
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+      <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/>
+      </svg>
+      <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7zM2 13h2M20 13h2M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Page content -->
+  <main class="page">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    // ── Theme toggle ──────────────────────────────
+    const html = document.documentElement;
+    const saved = localStorage.getItem('wasp-theme');
+    if (saved) html.dataset.theme = saved;
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+      html.dataset.theme = next;
+      localStorage.setItem('wasp-theme', next);
+    });
+
+    // ── Ripple effect ─────────────────────────────
+    document.querySelectorAll('.btn-filled, .btn-outlined').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const r = document.createElement('span');
+        r.className = 'ripple';
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+        btn.appendChild(r);
+        r.addEventListener('animationend', () => r.remove());
+      });
+    });
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -26,6 +26,7 @@ services_dir="${scripts_dir}/../services"
 image_tag="$(git -C "${services_dir}" rev-parse --short HEAD)"
 container_image_platform_frontend="silviosilva/wasp-platform-frontend:${image_tag}"
 container_image_callback_handler="silviosilva/wasp-callback-handler:${image_tag}"
+container_image_tenant_frontend="silviosilva/wasp-tenant-frontend:${image_tag}"
 
 # =============================================================================
 # Validação
@@ -55,9 +56,9 @@ echo "customer2 App Client ID: ${customer2_app_client_id}"
 
 # =============================================================================
 # Build e push das imagens atualizadas
-# Apenas platform-frontend e callback-handler mudaram (discovery não alterado)
+# Apenas platform-frontend, callback-handler e tenant-frontend (discovery não alterado)
 # =============================================================================
-for svc in platform-frontend callback-handler; do
+for svc in platform-frontend callback-handler tenant-frontend; do
   echo "Build: ${svc}..."
   docker build \
     --platform linux/amd64 \
@@ -106,7 +107,7 @@ echo "Aguardando rollout do platform-frontend..."
 kubectl -n platform rollout status deployment/platform-frontend --timeout=180s
 
 # =============================================================================
-# Deploy: customer2 (httpbin como app de teste)
+# Deploy: customer2 (tenant-frontend + httpbin como backend interno)
 # =============================================================================
 echo "Deploying: customer2..."
 
@@ -122,6 +123,7 @@ metadata:
   labels:
     istio-injection: enabled
 ---
+# httpbin: backend interno acessado apenas pelo tenant-frontend via HTTPBIN_URL
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -155,6 +157,53 @@ spec:
     - port: 8000
       targetPort: 80
 ---
+# tenant-frontend: app principal exposta externamente
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenant-frontend-config
+  namespace: customer2
+data:
+  HTTPBIN_URL: "http://httpbin:8000"
+  PLATFORM_URL: "https://${domain}"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-frontend
+  namespace: customer2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tenant-frontend
+  template:
+    metadata:
+      labels:
+        app: tenant-frontend
+    spec:
+      containers:
+        - name: tenant-frontend
+          image: ${container_image_tenant_frontend}
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: tenant-frontend-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenant-frontend
+  namespace: customer2
+spec:
+  selector:
+    app: tenant-frontend
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
@@ -184,7 +233,7 @@ spec:
   http:
     - route:
         - destination:
-            host: httpbin
+            host: tenant-frontend
             port:
               number: 8000
 ---
@@ -218,12 +267,15 @@ spec:
 EOF
 
 # =============================================================================
-# Aguarda deployment ficar pronto
+# Aguarda deployments ficarem prontos
 # =============================================================================
-echo "Aguardando deployment customer2/httpbin..."
-kubectl -n customer2 wait deployment/httpbin \
-  --for condition=Available \
-  --timeout=180s
+echo "Aguardando deployments customer2..."
+for deploy in httpbin tenant-frontend; do
+  kubectl -n customer2 wait deployment/"${deploy}" \
+    --for condition=Available \
+    --timeout=180s
+  echo "  customer2/${deploy}: pronto"
+done
 
 # =============================================================================
 # Verificação

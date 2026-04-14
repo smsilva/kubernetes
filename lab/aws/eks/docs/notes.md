@@ -149,10 +149,12 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
   retornar mensagem de erro estruturada. `DynamoDBTenantRepository.find_by_domain` captura `ClientError`,
   loga code+message e relança; rota `/tenant` converte em HTTP 503 com `detail: "DynamoDB error (<code>):
   service temporarily unavailable"`. 24 testes passando.
-- [ ] **UI — melhorias de UX**: após login bem-sucedido, o usuário é redirecionado direto para o
-  httpbin do tenant (`customer1.wasp.silvios.me`). Não há página de boas-vindas. Melhorias:
-  criar landing page por tenant com nome do usuário (claim `name` do JWT no cookie `session`),
-  link para `/get` e link de logout. Requer novo template ou serviço por namespace de tenant.
+- [x] **UI — melhorias de UX**: criado serviço `tenant-frontend` (FastAPI + Jinja2) nos namespaces
+  `customer1` e `customer2`. Substitui o httpbin como app principal exposta externamente; httpbin
+  permanece como backend interno acessado via `HTTPBIN_URL`. Rotas: `/` (home com avatar e
+  boas-vindas), `/test` (GET httpbin com JSON syntax-highlight e error box), `/profile` (claims
+  do JWT em tabela), `/logout` (deleta cookie `session`, redireciona para `PLATFORM_URL`).
+  Scripts 13 e 17 atualizados com build/push/deploy. 13 testes passando.
 - [ ] **Nomes expressivos para recursos de rede**: script 01 já nomeia todos os recursos com prefixo
   `${cluster_name}` (ex: `wasp-calm-crow-ndx4-vpc`). O problema é o sufixo aleatório gerado pelo
   eksctl, que muda a cada recriação do cluster. Avaliar usar `cluster_name` fixo em `env.conf`
@@ -189,6 +191,11 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 - [ ] **Links para scripts no mkdocs**: `operacoes/passo-a-passo.md` é o lugar natural para
   acrescentar links diretos aos scripts em `scripts/`. Atualmente o mkdocs não referencia
   os arquivos de script.
+
+- [ ] **CDN para assets frontend compartilhados**: `app.css`, logo SVG e JS de theme toggle são
+  duplicados entre `platform-frontend`, `callback-handler` e `tenant-frontend`. Avaliar servir
+  via S3+CloudFront ou nginx estático compartilhado no cluster. Por enquanto, cada serviço
+  carrega sua cópia local.
 
 - [ ] **Provisionar EKS com CNI Cillium em ENI (Elastic Network Interface) mode**: Ativado com IPAM (IP Address Management).
 
