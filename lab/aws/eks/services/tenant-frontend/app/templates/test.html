@@ -6,70 +6,146 @@
 <div class="card">
 
   <div class="section-header">
-    <span class="section-title">GET <span class="url-text">{{ httpbin_url }}</span></span>
-    <a href="/test" class="btn-outlined">
+    <span class="section-title">Isolation Tests</span>
+    <button id="run-all-btn" class="btn-outlined" onclick="runAll()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
       </svg>
-      Run again
-    </a>
+      Run all
+    </button>
   </div>
 
-  {% if result_json %}
-    <!-- Success: syntax-highlighted JSON viewer -->
-    <div class="code-fence">
-      <pre id="json-output"></pre>
-    </div>
+  <div class="test-grid">
+    {% for t in test_results %}
+    <div class="test-card" id="card-{{ t.label }}">
 
-  {% elif error %}
-    <!-- Error box -->
-    <div class="error-box">
-      <div class="error-box-header">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
-        </svg>
-        <span class="error-box-title">Request failed</span>
+      <div class="test-card-header">
+        <span class="test-label">{{ t.label }}</span>
+        <button class="btn-outlined btn-sm" onclick="runSingle('{{ t.label }}', '{{ t.url }}', {{ t.expected }})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+          </svg>
+          Run
+        </button>
       </div>
-      <div class="error-box-detail">{{ error }}</div>
-      <div class="error-box-actions">
-        <a href="/test" class="btn-outlined">Try again</a>
+
+      <div class="test-card-url">
+        <span class="test-method">GET</span>
+        <span class="url-text">{{ t.url }}</span>
       </div>
+
+      <div class="test-card-expected">
+        Expected: <strong>HTTP {{ t.expected }}</strong>
+        {% if t.expected == 200 %}
+          <span class="badge badge-ok">allowed</span>
+        {% else %}
+          <span class="badge badge-deny">denied</span>
+        {% endif %}
+      </div>
+
+      <div class="test-card-result" id="result-{{ t.label }}">
+        {% if t.passed is not none %}
+          {% if t.passed %}
+            <div class="result-pass">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>
+              </svg>
+              HTTP {{ t.status_code }} — passed
+            </div>
+          {% else %}
+            <div class="result-fail">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/>
+              </svg>
+              {% if t.status_code %}HTTP {{ t.status_code }}{% else %}{{ t.error }}{% endif %} — failed
+            </div>
+          {% endif %}
+          {% if t.result_json %}
+            <div class="code-fence code-fence-sm">
+              <pre id="json-{{ t.label }}"></pre>
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+
     </div>
-  {% endif %}
+    {% endfor %}
+  </div>
 
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  const raw = {{ result_json | tojson if result_json else 'null' }};
-  if (raw !== null) {
-    document.getElementById('json-output').innerHTML = syntaxHighlight(raw);
-  }
-
+  // ── Syntax highlighter ────────────────────────────────────────────────────
   function syntaxHighlight(jsonStr) {
-    // Tokenize and wrap each token in a span
     return jsonStr.replace(
       /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
       function(match) {
         let cls = 'json-number';
-        if (/^"/.test(match)) {
-          cls = /:$/.test(match) ? 'json-key' : 'json-string';
-        } else if (/true|false/.test(match)) {
-          cls = 'json-bool';
-        } else if (/null/.test(match)) {
-          cls = 'json-null';
-        }
+        if (/^"/.test(match)) cls = /:$/.test(match) ? 'json-key' : 'json-string';
+        else if (/true|false/.test(match)) cls = 'json-bool';
+        else if (/null/.test(match)) cls = 'json-null';
         return `<span class="${cls}">${escapeHtml(match)}</span>`;
       }
     );
   }
 
   function escapeHtml(s) {
-    return s
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Initial render of server-side JSON results ────────────────────────────
+  const initialResults = {{ test_results | tojson }};
+  initialResults.forEach(t => {
+    if (t.result_json) {
+      const el = document.getElementById(`json-${t.label}`);
+      if (el) el.innerHTML = syntaxHighlight(t.result_json);
+    }
+  });
+
+  // ── Run single test via fetch ─────────────────────────────────────────────
+  async function runSingle(label, url, expected) {
+    const resultEl = document.getElementById(`result-${label}`);
+    resultEl.innerHTML = '<span class="test-running">Running…</span>';
+
+    try {
+      const resp = await fetch(`/test/run?url=${encodeURIComponent(url)}&expected=${expected}`);
+      const data = await resp.json();
+      renderResult(label, data);
+    } catch (e) {
+      resultEl.innerHTML = `<div class="result-fail">Fetch error: ${escapeHtml(String(e))}</div>`;
+    }
+  }
+
+  // ── Run all tests in parallel ─────────────────────────────────────────────
+  async function runAll() {
+    const btn = document.getElementById('run-all-btn');
+    btn.disabled = true;
+    const promises = initialResults.map(t =>
+      fetch(`/test/run?url=${encodeURIComponent(t.url)}&expected=${t.expected}`)
+        .then(r => r.json())
+        .then(data => renderResult(t.label, data))
+        .catch(e => {
+          document.getElementById(`result-${t.label}`).innerHTML =
+            `<div class="result-fail">Fetch error: ${escapeHtml(String(e))}</div>`;
+        })
+    );
+    await Promise.all(promises);
+    btn.disabled = false;
+  }
+
+  // ── Render a result dict into the DOM ─────────────────────────────────────
+  function renderResult(label, t) {
+    const el = document.getElementById(`result-${label}`);
+    const passed = t.status_code === t.expected;
+    let html = passed
+      ? `<div class="result-pass">✓ HTTP ${t.status_code} — passed</div>`
+      : `<div class="result-fail">✗ ${t.status_code ? 'HTTP ' + t.status_code : t.error} — failed</div>`;
+    if (t.result_json) {
+      html += `<div class="code-fence code-fence-sm"><pre>${syntaxHighlight(t.result_json)}</pre></div>`;
+    }
+    el.innerHTML = html;
   }
 </script>
 {% endblock %}

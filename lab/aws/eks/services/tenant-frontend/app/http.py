@@ -22,10 +22,14 @@ async def fetch_url(url: str, timeout: float = 10.0) -> dict:
             resp = await client.get(url)
 
         if resp.status_code == 200:
+            try:
+                result_json = json.dumps(resp.json(), indent=2)
+            except Exception:
+                result_json = None
             return {
                 "url": url,
                 "status_code": resp.status_code,
-                "result_json": json.dumps(resp.json(), indent=2),
+                "result_json": result_json,
                 "error": None,
             }
 

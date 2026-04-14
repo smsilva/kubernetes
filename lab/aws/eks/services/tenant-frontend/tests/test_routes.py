@@ -37,12 +37,18 @@ def test_test_page_redirects_when_no_session(api_client):
     assert response.status_code == 302
 
 
+def _mock_all_test_urls(httpx_mock: HTTPXMock, *, httpbin_status=200, c1_status=200, c2_status=403):
+    """Register mock responses for all 3 URLs used by /test."""
+    if httpbin_status == 200:
+        httpx_mock.add_response(url="http://httpbin-mock:8000/get", json=SAMPLE_HTTPBIN_RESPONSE, status_code=200)
+    else:
+        httpx_mock.add_response(url="http://httpbin-mock:8000/get", status_code=httpbin_status, text="error")
+    httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/", status_code=c1_status, text="ok" if c1_status == 200 else "RBAC: access denied")
+    httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/", status_code=c2_status, text="ok" if c2_status == 200 else "RBAC: access denied")
+
+
 def test_test_page_shows_json_on_success(authenticated_client, httpx_mock: HTTPXMock):
-    httpx_mock.add_response(
-        url="http://httpbin-mock:8000/get",
-        json=SAMPLE_HTTPBIN_RESPONSE,
-        status_code=200,
-    )
+    _mock_all_test_urls(httpx_mock)
     response = authenticated_client.get("/test")
     assert response.status_code == 200
     body = response.text
@@ -51,23 +57,14 @@ def test_test_page_shows_json_on_success(authenticated_client, httpx_mock: HTTPX
 
 
 def test_test_page_url_preserves_lowercase(authenticated_client, httpx_mock: HTTPXMock):
-    httpx_mock.add_response(
-        url="http://httpbin-mock:8000/get",
-        json=SAMPLE_HTTPBIN_RESPONSE,
-        status_code=200,
-    )
+    _mock_all_test_urls(httpx_mock)
     response = authenticated_client.get("/test")
     body = response.text
-    # URL must appear as-is, not uppercased by CSS class on the wrapping element
     assert 'text-transform: none' in body or 'url-text' in body
 
 
 def test_test_page_shows_error_on_httpbin_non_200(authenticated_client, httpx_mock: HTTPXMock):
-    httpx_mock.add_response(
-        url="http://httpbin-mock:8000/get",
-        status_code=503,
-        text="Service Unavailable",
-    )
+    _mock_all_test_urls(httpx_mock, httpbin_status=503)
     response = authenticated_client.get("/test")
     assert response.status_code == 200
     body = response.text
@@ -75,14 +72,32 @@ def test_test_page_shows_error_on_httpbin_non_200(authenticated_client, httpx_mo
 
 
 def test_test_page_shows_error_on_httpbin_connection_failure(authenticated_client, httpx_mock: HTTPXMock):
-    httpx_mock.add_exception(
-        httpx.ConnectError("connection refused"),
-        url="http://httpbin-mock:8000/get",
-    )
+    httpx_mock.add_exception(httpx.ConnectError("connection refused"), url="http://httpbin-mock:8000/get")
+    httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/", status_code=403, text="RBAC: access denied")
+    httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/", status_code=403, text="RBAC: access denied")
     response = authenticated_client.get("/test")
     assert response.status_code == 200
     body = response.text
-    assert "error" in body.lower() or "Error" in body
+    assert "connection" in body.lower()
+
+
+def test_test_page_shows_three_test_results(authenticated_client, httpx_mock: HTTPXMock):
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    assert response.status_code == 200
+    body = response.text
+    assert "httpbin-mock:8000" in body
+    assert "customer1-mock" in body
+    assert "customer2-mock" in body
+
+
+def test_test_page_shows_expected_outcome_per_test(authenticated_client, httpx_mock: HTTPXMock):
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    body = response.text
+    # httpbin test expects 200; cross-tenant tests expect 403
+    assert "200" in body
+    assert "403" in body
 
 
 # ── Profile (/profile) ───────────────────────────────────────────────────────

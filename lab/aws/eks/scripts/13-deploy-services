@@ -537,6 +537,8 @@ metadata:
 data:
   HTTPBIN_URL: "https://httpbin.${domain}"
   PLATFORM_URL: "https://${domain}"
+  CUSTOMER1_URL: "https://customer1.${domain}"
+  CUSTOMER2_URL: "https://customer2.${domain}"
   LOG_LEVEL: "INFO"
 ---
 apiVersion: apps/v1

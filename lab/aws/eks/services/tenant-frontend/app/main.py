@@ -1,9 +1,10 @@
+import asyncio
 import logging
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, Query, Request
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -20,6 +21,8 @@ _logger = logging.getLogger(__name__)
 # ── Config ───────────────────────────────────────────────────────────────────
 HTTPBIN_URL = os.getenv("HTTPBIN_URL", "http://httpbin:8000")
 PLATFORM_URL = os.getenv("PLATFORM_URL", "https://wasp.silvios.me")
+CUSTOMER1_URL = os.getenv("CUSTOMER1_URL", "https://customer1.wasp.silvios.me")
+CUSTOMER2_URL = os.getenv("CUSTOMER2_URL", "https://customer2.wasp.silvios.me")
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="WASP Tenant Frontend", version="1.0.0")
@@ -68,19 +71,54 @@ async def test_page(request: Request):
     if claims is None:
         return RedirectResponse(url=PLATFORM_URL, status_code=302)
 
-    result = await fetch_url(f"{HTTPBIN_URL}/get")
+    tenant_id = claims.get("custom:tenant_id", "")
+
+    tests = [
+        {"label": "httpbin",   "url": f"{HTTPBIN_URL}/get", "expected": 200},
+        {"label": "customer1", "url": f"{CUSTOMER1_URL}/",  "expected": 200 if tenant_id == "customer1" else 403},
+        {"label": "customer2", "url": f"{CUSTOMER2_URL}/",  "expected": 200 if tenant_id == "customer2" else 403},
+    ]
+
+    results = await asyncio.gather(*[fetch_url(t["url"]) for t in tests])
+
+    test_results = [
+        {
+            "label":    t["label"],
+            "url":      r["url"],
+            "expected": t["expected"],
+            "status_code": r["status_code"],
+            "result_json": r["result_json"],
+            "error":    r["error"],
+            "passed":   r["status_code"] == t["expected"],
+        }
+        for t, r in zip(tests, results)
+    ]
 
     return templates.TemplateResponse(
         request=request,
         name="test.html",
         context={
-            "result_json": result["result_json"],
-            "error": result["error"],
-            "httpbin_url": result["url"],
+            "test_results": test_results,
             "name": claims.get("name", "User"),
-            "tenant_id": claims.get("custom:tenant_id", ""),
+            "tenant_id": tenant_id,
         },
     )
+
+
+@app.get("/test/run")
+async def test_run(
+    request: Request,
+    url: str = Query(...),
+    expected: int = Query(...),
+):
+    """JSON endpoint used by the frontend JS to re-run a single test."""
+    claims = _require_session(request)
+    if claims is None:
+        return JSONResponse({"error": "unauthenticated"}, status_code=401)
+
+    result = await fetch_url(url)
+    result["expected"] = expected
+    return JSONResponse(result)
 
 
 @app.get("/profile")
