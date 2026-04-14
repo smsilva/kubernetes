@@ -93,3 +93,21 @@ def test_dynamodb_repository_propagates_client_error():
     import pytest
     with pytest.raises(ClientError):
         repository.find_by_domain("gmail.com")
+
+
+def test_dynamodb_repository_logs_client_error(caplog):
+    import logging
+    dynamodb_client = MagicMock()
+    dynamodb_client.get_item.side_effect = ClientError(
+        {"Error": {"Code": "AccessDeniedException", "Message": "User is not authorized"}},
+        "GetItem",
+    )
+
+    repository = DynamoDBTenantRepository(client=dynamodb_client, table_name="tenant-registry")
+
+    import pytest
+    with caplog.at_level(logging.ERROR, logger="app.repository"):
+        with pytest.raises(ClientError):
+            repository.find_by_domain("gmail.com")
+
+    assert any("AccessDeniedException" in r.message for r in caplog.records)

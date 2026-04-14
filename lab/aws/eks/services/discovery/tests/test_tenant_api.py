@@ -100,7 +100,7 @@ def test_get_tenant_returns_404_for_empty_domain(api_client):
     assert response.status_code == 404
 
 
-def test_get_tenant_returns_500_when_dynamodb_raises_client_error():
+def test_get_tenant_returns_503_with_structured_error_when_dynamodb_raises_client_error():
     from app.main import app, get_repository
     from app.repository import DynamoDBTenantRepository
 
@@ -116,4 +116,29 @@ def test_get_tenant_returns_500_when_dynamodb_raises_client_error():
     response = client.get("/tenant?domain=gmail.com")
 
     app.dependency_overrides.clear()
-    assert response.status_code == 500
+    assert response.status_code == 503
+    body = response.json()
+    assert "detail" in body
+    assert "DynamoDB" in body["detail"]
+
+
+def test_get_tenant_returns_503_with_structured_error_when_dynamodb_raises_access_denied():
+    from app.main import app, get_repository
+    from app.repository import DynamoDBTenantRepository
+
+    broken_repository = MagicMock(spec=DynamoDBTenantRepository)
+    broken_repository.find_by_domain.side_effect = ClientError(
+        {"Error": {"Code": "AccessDeniedException", "Message": "User is not authorized to perform: dynamodb:GetItem"}},
+        "GetItem",
+    )
+
+    app.dependency_overrides[get_repository] = lambda: broken_repository
+    client = TestClient(app, raise_server_exceptions=False)
+
+    response = client.get("/tenant?domain=gmail.com")
+
+    app.dependency_overrides.clear()
+    assert response.status_code == 503
+    body = response.json()
+    assert "detail" in body
+    assert "DynamoDB" in body["detail"]

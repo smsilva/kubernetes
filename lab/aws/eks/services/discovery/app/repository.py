@@ -1,4 +1,10 @@
+import logging
+
+from botocore.exceptions import ClientError
+
 from .models import TenantConfig
+
+_logger = logging.getLogger(__name__)
 
 
 class InMemoryTenantRepository:
@@ -15,10 +21,20 @@ class DynamoDBTenantRepository:
         self._table_name = table_name
 
     def find_by_domain(self, domain: str) -> TenantConfig | None:
-        response = self._client.get_item(
-            TableName=self._table_name,
-            Key={"pk": {"S": f"domain#{domain.lower()}"}},
-        )
+        try:
+            response = self._client.get_item(
+                TableName=self._table_name,
+                Key={"pk": {"S": f"domain#{domain.lower()}"}},
+            )
+        except ClientError as exc:
+            _logger.error(
+                "DynamoDB ClientError on GetItem table=%s domain=%s code=%s message=%s",
+                self._table_name,
+                domain,
+                exc.response["Error"]["Code"],
+                exc.response["Error"]["Message"],
+            )
+            raise
         item = response.get("Item")
         if not item:
             return None

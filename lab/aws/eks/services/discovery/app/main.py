@@ -3,6 +3,7 @@ import os
 from functools import lru_cache
 
 import boto3
+from botocore.exceptions import ClientError
 from fastapi import Depends, FastAPI, HTTPException, Query
 
 from .models import TenantConfig
@@ -33,7 +34,14 @@ def get_tenant_by_domain(
     domain: str = Query(..., description="Email domain to look up (e.g. gmail.com)"),
     repository: DynamoDBTenantRepository = Depends(get_repository),
 ):
-    tenant = repository.find_by_domain(domain)
+    try:
+        tenant = repository.find_by_domain(domain)
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        raise HTTPException(
+            status_code=503,
+            detail=f"DynamoDB error ({code}): service temporarily unavailable",
+        ) from exc
     if not tenant:
         raise HTTPException(status_code=404, detail=f"Tenant not found for domain: {domain}")
     return tenant
