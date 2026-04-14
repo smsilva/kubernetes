@@ -37,12 +37,24 @@ def test_test_page_redirects_when_no_session(api_client):
     assert response.status_code == 302
 
 
-def _mock_all_test_urls(httpx_mock: HTTPXMock, *, httpbin_status=200, c1_status=200, c2_status=403):
-    """Register mock response only for httpbin — customer URLs are now fetched client-side."""
+def _mock_all_test_urls(
+    httpx_mock: HTTPXMock,
+    *,
+    httpbin_status=200,
+    c1_health_status=200,
+    c2_health_status=200,
+    c1_httpbin_status=200,
+    c2_httpbin_status=403,
+):
+    """Register mock responses for all 5 URLs fetched server-side by /test."""
     if httpbin_status == 200:
         httpx_mock.add_response(url="http://httpbin-mock:8000/get", json=SAMPLE_HTTPBIN_RESPONSE, status_code=200)
     else:
         httpx_mock.add_response(url="http://httpbin-mock:8000/get", status_code=httpbin_status, text="error")
+    httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/health", status_code=c1_health_status, text="ok")
+    httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/health", status_code=c2_health_status, text="ok")
+    httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/httpbin/get", json=SAMPLE_HTTPBIN_RESPONSE, status_code=c1_httpbin_status)
+    httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/httpbin/get", status_code=c2_httpbin_status, text="RBAC: access denied")
 
 
 def test_test_page_shows_json_on_success(authenticated_client, httpx_mock: HTTPXMock):
@@ -71,27 +83,42 @@ def test_test_page_shows_error_on_httpbin_non_200(authenticated_client, httpx_mo
 
 def test_test_page_shows_error_on_httpbin_connection_failure(authenticated_client, httpx_mock: HTTPXMock):
     httpx_mock.add_exception(httpx.ConnectError("connection refused"), url="http://httpbin-mock:8000/get")
+    httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/health", status_code=200, text="ok")
+    httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/health", status_code=200, text="ok")
+    httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/httpbin/get", status_code=200, json=SAMPLE_HTTPBIN_RESPONSE)
+    httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/httpbin/get", status_code=403, text="RBAC: access denied")
     response = authenticated_client.get("/test")
     assert response.status_code == 200
     body = response.text
     assert "connection" in body.lower()
 
 
-def test_test_page_shows_three_test_results(authenticated_client, httpx_mock: HTTPXMock):
+def test_test_page_shows_five_test_results(authenticated_client, httpx_mock: HTTPXMock):
     _mock_all_test_urls(httpx_mock)
     response = authenticated_client.get("/test")
     assert response.status_code == 200
     body = response.text
     assert "httpbin-mock:8000" in body
-    assert "customer1-mock" in body
-    assert "customer2-mock" in body
+    assert "customer1-mock.wasp.silvios.me/health" in body
+    assert "customer2-mock.wasp.silvios.me/health" in body
+    assert "customer1-mock.wasp.silvios.me/httpbin/get" in body
+    assert "customer2-mock.wasp.silvios.me/httpbin/get" in body
+
+
+def test_health_tests_always_expect_200(authenticated_client, httpx_mock: HTTPXMock):
+    """Health endpoints are open — expected is always 200 regardless of tenant."""
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    body = response.text
+    # Both health tests should show badge-ok (200) — not badge-deny (403)
+    assert body.count("badge-ok") >= 3  # httpbin + c1-health + c2-health
 
 
 def test_test_page_shows_expected_outcome_per_test(authenticated_client, httpx_mock: HTTPXMock):
     _mock_all_test_urls(httpx_mock)
     response = authenticated_client.get("/test")
     body = response.text
-    # httpbin test expects 200; cross-tenant tests expect 403
+    # httpbin and health tests expect 200; customer2-httpbin expects 403 for customer1 user
     assert "200" in body
     assert "403" in body
 
@@ -100,9 +127,26 @@ def test_test_page_has_accordion_structure(authenticated_client, httpx_mock: HTT
     _mock_all_test_urls(httpx_mock)
     response = authenticated_client.get("/test")
     body = response.text
-    # Each test card has a clickable header and a collapsible body
     assert "accordion-header" in body
     assert "accordion-body" in body
+
+
+def test_test_run_forwards_jwt_as_bearer(authenticated_client, httpx_mock: HTTPXMock):
+    """GET /test/run must forward the session cookie as Authorization: Bearer to the target URL."""
+    received_headers = {}
+
+    def capture_request(request: httpx.Request) -> httpx.Response:
+        received_headers.update(dict(request.headers))
+        return httpx.Response(200, json={"url": str(request.url), "origin": "10.0.0.1"})
+
+    httpx_mock.add_callback(capture_request, url="https://customer1-mock.wasp.silvios.me/httpbin/get")
+
+    response = authenticated_client.get(
+        "/test/run",
+        params={"url": "https://customer1-mock.wasp.silvios.me/httpbin/get", "expected": 200},
+    )
+    assert response.status_code == 200
+    assert received_headers.get("authorization") == f"Bearer {SAMPLE_TOKEN}"
 
 
 # ── Profile (/profile) ───────────────────────────────────────────────────────

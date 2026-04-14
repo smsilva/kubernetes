@@ -134,38 +134,17 @@
     if (t.passed === false) openAccordion(t.label);
   });
 
-  // client-side tests run automatically on page load
-  initialResults
-    .filter(t => t.client_side)
-    .forEach(t => runClientSide(t.label, t.url, t.expected));
-
   // ── Run single test ───────────────────────────────────────────────────────
   async function runSingle(label, url, expected) {
-    const t = initialResults.find(r => r.label === label);
-    if (t && t.client_side) {
-      await runClientSide(label, url, expected);
-    } else {
-      await runServerSide(label, url, expected);
-    }
+    await runServerSide(label, url, expected);
   }
 
-  // server-side: proxied through /test/run (public URLs, no cookie needed)
+  // server-side: proxied through /test/run (JWT forwarded by server)
   async function runServerSide(label, url, expected) {
     setRunning(label);
     try {
       const resp = await fetch(`/test/run?url=${encodeURIComponent(url)}&expected=${expected}`);
       renderResult(label, await resp.json());
-    } catch (e) {
-      setError(label, e);
-    }
-  }
-
-  // client-side: browser fetch with credentials (session cookie forwarded)
-  async function runClientSide(label, url, expected) {
-    setRunning(label);
-    try {
-      const resp = await fetch(url, { credentials: 'include' });
-      renderResult(label, { url, status_code: resp.status, expected, result_json: null, error: null });
     } catch (e) {
       setError(label, e);
     }

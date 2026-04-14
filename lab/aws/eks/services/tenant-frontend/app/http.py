@@ -6,7 +6,7 @@ import httpx
 _logger = logging.getLogger(__name__)
 
 
-async def fetch_url(url: str, timeout: float = 10.0) -> dict:
+async def fetch_url(url: str, headers: dict | None = None, timeout: float = 10.0) -> dict:
     """Fetch a URL and return a normalized result dict.
 
     Returns:
@@ -19,7 +19,7 @@ async def fetch_url(url: str, timeout: float = 10.0) -> dict:
     """
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
-            resp = await client.get(url)
+            resp = await client.get(url, headers=headers or {})
 
         if resp.status_code == 200:
             try:

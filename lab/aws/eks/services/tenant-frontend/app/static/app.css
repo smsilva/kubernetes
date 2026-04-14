@@ -617,4 +617,4 @@ body {
 }
 
 .test-running { color: var(--color-secondary); font-style: italic; }
-.code-fence-sm { max-height: 220px; overflow-y: auto; }
+.code-fence-sm { }

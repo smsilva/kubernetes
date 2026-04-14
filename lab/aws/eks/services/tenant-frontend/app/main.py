@@ -72,42 +72,38 @@ async def test_page(request: Request):
         return RedirectResponse(url=PLATFORM_URL, status_code=302)
 
     tenant_id = claims.get("custom:tenant_id", "")
+    session_token = request.cookies.get("session")
+    auth_headers = {"Authorization": f"Bearer {session_token}"} if session_token else {}
 
-    # httpbin is public — executed server-side
-    httpbin_result = await fetch_url(f"{HTTPBIN_URL}/get")
+    (
+        httpbin_r,
+        c1_health, c2_health,
+        c1_httpbin, c2_httpbin,
+    ) = await asyncio.gather(
+        fetch_url(f"{HTTPBIN_URL}/get"),
+        fetch_url(f"{CUSTOMER1_URL}/health"),                              # health is open — no JWT
+        fetch_url(f"{CUSTOMER2_URL}/health"),                              # health is open — no JWT
+        fetch_url(f"{CUSTOMER1_URL}/httpbin/get", headers=auth_headers),  # JWT forwarded
+        fetch_url(f"{CUSTOMER2_URL}/httpbin/get", headers=auth_headers),  # JWT forwarded
+    )
 
-    # cross-tenant tests must be executed client-side (browser carries the session cookie)
+    def _entry(label, result, expected):
+        return {
+            "label":       label,
+            "url":         result["url"],
+            "expected":    expected,
+            "status_code": result["status_code"],
+            "result_json": result["result_json"],
+            "error":       result["error"],
+            "passed":      result["status_code"] == expected,
+        }
+
     test_results = [
-        {
-            "label":       "httpbin",
-            "url":         httpbin_result["url"],
-            "expected":    200,
-            "status_code": httpbin_result["status_code"],
-            "result_json": httpbin_result["result_json"],
-            "error":       httpbin_result["error"],
-            "passed":      httpbin_result["status_code"] == 200,
-            "client_side": False,
-        },
-        {
-            "label":       "customer1",
-            "url":         f"{CUSTOMER1_URL}/health",
-            "expected":    200 if tenant_id == "customer1" else 403,
-            "status_code": None,
-            "result_json": None,
-            "error":       None,
-            "passed":      None,
-            "client_side": True,
-        },
-        {
-            "label":       "customer2",
-            "url":         f"{CUSTOMER2_URL}/health",
-            "expected":    200 if tenant_id == "customer2" else 403,
-            "status_code": None,
-            "result_json": None,
-            "error":       None,
-            "passed":      None,
-            "client_side": True,
-        },
+        _entry("httpbin",          httpbin_r,  200),
+        _entry("customer1-health", c1_health,  200),
+        _entry("customer2-health", c2_health,  200),
+        _entry("customer1-httpbin", c1_httpbin, 200 if tenant_id == "customer1" else 403),
+        _entry("customer2-httpbin", c2_httpbin, 200 if tenant_id == "customer2" else 403),
     ]
 
     return templates.TemplateResponse(
@@ -132,7 +128,9 @@ async def test_run(
     if claims is None:
         return JSONResponse({"error": "unauthenticated"}, status_code=401)
 
-    result = await fetch_url(url)
+    session_token = request.cookies.get("session")
+    auth_headers = {"Authorization": f"Bearer {session_token}"} if session_token else {}
+    result = await fetch_url(url, headers=auth_headers)
     result["expected"] = expected
     return JSONResponse(result)
 
