@@ -220,4 +220,29 @@ az network dns record-set a show \
   --output table
 
 echo ""
+echo "Verificando propagação DNS via 8.8.8.8..."
+dig_result=$(dig +short "${domain}" @8.8.8.8 | sort)
+
+echo "IPs resolvidos via 8.8.8.8:"
+if [[ -z "${dig_result}" ]]; then
+  echo "  (nenhum resultado — DNS ainda não propagou)"
+else
+  while IFS= read -r ip; do
+    echo "  ${ip}"
+  done <<< "${dig_result}"
+fi
+
+ga_ips_sorted=$(echo "${ga_ips}" | tr '\t' '\n' | sort)
+if [[ "${dig_result}" == "${ga_ips_sorted}" ]]; then
+  echo ""
+  echo "DNS propagado: IPs batem com o Global Accelerator."
+else
+  echo ""
+  echo "Aviso: IPs resolvidos diferem dos IPs do Global Accelerator."
+  echo "  GA  : $(echo "${ga_ips_sorted}" | tr '\n' ' ')"
+  echo "  DNS : $(echo "${dig_result}" | tr '\n' ' ')"
+  echo "  Propagação pode levar alguns minutos (TTL 300s)."
+fi
+
+echo ""
 echo "Próximo passo: scripts/08-deploy-sample-app"

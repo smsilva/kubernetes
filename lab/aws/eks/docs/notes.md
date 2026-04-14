@@ -118,14 +118,14 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
   - [x] IAM: role `wasp-pre-token-lambda-role` (com inline policy `DynamoDBTenantRegistry`)
   - [x] IAM: role `wasp-discovery-irsa` (com inline policy `DynamoDBTenantRegistryRead`)
   - [x] DynamoDB: tabela `tenant-registry`
-- [ ] **Verificar propagação DNS pós Global Accelerator**: o script `07b` já mostra os A records
+- [x] **Verificar propagação DNS pós Global Accelerator**: o script `07b` já mostra os A records
   configurados no Azure DNS, mas não confirma resolução real. Acrescentar ao final:
   `dig +short wasp.silvios.me @8.8.8.8` e comparar com os IPs retornados pelo Global Accelerator.
 - [x] **Limpar IDs gerados antes de recriar recursos**: script `scripts/reset-session` criado.
   Zera variáveis dinâmicas de `env.conf` (IDs Cognito, ARN Global Accelerator) e remove linhas
   de `env.secrets` (secrets geradas + JWTs de teste). Suporta `--dry-run` e `--yes`.
   Rodar antes de provisionar do zero; bootstrap após confirma pré-requisitos.
-- [ ] **Fix redirect "Try Again"**: `error.html:45` tem `href="/"` que aponta para a raiz do
+- [x] **Fix redirect "Try Again"**: `error.html:45` tem `href="/"` que aponta para a raiz do
   `callback-handler` (`auth.wasp.silvios.me/`), que retorna `{"detail": "Not Found"}`.
   Fix: passar `login_url` no contexto do `_render_error` e usar `href="{{ login_url }}"` no template.
   O valor deve ser `https://wasp.silvios.me` (lido de env var `PLATFORM_URL` ou equivalente).
@@ -190,3 +190,7 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 - [ ] **Provisionar EKS com CNI Cillium em ENI (Elastic Network Interface) mode**: Ativado com IPAM (IP Address Management).
 
 - [ ] **Istio com Ambient Mesh**: implementar e verificar possíveis limitações.
+
+- [ ] **Padronizar referencias às variáveis de ambiente**: COGNITO_CLIENT_SECRET e COGNITO_CLIENT_SECRET_CUSTOMER1/2 estão misturados. Padronizar para a convenção `COGNITO_CLIENT_SECRET_<TENANT_ID>` nos documentos e verificar se o código dos serviços está 100% compatível.
+
+- [ ] **Rever informação duplicada entre documentos**: exemplo: `AWS ALB  (subnets públicas, HTTPS terminado via ACM)` aparece tanto em `docs/index.md` (topologia) quanto em `docs/decisoes-tecnicas.md` (ALB). Manter a informação atualizada e consistente entre os documentos é um desafio. Avaliar se vale a pena centralizar detalhes técnicos no `decisoes-tecnicas.md` e deixar o `index.md` mais enxuto, focado na visão geral.
