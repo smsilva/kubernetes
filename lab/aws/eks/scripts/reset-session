@@ -1,0 +1,142 @@
+#!/bin/bash
+# reset-session: limpa variáveis dinâmicas de env.conf e env.secrets antes de reprovisionar do zero.
+#
+# Variáveis geradas automaticamente pelos scripts (IDs, secrets, tokens) ficam persistidas nos
+# arquivos de config entre sessões. Ao recriar recursos do zero, esses valores antigos causam
+# erros silenciosos — o script os remove para forçar regeneração.
+#
+# Uso:
+#   ./scripts/reset-session            # interativo (pede confirmação)
+#   ./scripts/reset-session --yes      # sem confirmação
+#   ./scripts/reset-session --dry-run  # mostra o que seria limpo sem alterar nada
+
+set -euo pipefail
+
+scripts_dir="$(dirname "$0")"
+conf_file="${scripts_dir}/env.conf"
+secrets_file="${scripts_dir}/env.secrets"
+
+dry_run=false
+auto_yes=false
+
+for arg in "$@"; do
+  case "${arg}" in
+    --dry-run) dry_run=true ;;
+    --yes)     auto_yes=true ;;
+    *)
+      echo "Uso: $0 [--dry-run] [--yes]"
+      exit 1
+      ;;
+  esac
+done
+
+red="\033[0;31m"
+green="\033[0;32m"
+yellow="\033[1;33m"
+reset="\033[0m"
+
+cleared() { echo -e "${green}[CLEAR]${reset}  $*"; }
+skipped() { echo -e "${yellow}[SKIP]${reset}   $*"; }
+dryrun()  { echo -e "${yellow}[DRY-RUN]${reset} removeria: $*"; }
+missing() { echo -e "         ${red}(não encontrado)${reset} $*"; }
+
+# ---------------------------------------------------------------------------
+# Variáveis dinâmicas a limpar
+# ---------------------------------------------------------------------------
+
+# env.conf: substituir valor por string vazia (manter a linha comentada com o valor antigo)
+declare -a conf_vars=(
+  cognito_user_pool_id
+  cognito_app_client_id
+  cognito_cloudfront_domain
+  global_accelerator_arn
+)
+
+# env.secrets: remover a linha inteira (as variáveis são regeneradas ou reinseridas pelos scripts)
+declare -a secrets_vars=(
+  STATE_JWT_SECRET
+  COGNITO_CLIENT_SECRET_CUSTOMER1
+  COGNITO_CLIENT_SECRET_CUSTOMER2
+  JWT_CUSTOMER1
+  JWT_CUSTOMER2
+)
+
+# ---------------------------------------------------------------------------
+# Confirmar (a menos que --yes ou --dry-run)
+# ---------------------------------------------------------------------------
+if ! ${dry_run} && ! ${auto_yes}; then
+  echo -e "${yellow}Este script apaga variáveis dinâmicas de:${reset}"
+  echo "  ${conf_file}"
+  echo "  ${secrets_file}"
+  echo ""
+  echo "Variáveis que serão limpas em env.conf:"
+  for var in "${conf_vars[@]}"; do
+    echo "  - ${var}"
+  done
+  echo ""
+  echo "Variáveis que serão removidas de env.secrets:"
+  for var in "${secrets_vars[@]}"; do
+    echo "  - ${var}"
+  done
+  echo ""
+  printf "Continuar? [s/N] "
+  read -r answer
+  if [[ "${answer}" != "s" && "${answer}" != "S" ]]; then
+    echo "Cancelado."
+    exit 0
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# env.conf — zerar valor (mantém a chave; scripts que persistem com sed -i
+# verificam se está vazia antes de sobrescrever)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== env.conf ==="
+
+for var in "${conf_vars[@]}"; do
+  if grep -q "^${var}=" "${conf_file}" 2>/dev/null; then
+    current_val=$(grep "^${var}=" "${conf_file}" | cut -d'=' -f2-)
+    if [[ "${current_val}" == '""' || -z "${current_val}" ]]; then
+      skipped "${var} (já vazia)"
+    elif ${dry_run}; then
+      dryrun "${var}=${current_val}"
+    else
+      sed -i "s|^${var}=.*|${var}=\"\"|" "${conf_file}"
+      cleared "${var} (era: ${current_val})"
+    fi
+  else
+    missing "${var} — linha não encontrada em env.conf"
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# env.secrets — remover linha inteira
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== env.secrets ==="
+
+for var in "${secrets_vars[@]}"; do
+  if grep -q "^${var}=" "${secrets_file}" 2>/dev/null; then
+    if ${dry_run}; then
+      current_val=$(grep "^${var}=" "${secrets_file}" | cut -d'=' -f2-)
+      dryrun "${var}=${current_val}"
+    else
+      sed -i "/^${var}=/d" "${secrets_file}"
+      cleared "${var}"
+    fi
+  else
+    skipped "${var} (não encontrada em env.secrets)"
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# Resultado
+# ---------------------------------------------------------------------------
+echo ""
+if ${dry_run}; then
+  echo -e "${yellow}Modo dry-run — nenhum arquivo foi alterado.${reset}"
+  echo "Rode sem --dry-run para aplicar."
+else
+  echo -e "${green}Reset concluído. Rode './scripts/bootstrap --create' antes de provisionar.${reset}"
+fi

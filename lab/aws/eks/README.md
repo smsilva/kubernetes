@@ -35,6 +35,9 @@ Provisionar um cluster EKS com VPC pública e privada, onde o tráfego de entrad
 Internet
    │
    ▼
+wasp.silvios.me  (DNS APEX rule apontando para Global Accelerator Anycast IPs estáticos)
+   │
+   ▼
 AWS ALB  (subnets públicas, HTTPS terminado via ACM)
    │       WAF WebACL: CRS + KnownBadInputs + IP Reputation
    │       Shield Standard: ativo por padrão
@@ -54,7 +57,7 @@ Aplicações  (namespaces com sidecar injection habilitado)
                                           ▼
                                    wasp.silvios.me
                                           │
-                                Global Accelerator
+                                 Global Accelerator
                                           │
                     ┌─────────────────────┴────────────────────┐
                     ▼                                          ▼

@@ -121,10 +121,10 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 - [ ] **Verificar propagação DNS pós Global Accelerator**: o script `07b` já mostra os A records
   configurados no Azure DNS, mas não confirma resolução real. Acrescentar ao final:
   `dig +short wasp.silvios.me @8.8.8.8` e comparar com os IPs retornados pelo Global Accelerator.
-- [ ] **Limpar IDs gerados antes de recriar recursos**: evita que valores de uma sessão anterior
-  causem erros silenciosos em outra. Limpar antes de rodar os scripts do zero:
-  - `env.secrets`: `STATE_JWT_SECRET`, `COGNITO_CLIENT_SECRET_CUSTOMER1`, `COGNITO_CLIENT_SECRET_CUSTOMER2`, `JWT_CUSTOMER1`, `JWT_CUSTOMER2`
-  - `env.conf`: `cognito_user_pool_id`, `cognito_app_client_id`, `cognito_cloudfront_domain`, `global_accelerator_arn`
+- [x] **Limpar IDs gerados antes de recriar recursos**: script `scripts/reset-session` criado.
+  Zera variáveis dinâmicas de `env.conf` (IDs Cognito, ARN Global Accelerator) e remove linhas
+  de `env.secrets` (secrets geradas + JWTs de teste). Suporta `--dry-run` e `--yes`.
+  Rodar antes de provisionar do zero; bootstrap após confirma pré-requisitos.
 - [ ] **Fix redirect "Try Again"**: `error.html:45` tem `href="/"` que aponta para a raiz do
   `callback-handler` (`auth.wasp.silvios.me/`), que retorna `{"detail": "Not Found"}`.
   Fix: passar `login_url` no contexto do `_render_error` e usar `href="{{ login_url }}"` no template.
@@ -186,3 +186,7 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 - [ ] **Links para scripts no mkdocs**: `operacoes/passo-a-passo.md` é o lugar natural para
   acrescentar links diretos aos scripts em `scripts/`. Atualmente o mkdocs não referencia
   os arquivos de script.
+
+- [ ] **Provisionar EKS com CNI Cillium em ENI (Elastic Network Interface) mode**: Ativado com IPAM (IP Address Management).
+
+- [ ] **Istio com Ambient Mesh**: implementar e verificar possíveis limitações.

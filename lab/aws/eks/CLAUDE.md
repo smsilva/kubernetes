@@ -71,6 +71,7 @@ Scripts em `scripts/`, documentos em `docs/`. Configurações globais em `script
 | Script | O que faz | Tempo |
 |---|---|---|
 | `scripts/bootstrap` | Valida pré-requisitos antes de criar ou destruir recursos | ~5s |
+| `scripts/reset-session` | Zera variáveis dinâmicas (IDs Cognito, ARN GA, secrets geradas, JWTs) antes de reprovisionar do zero | ~1s |
 | `scripts/01-create-vpc` | VPC, subnets, IGW, NAT Gateway, route tables | ~3min |
 | `scripts/02-create-cluster` | Cluster EKS + node group via eksctl | ~15min |
 | `scripts/03-configure-access` | EKS Access API + AmazonEKSClusterAdminPolicy | ~20s |
