@@ -6,7 +6,10 @@
 <div class="card">
 
   <div class="section-header">
-    <span class="section-title">Isolation Tests</span>
+    <div>
+      <span class="section-title">Tenant Isolation</span>
+      <span class="section-subtitle">Cross-tenant access control via Istio JWT</span>
+    </div>
     <button id="run-all-btn" class="btn-outlined" onclick="runAll()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
@@ -78,10 +81,35 @@
             {% endif %}
           {% endif %}
         </div>
+        <div class="curl-block mt-8">
+          <pre class="curl-code" id="curl-{{ t.label }}">{{ t.curl_cmd }}</pre>
+          <button class="copy-btn" data-label="{{ t.label }}" onclick="copyCurl(this)" title="Copy command">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
     </div>
     {% endfor %}
+  </div>
+
+  <div class="results-summary" id="results-summary">
+    <span class="summary-item summary-passed">
+      <span class="status-dot status-pass"></span>
+      <span id="count-passed">{{ passed_count }}</span> passed
+    </span>
+    <span class="summary-sep">·</span>
+    <span class="summary-item summary-failed">
+      <span class="status-dot status-fail"></span>
+      <span id="count-failed">{{ failed_count }}</span> failed
+    </span>
+    <span class="summary-sep summary-running-sep" id="summary-running-sep" style="display:none">·</span>
+    <span class="summary-item summary-running" id="summary-running" style="display:none">
+      <span class="status-dot status-idle"></span>
+      <span id="count-running">0</span> running
+    </span>
   </div>
 
 </div>
@@ -134,13 +162,49 @@
     if (t.passed === false) openAccordion(t.label);
   });
 
-  // ── Run single test ───────────────────────────────────────────────────────
-  async function runSingle(label, url, expected) {
-    await runServerSide(label, url, expected);
+  // ── Copy curl command ─────────────────────────────────────────────────────
+  const CLIPBOARD_ICON = '<path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>';
+  const CHECK_ICON    = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>';
+
+  function copyCurl(btn) {
+    const label = btn.dataset.label;
+    const t = initialResults.find(r => r.label === label);
+    if (!t?.curl_cmd) return;
+    navigator.clipboard.writeText(t.curl_cmd).then(() => {
+      const path = btn.querySelector('path');
+      path.setAttribute('d', CHECK_ICON.match(/d="([^"]+)"/)[1]);
+      btn.classList.add('copy-btn-ok');
+      setTimeout(() => {
+        path.setAttribute('d', CLIPBOARD_ICON.match(/d="([^"]+)"/)[1]);
+        btn.classList.remove('copy-btn-ok');
+      }, 1500);
+    }).catch(() => {});
   }
 
-  // server-side: proxied through /test/run (JWT forwarded by server)
-  async function runServerSide(label, url, expected) {
+  // ── Summary ───────────────────────────────────────────────────────────────
+  function updateSummary() {
+    let passed = 0, failed = 0, running = 0;
+    document.querySelectorAll('.accordion-status').forEach(el => {
+      if (el.querySelector('.status-pass')) passed++;
+      else if (el.querySelector('.status-fail')) failed++;
+      else running++;
+    });
+    document.getElementById('count-passed').textContent = passed;
+    document.getElementById('count-failed').textContent = failed;
+    const runningEl  = document.getElementById('summary-running');
+    const runningSep = document.getElementById('summary-running-sep');
+    if (running > 0) {
+      document.getElementById('count-running').textContent = running;
+      runningEl.style.display  = '';
+      runningSep.style.display = '';
+    } else {
+      runningEl.style.display  = 'none';
+      runningSep.style.display = 'none';
+    }
+  }
+
+  // ── Run single test ───────────────────────────────────────────────────────
+  async function runSingle(label, url, expected) {
     setRunning(label);
     try {
       const resp = await fetch(`/test/run?url=${encodeURIComponent(url)}&expected=${expected}`);
@@ -162,11 +226,13 @@
     document.getElementById(`result-${label}`).innerHTML = '<span class="test-running">Running…</span>';
     document.getElementById(`status-${label}`).innerHTML = '<span class="status-dot status-idle"></span>';
     openAccordion(label);
+    updateSummary();
   }
 
   function setError(label, e) {
     document.getElementById(`result-${label}`).innerHTML =
       `<div class="result-fail">Fetch error: ${escapeHtml(String(e))}</div>`;
+    updateSummary();
   }
 
   // ── Render result into DOM ─────────────────────────────────────────────────
@@ -189,6 +255,7 @@
 
     // Auto-open on failure, keep open on pass if already open
     if (!passed) openAccordion(label);
+    updateSummary();
   }
 </script>
 {% endblock %}

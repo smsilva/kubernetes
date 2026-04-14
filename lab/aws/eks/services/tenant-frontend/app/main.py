@@ -87,6 +87,13 @@ async def test_page(request: Request):
         fetch_url(f"{CUSTOMER2_URL}/httpbin/get", headers=auth_headers),  # JWT forwarded
     )
 
+    def _build_curl(url: str) -> str:
+        parts = ["curl -s -o /dev/null -w '%{http_code}'"]
+        if session_token:
+            parts.append(f"  -H 'Authorization: Bearer {session_token}'")
+        parts.append(f"  '{url}'")
+        return " \\\n".join(parts)
+
     def _entry(label, result, expected):
         return {
             "label":       label,
@@ -96,23 +103,29 @@ async def test_page(request: Request):
             "result_json": result["result_json"],
             "error":       result["error"],
             "passed":      result["status_code"] == expected,
+            "curl_cmd":    _build_curl(result["url"]),
         }
 
     test_results = [
-        _entry("httpbin",          httpbin_r,  200),
-        _entry("customer1-health", c1_health,  200),
-        _entry("customer2-health", c2_health,  200),
+        _entry("httpbin",           httpbin_r,  200),
+        _entry("customer1-health",  c1_health,  200),
+        _entry("customer2-health",  c2_health,  200),
         _entry("customer1-httpbin", c1_httpbin, 200 if tenant_id == "customer1" else 403),
         _entry("customer2-httpbin", c2_httpbin, 200 if tenant_id == "customer2" else 403),
     ]
+
+    passed_count = sum(1 for t in test_results if t["passed"])
+    failed_count = sum(1 for t in test_results if not t["passed"])
 
     return templates.TemplateResponse(
         request=request,
         name="test.html",
         context={
-            "test_results": test_results,
-            "name": claims.get("name", "User"),
-            "tenant_id": tenant_id,
+            "test_results":  test_results,
+            "name":          claims.get("name", "User"),
+            "tenant_id":     tenant_id,
+            "passed_count":  passed_count,
+            "failed_count":  failed_count,
         },
     )
 

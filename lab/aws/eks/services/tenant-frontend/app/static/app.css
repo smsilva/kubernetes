@@ -370,6 +370,16 @@ body {
   text-transform: uppercase;
 }
 
+.section-subtitle {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-outline);
+  letter-spacing: 0;
+  text-transform: none;
+  margin-top: 2px;
+}
+
 .url-text {
   text-transform: none;
   letter-spacing: 0;
@@ -618,3 +628,63 @@ body {
 
 .test-running { color: var(--color-secondary); font-style: italic; }
 .code-fence-sm { }
+
+/* ── Curl command block ───────────────────────── */
+.curl-block {
+  position: relative;
+  background: var(--color-code-bg);
+  border: 1px solid var(--color-code-border);
+  border-radius: 6px;
+  padding: 8px 40px 8px 12px;
+}
+
+.curl-code {
+  font-family: 'Roboto Mono', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre;
+  color: var(--color-on-surface);
+  margin: 0;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--color-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 150ms, color 150ms;
+}
+
+.copy-btn:hover { background: var(--color-outline-dim); color: var(--color-on-surface); }
+.copy-btn-ok { color: #34a853 !important; }
+
+/* ── Results summary ──────────────────────────── */
+.results-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-outline-dim);
+  font-size: 13px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summary-passed { color: #1e7e34; }
+.summary-failed { color: #c5221f; }
+.summary-running { color: var(--color-secondary); }
+.summary-sep { color: var(--color-outline); }

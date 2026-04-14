@@ -131,6 +131,25 @@ def test_test_page_has_accordion_structure(authenticated_client, httpx_mock: HTT
     assert "accordion-body" in body
 
 
+def test_test_page_includes_curl_commands(authenticated_client, httpx_mock: HTTPXMock):
+    """Each test entry must include a curl_cmd with the JWT Bearer token."""
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    assert response.status_code == 200
+    body = response.text
+    assert "curl" in body
+    assert f"Bearer {SAMPLE_TOKEN}" in body
+
+
+def test_test_page_has_results_summary(authenticated_client, httpx_mock: HTTPXMock):
+    """Page must include a results summary section."""
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    body = response.text
+    assert "results-summary" in body
+    assert "passed" in body
+
+
 def test_test_run_forwards_jwt_as_bearer(authenticated_client, httpx_mock: HTTPXMock):
     """GET /test/run must forward the session cookie as Authorization: Bearer to the target URL."""
     received_headers = {}
