@@ -19,7 +19,10 @@
     {% for t in test_results %}
     <div class="accordion-item" id="item-{{ t.label }}">
 
-      <button class="accordion-header" onclick="toggleAccordion('{{ t.label }}')" aria-expanded="false">
+      <div class="accordion-header" role="button" tabindex="0"
+           onclick="toggleAccordion('{{ t.label }}')"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAccordion('{{ t.label }}')}"
+           aria-expanded="false">
         <div class="accordion-header-left">
           <span class="accordion-status" id="status-{{ t.label }}">
             {% if t.passed is not none %}
@@ -52,7 +55,7 @@
             <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-      </button>
+      </div>
 
       <div class="accordion-body" id="body-{{ t.label }}" style="display:none">
         <div class="accordion-result" id="result-{{ t.label }}">
