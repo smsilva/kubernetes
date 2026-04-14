@@ -61,18 +61,6 @@ k3d cluster create \
 kind create cluster --config kind-cluster.yaml --name <cluster-name>
 ```
 
-### Script Execution Pattern
-
-Most installation scripts follow a sourcing pattern:
-```bash
-# AKS example - config file passed as argument
-./create-cluster.sh my-config
-
-# Scripts typically source:
-# - load-config.sh (loads environment variables)
-# - show-config.sh (displays current configuration)
-```
-
 ### Environment Configuration
 
 Many scripts (especially in `install/aks/` and `install/kubeadm/multipass/`) require environment variables. Look for:
@@ -88,21 +76,6 @@ helm repo add <repo-name> <url>
 helm repo update <repo-name>
 helm upgrade --install --namespace <ns> --create-namespace <release> <chart> --values <values-file>
 ```
-
-## Commit Message Convention
-
-This repository uses Conventional Commits format enforced by a git hook:
-
-```
-<type>(<scope>): <description>
-```
-
-Types: `bump`, `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
-
-Examples:
-- `feat(lab/argo): add new sync example`
-- `fix(install/k3d): correct port mapping`
-- `docs(lab/istio): update traffic management docs`
 
 ## Key Patterns
 
