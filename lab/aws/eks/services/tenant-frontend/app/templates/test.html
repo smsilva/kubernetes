@@ -28,12 +28,9 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
         </svg>
-        <span class="error-box-title">
-          {% if error.status_code %}HTTP {{ error.status_code }} — Request failed{% else %}Connection error{% endif %}
-        </span>
+        <span class="error-box-title">Request failed</span>
       </div>
-      <div class="error-box-detail">{{ error.message }}</div>
-      <div class="error-box-detail" style="opacity:.7">{{ error.url }}</div>
+      <div class="error-box-detail">{{ error }}</div>
       <div class="error-box-actions">
         <a href="/test" class="btn-outlined">Try again</a>
       </div>

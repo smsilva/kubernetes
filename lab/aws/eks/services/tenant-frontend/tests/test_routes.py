@@ -71,7 +71,7 @@ def test_test_page_shows_error_on_httpbin_non_200(authenticated_client, httpx_mo
     response = authenticated_client.get("/test")
     assert response.status_code == 200
     body = response.text
-    assert "503" in body
+    assert "HTTP 503" in body
 
 
 def test_test_page_shows_error_on_httpbin_connection_failure(authenticated_client, httpx_mock: HTTPXMock):

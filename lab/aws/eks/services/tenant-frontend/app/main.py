@@ -1,14 +1,13 @@
-import json
 import logging
 import os
 from pathlib import Path
 
-import httpx
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from app.http import fetch_url
 from app.session import decode_session
 
 # ── Logging ──────────────────────────────────────────────────────────────────
@@ -69,44 +68,15 @@ async def test_page(request: Request):
     if claims is None:
         return RedirectResponse(url=PLATFORM_URL, status_code=302)
 
-    httpbin_get_url = f"{HTTPBIN_URL}/get"
-    result_json: str | None = None
-    error: dict | None = None
-
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(httpbin_get_url)
-
-        if resp.status_code == 200:
-            result_json = json.dumps(resp.json(), indent=2)
-        else:
-            error = {
-                "status_code": resp.status_code,
-                "message": resp.text[:500],
-                "url": httpbin_get_url,
-            }
-    except httpx.ConnectError as exc:
-        _logger.error("httpbin connection error: %s", exc)
-        error = {
-            "status_code": None,
-            "message": f"Connection failed: {exc}",
-            "url": httpbin_get_url,
-        }
-    except httpx.TimeoutException as exc:
-        _logger.error("httpbin timeout: %s", exc)
-        error = {
-            "status_code": None,
-            "message": f"Request timed out: {exc}",
-            "url": httpbin_get_url,
-        }
+    result = await fetch_url(f"{HTTPBIN_URL}/get")
 
     return templates.TemplateResponse(
         request=request,
         name="test.html",
         context={
-            "result_json": result_json,
-            "error": error,
-            "httpbin_url": httpbin_get_url,
+            "result_json": result["result_json"],
+            "error": result["error"],
+            "httpbin_url": result["url"],
             "name": claims.get("name", "User"),
             "tenant_id": claims.get("custom:tenant_id", ""),
         },
