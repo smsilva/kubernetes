@@ -110,9 +110,22 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 
 ### P1 — Quick wins (fácil + alto valor)
 
-- [ ] **Página de teste — URL em minúsculas**: o título da seção exibe `GET https://httpbin.wasp.silvios.me/get`
-  em maiúsculas por herdar o estilo `text-transform: uppercase` do `.section-title`. Fix: aplicar
-  `text-transform: none` ou trocar a classe no elemento que exibe a URL.
+- [x] **Página de teste — URL em minúsculas**: corrigido com `.url-text { text-transform: none }`.
+
+- [x] **Página de teste — testes cruzados entre tenants**: implementado com 3 cards, botão Run
+  individual e Run all. Funcionando em produção (customer1 e customer2).
+
+- [ ] **Página de teste — melhorias de layout (pós validação visual)**:
+  Observações do primeiro uso em produção:
+  1. **Cards empilhados**: o grid de 3 colunas não está funcionando — os cards aparecem
+     verticalmente em vez de lado a lado. Rever o CSS `.test-grid` (possível conflito com o
+     `.card` pai que pode estar limitando o `display: grid`).
+  2. **JSON domina a tela**: o resultado do httpbin (JSON longo) empurra os outros cards para
+     baixo. Limitar `max-height` do `.code-fence-sm` a ~150px com `overflow-y: auto`, ou
+     colocar o JSON colapsado por padrão (expandir ao clicar).
+  3. **Hierarquia visual dos cards**: label + botão Run ficaram sem separação visual clara.
+     Melhorar com border-bottom no header, ou aumentar o contraste entre `.test-label` e o
+     conteúdo do card.
 
 - [ ] **Página de teste — testes cruzados entre tenants**: adicionar dois testes de isolamento além
   do teste existente de `httpbin.wasp.silvios.me/get`. Escopo completo:
@@ -132,7 +145,26 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
   - [ ] **T3**: adicionar env vars `CUSTOMER1_URL` e `CUSTOMER2_URL` no ConfigMap e no `main.py`
   - [ ] **T4**: refatorar rota `/test` para retornar lista de resultados (um por teste)
   - [ ] **T5**: atualizar template `test.html` com 3 cards de resultado + botão "Run all"
-  - [ ] **T6**: deploy e validação end-to-end no cluster
+  - [x] **T6**: deploy e validação end-to-end no cluster
+
+  Após validação em produção, explorar alternativas de layout para substituir o grid de cards:
+
+  **Opção A — Tabs**
+  Cada teste em uma aba (httpbin | customer1 | customer2). "Run all" executa os 3 e marca
+  cada aba com ✓/✗. Clicar na aba mostra o resultado individual com JSON expandido.
+  Vantagem: foco em um resultado por vez, JSON tem espaço total. Desvantagem: não dá para
+  comparar os 3 lado a lado sem trocar de aba.
+
+  **Opção B — Accordion / collapsible cards**
+  Cards empilhados, mas o JSON fica colapsado por padrão e expande ao clicar. Header do
+  card mostra status (✓/✗ + HTTP code) de forma compacta. "Run all" expande apenas os que
+  falharam. Vantagem: visão geral de todos os testes sem scroll; detalhe sob demanda.
+
+  **Opção C — Split: status bar + detalhe**
+  Barra horizontal com os 3 status (compacta, sempre visível). Clicar em um status mostra
+  o detalhe (JSON, erro) abaixo da barra. Vantagem: layout fixo, sem reflow ao rodar testes.
+
+  Decidir a abordagem antes de implementar.
 
 - [x] **Completar script destroy**: os recursos abaixo são criados pelos scripts mas não são removidos pelo `destroy`
   - [x] Cognito: custom domain `idp.wasp.silvios.me` (deve ser removido antes do User Pool)
@@ -230,3 +262,5 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 - [x] **Padronizar referencias às variáveis de ambiente**: COGNITO_CLIENT_SECRET e COGNITO_CLIENT_SECRET_CUSTOMER1/2 estão misturados. Padronizar para a convenção `COGNITO_CLIENT_SECRET_<TENANT_ID>` nos documentos e verificar se o código dos serviços está 100% compatível.
 
 - [x] **Rever informação duplicada entre documentos**: `docs/index.md` enxugado — removidas as seções "Fluxo de tráfego" e "Topologia multi-região" que duplicavam `arquitetura/index.md` e `arquitetura/fluxo-trafego.md`. Adicionado link `Para o fluxo de tráfego detalhado... ver Arquitetura` após a tabela de componentes. Decisão: `index.md` é página de entrada (tabela de componentes + links de navegação); detalhes técnicos ficam em `arquitetura/`.
+
+- [ ] **Endpoints de health check do ALB**: atualmente o ALB é configurado com health check em `/` (raiz do `platform-frontend`), que retorna HTTP 200. Avaliar criar endpoint dedicado `/healthz` ou similar, para separar tráfego de health check do tráfego real de usuários. Ter Health Checks dos serviços sem precisar de jwt (avaliar se é risco de segurança ou se pode ser mitigado com regras de firewall/ALB).

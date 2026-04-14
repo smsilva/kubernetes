@@ -15,57 +15,66 @@
     </button>
   </div>
 
-  <div class="test-grid">
+  <div class="accordion">
     {% for t in test_results %}
-    <div class="test-card" id="card-{{ t.label }}">
+    <div class="accordion-item" id="item-{{ t.label }}">
 
-      <div class="test-card-header">
-        <span class="test-label">{{ t.label }}</span>
-        <button class="btn-outlined btn-sm" onclick="runSingle('{{ t.label }}', '{{ t.url }}', {{ t.expected }})">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+      <button class="accordion-header" onclick="toggleAccordion('{{ t.label }}')" aria-expanded="false">
+        <div class="accordion-header-left">
+          <span class="accordion-status" id="status-{{ t.label }}">
+            {% if t.passed is not none %}
+              {% if t.passed %}
+                <span class="status-dot status-pass"></span>
+              {% else %}
+                <span class="status-dot status-fail"></span>
+              {% endif %}
+            {% else %}
+              <span class="status-dot status-idle"></span>
+            {% endif %}
+          </span>
+          <span class="accordion-label">{{ t.label }}</span>
+          <span class="accordion-url url-text">{{ t.url }}</span>
+        </div>
+        <div class="accordion-header-right">
+          <span class="accordion-expected">
+            <span class="badge {% if t.expected == 200 %}badge-ok{% else %}badge-deny{% endif %}">
+              {{ t.expected }}
+            </span>
+          </span>
+          <button class="btn-outlined btn-sm accordion-run-btn"
+                  onclick="event.stopPropagation(); runSingle('{{ t.label }}', '{{ t.url }}', {{ t.expected }})">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+            </svg>
+            Run
+          </button>
+          <svg class="accordion-chevron" id="chevron-{{ t.label }}" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          Run
-        </button>
-      </div>
+        </div>
+      </button>
 
-      <div class="test-card-url">
-        <span class="test-method">GET</span>
-        <span class="url-text">{{ t.url }}</span>
-      </div>
-
-      <div class="test-card-expected">
-        Expected: <strong>HTTP {{ t.expected }}</strong>
-        {% if t.expected == 200 %}
-          <span class="badge badge-ok">allowed</span>
-        {% else %}
-          <span class="badge badge-deny">denied</span>
-        {% endif %}
-      </div>
-
-      <div class="test-card-result" id="result-{{ t.label }}">
-        {% if t.passed is not none %}
-          {% if t.passed %}
-            <div class="result-pass">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>
-              </svg>
-              HTTP {{ t.status_code }} — passed
-            </div>
-          {% else %}
-            <div class="result-fail">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/>
-              </svg>
-              {% if t.status_code %}HTTP {{ t.status_code }}{% else %}{{ t.error }}{% endif %} — failed
-            </div>
+      <div class="accordion-body" id="body-{{ t.label }}" style="display:none">
+        <div class="accordion-result" id="result-{{ t.label }}">
+          {% if t.passed is not none %}
+            {% if t.passed %}
+              <span class="result-pass">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/></svg>
+                HTTP {{ t.status_code }} — passed
+              </span>
+            {% else %}
+              <span class="result-fail">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/></svg>
+                {% if t.status_code %}HTTP {{ t.status_code }}{% else %}{{ t.error }}{% endif %} — failed
+              </span>
+            {% endif %}
+            {% if t.result_json %}
+              <div class="code-fence code-fence-sm mt-8">
+                <pre id="json-{{ t.label }}"></pre>
+              </div>
+            {% endif %}
           {% endif %}
-          {% if t.result_json %}
-            <div class="code-fence code-fence-sm">
-              <pre id="json-{{ t.label }}"></pre>
-            </div>
-          {% endif %}
-        {% endif %}
+        </div>
       </div>
 
     </div>
@@ -95,26 +104,67 @@
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  // ── Initial render of server-side JSON results ────────────────────────────
+  // ── Accordion toggle ──────────────────────────────────────────────────────
+  function toggleAccordion(label) {
+    const body = document.getElementById(`body-${label}`);
+    const chevron = document.getElementById(`chevron-${label}`);
+    const header = body.previousElementSibling;
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+    header.setAttribute('aria-expanded', String(!isOpen));
+  }
+
+  function openAccordion(label) {
+    const body = document.getElementById(`body-${label}`);
+    if (body.style.display === 'none') toggleAccordion(label);
+  }
+
+  // ── Initial render ────────────────────────────────────────────────────────
   const initialResults = {{ test_results | tojson }};
+
   initialResults.forEach(t => {
     if (t.result_json) {
       const el = document.getElementById(`json-${t.label}`);
       if (el) el.innerHTML = syntaxHighlight(t.result_json);
     }
+    if (t.passed === false) openAccordion(t.label);
   });
 
-  // ── Run single test via fetch ─────────────────────────────────────────────
-  async function runSingle(label, url, expected) {
-    const resultEl = document.getElementById(`result-${label}`);
-    resultEl.innerHTML = '<span class="test-running">Running…</span>';
+  // client-side tests run automatically on page load
+  initialResults
+    .filter(t => t.client_side)
+    .forEach(t => runClientSide(t.label, t.url, t.expected));
 
+  // ── Run single test ───────────────────────────────────────────────────────
+  async function runSingle(label, url, expected) {
+    const t = initialResults.find(r => r.label === label);
+    if (t && t.client_side) {
+      await runClientSide(label, url, expected);
+    } else {
+      await runServerSide(label, url, expected);
+    }
+  }
+
+  // server-side: proxied through /test/run (public URLs, no cookie needed)
+  async function runServerSide(label, url, expected) {
+    setRunning(label);
     try {
       const resp = await fetch(`/test/run?url=${encodeURIComponent(url)}&expected=${expected}`);
-      const data = await resp.json();
-      renderResult(label, data);
+      renderResult(label, await resp.json());
     } catch (e) {
-      resultEl.innerHTML = `<div class="result-fail">Fetch error: ${escapeHtml(String(e))}</div>`;
+      setError(label, e);
+    }
+  }
+
+  // client-side: browser fetch with credentials (session cookie forwarded)
+  async function runClientSide(label, url, expected) {
+    setRunning(label);
+    try {
+      const resp = await fetch(url, { credentials: 'include' });
+      renderResult(label, { url, status_code: resp.status, expected, result_json: null, error: null });
+    } catch (e) {
+      setError(label, e);
     }
   }
 
@@ -122,30 +172,41 @@
   async function runAll() {
     const btn = document.getElementById('run-all-btn');
     btn.disabled = true;
-    const promises = initialResults.map(t =>
-      fetch(`/test/run?url=${encodeURIComponent(t.url)}&expected=${t.expected}`)
-        .then(r => r.json())
-        .then(data => renderResult(t.label, data))
-        .catch(e => {
-          document.getElementById(`result-${t.label}`).innerHTML =
-            `<div class="result-fail">Fetch error: ${escapeHtml(String(e))}</div>`;
-        })
-    );
-    await Promise.all(promises);
+    await Promise.all(initialResults.map(t => runSingle(t.label, t.url, t.expected)));
     btn.disabled = false;
   }
 
-  // ── Render a result dict into the DOM ─────────────────────────────────────
+  function setRunning(label) {
+    document.getElementById(`result-${label}`).innerHTML = '<span class="test-running">Running…</span>';
+    document.getElementById(`status-${label}`).innerHTML = '<span class="status-dot status-idle"></span>';
+    openAccordion(label);
+  }
+
+  function setError(label, e) {
+    document.getElementById(`result-${label}`).innerHTML =
+      `<div class="result-fail">Fetch error: ${escapeHtml(String(e))}</div>`;
+  }
+
+  // ── Render result into DOM ─────────────────────────────────────────────────
   function renderResult(label, t) {
-    const el = document.getElementById(`result-${label}`);
     const passed = t.status_code === t.expected;
+    const statusEl = document.getElementById(`status-${label}`);
+    statusEl.innerHTML = passed
+      ? '<span class="status-dot status-pass"></span>'
+      : '<span class="status-dot status-fail"></span>';
+
     let html = passed
-      ? `<div class="result-pass">✓ HTTP ${t.status_code} — passed</div>`
-      : `<div class="result-fail">✗ ${t.status_code ? 'HTTP ' + t.status_code : t.error} — failed</div>`;
+      ? `<span class="result-pass"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/></svg>HTTP ${t.status_code} — passed</span>`
+      : `<span class="result-fail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/></svg>${t.status_code ? 'HTTP ' + t.status_code : t.error} — failed</span>`;
+
     if (t.result_json) {
-      html += `<div class="code-fence code-fence-sm"><pre>${syntaxHighlight(t.result_json)}</pre></div>`;
+      html += `<div class="code-fence code-fence-sm mt-8"><pre>${syntaxHighlight(t.result_json)}</pre></div>`;
     }
-    el.innerHTML = html;
+
+    document.getElementById(`result-${label}`).innerHTML = html;
+
+    // Auto-open on failure, keep open on pass if already open
+    if (!passed) openAccordion(label);
   }
 </script>
 {% endblock %}

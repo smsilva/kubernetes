@@ -73,25 +73,41 @@ async def test_page(request: Request):
 
     tenant_id = claims.get("custom:tenant_id", "")
 
-    tests = [
-        {"label": "httpbin",   "url": f"{HTTPBIN_URL}/get", "expected": 200},
-        {"label": "customer1", "url": f"{CUSTOMER1_URL}/",  "expected": 200 if tenant_id == "customer1" else 403},
-        {"label": "customer2", "url": f"{CUSTOMER2_URL}/",  "expected": 200 if tenant_id == "customer2" else 403},
-    ]
+    # httpbin is public — executed server-side
+    httpbin_result = await fetch_url(f"{HTTPBIN_URL}/get")
 
-    results = await asyncio.gather(*[fetch_url(t["url"]) for t in tests])
-
+    # cross-tenant tests must be executed client-side (browser carries the session cookie)
     test_results = [
         {
-            "label":    t["label"],
-            "url":      r["url"],
-            "expected": t["expected"],
-            "status_code": r["status_code"],
-            "result_json": r["result_json"],
-            "error":    r["error"],
-            "passed":   r["status_code"] == t["expected"],
-        }
-        for t, r in zip(tests, results)
+            "label":       "httpbin",
+            "url":         httpbin_result["url"],
+            "expected":    200,
+            "status_code": httpbin_result["status_code"],
+            "result_json": httpbin_result["result_json"],
+            "error":       httpbin_result["error"],
+            "passed":      httpbin_result["status_code"] == 200,
+            "client_side": False,
+        },
+        {
+            "label":       "customer1",
+            "url":         f"{CUSTOMER1_URL}/health",
+            "expected":    200 if tenant_id == "customer1" else 403,
+            "status_code": None,
+            "result_json": None,
+            "error":       None,
+            "passed":      None,
+            "client_side": True,
+        },
+        {
+            "label":       "customer2",
+            "url":         f"{CUSTOMER2_URL}/health",
+            "expected":    200 if tenant_id == "customer2" else 403,
+            "status_code": None,
+            "result_json": None,
+            "error":       None,
+            "passed":      None,
+            "client_side": True,
+        },
     ]
 
     return templates.TemplateResponse(

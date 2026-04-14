@@ -38,13 +38,11 @@ def test_test_page_redirects_when_no_session(api_client):
 
 
 def _mock_all_test_urls(httpx_mock: HTTPXMock, *, httpbin_status=200, c1_status=200, c2_status=403):
-    """Register mock responses for all 3 URLs used by /test."""
+    """Register mock response only for httpbin — customer URLs are now fetched client-side."""
     if httpbin_status == 200:
         httpx_mock.add_response(url="http://httpbin-mock:8000/get", json=SAMPLE_HTTPBIN_RESPONSE, status_code=200)
     else:
         httpx_mock.add_response(url="http://httpbin-mock:8000/get", status_code=httpbin_status, text="error")
-    httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/", status_code=c1_status, text="ok" if c1_status == 200 else "RBAC: access denied")
-    httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/", status_code=c2_status, text="ok" if c2_status == 200 else "RBAC: access denied")
 
 
 def test_test_page_shows_json_on_success(authenticated_client, httpx_mock: HTTPXMock):
@@ -73,8 +71,6 @@ def test_test_page_shows_error_on_httpbin_non_200(authenticated_client, httpx_mo
 
 def test_test_page_shows_error_on_httpbin_connection_failure(authenticated_client, httpx_mock: HTTPXMock):
     httpx_mock.add_exception(httpx.ConnectError("connection refused"), url="http://httpbin-mock:8000/get")
-    httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/", status_code=403, text="RBAC: access denied")
-    httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/", status_code=403, text="RBAC: access denied")
     response = authenticated_client.get("/test")
     assert response.status_code == 200
     body = response.text
@@ -98,6 +94,15 @@ def test_test_page_shows_expected_outcome_per_test(authenticated_client, httpx_m
     # httpbin test expects 200; cross-tenant tests expect 403
     assert "200" in body
     assert "403" in body
+
+
+def test_test_page_has_accordion_structure(authenticated_client, httpx_mock: HTTPXMock):
+    _mock_all_test_urls(httpx_mock)
+    response = authenticated_client.get("/test")
+    body = response.text
+    # Each test card has a clickable header and a collapsible body
+    assert "accordion-header" in body
+    assert "accordion-body" in body
 
 
 # ── Profile (/profile) ───────────────────────────────────────────────────────
