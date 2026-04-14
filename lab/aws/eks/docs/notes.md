@@ -194,6 +194,8 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 
 - [ ] **Istio com Ambient Mesh**: implementar e verificar possíveis limitações.
 
-- [ ] **Padronizar referencias às variáveis de ambiente**: COGNITO_CLIENT_SECRET e COGNITO_CLIENT_SECRET_CUSTOMER1/2 estão misturados. Padronizar para a convenção `COGNITO_CLIENT_SECRET_<TENANT_ID>` nos documentos e verificar se o código dos serviços está 100% compatível.
+- [ ] **Remover `COGNITO_CLIENT_ID` órfão dos ConfigMaps**: os ConfigMaps `platform-frontend-config` e `callback-handler-config` (gerados pelo script 13) incluem `COGNITO_CLIENT_ID`, mas nenhum dos dois serviços lê essa variável — o `client_id` vem do discovery service (injetado no `state` JWT pelo `platform-frontend`) e chega ao `callback-handler` via `login_state.client_id`. Limpar a entrada dos ConfigMaps e do script 13.
+
+- [x] **Padronizar referencias às variáveis de ambiente**: COGNITO_CLIENT_SECRET e COGNITO_CLIENT_SECRET_CUSTOMER1/2 estão misturados. Padronizar para a convenção `COGNITO_CLIENT_SECRET_<TENANT_ID>` nos documentos e verificar se o código dos serviços está 100% compatível.
 
 - [x] **Rever informação duplicada entre documentos**: `docs/index.md` enxugado — removidas as seções "Fluxo de tráfego" e "Topologia multi-região" que duplicavam `arquitetura/index.md` e `arquitetura/fluxo-trafego.md`. Adicionado link `Para o fluxo de tráfego detalhado... ver Arquitetura` após a tabela de componentes. Decisão: `index.md` é página de entrada (tabela de componentes + links de navegação); detalhes técnicos ficam em `arquitetura/`.

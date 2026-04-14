@@ -132,7 +132,7 @@ Scripts 11 e 13 requerem env vars (não entram no `env.conf`):
 |---|---|---|
 | `GOOGLE_CLIENT_ID` | `11-create-cognito` | Google Cloud Console → OAuth 2.0 credentials |
 | `GOOGLE_CLIENT_SECRET` | `11-create-cognito` | Google Cloud Console → OAuth 2.0 credentials |
-| `COGNITO_CLIENT_SECRET` | `13-deploy-services` | `aws cognito-idp describe-user-pool-client --query UserPoolClient.ClientSecret` |
+| `COGNITO_CLIENT_SECRET_CUSTOMER1` | `13-deploy-services` | `aws cognito-idp describe-user-pool-client --query UserPoolClient.ClientSecret` |
 | `STATE_JWT_SECRET` | `13-deploy-services` | `openssl rand -hex 32` |
 
 Google redirect URI obrigatório: `https://idp.wasp.silvios.me/oauth2/idpresponse` em **Authorized redirect URIs** (não em JavaScript origins — nosso flow é server-side redirect).
@@ -154,8 +154,8 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 | Serviço | Variável | Valor |
 |---|---|---|
 | `callback-handler` | `COGNITO_DOMAIN` | `idp.wasp.silvios.me` (só hostname, sem `https://`) |
-| `callback-handler` | `COGNITO_CLIENT_ID` | App Client ID do tenant (ConfigMap) |
-| `callback-handler` | `COGNITO_CLIENT_SECRET` | Via Secret `callback-handler-secret` |
+| `callback-handler` | `COGNITO_CLIENT_SECRET_CUSTOMER1` | Client secret customer1 — Via Secret `callback-handler-secret` |
+| `callback-handler` | `COGNITO_CLIENT_SECRET_CUSTOMER2` | Client secret customer2 — Via Secret `callback-handler-secret` |
 | `callback-handler` | `STATE_JWT_SECRET` | Chave compartilhada com `platform-frontend` |
 | `platform-frontend` | `COGNITO_DOMAIN` | `idp.wasp.silvios.me` (só hostname, sem `https://`) |
 | `platform-frontend` | `DISCOVERY_URL` | `https://discovery.wasp.silvios.me` |

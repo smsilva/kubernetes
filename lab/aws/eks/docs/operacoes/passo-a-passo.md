@@ -210,7 +210,7 @@ Configura o custom domain `idp.wasp.silvios.me` para o Cognito Hosted UI e cria 
 ## 13. Deploy dos serviços
 
 ```bash
-export COGNITO_CLIENT_SECRET="..."   # aws cognito-idp describe-user-pool-client --query UserPoolClient.ClientSecret
+export COGNITO_CLIENT_SECRET_CUSTOMER1="..."   # aws cognito-idp describe-user-pool-client --query UserPoolClient.ClientSecret
 export STATE_JWT_SECRET="..."        # openssl rand -hex 32
 ./scripts/13-deploy-services
 ```
@@ -270,5 +270,5 @@ Scripts 11 e 13 requerem variáveis de ambiente que **não entram** no `env.conf
 |---|---|---|
 | `GOOGLE_CLIENT_ID` | `11-create-cognito` | Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID |
 | `GOOGLE_CLIENT_SECRET` | `11-create-cognito` | Mesmo lugar do Client ID |
-| `COGNITO_CLIENT_SECRET` | `13-deploy-services` | `aws cognito-idp describe-user-pool-client --query UserPoolClient.ClientSecret` |
+| `COGNITO_CLIENT_SECRET_CUSTOMER1` | `13-deploy-services` | `aws cognito-idp describe-user-pool-client --query UserPoolClient.ClientSecret` |
 | `STATE_JWT_SECRET` | `13-deploy-services` | `openssl rand -hex 32` |

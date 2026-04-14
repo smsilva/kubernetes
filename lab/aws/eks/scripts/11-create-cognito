@@ -325,7 +325,7 @@ aws cognito-idp describe-user-pool-client \
 echo ""
 echo "============================================================"
 echo "ATENÇÃO: guarde o client secret — necessário no passo 13"
-echo "  COGNITO_CLIENT_SECRET=${app_client_secret}"
+echo "  COGNITO_CLIENT_SECRET_CUSTOMER1=${app_client_secret}"
 echo "============================================================"
 echo ""
 echo "Próximo passo: scripts/12-configure-dns-cognito"
