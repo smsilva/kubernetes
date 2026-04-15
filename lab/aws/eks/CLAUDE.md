@@ -44,7 +44,7 @@ Checklist ao adicionar um recurso:
 2. Determinar a posição correta no `destroy` (ordem inversa da criação, respeitando dependências)
 3. Usar `|| true` ou verificação de existência para tornar idempotente
 4. Atualizar o comentário de ordem no cabeçalho do `destroy`
-5. Marcar o item como `[x]` no backlog de `docs/notes.md` se havia pendência registrada
+5. Atualizar HANDOFF.md se havia pendência registrada no backlog
 
 ---
 
@@ -221,7 +221,7 @@ O script `17-deploy-customer2` faz build/push apenas de `platform-frontend` e `c
 
 # Notas
 
-Durante a execução dos scripts do lab, faça anotações no arquivo lab/aws/eks/docs/notes.md para registrar aprendizados, decisões, problemas encontrados e soluções aplicadas. Essas notas serão valiosas para futuras sessões de desenvolvimento, troubleshooting e para enriquecer a documentação do projeto.
+Durante a execução dos scripts do lab, atualize o arquivo HANDOFF.md para registrar aprendizados, decisões, problemas encontrados e soluções aplicadas. Este documento serve como contexto para futuras sessões de desenvolvimento e troubleshooting.
 
 Anote também sempre que precisar tirar uma dúvida durante a execução dos scripts, para que possamos discutir e esclarecer esses pontos em sessões futuras.
 

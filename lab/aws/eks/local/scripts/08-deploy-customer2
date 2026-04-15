@@ -150,7 +150,7 @@ metadata:
   name: tenant-frontend-config
   namespace: customer2
 data:
-  HTTPBIN_URL: "http://httpbin.${domain}:${haproxy_nodeport}"
+  HTTPBIN_URL: "http://httpbin:8000"
   PLATFORM_URL: "http://${domain}:${haproxy_nodeport}"
   CUSTOMER1_URL: "http://customer1.${domain}:${haproxy_nodeport}"
   CUSTOMER2_URL: "http://customer2.${domain}:${haproxy_nodeport}"

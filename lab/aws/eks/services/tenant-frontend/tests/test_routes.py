@@ -212,6 +212,25 @@ def test_test_page_group_order(authenticated_client, httpx_mock: HTTPXMock):
     assert own_pos < cross_pos
 
 
+def test_httpbin_fetch_passes_jwt(authenticated_client, httpx_mock: HTTPXMock):
+    """httpbin fetch must include Authorization: Bearer (Istio sidecar requires JWT)."""
+    received_headers = {}
+
+    def capture(request: httpx.Request) -> httpx.Response:
+        received_headers.update(dict(request.headers))
+        return httpx.Response(200, json=SAMPLE_HTTPBIN_RESPONSE)
+
+    httpx_mock.add_callback(capture, url="http://httpbin-mock:8000/get")
+    httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/health", status_code=200, text="ok")
+    httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/health", status_code=200, text="ok")
+    httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/httpbin/get", json=SAMPLE_HTTPBIN_RESPONSE, status_code=200)
+    httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/httpbin/get", status_code=403, text="denied")
+
+    response = authenticated_client.get("/test")
+    assert response.status_code == 200
+    assert received_headers.get("authorization") == f"Bearer {SAMPLE_TOKEN}"
+
+
 def test_test_run_forwards_jwt_as_bearer(authenticated_client, httpx_mock: HTTPXMock):
     """GET /test/run must forward the session cookie as Authorization: Bearer to the target URL."""
     received_headers = {}

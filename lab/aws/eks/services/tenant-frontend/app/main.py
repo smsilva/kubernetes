@@ -80,7 +80,7 @@ async def test_page(request: Request):
         c1_health, c2_health,
         c1_httpbin, c2_httpbin,
     ) = await asyncio.gather(
-        fetch_url(f"{HTTPBIN_URL}/get"),
+        fetch_url(f"{HTTPBIN_URL}/get", headers=auth_headers),
         fetch_url(f"{CUSTOMER1_URL}/health"),                              # health is open — no JWT
         fetch_url(f"{CUSTOMER2_URL}/health"),                              # health is open — no JWT
         fetch_url(f"{CUSTOMER1_URL}/httpbin/get", headers=auth_headers),  # JWT forwarded
