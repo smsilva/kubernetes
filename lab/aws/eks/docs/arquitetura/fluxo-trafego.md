@@ -6,6 +6,9 @@
 Internet
    │
    ▼
+wasp.silvios.me  (DNS APEX → Global Accelerator Anycast IPs estáticos)
+   │
+   ▼
 AWS ALB  (subnets públicas, HTTPS terminado via ACM)
    │       WAF WebACL: CRS + KnownBadInputs + IP Reputation + rate limiting
    │       Shield Standard: ativo por padrão

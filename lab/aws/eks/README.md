@@ -31,22 +31,7 @@ Provisionar um cluster EKS com VPC pública e privada, onde o tráfego de entrad
 
 ### Fluxo de tráfego
 
-```
-Internet
-   │
-   ▼
-wasp.silvios.me  (DNS APEX rule apontando para Global Accelerator Anycast IPs estáticos)
-   │
-   ▼
-AWS ALB  (subnets públicas, HTTPS terminado via ACM)
-   │       WAF WebACL: CRS + KnownBadInputs + IP Reputation
-   │       Shield Standard: ativo por padrão
-   ▼
-Istio IngressGateway  (namespace: istio-ingress, ClusterIP)
-   │       pods nas subnets privadas, tráfego via target-type ip
-   ▼
-Aplicações  (namespaces com sidecar injection habilitado)
-```
+Ver [docs/arquitetura/fluxo-trafego.md](docs/arquitetura/fluxo-trafego.md).
 
 ### Topologia
 
