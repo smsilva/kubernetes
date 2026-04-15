@@ -223,6 +223,12 @@ spec:
     - match:
         - uri:
             prefix: /httpbin
+      corsPolicy:
+        allowOrigins:
+          - regex: "http://.*\\.${domain}:${haproxy_nodeport}"
+        allowMethods: ["GET", "OPTIONS"]
+        allowHeaders: ["authorization", "content-type"]
+        maxAge: "24h"
       rewrite:
         uri: /
       route:
@@ -230,7 +236,13 @@ spec:
             host: httpbin
             port:
               number: 8000
-    - route:
+    - corsPolicy:
+        allowOrigins:
+          - regex: "http://.*\\.${domain}:${haproxy_nodeport}"
+        allowMethods: ["GET", "OPTIONS"]
+        allowHeaders: ["authorization", "content-type"]
+        maxAge: "24h"
+      route:
         - destination:
             host: tenant-frontend
             port:
@@ -247,6 +259,9 @@ spec:
     - to:
         - operation:
             paths: ["/health"]
+    - to:
+        - operation:
+            methods: ["OPTIONS"]
 ---
 apiVersion: security.istio.io/v1beta1
 kind: RequestAuthentication
@@ -275,6 +290,9 @@ spec:
     - when:
         - key: request.auth.claims[custom:tenant_id]
           values: ["customer2"]
+    - to:
+        - operation:
+            methods: ["OPTIONS"]
 EOF
 
 # =============================================================================

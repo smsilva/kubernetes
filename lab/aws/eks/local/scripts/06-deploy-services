@@ -506,7 +506,13 @@ spec:
   gateways:
     - httpbin-gateway
   http:
-    - route:
+    - corsPolicy:
+        allowOrigins:
+          - regex: "http://.*\\.${domain}:${haproxy_nodeport}"
+        allowMethods: ["GET", "OPTIONS"]
+        allowHeaders: ["authorization", "content-type"]
+        maxAge: "24h"
+      route:
         - destination:
             host: httpbin
             port:
@@ -591,6 +597,12 @@ spec:
     - match:
         - uri:
             prefix: /httpbin
+      corsPolicy:
+        allowOrigins:
+          - regex: "http://.*\\.${domain}:${haproxy_nodeport}"
+        allowMethods: ["GET", "OPTIONS"]
+        allowHeaders: ["authorization", "content-type"]
+        maxAge: "24h"
       rewrite:
         uri: /
       route:
@@ -598,7 +610,13 @@ spec:
             host: httpbin
             port:
               number: 8000
-    - route:
+    - corsPolicy:
+        allowOrigins:
+          - regex: "http://.*\\.${domain}:${haproxy_nodeport}"
+        allowMethods: ["GET", "OPTIONS"]
+        allowHeaders: ["authorization", "content-type"]
+        maxAge: "24h"
+      route:
         - destination:
             host: tenant-frontend
             port:
@@ -615,6 +633,9 @@ spec:
     - to:
         - operation:
             paths: ["/health"]
+    - to:
+        - operation:
+            methods: ["OPTIONS"]
 EOF
 
 # =============================================================================

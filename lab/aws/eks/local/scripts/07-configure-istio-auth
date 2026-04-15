@@ -66,6 +66,9 @@ spec:
     - when:
         - key: request.auth.claims[custom:tenant_id]
           values: ["customer1"]
+    - to:
+        - operation:
+            methods: ["OPTIONS"]
 EOF
 
 # =============================================================================

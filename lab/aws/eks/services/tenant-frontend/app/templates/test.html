@@ -29,7 +29,7 @@
 
   <div class="accordion">
     {% set ns = namespace(current_group="") %}
-    {% for t in test_results %}
+    {% for t in test_cases %}
     {% if t.group != ns.current_group %}
       {% set ns.current_group = t.group %}
       <div class="group-separator">{{ t.group }}</div>
@@ -42,15 +42,7 @@
            aria-expanded="false">
         <div class="accordion-header-left">
           <span class="accordion-status" id="status-{{ t.label }}">
-            {% if t.passed is not none %}
-              {% if t.passed %}
-                <span class="status-dot status-pass"></span>
-              {% else %}
-                <span class="status-dot status-fail"></span>
-              {% endif %}
-            {% else %}
-              <span class="status-dot status-idle"></span>
-            {% endif %}
+            <span class="status-dot status-idle"></span>
           </span>
           <span class="accordion-label">{{ t.label }}</span>
           <span class="accordion-url url-text">{{ t.url }}</span>
@@ -62,7 +54,7 @@
             </span>
           </span>
           <button class="btn-outlined btn-sm accordion-run-btn"
-                  onclick="event.stopPropagation(); runSingle('{{ t.label }}', '{{ t.url }}', {{ t.expected }})">
+                  onclick="event.stopPropagation(); runSingle('{{ t.label }}', '{{ t.url }}', {{ t.expected }}, {{ 'true' if t.with_jwt else 'false' }})">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
             </svg>
@@ -75,26 +67,7 @@
       </div>
 
       <div class="accordion-body" id="body-{{ t.label }}" style="display:none">
-        <div class="accordion-result" id="result-{{ t.label }}">
-          {% if t.passed is not none %}
-            {% if t.passed %}
-              <span class="result-pass">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/></svg>
-                HTTP {{ t.status_code }} — passed
-              </span>
-            {% else %}
-              <span class="result-fail">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/></svg>
-                {% if t.status_code %}HTTP {{ t.status_code }}{% else %}{{ t.error }}{% endif %} — failed
-              </span>
-            {% endif %}
-            {% if t.result_json %}
-              <div class="code-fence code-fence-sm mt-8">
-                <pre id="json-{{ t.label }}"></pre>
-              </div>
-            {% endif %}
-          {% endif %}
-        </div>
+        <div class="accordion-result" id="result-{{ t.label }}"></div>
         <div class="curl-block mt-8">
           <pre class="curl-code" id="curl-{{ t.label }}">{{ t.curl_cmd }}</pre>
           <button class="copy-btn" data-label="{{ t.label }}" onclick="copyCurl(this)" title="Copy command">
@@ -112,12 +85,12 @@
   <div class="results-summary" id="results-summary">
     <span class="summary-item summary-passed">
       <span class="status-dot status-pass"></span>
-      <span id="count-passed">{{ passed_count }}</span> passed
+      <span id="count-passed">0</span> passed
     </span>
     <span class="summary-sep">·</span>
     <span class="summary-item summary-failed">
       <span class="status-dot status-fail"></span>
-      <span id="count-failed">{{ failed_count }}</span> failed
+      <span id="count-failed">0</span> failed
     </span>
     <span class="summary-sep summary-running-sep" id="summary-running-sep" style="display:none">·</span>
     <span class="summary-item summary-running" id="summary-running" style="display:none">
@@ -131,6 +104,9 @@
 
 {% block scripts %}
 <script>
+  const testCases  = {{ test_cases | tojson }};
+  const JWT_TOKEN  = {{ jwt_token | tojson }};
+
   // ── Syntax highlighter ────────────────────────────────────────────────────
   function syntaxHighlight(jsonStr) {
     return jsonStr.replace(
@@ -151,12 +127,12 @@
 
   // ── Accordion toggle ──────────────────────────────────────────────────────
   function toggleAccordion(label) {
-    const body = document.getElementById(`body-${label}`);
+    const body    = document.getElementById(`body-${label}`);
     const chevron = document.getElementById(`chevron-${label}`);
-    const header = body.previousElementSibling;
-    const isOpen = body.style.display !== 'none';
-    body.style.display = isOpen ? 'none' : 'block';
-    chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+    const header  = body.previousElementSibling;
+    const isOpen  = body.style.display !== 'none';
+    body.style.display          = isOpen ? 'none' : 'block';
+    chevron.style.transform     = isOpen ? '' : 'rotate(180deg)';
     header.setAttribute('aria-expanded', String(!isOpen));
   }
 
@@ -165,49 +141,56 @@
     if (body.style.display === 'none') toggleAccordion(label);
   }
 
-  // ── Initial render ────────────────────────────────────────────────────────
-  const initialResults = {{ test_results | tojson }};
-
-  initialResults.forEach(t => {
-    if (t.result_json) {
-      const el = document.getElementById(`json-${t.label}`);
-      if (el) el.innerHTML = syntaxHighlight(t.result_json);
-    }
-    if (t.passed === false) openAccordion(t.label);
-  });
-
   // ── Copy curl command ─────────────────────────────────────────────────────
   const CLIPBOARD_ICON = '<path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>';
-  const CHECK_ICON    = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>';
+  const CHECK_ICON     = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>';
+
+  function _showCheckmark(btn) {
+    const path = btn.querySelector('path');
+    path.setAttribute('d', CHECK_ICON.match(/d="([^"]+)"/)[1]);
+    btn.classList.add('copy-btn-ok');
+    setTimeout(() => {
+      path.setAttribute('d', CLIPBOARD_ICON.match(/d="([^"]+)"/)[1]);
+      btn.classList.remove('copy-btn-ok');
+    }, 1500);
+  }
+
+  function _fallbackCopy(text, onSuccess) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); onSuccess(); } catch(e) {}
+    document.body.removeChild(ta);
+  }
 
   function copyCurl(btn) {
     const label = btn.dataset.label;
-    const t = initialResults.find(r => r.label === label);
+    const t = testCases.find(r => r.label === label);
     if (!t?.curl_cmd) return;
-    navigator.clipboard.writeText(t.curl_cmd).then(() => {
-      const path = btn.querySelector('path');
-      path.setAttribute('d', CHECK_ICON.match(/d="([^"]+)"/)[1]);
-      btn.classList.add('copy-btn-ok');
-      setTimeout(() => {
-        path.setAttribute('d', CLIPBOARD_ICON.match(/d="([^"]+)"/)[1]);
-        btn.classList.remove('copy-btn-ok');
-      }, 1500);
-    }).catch(() => {});
+    const onSuccess = () => _showCheckmark(btn);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(t.curl_cmd).then(onSuccess).catch(() => _fallbackCopy(t.curl_cmd, onSuccess));
+    } else {
+      _fallbackCopy(t.curl_cmd, onSuccess);
+    }
   }
 
   // ── Summary ───────────────────────────────────────────────────────────────
   function updateSummary() {
     let passed = 0, failed = 0, running = 0;
     document.querySelectorAll('.accordion-status').forEach(el => {
-      if (el.querySelector('.status-pass')) passed++;
+      if (el.querySelector('.status-pass'))      passed++;
       else if (el.querySelector('.status-fail')) failed++;
-      else running++;
+      else                                       running++;
     });
     document.getElementById('count-passed').textContent = passed;
     document.getElementById('count-failed').textContent = failed;
     const runningEl  = document.getElementById('summary-running');
     const runningSep = document.getElementById('summary-running-sep');
-    if (running > 0) {
+    if (running > 0 && running < testCases.length) {
       document.getElementById('count-running').textContent = running;
       runningEl.style.display  = '';
       runningSep.style.display = '';
@@ -219,20 +202,40 @@
 
   // ── Collapse all ──────────────────────────────────────────────────────────
   function collapseAll() {
-    initialResults.forEach(t => {
+    testCases.forEach(t => {
       const body = document.getElementById(`body-${t.label}`);
       if (body && body.style.display !== 'none') toggleAccordion(t.label);
     });
   }
 
-  // ── Run single test ───────────────────────────────────────────────────────
-  async function runSingle(label, url, expected) {
+  // ── Run single test (direct browser fetch) ────────────────────────────────
+  async function runSingle(label, url, expected, withJwt) {
     setRunning(label);
     try {
-      const resp = await fetch(`/test/run?url=${encodeURIComponent(url)}&expected=${expected}`);
-      renderResult(label, await resp.json());
+      const headers = {};
+      if (withJwt && JWT_TOKEN) headers['Authorization'] = `Bearer ${JWT_TOKEN}`;
+
+      const resp = await fetch(url, { headers, mode: 'cors' });
+
+      let resultJson = null;
+      const ct = resp.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        try { resultJson = JSON.stringify(await resp.json(), null, 2); } catch(e) {}
+      }
+
+      renderResult(label, {
+        status_code: resp.status,
+        expected,
+        result_json: resultJson,
+        error: null,
+      });
     } catch (e) {
-      setError(label, e);
+      renderResult(label, {
+        status_code: null,
+        expected,
+        result_json: null,
+        error: e.message || String(e),
+      });
     }
   }
 
@@ -240,7 +243,7 @@
   async function runAll() {
     const btn = document.getElementById('run-all-btn');
     btn.disabled = true;
-    await Promise.all(initialResults.map(t => runSingle(t.label, t.url, t.expected)));
+    await Promise.all(testCases.map(t => runSingle(t.label, t.url, t.expected, t.with_jwt)));
     btn.disabled = false;
   }
 
@@ -253,15 +256,9 @@
     updateSummary();
   }
 
-  function setError(label, e) {
-    document.getElementById(`result-${label}`).innerHTML =
-      `<div class="result-fail">Fetch error: ${escapeHtml(String(e))}</div>`;
-    updateSummary();
-  }
-
   // ── Render result into DOM ─────────────────────────────────────────────────
   function renderResult(label, t) {
-    const passed = t.status_code === t.expected;
+    const passed  = t.status_code === t.expected;
     const statusEl = document.getElementById(`status-${label}`);
     statusEl.innerHTML = passed
       ? '<span class="status-dot status-pass"></span>'
@@ -270,20 +267,18 @@
     const badge = document.getElementById(`badge-${label}`);
     if (badge) {
       badge.textContent = t.status_code ?? t.expected;
-      badge.className = 'badge ' + (passed ? 'badge-ok' : 'badge-deny');
+      badge.className   = 'badge ' + (passed ? 'badge-ok' : 'badge-deny');
     }
 
     let html = passed
       ? `<span class="result-pass"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/></svg>HTTP ${t.status_code} — passed</span>`
-      : `<span class="result-fail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/></svg>${t.status_code ? 'HTTP ' + t.status_code : t.error} — failed</span>`;
+      : `<span class="result-fail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/></svg>${t.status_code ? 'HTTP ' + t.status_code : escapeHtml(t.error)} — failed</span>`;
 
     if (t.result_json) {
       html += `<div class="code-fence code-fence-sm mt-8"><pre>${syntaxHighlight(t.result_json)}</pre></div>`;
     }
 
     document.getElementById(`result-${label}`).innerHTML = html;
-
-    // Auto-open on failure, keep open on pass if already open
     if (!passed) openAccordion(label);
     updateSummary();
   }
