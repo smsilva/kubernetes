@@ -1,0 +1,46 @@
+#!/bin/bash
+# 04-install-istio: instala Istio (base, istiod, ingressgateway como ClusterIP)
+# O HAProxy Ingress roteia o tráfego externo até o istio-ingressgateway
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+istio_version="1.24.3"
+
+echo "=== Adicionando repositório Helm do Istio ==="
+helm repo add istio https://istio-release.storage.googleapis.com/charts
+helm repo update istio
+
+echo ""
+echo "=== Instalando istio-base (CRDs) ==="
+helm upgrade --install istio-base istio/base \
+  --namespace istio-system \
+  --create-namespace \
+  --version "${istio_version}" \
+  --wait
+
+echo ""
+echo "=== Instalando istiod (control plane) ==="
+helm upgrade --install istiod istio/istiod \
+  --namespace istio-system \
+  --version "${istio_version}" \
+  --wait
+
+kubectl wait deployment istiod \
+  --namespace istio-system \
+  --for condition=Available \
+  --timeout=120s
+
+echo ""
+echo "=== Instalando istio-ingressgateway (ClusterIP) ==="
+helm upgrade --install istio-ingressgateway istio/gateway \
+  --namespace istio-ingress \
+  --create-namespace \
+  --version "${istio_version}" \
+  --set service.type=ClusterIP \
+  --wait
+
+echo ""
+echo "=== Istio pronto ==="
+kubectl get pods --namespace istio-system
+kubectl get pods,svc --namespace istio-ingress

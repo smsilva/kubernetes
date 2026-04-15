@@ -1,0 +1,38 @@
+#!/bin/bash
+# 01-create-cluster: cria cluster k3d local para o lab wasp
+# Traefik desabilitado — Nginx Ingress Controller instalado no script 02
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+echo "=== Criando cluster k3d: ${cluster_name} ==="
+
+if k3d cluster list 2>/dev/null | grep -q "^${cluster_name}"; then
+  echo "Cluster '${cluster_name}' já existe. Pulando criação."
+  k3d kubeconfig merge "${cluster_name}" --kubeconfig-merge-default
+  kubectl config use-context "k3d-${cluster_name}"
+  exit 0
+fi
+
+k3d cluster create "${cluster_name}" \
+  --api-port 6550 \
+  --port "${http_port}:80@loadbalancer" \
+  --port "${https_port}:443@loadbalancer" \
+  --port "${haproxy_nodeport}:${haproxy_nodeport}@loadbalancer" \
+  --servers 3 \
+  --k3s-arg '--disable=traefik@server:*' \
+  --wait \
+  --timeout 360s
+
+echo ""
+echo "=== Configurando kubeconfig ==="
+k3d kubeconfig merge "${cluster_name}" --kubeconfig-merge-default
+kubectl config use-context "k3d-${cluster_name}"
+
+echo ""
+echo "=== Aguardando nodes ficarem prontos ==="
+kubectl wait nodes --all --for condition=Ready --timeout=120s
+
+echo ""
+echo "=== Cluster pronto ==="
+kubectl get nodes

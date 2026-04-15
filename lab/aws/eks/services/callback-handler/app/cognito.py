@@ -15,15 +15,16 @@ class CognitoTokenExchangeError(Exception):
 
 
 class CognitoClient:
-    def __init__(self, domain: str, client_id: str, client_secret: str, callback_url: str):
+    def __init__(self, domain: str, client_id: str, client_secret: str, callback_url: str, token_url: str = ""):
         self._domain = domain
         self._client_id = client_id
         self._client_secret = client_secret
         self._callback_url = callback_url
+        self._token_url = token_url or f"https://{domain}/oauth2/token"
 
     def exchange_code_for_tokens(self, code: str) -> CognitoTokens:
         response = httpx.post(
-            f"https://{self._domain}/oauth2/token",
+            self._token_url,
             data={
                 "grant_type": "authorization_code",
                 "code": code,

@@ -1,0 +1,81 @@
+#!/bin/bash
+# 03-install-cert-manager: instala cert-manager + ClusterIssuer CA auto-assinada para *.wasp.local
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+echo "=== Adicionando repositório Helm do cert-manager ==="
+helm repo add jetstack https://charts.jetstack.io
+helm repo update jetstack
+
+echo ""
+echo "=== Instalando cert-manager ==="
+helm upgrade --install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --set crds.enabled=true \
+  --wait \
+  --timeout 120s
+
+echo ""
+echo "=== Aguardando pods ficarem prontos ==="
+kubectl wait deployment cert-manager \
+  --namespace cert-manager \
+  --for condition=Available \
+  --timeout=120s
+
+kubectl wait deployment cert-manager-webhook \
+  --namespace cert-manager \
+  --for condition=Available \
+  --timeout=120s
+
+echo ""
+echo "=== Criando CA auto-assinada para *.${domain} ==="
+kubectl apply --filename - <<EOF
+---
+# Issuer raiz (selfSigned) — só para gerar o CA
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-root
+spec:
+  selfSigned: {}
+---
+# Certificado CA
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wasp-local-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: wasp-local-ca
+  secretName: wasp-local-ca-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    kind: ClusterIssuer
+    name: selfsigned-root
+---
+# ClusterIssuer que usa o CA para emitir certificados dos serviços
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: wasp-local-ca
+spec:
+  ca:
+    secretName: wasp-local-ca-secret
+EOF
+
+echo ""
+echo "=== Aguardando CA ficar pronto ==="
+kubectl wait clusterissuer wasp-local-ca \
+  --for condition=Ready \
+  --timeout=60s
+
+echo ""
+echo "=== cert-manager pronto ==="
+echo "  ClusterIssuer disponível: wasp-local-ca"
+echo "  Usar em certificados: issuerRef.name: wasp-local-ca"
+kubectl get clusterissuer

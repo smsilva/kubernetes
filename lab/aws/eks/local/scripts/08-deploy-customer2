@@ -1,0 +1,318 @@
+#!/bin/bash
+# 08-deploy-customer2: adiciona customer2 ao seed do discovery, atualiza o
+#   callback-handler com o segundo secret e faz deploy do namespace customer2.
+#
+# Pré-requisitos:
+#   - Scripts 01-07 executados
+#   - KEYCLOAK_CLIENT_SECRET em env.secrets (gravado pelo 05-deploy-keycloak)
+#   - STATE_JWT_SECRET em env.secrets (gravado pelo 06-deploy-services)
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+scripts_dir="$(cd "$(dirname "$0")" && pwd)"
+secrets_file="${scripts_dir}/env.secrets"
+services_dir="${scripts_dir}/../services"
+
+if [[ -f "${secrets_file}" ]]; then
+  # shellcheck source=/dev/null
+  . "${secrets_file}"
+fi
+
+# =============================================================================
+# Validação
+# =============================================================================
+for var in KEYCLOAK_CLIENT_SECRET STATE_JWT_SECRET; do
+  if [[ -z "${!var:-}" ]]; then
+    echo "Erro: ${var} não definido em env.secrets"
+    exit 1
+  fi
+done
+
+image_tag="$(git -C "${services_dir}" rev-parse --short HEAD)"
+container_image_callback_handler="${image_callback_handler}:${image_tag}"
+container_image_tenant_frontend="${image_tenant_frontend}:${image_tag}"
+
+# =============================================================================
+# Atualiza ConfigMap discovery-seed: adiciona customer2
+# =============================================================================
+echo "Atualizando ConfigMap discovery-seed (adicionando customer2)..."
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: discovery-seed
+  namespace: discovery
+data:
+  tenants.json: |
+    [
+      {
+        "domain": "customer1.${domain}",
+        "tenant_id": "customer1",
+        "tenant_url": "http://customer1.${domain}:${haproxy_nodeport}",
+        "client_id": "wasp-platform",
+        "idp_name": "",
+        "cognito_pool_id": ""
+      },
+      {
+        "domain": "customer2.${domain}",
+        "tenant_id": "customer2",
+        "tenant_url": "http://customer2.${domain}:${haproxy_nodeport}",
+        "client_id": "wasp-platform",
+        "idp_name": "",
+        "cognito_pool_id": ""
+      }
+    ]
+EOF
+
+# SQLite é carregado apenas na inicialização do pod — precisa de restart
+echo "Reiniciando discovery para recarregar seed..."
+kubectl -n discovery rollout restart deployment/discovery
+kubectl -n discovery rollout status deployment/discovery --timeout=180s
+
+# =============================================================================
+# Atualiza Secret do callback-handler: adiciona COGNITO_CLIENT_SECRET_CUSTOMER2
+# No lab local, customer1 e customer2 usam o mesmo client Keycloak (wasp-platform)
+# =============================================================================
+echo "Atualizando Secret do callback-handler (adicionando customer2)..."
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: callback-handler-secret
+  namespace: auth
+type: Opaque
+stringData:
+  COGNITO_CLIENT_SECRET_CUSTOMER1: "${KEYCLOAK_CLIENT_SECRET}"
+  COGNITO_CLIENT_SECRET_CUSTOMER2: "${KEYCLOAK_CLIENT_SECRET}"
+  STATE_JWT_SECRET: "${STATE_JWT_SECRET}"
+EOF
+
+kubectl -n auth rollout restart deployment/callback-handler
+echo "Aguardando rollout do callback-handler..."
+kubectl -n auth rollout status deployment/callback-handler --timeout=180s
+
+# =============================================================================
+# Deploy: customer2 (httpbin + tenant-frontend + Istio auth)
+# =============================================================================
+echo "Deploying: customer2..."
+
+jwt_issuer="http://idp.${domain}:${haproxy_nodeport}/realms/${keycloak_realm}"
+jwks_uri="http://keycloak.${keycloak_namespace}.svc.cluster.local:8080/realms/${keycloak_realm}/protocol/openid-connect/certs"
+
+kubectl apply -f - <<EOF
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: customer2
+  labels:
+    istio-injection: enabled
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+  namespace: customer2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpbin
+  template:
+    metadata:
+      labels:
+        app: httpbin
+    spec:
+      containers:
+        - name: httpbin
+          image: kennethreitz/httpbin
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+  namespace: customer2
+spec:
+  selector:
+    app: httpbin
+  ports:
+    - port: 8000
+      targetPort: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenant-frontend-config
+  namespace: customer2
+data:
+  HTTPBIN_URL: "http://httpbin.${domain}:${haproxy_nodeport}"
+  PLATFORM_URL: "http://${domain}:${haproxy_nodeport}"
+  CUSTOMER1_URL: "http://customer1.${domain}:${haproxy_nodeport}"
+  CUSTOMER2_URL: "http://customer2.${domain}:${haproxy_nodeport}"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-frontend
+  namespace: customer2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tenant-frontend
+  template:
+    metadata:
+      labels:
+        app: tenant-frontend
+    spec:
+      containers:
+        - name: tenant-frontend
+          image: ${container_image_tenant_frontend}
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: tenant-frontend-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenant-frontend
+  namespace: customer2
+spec:
+  selector:
+    app: tenant-frontend
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: customer2-gateway
+  namespace: customer2
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "customer2.${domain}"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: customer2
+  namespace: customer2
+spec:
+  hosts:
+    - "customer2.${domain}"
+  gateways:
+    - customer2-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /httpbin
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: httpbin
+            port:
+              number: 8000
+    - route:
+        - destination:
+            host: tenant-frontend
+            port:
+              number: 8000
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-health-check
+  namespace: customer2
+spec:
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths: ["/health"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: keycloak-jwt
+  namespace: customer2
+spec:
+  jwtRules:
+    - issuer: "${jwt_issuer}"
+      jwksUri: "${jwks_uri}"
+      forwardOriginalToken: true
+      fromCookies:
+        - session
+      fromHeaders:
+        - name: Authorization
+          prefix: "Bearer "
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: require-tenant-jwt
+  namespace: customer2
+spec:
+  action: ALLOW
+  rules:
+    - when:
+        - key: request.auth.claims[custom:tenant_id]
+          values: ["customer2"]
+EOF
+
+# =============================================================================
+# Aguarda deployments
+# =============================================================================
+echo "Aguardando deployments customer2..."
+for deploy in httpbin tenant-frontend; do
+  kubectl -n customer2 wait deployment/"${deploy}" \
+    --for condition=Available \
+    --timeout=180s
+  echo "  customer2/${deploy}: pronto"
+done
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo ""
+echo "Namespace customer2:"
+kubectl -n customer2 get deployment,svc,gateway,virtualservice,requestauthentication,authorizationpolicy
+
+echo ""
+echo "Pods:"
+kubectl get pods --all-namespaces --selector 'app in (discovery,callback-handler,httpbin,tenant-frontend)'
+
+echo ""
+echo "--- Testes esperados ---"
+echo ""
+echo "Sem JWT → 403:"
+echo "  curl -i http://customer2.${domain}:${haproxy_nodeport}/"
+echo ""
+echo "Isolamento cruzado (JWT do customer2 rejeitado no customer1):"
+echo "  curl -b 'session=<JWT-customer2>' http://customer1.${domain}:${haproxy_nodeport}/"
+echo "  # esperado: HTTP 403"
+echo ""
+echo "Fluxo completo:"
+echo "  http://${domain}:${haproxy_nodeport} → user2@customer2.com / password2 → customer2.${domain}"
+echo ""
+echo "Próximo passo: scripts/destroy  (quando quiser limpar o ambiente)"

@@ -1,0 +1,14 @@
+#!/bin/bash
+# destroy: remove o cluster k3d (destrói todos os recursos locais)
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+if ! k3d cluster list | grep --quiet "${cluster_name}"; then
+  echo "Cluster '${cluster_name}' não existe, nada a fazer."
+  exit 0
+fi
+
+echo "Deletando cluster k3d '${cluster_name}'..."
+k3d cluster delete "${cluster_name}"
+echo "Cluster deletado."

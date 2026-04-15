@@ -66,10 +66,13 @@ def process_login(
             email=email,
         )
 
+    tenant_url = tenant.tenant_url
+    return_url = tenant_url if "://" in tenant_url else f"https://{tenant_url}"
+
     state = build_state_token(
         tenant_id=tenant.tenant_id,
         client_id=tenant.client_id,
-        return_url=f"https://{tenant.tenant_url}",
+        return_url=return_url,
         secret=os.getenv("STATE_JWT_SECRET", ""),
     )
 
@@ -79,6 +82,7 @@ def process_login(
         idp_name=tenant.idp_name,
         callback_url=os.getenv("CALLBACK_URL", ""),
         state=state,
+        authorize_url=os.getenv("IDP_AUTHORIZE_URL", ""),
     )
 
     return RedirectResponse(url=redirect_url, status_code=302)

@@ -1,0 +1,32 @@
+#!/bin/bash
+# 02-install-haproxy-ingress: instala HAProxy Ingress Controller via Helm
+# NodePort 32080 (HTTP) exposto no host pelo k3d (configurado em 01-create-cluster)
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+echo "=== Adicionando repositório Helm do HAProxy Ingress ==="
+helm repo add haproxy-ingress https://haproxy-ingress.github.io/charts
+helm repo update haproxy-ingress
+
+echo ""
+echo "=== Instalando HAProxy Ingress Controller ==="
+helm upgrade --install haproxy-ingress haproxy-ingress/haproxy-ingress \
+  --namespace ingress-controller \
+  --create-namespace \
+  --set controller.service.type=NodePort \
+  --set controller.service.nodePorts.http="${haproxy_nodeport}" \
+  --wait \
+  --timeout 120s
+
+echo ""
+echo "=== Aguardando controller ficar pronto ==="
+kubectl wait deployment haproxy-ingress \
+  --namespace ingress-controller \
+  --for condition=Available \
+  --timeout=120s
+
+echo ""
+echo "=== HAProxy Ingress Controller pronto ==="
+echo "  HTTP disponível em: http://localhost:${haproxy_nodeport}"
+kubectl get pods --namespace ingress-controller

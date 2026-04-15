@@ -1,0 +1,210 @@
+#!/bin/bash
+# 05-deploy-keycloak: instala Keycloak + configura realm wasp com users de teste
+# - Realm: wasp
+# - Client OIDC: wasp-platform
+# - Users: user1@customer1.com (tenant_id=customer1), user2@customer2.com (tenant_id=customer2)
+# - Protocol Mapper: injeta custom:tenant_id no token via atributo do usuário
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+keycloak_internal_port="8080"
+keycloak_forward_port="8180"
+keycloak_url="http://localhost:${keycloak_forward_port}"
+client_id="wasp-platform"
+callback_url="http://auth.${domain}:${haproxy_nodeport}/callback"
+
+# =============================================================================
+# Instalação via Helm
+# =============================================================================
+echo "=== Adicionando repositório Helm Bitnami ==="
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update bitnami
+
+echo ""
+echo "=== Instalando Keycloak ==="
+helm upgrade --install keycloak bitnami/keycloak \
+  --namespace "${keycloak_namespace}" \
+  --create-namespace \
+  --set auth.adminUser="${keycloak_admin_user}" \
+  --set auth.adminPassword="${keycloak_admin_password}" \
+  --set service.type=ClusterIP \
+  --set ingress.enabled=false \
+  --wait \
+  --timeout 300s
+
+echo ""
+echo "=== Aguardando Keycloak ficar pronto ==="
+kubectl wait deployment keycloak \
+  --namespace "${keycloak_namespace}" \
+  --for condition=Available \
+  --timeout=300s
+
+# =============================================================================
+# Port-forward para configuração via API
+# =============================================================================
+echo ""
+echo "=== Abrindo port-forward para configuração ==="
+kubectl port-forward \
+  --namespace "${keycloak_namespace}" \
+  service/keycloak "${keycloak_forward_port}:${keycloak_internal_port}" &
+pf_pid=$!
+trap 'kill "${pf_pid}" 2>/dev/null || true' EXIT
+
+# aguarda o port-forward estar aceitando conexões
+for i in $(seq 1 30); do
+  if curl --silent --fail "${keycloak_url}/realms/master" &>/dev/null; then
+    break
+  fi
+  sleep 2
+done
+
+# =============================================================================
+# Token de admin
+# =============================================================================
+echo ""
+echo "=== Obtendo token de admin ==="
+admin_token=$(curl --silent --fail \
+  --request POST \
+  "${keycloak_url}/realms/master/protocol/openid-connect/token" \
+  --data "client_id=admin-cli" \
+  --data "username=${keycloak_admin_user}" \
+  --data "password=${keycloak_admin_password}" \
+  --data "grant_type=password" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+auth_header="Authorization: Bearer ${admin_token}"
+
+# =============================================================================
+# Realm wasp
+# =============================================================================
+echo ""
+echo "=== Criando realm '${keycloak_realm}' ==="
+curl --silent --output /dev/null \
+  --request POST \
+  "${keycloak_url}/admin/realms" \
+  --header "${auth_header}" \
+  --header "Content-Type: application/json" \
+  --data "{
+    \"realm\": \"${keycloak_realm}\",
+    \"enabled\": true,
+    \"displayName\": \"WASP Platform\",
+    \"frontendUrl\": \"http://idp.${domain}:${haproxy_nodeport}\"
+  }"
+
+# =============================================================================
+# Client OIDC: wasp-platform
+# =============================================================================
+echo "=== Criando client '${client_id}' ==="
+curl --silent --output /dev/null \
+  --request POST \
+  "${keycloak_url}/admin/realms/${keycloak_realm}/clients" \
+  --header "${auth_header}" \
+  --header "Content-Type: application/json" \
+  --data "{
+    \"clientId\": \"${client_id}\",
+    \"enabled\": true,
+    \"protocol\": \"openid-connect\",
+    \"publicClient\": false,
+    \"standardFlowEnabled\": true,
+    \"redirectUris\": [\"${callback_url}\", \"http://auth.${domain}/callback\"],
+    \"webOrigins\": [\"+\"]
+  }"
+
+# recupera UUID do client para criar mappers
+client_uuid=$(curl --silent \
+  "${keycloak_url}/admin/realms/${keycloak_realm}/clients?clientId=${client_id}" \
+  --header "${auth_header}" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['id'])")
+
+# recupera client_secret
+client_secret=$(curl --silent \
+  "${keycloak_url}/admin/realms/${keycloak_realm}/clients/${client_uuid}/client-secret" \
+  --header "${auth_header}" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['value'])")
+
+# =============================================================================
+# Protocol Mapper: custom:tenant_id via atributo do usuário
+# =============================================================================
+echo "=== Criando Protocol Mapper 'custom:tenant_id' ==="
+curl --silent --output /dev/null \
+  --request POST \
+  "${keycloak_url}/admin/realms/${keycloak_realm}/clients/${client_uuid}/protocol-mappers/models" \
+  --header "${auth_header}" \
+  --header "Content-Type: application/json" \
+  --data "{
+    \"name\": \"tenant_id\",
+    \"protocol\": \"openid-connect\",
+    \"protocolMapper\": \"oidc-usermodel-attribute-mapper\",
+    \"config\": {
+      \"user.attribute\": \"tenant_id\",
+      \"claim.name\": \"custom:tenant_id\",
+      \"jsonType.label\": \"String\",
+      \"id.token.claim\": \"true\",
+      \"access.token.claim\": \"true\",
+      \"userinfo.token.claim\": \"true\"
+    }
+  }"
+
+# =============================================================================
+# Usuários de teste
+# =============================================================================
+create_user() {
+  local email="$1"
+  local password="$2"
+  local tenant="$3"
+
+  echo "=== Criando usuário ${email} (tenant_id=${tenant}) ==="
+
+  curl --silent --output /dev/null \
+    --request POST \
+    "${keycloak_url}/admin/realms/${keycloak_realm}/users" \
+    --header "${auth_header}" \
+    --header "Content-Type: application/json" \
+    --data "{
+      \"username\": \"${email}\",
+      \"email\": \"${email}\",
+      \"enabled\": true,
+      \"emailVerified\": true,
+      \"attributes\": {
+        \"tenant_id\": [\"${tenant}\"]
+      },
+      \"credentials\": [{
+        \"type\": \"password\",
+        \"value\": \"${password}\",
+        \"temporary\": false
+      }]
+    }"
+}
+
+create_user "user1@customer1.com" "password1" "customer1"
+create_user "user2@customer2.com" "password2" "customer2"
+
+# =============================================================================
+# Resultado
+# =============================================================================
+# =============================================================================
+# Salva client_secret em env.secrets (sobrescreve entrada existente ou adiciona)
+# =============================================================================
+secrets_file="$(dirname "$0")/env.secrets"
+
+if grep --quiet "^KEYCLOAK_CLIENT_SECRET=" "${secrets_file}" 2>/dev/null; then
+  sed --in-place "s|^KEYCLOAK_CLIENT_SECRET=.*|KEYCLOAK_CLIENT_SECRET=\"${client_secret}\"|" "${secrets_file}"
+else
+  echo "KEYCLOAK_CLIENT_SECRET=\"${client_secret}\"" >> "${secrets_file}"
+fi
+
+echo ""
+echo "=== Keycloak configurado ==="
+echo "  Realm:         ${keycloak_realm}"
+echo "  Client ID:     ${client_id}"
+echo "  Client Secret: ${client_secret}  (salvo em env.secrets)"
+echo "  Frontend URL:  http://idp.${domain}:${haproxy_nodeport}"
+echo "  Issuer JWT:    http://idp.${domain}:${haproxy_nodeport}/realms/${keycloak_realm}"
+echo "  JWKS URI:      http://keycloak.${keycloak_namespace}.svc.cluster.local:8080/realms/${keycloak_realm}/protocol/openid-connect/certs"
+echo ""
+echo "  Usuários de teste:"
+echo "    user1@customer1.com / password1  (tenant_id=customer1)"
+echo "    user2@customer2.com / password2  (tenant_id=customer2)"
+echo ""
+echo "Próximo passo: scripts/06-deploy-services"

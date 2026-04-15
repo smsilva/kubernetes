@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import MagicMock
 from botocore.exceptions import ClientError
 
@@ -111,3 +112,51 @@ def test_dynamodb_repository_logs_client_error(caplog):
             repository.find_by_domain("gmail.com")
 
     assert any("AccessDeniedException" in r.message for r in caplog.records)
+
+
+# SQLiteTenantRepository
+
+from app.repository import SQLiteTenantRepository
+
+
+@pytest.fixture
+def sqlite_repository():
+    repo = SQLiteTenantRepository(db_path=":memory:")
+    repo.seed([
+        {"domain": "gmail.com",      **CUSTOMER1.model_dump()},
+        {"domain": "customer2.com",  **CUSTOMER2.model_dump()},
+    ])
+    return repo
+
+
+def test_sqlite_repository_returns_none_for_empty_db():
+    repo = SQLiteTenantRepository(db_path=":memory:")
+    assert repo.find_by_domain("gmail.com") is None
+
+
+def test_sqlite_repository_find_by_domain_returns_tenant(sqlite_repository):
+    tenant = sqlite_repository.find_by_domain("gmail.com")
+    assert tenant == CUSTOMER1
+
+
+def test_sqlite_repository_find_by_domain_returns_none_for_unknown_domain(sqlite_repository):
+    assert sqlite_repository.find_by_domain("unknown.com") is None
+
+
+def test_sqlite_repository_returns_correct_tenant_for_each_domain(sqlite_repository):
+    assert sqlite_repository.find_by_domain("gmail.com") == CUSTOMER1
+    assert sqlite_repository.find_by_domain("customer2.com") == CUSTOMER2
+
+
+def test_sqlite_repository_is_case_insensitive(sqlite_repository):
+    tenant = sqlite_repository.find_by_domain("Gmail.COM")
+    assert tenant == CUSTOMER1
+
+
+def test_sqlite_repository_returns_all_fields(sqlite_repository):
+    tenant = sqlite_repository.find_by_domain("gmail.com")
+    assert tenant.tenant_id == CUSTOMER1.tenant_id
+    assert tenant.tenant_url == CUSTOMER1.tenant_url
+    assert tenant.client_id == CUSTOMER1.client_id
+    assert tenant.idp_name == CUSTOMER1.idp_name
+    assert tenant.cognito_pool_id == CUSTOMER1.cognito_pool_id

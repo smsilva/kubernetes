@@ -13,7 +13,7 @@ def test_get_repository_raises_when_env_vars_are_missing():
     from app.main import get_repository
     get_repository.cache_clear()
 
-    env_without_aws = {k: v for k, v in os.environ.items() if k not in ("AWS_REGION", "DYNAMODB_TABLE")}
+    env_without_aws = {k: v for k, v in os.environ.items() if k not in ("AWS_REGION", "DYNAMODB_TABLE", "BACKEND", "SQLITE_DB_PATH")}
     with patch.dict("os.environ", env_without_aws, clear=True):
         with pytest.raises(KeyError):
             get_repository()
@@ -50,6 +50,73 @@ def test_get_repository_returns_dynamodb_repository_using_env_vars():
 
         assert isinstance(repository, DynamoDBTenantRepository)
         mock_boto3.client.assert_called_once_with("dynamodb", region_name="us-east-1")
+
+    get_repository.cache_clear()
+
+
+def test_get_repository_returns_sqlite_repository_when_backend_is_sqlite():
+    import pytest
+    from app.main import get_repository
+    from app.repository import SQLiteTenantRepository
+    get_repository.cache_clear()
+
+    with patch.dict("os.environ", {"BACKEND": "sqlite", "SQLITE_DB_PATH": ":memory:"}):
+        repository = get_repository()
+        assert isinstance(repository, SQLiteTenantRepository)
+
+    get_repository.cache_clear()
+
+
+def test_get_repository_raises_for_unknown_backend():
+    import pytest
+    from app.main import get_repository
+    get_repository.cache_clear()
+
+    with patch.dict("os.environ", {"BACKEND": "redis"}):
+        with pytest.raises(ValueError, match="BACKEND"):
+            get_repository()
+
+    get_repository.cache_clear()
+
+
+def test_get_repository_seeds_sqlite_from_file_when_seed_file_is_set(tmp_path):
+    import json
+    import pytest
+    from app.main import get_repository
+    from app.repository import SQLiteTenantRepository
+    get_repository.cache_clear()
+
+    seed_data = [
+        {
+            "domain": "customer1.com",
+            "tenant_id": "customer1",
+            "tenant_url": "http://customer1.wasp.local:32080",
+            "client_id": "wasp-platform",
+            "idp_name": "",
+            "cognito_pool_id": "",
+        }
+    ]
+    seed_file = tmp_path / "seed.json"
+    seed_file.write_text(json.dumps(seed_data))
+
+    with patch.dict("os.environ", {"BACKEND": "sqlite", "SQLITE_DB_PATH": ":memory:", "SQLITE_SEED_FILE": str(seed_file)}):
+        repo = get_repository()
+        tenant = repo.find_by_domain("customer1.com")
+        assert tenant is not None
+        assert tenant.tenant_id == "customer1"
+
+    get_repository.cache_clear()
+
+
+def test_get_repository_sqlite_without_seed_file_starts_empty():
+    import pytest
+    from app.main import get_repository
+    from app.repository import SQLiteTenantRepository
+    get_repository.cache_clear()
+
+    with patch.dict("os.environ", {"BACKEND": "sqlite", "SQLITE_DB_PATH": ":memory:"}):
+        repo = get_repository()
+        assert repo.find_by_domain("customer1.com") is None
 
     get_repository.cache_clear()
 

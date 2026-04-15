@@ -1,0 +1,93 @@
+#!/bin/bash
+# bootstrap: valida pré-requisitos do lab local (k3d, sem dependências cloud)
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+errors=0
+
+red="\033[0;31m"
+green="\033[0;32m"
+yellow="\033[1;33m"
+reset="\033[0m"
+
+ok()      { echo -e "${green}[OK]${reset}   $*"; }
+fail()    { echo -e "${red}[FAIL]${reset} $*"; errors=$((errors + 1)); }
+warn()    { echo -e "${yellow}[WARN]${reset} $*"; }
+section() { echo -e "\n=== $* ==="; }
+
+# =============================================================================
+# CLIs obrigatórias
+# =============================================================================
+section "Ferramentas CLI"
+
+for tool in k3d kubectl helm docker; do
+  if command -v "${tool}" &>/dev/null; then
+    version=$("${tool}" version 2>/dev/null | head -1 || echo 'versão não detectada')
+    ok "${tool}: ${version}"
+  else
+    fail "${tool} não encontrado no PATH"
+  fi
+done
+
+# istioctl é opcional (instalado pelo script 04)
+if command -v istioctl &>/dev/null; then
+  version=$(istioctl version --remote=false 2>/dev/null | head -1 || echo 'versão não detectada')
+  ok "istioctl: ${version}"
+else
+  warn "istioctl não encontrado — será necessário no script 04-install-istio"
+fi
+
+# =============================================================================
+# Docker daemon
+# =============================================================================
+section "Docker"
+
+if docker info &>/dev/null; then
+  docker_version=$(docker info --format '{{.ServerVersion}}' 2>/dev/null)
+  ok "Docker daemon rodando (v${docker_version})"
+else
+  fail "Docker daemon não está rodando"
+fi
+
+# =============================================================================
+# /etc/hosts — entradas wasp.local
+# =============================================================================
+section "/etc/hosts"
+
+expected_domains=(
+  "wasp.local"
+  "auth.wasp.local"
+  "discovery.wasp.local"
+  "idp.wasp.local"
+  "customer1.wasp.local"
+  "customer2.wasp.local"
+)
+
+missing_hosts=()
+for host in "${expected_domains[@]}"; do
+  if grep -qE "^127\.0\.0\.1[[:space:]].*\b${host}\b" /etc/hosts 2>/dev/null; then
+    ok "/etc/hosts: ${host}"
+  else
+    missing_hosts+=("${host}")
+    warn "/etc/hosts: ${host} ausente"
+  fi
+done
+
+if [[ ${#missing_hosts[@]} -gt 0 ]]; then
+  echo ""
+  echo "  Adicione ao /etc/hosts (sudo):"
+  echo "  127.0.0.1 ${missing_hosts[*]}"
+fi
+
+# =============================================================================
+# Resultado final
+# =============================================================================
+echo ""
+if [[ "${errors}" -eq 0 ]]; then
+  echo -e "${green}Todos os pré-requisitos atendidos. Pode prosseguir.${reset}"
+  exit 0
+else
+  echo -e "${red}${errors} problema(s) encontrado(s). Corrija antes de continuar.${reset}"
+  exit 1
+fi

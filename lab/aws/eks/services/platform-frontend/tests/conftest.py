@@ -45,5 +45,40 @@ def mock_discovery_returns_none():
 
 
 @pytest.fixture
+def mock_discovery_with_full_url():
+    client = MockDiscoveryClient(
+        tenant_info=TenantInfo(
+            tenant_id="customer1",
+            tenant_url="http://customer1.wasp.local:32080",
+            client_id="wasp-platform",
+            idp_name="",
+            cognito_pool_id="",
+        )
+    )
+    app.dependency_overrides[get_discovery_client] = lambda: client
+    yield client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def mock_discovery_no_idp():
+    from app.discovery_client import TenantInfo
+
+    class MockDiscoveryNoIdp:
+        def find_tenant_by_domain(self, domain):
+            return TenantInfo(
+                tenant_id="customer1",
+                tenant_url="customer1.wasp.local",
+                client_id="wasp-platform",
+                idp_name="",
+                cognito_pool_id="",
+            )
+
+    app.dependency_overrides[get_discovery_client] = lambda: MockDiscoveryNoIdp()
+    yield
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
 def api_client():
     return TestClient(app, follow_redirects=False)

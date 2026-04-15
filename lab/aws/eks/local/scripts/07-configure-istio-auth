@@ -1,0 +1,96 @@
+#!/bin/bash
+# 07-configure-istio-auth: RequestAuthentication + AuthorizationPolicy no namespace customer1
+# Valida JWT emitido pelo Keycloak (substituição do Cognito).
+# - issuer:  frontendUrl do realm configurado em 05-deploy-keycloak
+# - jwksUri: URL interna do cluster (evita round-trip externo pelo HAProxy)
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+# Issuer deve coincidir exatamente com o claim "iss" no JWT emitido pelo Keycloak.
+# O 05-deploy-keycloak define frontendUrl = http://idp.${domain}:${haproxy_nodeport},
+# por isso o iss será http://idp.${domain}:${haproxy_nodeport}/realms/${keycloak_realm}.
+jwt_issuer="http://idp.${domain}:${haproxy_nodeport}/realms/${keycloak_realm}"
+
+# jwksUri usa o service interno — Istio busca as chaves públicas sem passar pelo HAProxy.
+jwks_uri="http://keycloak.${keycloak_namespace}.svc.cluster.local:8080/realms/${keycloak_realm}/protocol/openid-connect/certs"
+
+echo "Issuer : ${jwt_issuer}"
+echo "JWKS   : ${jwks_uri}"
+
+# =============================================================================
+# RequestAuthentication
+# Valida assinatura e expiração do JWT emitido pelo Keycloak.
+# fromCookies:  lê o JWT do cookie "session" emitido pelo callback-handler.
+# fromHeaders:  lê o JWT do header "Authorization: Bearer <token>" (API/CLI).
+# forwardOriginalToken: propaga o JWT nos headers para leitura de claims pela app.
+# =============================================================================
+echo ""
+echo "Aplicando RequestAuthentication (namespace: customer1)..."
+
+kubectl apply -f - <<EOF
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: keycloak-jwt
+  namespace: customer1
+spec:
+  jwtRules:
+    - issuer: "${jwt_issuer}"
+      jwksUri: "${jwks_uri}"
+      forwardOriginalToken: true
+      fromCookies:
+        - session
+      fromHeaders:
+        - name: Authorization
+          prefix: "Bearer "
+EOF
+
+# =============================================================================
+# AuthorizationPolicy
+# Permite apenas requests com custom:tenant_id == "customer1".
+# Deny-by-default ativo porque já existe allow-health-check no namespace.
+# Sem JWT válido ou tenant_id errado → HTTP 403.
+# =============================================================================
+echo "Aplicando AuthorizationPolicy (namespace: customer1)..."
+
+kubectl apply -f - <<EOF
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: require-tenant-jwt
+  namespace: customer1
+spec:
+  action: ALLOW
+  rules:
+    - when:
+        - key: request.auth.claims[custom:tenant_id]
+          values: ["customer1"]
+EOF
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+echo ""
+echo "RequestAuthentication:"
+kubectl -n customer1 get requestauthentication keycloak-jwt -o yaml
+
+echo ""
+echo "AuthorizationPolicy:"
+kubectl -n customer1 get authorizationpolicy require-tenant-jwt -o yaml
+
+echo ""
+echo "Comportamento esperado:"
+echo "  JWT válido com custom:tenant_id=customer1  → HTTP 200"
+echo "  JWT válido com tenant_id de outro tenant   → HTTP 403"
+echo "  Sem cookie session e sem Bearer token      → HTTP 403"
+echo "  JWT expirado ou assinatura inválida        → HTTP 401"
+echo ""
+echo "Teste rápido (sem JWT):"
+echo "  curl -i http://customer1.${domain}:${haproxy_nodeport}/"
+echo "  # esperado: HTTP 403"
+echo ""
+echo "Próximo passo: scripts/08-deploy-customer2"

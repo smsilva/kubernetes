@@ -33,6 +33,7 @@ def _build_cognito_client(client_id: str, client_secret: str) -> CognitoClient:
         client_id=client_id,
         client_secret=client_secret,
         callback_url=os.getenv("CALLBACK_URL", ""),
+        token_url=os.getenv("IDP_TOKEN_URL", ""),
     )
 
 

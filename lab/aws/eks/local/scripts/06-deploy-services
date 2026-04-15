@@ -1,0 +1,618 @@
+#!/bin/bash
+# 06-deploy-services: build local + import k3d + deploy dos serviços (sem AWS)
+# - discovery:          BACKEND=sqlite, seed via ConfigMap tenants.json
+# - platform-frontend:  IDP_AUTHORIZE_URL apontando para Keycloak
+# - callback-handler:   IDP_TOKEN_URL apontando para Keycloak
+# - customer1:          httpbin interno + tenant-frontend
+
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+scripts_dir="$(cd "$(dirname "$0")" && pwd)"
+secrets_file="${scripts_dir}/env.secrets"
+services_dir="${scripts_dir}/../services"
+
+if [[ -f "${secrets_file}" ]]; then
+  # shellcheck source=/dev/null
+  . "${secrets_file}"
+fi
+
+# =============================================================================
+# Validação
+# =============================================================================
+if [[ -z "${KEYCLOAK_CLIENT_SECRET:-}" ]]; then
+  echo "Erro: KEYCLOAK_CLIENT_SECRET não definido em env.secrets"
+  echo "  Execute o passo 05-deploy-keycloak antes deste script."
+  exit 1
+fi
+
+if [[ -z "${STATE_JWT_SECRET:-}" ]]; then
+  echo "STATE_JWT_SECRET não definido — gerando e salvando em env.secrets..."
+  STATE_JWT_SECRET="$(openssl rand --hex 32)"
+  echo "STATE_JWT_SECRET=\"${STATE_JWT_SECRET}\"" >> "${secrets_file}"
+  echo "STATE_JWT_SECRET salvo em env.secrets"
+fi
+
+image_tag="$(git -C "${services_dir}" rev-parse --short HEAD)"
+container_image_discovery="${image_discovery}:${image_tag}"
+container_image_platform_frontend="${image_platform_frontend}:${image_tag}"
+container_image_callback_handler="${image_callback_handler}:${image_tag}"
+container_image_tenant_frontend="${image_tenant_frontend}:${image_tag}"
+
+# URLs do Keycloak (acessíveis dentro do cluster via service name)
+keycloak_internal_url="http://keycloak.keycloak.svc.cluster.local"
+keycloak_authorize_url="http://idp.${domain}:${haproxy_nodeport}/realms/${keycloak_realm}/protocol/openid-connect/auth"
+keycloak_token_url="${keycloak_internal_url}:8080/realms/${keycloak_realm}/protocol/openid-connect/token"
+
+# =============================================================================
+# Build local das imagens (sem --platform, sem push)
+# =============================================================================
+declare -A service_images=(
+  [discovery]="${container_image_discovery}"
+  [platform-frontend]="${container_image_platform_frontend}"
+  [callback-handler]="${container_image_callback_handler}"
+  [tenant-frontend]="${container_image_tenant_frontend}"
+)
+
+for svc in discovery platform-frontend callback-handler tenant-frontend; do
+  echo "Build: ${svc}..."
+  docker build \
+    --tag "${service_images[${svc}]}" \
+    "${services_dir}/${svc}"
+done
+
+echo "Importando imagens no cluster k3d ${cluster_name}..."
+k3d image import \
+  "${container_image_discovery}" \
+  "${container_image_platform_frontend}" \
+  "${container_image_callback_handler}" \
+  "${container_image_tenant_frontend}" \
+  --cluster "${cluster_name}"
+
+# =============================================================================
+# Deploy: discovery
+# =============================================================================
+echo "Deploying: discovery..."
+
+kubectl apply -f - <<EOF
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: discovery
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: discovery-config
+  namespace: discovery
+data:
+  BACKEND: "sqlite"
+  SQLITE_DB_PATH: "/data/tenants.db"
+  SQLITE_SEED_FILE: "/seed/tenants.json"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: discovery-seed
+  namespace: discovery
+data:
+  tenants.json: |
+    [
+      {
+        "domain": "customer1.${domain}",
+        "tenant_id": "customer1",
+        "tenant_url": "http://customer1.${domain}:${haproxy_nodeport}",
+        "client_id": "wasp-platform",
+        "idp_name": "",
+        "cognito_pool_id": ""
+      }
+    ]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery
+  namespace: discovery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discovery
+  template:
+    metadata:
+      labels:
+        app: discovery
+    spec:
+      containers:
+        - name: discovery
+          image: ${container_image_discovery}
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: discovery-config
+          volumeMounts:
+            - name: seed
+              mountPath: /seed
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: seed
+          configMap:
+            name: discovery-seed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery
+  namespace: discovery
+spec:
+  selector:
+    app: discovery
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: discovery-gateway
+  namespace: discovery
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "discovery.${domain}"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: discovery
+  namespace: discovery
+spec:
+  hosts:
+    - "discovery.${domain}"
+  gateways:
+    - discovery-gateway
+  http:
+    - route:
+        - destination:
+            host: discovery
+            port:
+              number: 8000
+EOF
+
+# =============================================================================
+# Deploy: platform-frontend
+# =============================================================================
+echo "Deploying: platform-frontend..."
+
+kubectl apply -f - <<EOF
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: platform
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-frontend-config
+  namespace: platform
+data:
+  DISCOVERY_URL: "http://discovery.${domain}:${haproxy_nodeport}"
+  COGNITO_DOMAIN: "idp.${domain}"
+  CALLBACK_URL: "http://auth.${domain}:${haproxy_nodeport}/callback"
+  IDP_AUTHORIZE_URL: "${keycloak_authorize_url}"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: platform-frontend-secret
+  namespace: platform
+type: Opaque
+stringData:
+  STATE_JWT_SECRET: "${STATE_JWT_SECRET}"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-frontend
+  namespace: platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platform-frontend
+  template:
+    metadata:
+      labels:
+        app: platform-frontend
+    spec:
+      containers:
+        - name: platform-frontend
+          image: ${container_image_platform_frontend}
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: platform-frontend-config
+            - secretRef:
+                name: platform-frontend-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-frontend
+  namespace: platform
+spec:
+  selector:
+    app: platform-frontend
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: platform-gateway
+  namespace: platform
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "${domain}"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: platform-frontend
+  namespace: platform
+spec:
+  hosts:
+    - "${domain}"
+  gateways:
+    - platform-gateway
+  http:
+    - route:
+        - destination:
+            host: platform-frontend
+            port:
+              number: 8000
+EOF
+
+# =============================================================================
+# Deploy: callback-handler
+# =============================================================================
+echo "Deploying: callback-handler..."
+
+kubectl apply -f - <<EOF
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: auth
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: callback-handler-config
+  namespace: auth
+data:
+  COGNITO_DOMAIN: "idp.${domain}"
+  CALLBACK_URL: "http://auth.${domain}:${haproxy_nodeport}/callback"
+  PLATFORM_URL: "http://${domain}:${haproxy_nodeport}"
+  IDP_TOKEN_URL: "${keycloak_token_url}"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: callback-handler-secret
+  namespace: auth
+type: Opaque
+stringData:
+  COGNITO_CLIENT_SECRET_CUSTOMER1: "${KEYCLOAK_CLIENT_SECRET}"
+  STATE_JWT_SECRET: "${STATE_JWT_SECRET}"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: callback-handler
+  namespace: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: callback-handler
+  template:
+    metadata:
+      labels:
+        app: callback-handler
+    spec:
+      containers:
+        - name: callback-handler
+          image: ${container_image_callback_handler}
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: callback-handler-config
+            - secretRef:
+                name: callback-handler-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: callback-handler
+  namespace: auth
+spec:
+  selector:
+    app: callback-handler
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: auth-gateway
+  namespace: auth
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "auth.${domain}"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: callback-handler
+  namespace: auth
+spec:
+  hosts:
+    - "auth.${domain}"
+  gateways:
+    - auth-gateway
+  http:
+    - route:
+        - destination:
+            host: callback-handler
+            port:
+              number: 8000
+EOF
+
+# =============================================================================
+# Deploy: customer1 (httpbin interno + tenant-frontend)
+# =============================================================================
+echo "Deploying: customer1..."
+
+kubectl apply -f - <<EOF
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: customer1
+  labels:
+    istio-injection: enabled
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+  namespace: customer1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpbin
+  template:
+    metadata:
+      labels:
+        app: httpbin
+    spec:
+      containers:
+        - name: httpbin
+          image: kennethreitz/httpbin
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+  namespace: customer1
+spec:
+  selector:
+    app: httpbin
+  ports:
+    - port: 8000
+      targetPort: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenant-frontend-config
+  namespace: customer1
+data:
+  HTTPBIN_URL: "http://httpbin.${domain}:${haproxy_nodeport}"
+  PLATFORM_URL: "http://${domain}:${haproxy_nodeport}"
+  CUSTOMER1_URL: "http://customer1.${domain}:${haproxy_nodeport}"
+  CUSTOMER2_URL: "http://customer2.${domain}:${haproxy_nodeport}"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-frontend
+  namespace: customer1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tenant-frontend
+  template:
+    metadata:
+      labels:
+        app: tenant-frontend
+    spec:
+      containers:
+        - name: tenant-frontend
+          image: ${container_image_tenant_frontend}
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: tenant-frontend-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenant-frontend
+  namespace: customer1
+spec:
+  selector:
+    app: tenant-frontend
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: customer1-gateway
+  namespace: customer1
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "customer1.${domain}"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: customer1
+  namespace: customer1
+spec:
+  hosts:
+    - "customer1.${domain}"
+  gateways:
+    - customer1-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /httpbin
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: httpbin
+            port:
+              number: 8000
+    - route:
+        - destination:
+            host: tenant-frontend
+            port:
+              number: 8000
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-health-check
+  namespace: customer1
+spec:
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths: ["/health"]
+EOF
+
+# =============================================================================
+# Aguarda deployments
+# =============================================================================
+echo "Aguardando deployments..."
+
+for ns_deploy in discovery/discovery platform/platform-frontend auth/callback-handler customer1/httpbin customer1/tenant-frontend; do
+  ns="${ns_deploy%%/*}"
+  deploy="${ns_deploy##*/}"
+  kubectl -n "${ns}" wait deployment/"${deploy}" \
+    --for condition=Available \
+    --timeout=180s
+  echo "  ${ns}/${deploy}: pronto"
+done
+
+# =============================================================================
+# Verificação
+# =============================================================================
+echo ""
+echo "--- Verificação ---"
+
+for ns in discovery platform auth customer1; do
+  echo ""
+  echo "Namespace: ${ns}"
+  kubectl -n "${ns}" get deployment,svc,gateway,virtualservice 2>/dev/null
+done
+
+echo ""
+echo "Pods:"
+kubectl get pods --all-namespaces --selector 'app in (discovery,platform-frontend,callback-handler,httpbin,tenant-frontend)'
+
+echo ""
+echo "Endpoints disponíveis (porta ${haproxy_nodeport}):"
+echo "  http://${domain}:${haproxy_nodeport}                  → platform-frontend"
+echo "  http://discovery.${domain}:${haproxy_nodeport}/health → discovery"
+echo "  http://auth.${domain}:${haproxy_nodeport}/health      → callback-handler"
+echo "  http://customer1.${domain}:${haproxy_nodeport}        → tenant-frontend"
+echo ""
+echo "Próximo passo: scripts/07-configure-istio-auth"

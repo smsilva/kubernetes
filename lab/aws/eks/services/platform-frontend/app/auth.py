@@ -22,13 +22,16 @@ def build_cognito_authorize_url(
     idp_name: str,
     callback_url: str,
     state: str,
+    authorize_url: str = "",
 ) -> str:
+    base = authorize_url or f"https://{cognito_domain}/oauth2/authorize"
     params = {
         "client_id": client_id,
-        "identity_provider": idp_name,
         "redirect_uri": callback_url,
         "response_type": "code",
         "scope": "openid email profile",
         "state": state,
     }
-    return f"https://{cognito_domain}/oauth2/authorize?{urlencode(params)}"
+    if idp_name:
+        params["identity_provider"] = idp_name
+    return f"{base}?{urlencode(params)}"

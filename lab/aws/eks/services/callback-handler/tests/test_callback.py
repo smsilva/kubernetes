@@ -1,4 +1,5 @@
 import time
+from unittest.mock import patch, MagicMock
 
 import jwt
 from fastapi.testclient import TestClient
@@ -124,3 +125,63 @@ def test_callback_returns_400_when_token_has_no_tenant_id(api_client):
 
     assert response.status_code == 400
     app.dependency_overrides.clear()
+
+
+def test_cognito_client_uses_idp_token_url_when_set():
+    from app.cognito import CognitoClient
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "id_token": "id",
+        "access_token": "access",
+        "refresh_token": "refresh",
+    }
+
+    custom_token_url = "http://idp.wasp.local:32080/realms/wasp/protocol/openid-connect/token"
+    client = CognitoClient(
+        domain="idp.wasp.local",
+        client_id="wasp-platform",
+        client_secret="secret",
+        callback_url="http://auth.wasp.local:32080/callback",
+        token_url=custom_token_url,
+    )
+
+    with patch("app.cognito.httpx.post", return_value=mock_response) as mock_post:
+        client.exchange_code_for_tokens("some-code")
+        called_url = mock_post.call_args[0][0]
+        assert called_url == custom_token_url
+
+
+def test_cognito_client_defaults_to_cognito_token_url_when_token_url_not_set():
+    from app.cognito import CognitoClient
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "id_token": "id",
+        "access_token": "access",
+        "refresh_token": "refresh",
+    }
+
+    client = CognitoClient(
+        domain="idp.wasp.silvios.me",
+        client_id="abc123",
+        client_secret="secret",
+        callback_url="https://auth.wasp.silvios.me/callback",
+    )
+
+    with patch("app.cognito.httpx.post", return_value=mock_response) as mock_post:
+        client.exchange_code_for_tokens("some-code")
+        called_url = mock_post.call_args[0][0]
+        assert called_url == "https://idp.wasp.silvios.me/oauth2/token"
+
+
+def test_build_cognito_client_uses_idp_token_url_env_var(monkeypatch):
+    from app.main import _build_cognito_client
+
+    monkeypatch.setenv("IDP_TOKEN_URL", "http://idp.wasp.local:32080/realms/wasp/protocol/openid-connect/token")
+
+    client = _build_cognito_client("wasp-platform", "secret")
+
+    assert client._token_url == "http://idp.wasp.local:32080/realms/wasp/protocol/openid-connect/token"
