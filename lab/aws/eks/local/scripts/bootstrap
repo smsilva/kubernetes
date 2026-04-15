@@ -60,6 +60,7 @@ expected_domains=(
   "auth.wasp.local"
   "discovery.wasp.local"
   "idp.wasp.local"
+  "httpbin.wasp.local"
   "customer1.wasp.local"
   "customer2.wasp.local"
 )
