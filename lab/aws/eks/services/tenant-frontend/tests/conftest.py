@@ -29,7 +29,7 @@ SAMPLE_HTTPBIN_RESPONSE = {
 
 @pytest.fixture(autouse=True)
 def set_env_vars(monkeypatch):
-    monkeypatch.setenv("HTTPBIN_URL", "http://httpbin-mock:8000")
+    monkeypatch.setattr("app.main.HTTPBIN_URL", "http://httpbin.wasp.local:32080")
     monkeypatch.setenv("PLATFORM_URL", "https://wasp.silvios.me")
     monkeypatch.setenv("CUSTOMER1_URL", "https://customer1-mock.wasp.silvios.me")
     monkeypatch.setenv("CUSTOMER2_URL", "https://customer2-mock.wasp.silvios.me")

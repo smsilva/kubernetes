@@ -48,9 +48,9 @@ def _mock_all_test_urls(
 ):
     """Register mock responses for all 5 URLs fetched server-side by /test."""
     if httpbin_status == 200:
-        httpx_mock.add_response(url="http://httpbin-mock:8000/get", json=SAMPLE_HTTPBIN_RESPONSE, status_code=200)
+        httpx_mock.add_response(url="http://httpbin.wasp.local:32080/get", json=SAMPLE_HTTPBIN_RESPONSE, status_code=200)
     else:
-        httpx_mock.add_response(url="http://httpbin-mock:8000/get", status_code=httpbin_status, text="error")
+        httpx_mock.add_response(url="http://httpbin.wasp.local:32080/get", status_code=httpbin_status, text="error")
     httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/health", status_code=c1_health_status, text="ok")
     httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/health", status_code=c2_health_status, text="ok")
     httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/httpbin/get", json=SAMPLE_HTTPBIN_RESPONSE, status_code=c1_httpbin_status)
@@ -62,7 +62,7 @@ def test_test_page_shows_json_on_success(authenticated_client, httpx_mock: HTTPX
     response = authenticated_client.get("/test")
     assert response.status_code == 200
     body = response.text
-    assert "httpbin-mock:8000" in body
+    assert "httpbin.wasp.local:32080" in body
     assert "origin" in body
 
 
@@ -82,7 +82,7 @@ def test_test_page_shows_error_on_httpbin_non_200(authenticated_client, httpx_mo
 
 
 def test_test_page_shows_error_on_httpbin_connection_failure(authenticated_client, httpx_mock: HTTPXMock):
-    httpx_mock.add_exception(httpx.ConnectError("connection refused"), url="http://httpbin-mock:8000/get")
+    httpx_mock.add_exception(httpx.ConnectError("connection refused"), url="http://httpbin.wasp.local:32080/get")
     httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/health", status_code=200, text="ok")
     httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/health", status_code=200, text="ok")
     httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/httpbin/get", status_code=200, json=SAMPLE_HTTPBIN_RESPONSE)
@@ -98,7 +98,7 @@ def test_test_page_shows_five_test_results(authenticated_client, httpx_mock: HTT
     response = authenticated_client.get("/test")
     assert response.status_code == 200
     body = response.text
-    assert "httpbin-mock:8000" in body
+    assert "httpbin.wasp.local:32080" in body
     assert "customer1-mock.wasp.silvios.me/health" in body
     assert "customer2-mock.wasp.silvios.me/health" in body
     assert "customer1-mock.wasp.silvios.me/httpbin/get" in body
@@ -220,7 +220,7 @@ def test_httpbin_fetch_passes_jwt(authenticated_client, httpx_mock: HTTPXMock):
         received_headers.update(dict(request.headers))
         return httpx.Response(200, json=SAMPLE_HTTPBIN_RESPONSE)
 
-    httpx_mock.add_callback(capture, url="http://httpbin-mock:8000/get")
+    httpx_mock.add_callback(capture, url="http://httpbin.wasp.local:32080/get")
     httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/health", status_code=200, text="ok")
     httpx_mock.add_response(url="https://customer2-mock.wasp.silvios.me/health", status_code=200, text="ok")
     httpx_mock.add_response(url="https://customer1-mock.wasp.silvios.me/httpbin/get", json=SAMPLE_HTTPBIN_RESPONSE, status_code=200)

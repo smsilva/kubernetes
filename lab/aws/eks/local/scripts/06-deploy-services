@@ -130,7 +130,7 @@ spec:
       containers:
         - name: discovery
           image: ${container_image_discovery}
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           envFrom:
@@ -254,7 +254,7 @@ spec:
       containers:
         - name: platform-frontend
           image: ${container_image_platform_frontend}
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           envFrom:
@@ -371,7 +371,7 @@ spec:
       containers:
         - name: callback-handler
           image: ${container_image_callback_handler}
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           envFrom:
@@ -479,13 +479,46 @@ spec:
     - port: 8000
       targetPort: 80
 ---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: httpbin-gateway
+  namespace: customer1
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "httpbin.${domain}"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: httpbin
+  namespace: customer1
+spec:
+  hosts:
+    - "httpbin.${domain}"
+  gateways:
+    - httpbin-gateway
+  http:
+    - route:
+        - destination:
+            host: httpbin
+            port:
+              number: 8000
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: tenant-frontend-config
   namespace: customer1
 data:
-  HTTPBIN_URL: "http://httpbin:8000"
+  HTTPBIN_URL: "http://httpbin.${domain}:${haproxy_nodeport}"
   PLATFORM_URL: "http://${domain}:${haproxy_nodeport}"
   CUSTOMER1_URL: "http://customer1.${domain}:${haproxy_nodeport}"
   CUSTOMER2_URL: "http://customer2.${domain}:${haproxy_nodeport}"
@@ -509,7 +542,7 @@ spec:
       containers:
         - name: tenant-frontend
           image: ${container_image_tenant_frontend}
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           envFrom:
