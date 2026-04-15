@@ -10,7 +10,8 @@ helm repo update jetstack
 
 echo ""
 echo "=== Instalando cert-manager ==="
-helm upgrade --install cert-manager jetstack/cert-manager \
+helm upgrade \
+  --install cert-manager jetstack/cert-manager \
   --namespace cert-manager \
   --create-namespace \
   --set crds.enabled=true \

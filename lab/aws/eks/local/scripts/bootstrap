@@ -75,9 +75,13 @@ for host in "${expected_domains[@]}"; do
 done
 
 if [[ ${#missing_hosts[@]} -gt 0 ]]; then
-  echo ""
-  echo "  Adicione ao /etc/hosts (sudo):"
-  echo "  127.0.0.1 ${missing_hosts[*]}"
+  cat <<EOF
+
+for host in ${missing_hosts[@]}; do
+  echo "127.0.0.1 \${host}" | sudo tee -a /etc/hosts
+done
+
+EOF
 fi
 
 # =============================================================================

@@ -11,7 +11,8 @@ helm repo update haproxy-ingress
 
 echo ""
 echo "=== Instalando HAProxy Ingress Controller ==="
-helm upgrade --install haproxy-ingress haproxy-ingress/haproxy-ingress \
+helm upgrade \
+  --install haproxy-ingress haproxy-ingress/haproxy-ingress \
   --namespace ingress-controller \
   --create-namespace \
   --set controller.service.type=NodePort \

@@ -174,7 +174,7 @@ spec:
       containers:
         - name: tenant-frontend
           image: ${container_image_tenant_frontend}
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           envFrom:

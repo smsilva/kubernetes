@@ -13,7 +13,14 @@ helm repo update istio
 
 echo ""
 echo "=== Instalando istio-base (CRDs) ==="
-helm upgrade --install istio-base istio/base \
+# Remove webhooks para evitar conflito SSA com pilot-discovery no upgrade
+kubectl delete validatingwebhookconfiguration \
+  istiod-default-validator \
+  istio-validator-istio-system \
+  2>/dev/null || true
+
+helm upgrade \
+  --install istio-base istio/base \
   --namespace istio-system \
   --create-namespace \
   --version "${istio_version}" \
@@ -38,6 +45,7 @@ helm upgrade --install istio-ingressgateway istio/gateway \
   --create-namespace \
   --version "${istio_version}" \
   --set service.type=ClusterIP \
+  --skip-schema-validation \
   --wait
 
 echo ""
