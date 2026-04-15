@@ -268,3 +268,58 @@ Isso evita que secrets geradas em uma sessão se percam e causem inconsistência
 - [ ] **Acrescentar botão para colapsar o accordion do tests no tenant-frontend**: avalise se fica melhor ao lado do "Run all" um "Collapse all" que fecha os detalhes dos testes, para evitar que o JSON ocupe muito espaço na tela após rodar os testes.
 
 - [ ] **Unificar os scripts que criam os IDPs no Cognito para que os dois Providers atuais (Google e Microsoft) sejam criados em um único script**: atualmente o script 11 cria o IDP do Google e o script 16 cria o IDP da Microsoft. Avaliar unificar ambos em um único script (ex: `configure-idps`) para simplificar a estrutura dos scripts e evitar confusão sobre onde adicionar novos IDPs no futuro.
+
+- [ ] **Criar uma versão local do ambiente o mais simples possível para permitir desenvolvimento offline**: criar uma versão do lab usando k3d, com um script de bootstrap que provisiona um cluster local e configura os serviços de forma simplificada (sem ALB, Global Accelerator, Cognito). Isso permite desenvolvimento e testes rápidos sem depender da AWS. O foco é ter um ambiente local funcional para desenvolvimento iterativo, mesmo sem todas as integrações da versão AWS.
+
+  **Substituições planejadas (AWS → local):**
+
+  | Componente AWS | Substituto local | Justificativa |
+  |---|---|---|
+  | EKS | k3d (cluster single-node) | Spin-up em segundos, sem custo |
+  | ALB | Nginx Ingress Controller | Padrão k3d; sem LoadBalancer externo |
+  | ACM / TLS | cert-manager + CA auto-assinada | Sem Let's Encrypt offline |
+  | Global Accelerator | Removido | Irrelevante localmente |
+  | WAF | Removido | Foco em lógica de aplicação |
+  | Cognito | Keycloak (Docker) | OIDC-compatível; suporta custom claims |
+  | Lambda (Pre-Token) | Claims injetados no Keycloak via mapper | Keycloak tem Protocol Mappers nativos |
+  | DynamoDB | SQLite via `aiosqlite` no discovery service | Zero dependências externas |
+  | IRSA | Variáveis de ambiente no pod | Sem OIDC federation local |
+  | Azure DNS / Route 53 | `/etc/hosts` ou `dnsmasq` | Resolução local dos subdomínios |
+
+  **Subdomínios no `/etc/hosts` (todos → 127.0.0.1):**
+  `wasp.local`, `auth.wasp.local`, `discovery.wasp.local`, `idp.wasp.local`, `customer1.wasp.local`, `customer2.wasp.local`
+
+  **Etapas de implementação:**
+
+  1. [ ] **Criar `lab/local/`** com estrutura espelhada: `scripts/`, `manifests/`, `docs/`
+  2. [ ] **Script `01-create-cluster`**: criar cluster k3d com portas 9080/9443/32080 expostas no host; desabilitar Traefik (`--k3s-arg '--disable=traefik@server:*'`)
+
+    - Exemplo:
+
+```shell    
+k3d cluster create \
+  --api-port 6550 \
+  --port "9080:80@loadbalancer" \
+  --port "9443:443@loadbalancer" \
+  --port "32080:80@loadbalancer" \
+  --servers 3 \
+  --k3s-arg '--disable=traefik@server:*' \
+  --wait \
+  --timeout 360s
+```
+
+  3. [ ] **Script `02-install-haproxy-ingress`**: instalar HAProxy Ingress via Helm; verificar que o pod fica Ready
+
+    - Como o NGINX está como deprecated. Vamos usar outro Ingress que permita fazer o mesmo que fizemos conm NGINX nesse script: /home/silvios/git/kubernetes/lab/argo/argocd/install-nginx-ingress-controller.sh
+
+    - A porta do Ingress dever ser a 32080
+
+  4. [ ] **Script `03-install-cert-manager`**: instalar cert-manager + criar `ClusterIssuer` com CA auto-assinada para `*.wasp.local`
+  5. [ ] **Script `04-install-istio`**: reusar os mesmos charts Helm do lab AWS; ajustar `ingressgateway` para usar `ClusterIP` (sem LoadBalancer)
+  6. [ ] **Script `05-deploy-keycloak`**: instalar Keycloak via Helm (`bitnami/keycloak`); configurar realm `wasp` com dois users de teste (`user1@customer1.com`, `user2@customer2.com`); adicionar Protocol Mapper que injeta `tenant_id` no token com base no email domain
+  7. [ ] **Adaptar `discovery` service**: adicionar backend SQLite como alternativa ao DynamoDB (configurável via `BACKEND=sqlite|dynamodb`); seed com os mesmos dois tenants do lab AWS; cobrir com testes
+  8. [ ] **Script `06-deploy-services`**: build local das imagens (sem push para Docker Hub); deploy dos 4 namespaces (`discovery`, `platform`, `auth`, `customer1`) com ConfigMaps apontando para endpoints locais (Keycloak em vez de Cognito, discovery interno)
+  9. [ ] **Script `07-configure-istio-auth`**: reusar os mesmos manifests de `RequestAuthentication` e `AuthorizationPolicy`; ajustar `jwksUri` para apontar para o JWKS do Keycloak
+  10. [ ] **Script `08-deploy-customer2`**: replicar namespace `customer2` localmente
+  11. [ ] **Script `bootstrap`**: verificar pré-requisitos locais (`k3d`, `kubectl`, `helm`, `docker`; sem `aws`, `eksctl`, `az`)
+  12. [ ] **Script `destroy`**: excluir apenas o cluster k3d
