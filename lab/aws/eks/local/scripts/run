@@ -1,0 +1,9 @@
+#!/bin/bash
+01-create-cluster          || echo "Failed to create cluster" && exit 1
+02-install-haproxy-ingress || echo "Failed to install HAProxy Ingress Controller" && exit 1
+03-install-cert-manager    || echo "Failed to install cert-manager" && exit 1
+04-install-istio           || echo "Failed to install Istio" && exit 1
+05-deploy-keycloak         || echo "Failed to deploy Keycloak" && exit 1
+06-deploy-services         || echo "Failed to deploy services" && exit 1
+07-configure-istio-auth    || echo "Failed to configure Istio authentication" && exit 1
+08-deploy-customer2        || echo "Failed to deploy customer2" && exit 1
