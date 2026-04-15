@@ -15,7 +15,7 @@ helm upgrade --install haproxy-ingress haproxy-ingress/haproxy-ingress \
   --namespace ingress-controller \
   --create-namespace \
   --set controller.service.type=NodePort \
-  --set controller.service.nodePorts.http="${haproxy_nodeport}" \
+  --set "controller.service.httpPorts[0].nodePort=${haproxy_nodeport}" \
   --wait \
   --timeout 120s
 

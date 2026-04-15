@@ -41,6 +41,24 @@ helm upgrade --install istio-ingressgateway istio/gateway \
   --wait
 
 echo ""
+echo "=== Criando Ingress catch-all: HAProxy → Istio IngressGateway ==="
+kubectl apply -f - <<'EOF'
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: istio-passthrough
+  namespace: istio-ingress
+  annotations:
+    kubernetes.io/ingress.class: haproxy
+spec:
+  defaultBackend:
+    service:
+      name: istio-ingressgateway
+      port:
+        number: 80
+EOF
+
+echo ""
 echo "=== Istio pronto ==="
 kubectl get pods --namespace istio-system
 kubectl get pods,svc --namespace istio-ingress

@@ -10,7 +10,7 @@ set -euo pipefail
 
 scripts_dir="$(cd "$(dirname "$0")" && pwd)"
 secrets_file="${scripts_dir}/env.secrets"
-services_dir="${scripts_dir}/../services"
+services_dir="${scripts_dir}/../../services"
 
 if [[ -f "${secrets_file}" ]]; then
   # shellcheck source=/dev/null
@@ -103,7 +103,7 @@ data:
   tenants.json: |
     [
       {
-        "domain": "customer1.${domain}",
+        "domain": "customer1.com",
         "tenant_id": "customer1",
         "tenant_url": "http://customer1.${domain}:${haproxy_nodeport}",
         "client_id": "wasp-platform",
@@ -140,6 +140,8 @@ spec:
             - name: seed
               mountPath: /seed
               readOnly: true
+            - name: data
+              mountPath: /data
           readinessProbe:
             httpGet:
               path: /health
@@ -150,6 +152,8 @@ spec:
         - name: seed
           configMap:
             name: discovery-seed
+        - name: data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -217,7 +221,7 @@ metadata:
   name: platform-frontend-config
   namespace: platform
 data:
-  DISCOVERY_URL: "http://discovery.${domain}:${haproxy_nodeport}"
+  DISCOVERY_URL: "http://discovery.discovery.svc.cluster.local:8000"
   COGNITO_DOMAIN: "idp.${domain}"
   CALLBACK_URL: "http://auth.${domain}:${haproxy_nodeport}/callback"
   IDP_AUTHORIZE_URL: "${keycloak_authorize_url}"
@@ -335,6 +339,8 @@ data:
   CALLBACK_URL: "http://auth.${domain}:${haproxy_nodeport}/callback"
   PLATFORM_URL: "http://${domain}:${haproxy_nodeport}"
   IDP_TOKEN_URL: "${keycloak_token_url}"
+  COOKIE_SECURE: "false"
+  COOKIE_DOMAIN: ".${domain}"
   LOG_LEVEL: "INFO"
 ---
 apiVersion: v1

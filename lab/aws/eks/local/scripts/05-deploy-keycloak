@@ -8,6 +8,7 @@
 set -euo pipefail
 . "$(dirname "$0")/env.conf"
 
+keycloak_image="quay.io/keycloak/keycloak:26.1"
 keycloak_internal_port="8080"
 keycloak_forward_port="8180"
 keycloak_url="http://localhost:${keycloak_forward_port}"
@@ -15,23 +16,73 @@ client_id="wasp-platform"
 callback_url="http://auth.${domain}:${haproxy_nodeport}/callback"
 
 # =============================================================================
-# Instalação via Helm
+# Namespace + imagem
 # =============================================================================
-echo "=== Adicionando repositório Helm Bitnami ==="
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo update bitnami
+echo "=== Criando namespace com sidecar injection ==="
+kubectl create namespace "${keycloak_namespace}" --dry-run=client --output=yaml \
+  | kubectl apply -f -
+kubectl label namespace "${keycloak_namespace}" istio-injection=enabled --overwrite
 
 echo ""
-echo "=== Instalando Keycloak ==="
-helm upgrade --install keycloak bitnami/keycloak \
-  --namespace "${keycloak_namespace}" \
-  --create-namespace \
-  --set auth.adminUser="${keycloak_admin_user}" \
-  --set auth.adminPassword="${keycloak_admin_password}" \
-  --set service.type=ClusterIP \
-  --set ingress.enabled=false \
-  --wait \
-  --timeout 300s
+echo "=== Importando imagem Keycloak no cluster ==="
+k3d image import "${keycloak_image}" --cluster "${cluster_name}"
+
+# =============================================================================
+# Deploy Keycloak (imagem oficial, dev mode com H2 in-memory)
+# =============================================================================
+echo ""
+echo "=== Deployando Keycloak ==="
+kubectl apply -f - <<EOF
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: ${keycloak_namespace}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: ${keycloak_image}
+          imagePullPolicy: Never
+          args: ["start-dev"]
+          env:
+            - name: KEYCLOAK_ADMIN
+              value: "${keycloak_admin_user}"
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              value: "${keycloak_admin_password}"
+            - name: KC_HTTP_PORT
+              value: "${keycloak_internal_port}"
+          ports:
+            - containerPort: ${keycloak_internal_port}
+          readinessProbe:
+            httpGet:
+              path: /realms/master
+              port: ${keycloak_internal_port}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: ${keycloak_namespace}
+spec:
+  selector:
+    app: keycloak
+  ports:
+    - port: ${keycloak_internal_port}
+      targetPort: ${keycloak_internal_port}
+EOF
 
 echo ""
 echo "=== Aguardando Keycloak ficar pronto ==="
@@ -81,35 +132,57 @@ auth_header="Authorization: Bearer ${admin_token}"
 echo ""
 echo "=== Criando realm '${keycloak_realm}' ==="
 curl --silent --output /dev/null \
-  --request POST \
-  "${keycloak_url}/admin/realms" \
+  --request POST "${keycloak_url}/admin/realms" \
   --header "${auth_header}" \
   --header "Content-Type: application/json" \
-  --data "{
-    \"realm\": \"${keycloak_realm}\",
-    \"enabled\": true,
-    \"displayName\": \"WASP Platform\",
-    \"frontendUrl\": \"http://idp.${domain}:${haproxy_nodeport}\"
-  }"
+  --data "{\"realm\":\"${keycloak_realm}\",\"enabled\":true,\"displayName\":\"WASP Platform\"}"
+
+# KC 26: tenant_id precisa ser declarado no User Profile antes de poder ser persistido
+echo "=== Adicionando tenant_id ao User Profile ==="
+profile=$(curl --silent \
+  "${keycloak_url}/admin/realms/${keycloak_realm}/users/profile" \
+  --header "${auth_header}")
+
+python3 << PYEOF
+import json, sys
+profile = json.loads('${profile}')
+# adiciona tenant_id se ainda não existe
+if not any(a['name'] == 'tenant_id' for a in profile.get('attributes', [])):
+    profile['attributes'].append({
+        "name": "tenant_id",
+        "displayName": "Tenant ID",
+        "permissions": {"view": ["admin"], "edit": ["admin"]},
+        "validations": {},
+        "annotations": {},
+        "required": {"roles": []},
+        "multivalued": False
+    })
+with open('/tmp/wasp_user_profile.json', 'w') as f:
+    json.dump(profile, f)
+PYEOF
+
+curl --silent --output /dev/null \
+  --request PUT "${keycloak_url}/admin/realms/${keycloak_realm}/users/profile" \
+  --header "${auth_header}" \
+  --header "Content-Type: application/json" \
+  --data @/tmp/wasp_user_profile.json
+
+# KC 26: frontendUrl é configurado via attributes (não como campo top-level)
+curl --silent --output /dev/null \
+  --request PUT "${keycloak_url}/admin/realms/${keycloak_realm}" \
+  --header "${auth_header}" \
+  --header "Content-Type: application/json" \
+  --data "{\"attributes\":{\"frontendUrl\":\"http://idp.${domain}:${haproxy_nodeport}\"}}"
 
 # =============================================================================
 # Client OIDC: wasp-platform
 # =============================================================================
 echo "=== Criando client '${client_id}' ==="
 curl --silent --output /dev/null \
-  --request POST \
-  "${keycloak_url}/admin/realms/${keycloak_realm}/clients" \
+  --request POST "${keycloak_url}/admin/realms/${keycloak_realm}/clients" \
   --header "${auth_header}" \
   --header "Content-Type: application/json" \
-  --data "{
-    \"clientId\": \"${client_id}\",
-    \"enabled\": true,
-    \"protocol\": \"openid-connect\",
-    \"publicClient\": false,
-    \"standardFlowEnabled\": true,
-    \"redirectUris\": [\"${callback_url}\", \"http://auth.${domain}/callback\"],
-    \"webOrigins\": [\"+\"]
-  }"
+  --data "{\"clientId\":\"${client_id}\",\"enabled\":true,\"protocol\":\"openid-connect\",\"publicClient\":false,\"standardFlowEnabled\":true,\"redirectUris\":[\"${callback_url}\",\"http://auth.${domain}/callback\"],\"webOrigins\":[\"+\"]}"
 
 # recupera UUID do client para criar mappers
 client_uuid=$(curl --silent \
@@ -128,23 +201,10 @@ client_secret=$(curl --silent \
 # =============================================================================
 echo "=== Criando Protocol Mapper 'custom:tenant_id' ==="
 curl --silent --output /dev/null \
-  --request POST \
-  "${keycloak_url}/admin/realms/${keycloak_realm}/clients/${client_uuid}/protocol-mappers/models" \
+  --request POST "${keycloak_url}/admin/realms/${keycloak_realm}/clients/${client_uuid}/protocol-mappers/models" \
   --header "${auth_header}" \
   --header "Content-Type: application/json" \
-  --data "{
-    \"name\": \"tenant_id\",
-    \"protocol\": \"openid-connect\",
-    \"protocolMapper\": \"oidc-usermodel-attribute-mapper\",
-    \"config\": {
-      \"user.attribute\": \"tenant_id\",
-      \"claim.name\": \"custom:tenant_id\",
-      \"jsonType.label\": \"String\",
-      \"id.token.claim\": \"true\",
-      \"access.token.claim\": \"true\",
-      \"userinfo.token.claim\": \"true\"
-    }
-  }"
+  --data "{\"name\":\"tenant_id\",\"protocol\":\"openid-connect\",\"protocolMapper\":\"oidc-usermodel-attribute-mapper\",\"config\":{\"user.attribute\":\"tenant_id\",\"claim.name\":\"custom:tenant_id\",\"jsonType.label\":\"String\",\"id.token.claim\":\"true\",\"access.token.claim\":\"true\",\"userinfo.token.claim\":\"true\"}}"
 
 # =============================================================================
 # Usuários de teste
@@ -157,32 +217,24 @@ create_user() {
   echo "=== Criando usuário ${email} (tenant_id=${tenant}) ==="
 
   curl --silent --output /dev/null \
-    --request POST \
-    "${keycloak_url}/admin/realms/${keycloak_realm}/users" \
+    --request POST "${keycloak_url}/admin/realms/${keycloak_realm}/users" \
     --header "${auth_header}" \
     --header "Content-Type: application/json" \
-    --data "{
-      \"username\": \"${email}\",
-      \"email\": \"${email}\",
-      \"enabled\": true,
-      \"emailVerified\": true,
-      \"attributes\": {
-        \"tenant_id\": [\"${tenant}\"]
-      },
-      \"credentials\": [{
-        \"type\": \"password\",
-        \"value\": \"${password}\",
-        \"temporary\": false
-      }]
-    }"
+    --data "{\"username\":\"${email}\",\"email\":\"${email}\",\"firstName\":\"User\",\"lastName\":\"${tenant}\",\"enabled\":true,\"emailVerified\":true,\"attributes\":{\"tenant_id\":[\"${tenant}\"]},\"credentials\":[{\"type\":\"password\",\"value\":\"${password}\",\"temporary\":false}]}"
 }
 
 create_user "user1@customer1.com" "password1" "customer1"
 create_user "user2@customer2.com" "password2" "customer2"
 
-# =============================================================================
-# Resultado
-# =============================================================================
+# KC 26: VERIFY_PROFILE bloqueia login mesmo sem estar como defaultAction — desabilita
+# completamente para não interromper o fluxo de autenticação
+echo "=== Desabilitando VERIFY_PROFILE ==="
+curl --silent --output /dev/null \
+  --request PUT "${keycloak_url}/admin/realms/${keycloak_realm}/authentication/required-actions/VERIFY_PROFILE" \
+  --header "${auth_header}" \
+  --header "Content-Type: application/json" \
+  --data "{\"alias\":\"VERIFY_PROFILE\",\"name\":\"Verify Profile\",\"providerId\":\"VERIFY_PROFILE\",\"enabled\":false,\"defaultAction\":false,\"priority\":90,\"config\":{}}"
+
 # =============================================================================
 # Salva client_secret em env.secrets (sobrescreve entrada existente ou adiciona)
 # =============================================================================
@@ -194,6 +246,48 @@ else
   echo "KEYCLOAK_CLIENT_SECRET=\"${client_secret}\"" >> "${secrets_file}"
 fi
 
+# =============================================================================
+# Istio Gateway + VirtualService para Keycloak
+# Expõe idp.${domain} via HAProxy NodePort → Istio IngressGateway → Keycloak
+# =============================================================================
+echo ""
+echo "=== Configurando Istio Gateway para Keycloak ==="
+kubectl apply -f - <<EOF
+---
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: keycloak-gateway
+  namespace: ${keycloak_namespace}
+spec:
+  selector:
+    app: istio-ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "idp.${domain}"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: keycloak
+  namespace: ${keycloak_namespace}
+spec:
+  hosts:
+    - "idp.${domain}"
+  gateways:
+    - keycloak-gateway
+  http:
+    - route:
+        - destination:
+            host: keycloak
+            port:
+              number: 8080
+EOF
+
 echo ""
 echo "=== Keycloak configurado ==="
 echo "  Realm:         ${keycloak_realm}"
@@ -202,6 +296,7 @@ echo "  Client Secret: ${client_secret}  (salvo em env.secrets)"
 echo "  Frontend URL:  http://idp.${domain}:${haproxy_nodeport}"
 echo "  Issuer JWT:    http://idp.${domain}:${haproxy_nodeport}/realms/${keycloak_realm}"
 echo "  JWKS URI:      http://keycloak.${keycloak_namespace}.svc.cluster.local:8080/realms/${keycloak_realm}/protocol/openid-connect/certs"
+echo "  Hosted UI:     http://idp.${domain}:${haproxy_nodeport}/realms/${keycloak_realm}/account"
 echo ""
 echo "  Usuários de teste:"
 echo "    user1@customer1.com / password1  (tenant_id=customer1)"

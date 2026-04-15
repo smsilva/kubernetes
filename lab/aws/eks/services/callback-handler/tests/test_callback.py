@@ -185,3 +185,35 @@ def test_build_cognito_client_uses_idp_token_url_env_var(monkeypatch):
     client = _build_cognito_client("wasp-platform", "secret")
 
     assert client._token_url == "http://idp.wasp.local:32080/realms/wasp/protocol/openid-connect/token"
+
+
+def test_callback_cookie_not_secure_when_cookie_secure_is_false(api_client, mock_cognito_success, monkeypatch):
+    monkeypatch.setenv("COOKIE_SECURE", "false")
+
+    response = api_client.get(f"/callback?code=valid-code&state={SAMPLE_STATE}")
+
+    cookie = response.headers.get("set-cookie", "")
+    assert "Secure" not in cookie
+
+
+def test_callback_cookie_is_secure_by_default(api_client, mock_cognito_success):
+    response = api_client.get(f"/callback?code=valid-code&state={SAMPLE_STATE}")
+
+    cookie = response.headers.get("set-cookie", "")
+    assert "Secure" in cookie
+
+
+def test_callback_cookie_uses_domain_from_env(api_client, mock_cognito_success, monkeypatch):
+    monkeypatch.setenv("COOKIE_DOMAIN", ".wasp.local")
+
+    response = api_client.get(f"/callback?code=valid-code&state={SAMPLE_STATE}")
+
+    cookie = response.headers.get("set-cookie", "")
+    assert "Domain=.wasp.local" in cookie
+
+
+def test_callback_cookie_uses_default_domain_when_env_not_set(api_client, mock_cognito_success):
+    response = api_client.get(f"/callback?code=valid-code&state={SAMPLE_STATE}")
+
+    cookie = response.headers.get("set-cookie", "")
+    assert "Domain=.wasp.silvios.me" in cookie

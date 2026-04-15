@@ -7,7 +7,7 @@ Permite desenvolver e testar os serviços Python localmente sem AWS.
 
 ## Current Progress
 
-**Lab local: completo.**
+**Lab local: completo e validado end-to-end.**
 
 | Script | Status |
 |---|---|
@@ -23,6 +23,7 @@ Permite desenvolver e testar os serviços Python localmente sem AWS.
 | `08-deploy-customer2` | ✅ |
 | `destroy` | ✅ |
 | `docs/diferencas-aws.md` | ✅ |
+| `docs/lessons-learned.md` | ✅ |
 
 **Serviços modificados (TDD, AWS intacto):**
 
@@ -30,39 +31,63 @@ Permite desenvolver e testar os serviços Python localmente sem AWS.
 |---|---|
 | `discovery` | `SQLiteTenantRepository` + `BACKEND=sqlite\|dynamodb` (default `dynamodb`) + `SQLITE_SEED_FILE` |
 | `platform-frontend` | `IDP_AUTHORIZE_URL` opcional; `identity_provider` omitido quando `idp_name=""`; `tenant_url` usado as-is quando já tem scheme |
-| `callback-handler` | `IDP_TOKEN_URL` opcional para substituir URL do Cognito |
+| `callback-handler` | `IDP_TOKEN_URL` opcional; `COOKIE_SECURE` e `COOKIE_DOMAIN` configuráveis por env var |
 
-**Testes:** 16 (platform-frontend) + 34 (discovery) + 24 (callback-handler) = 74 passando.
+**Testes:** 16 (platform-frontend) + 34 (discovery) + 26 (callback-handler) = 76 passando.
 
-**Commits:**
+**Fluxo end-to-end validado:**
+
+```
+POST /login (user1@customer1.com)
+  → 302 → Keycloak login page
+  → POST credentials
+  → 302 → /callback?code=...&state=...
+  → 302 → customer1.wasp.local:32080 + set-cookie: session=<JWT>
+  → 200 customer1 com JWT              ← custom:tenant_id=customer1 ✅
+  → 403 customer2 com JWT customer1    ← isolamento Istio ✅
+  → 403 customer2 sem JWT              ← Istio AuthorizationPolicy ✅
+```
+
+**Commits neste branch:**
 - `d6afefd` — `feat(eks/local): add local k3d lab and extend services for offline operation`
 - `62e60a5` — `docs(eks): add notes on local lab plan and HANDOFF`
+- `218c4ef` — `docs(eks): update HANDOFF with completed local lab status`
+- (pendente commit desta sessão)
 
 Branch: `dev`. Push pendente (não fazer push sem instrução explícita do usuário).
 
 ## What Worked
 
 - HAProxy Ingress em vez de Nginx (deprecated) — `NodePort 32080`
-- Keycloak com `frontendUrl` explícito no realm → `iss` determinístico no JWT
-- `k3d image import` + `imagePullPolicy: Never` (sem Docker Hub)
-- `IDP_TOKEN_URL` aponta para service interno do cluster (`keycloak.keycloak.svc.cluster.local:8080`) para o callback-handler — evita round-trip pelo HAProxy
-- `tenant_url` no seed com URL completa (`http://customer1.wasp.local:32080`) — resolve o bug de `https://` hardcoded no `platform-frontend`
+- Keycloak oficial `quay.io/keycloak/keycloak:26.1` com `start-dev` + `k3d image import`
+- `frontendUrl` configurado via `PUT /admin/realms/{realm}` com `{"attributes":{"frontendUrl":"..."}}` (não no body de criação)
+- User Profile KC 26: declarar `tenant_id` antes de criar usuários, via `GET/PUT /users/profile`
+- `VERIFY_PROFILE` desabilitado com `enabled:false` (não apenas `defaultAction:false`)
+- `IDP_TOKEN_URL` apontando para service interno do cluster (`keycloak.keycloak.svc.cluster.local:8080`) — evita round-trip pelo HAProxy
+- Ingress catch-all em `istio-ingress` com `defaultBackend → istio-ingressgateway:80` — conecta HAProxy ao Istio
+- `emptyDir` em `/data` no discovery para o SQLite criar o arquivo `.db`
+- `DISCOVERY_URL` in-cluster (`discovery.discovery.svc.cluster.local:8000`) — DNS do `/etc/hosts` não propaga para pods
+- `COOKIE_SECURE=false` + `COOKIE_DOMAIN=.wasp.local` — cookie enviado em HTTP com domínio correto
 
 ## What Didn't Work / Gotchas
 
-- **Porto `32080:80@loadbalancer` conflitava** com `9080:80@loadbalancer` — corrigido para `32080:32080@loadbalancer` (HAProxy NodePort)
-- **`frontendUrl` ausente no realm Keycloak** → `iss` no JWT calculado a partir do Host header, não determinístico. Fixado em `05-deploy-keycloak`.
-- **`KEYCLOAK_CLIENT_SECRET` vs `keycloak_client_secret`** — convenção de nome inconsistente; `05` agora salva automaticamente em `env.secrets` como `KEYCLOAK_CLIENT_SECRET` (uppercase).
-- **SQLite carrega seed só na inicialização** — `08-deploy-customer2` faz `rollout restart` após atualizar o ConfigMap `discovery-seed`.
-- **`test_post_login_omits_identity_provider`**: override de dependency dentro do body do teste era não-confiável — movido para fixture `yield` no `conftest.py`.
+- **Bitnami removeu imagens do Docker Hub** — `bitnami/keycloak` retorna `pull access denied`. Usar `quay.io/keycloak/keycloak:26.1`.
+- **`frontendUrl` no body de criação do realm** → `"unable to read contents from stream"` no KC 26. Separar criação da configuração do `frontendUrl`.
+- **JSON multiline em `--data` com Istio sidecar** → KC 26 rejeita com erro de parse. Todo JSON nos `--data` dos scripts deve ser em linha única.
+- **KC 26 User Profile descarta atributos não declarados** — `tenant_id` silenciosamente ignorado ao criar usuários se não estiver no schema.
+- **`VERIFY_PROFILE` intercepta login mesmo com `defaultAction:false`** — precisa de `enabled:false`.
+- **Parâmetro Helm `controller.service.nodePorts.http`** não tem efeito. Correto: `controller.service.httpPorts[0].nodePort`.
+- **HAProxy sem `Ingress` resource** → 503 em tudo. O HAProxy não encaminha para o Istio sem um `Ingress` com `defaultBackend`.
+- **Discovery falha sem volume em `/data`** — `unable to open database file` se não houver `emptyDir`.
+- **Domínio do seed deve ser o do e-mail** (`customer1.com`), não o subdomínio da app (`customer1.wasp.local`).
+- **`secure=True` hardcoded** no callback-handler → cookie não enviado em HTTP. Substituído por `COOKIE_SECURE` env var.
+- **`domain=".wasp.silvios.me"` hardcoded** → cookie não aceito em `.wasp.local`. Substituído por `COOKIE_DOMAIN` env var.
+- **`grant_type=password` sem `scope=openid`** → não retorna `id_token` (só `access_token`). Adicionar `--data "scope=openid"` ao testar diretamente.
 
 ## Next Steps
 
-O lab está completo para execução. Os possíveis próximos passos são:
-
-1. **Executar o lab e validar o fluxo end-to-end** — rodar os scripts na ordem e fazer login com `user1@customer1.com` / `user2@customer2.com`
-2. **Adicionar Ingress HAProxy para Keycloak** em `05-deploy-keycloak` — atualmente só via port-forward; em produção o Keycloak precisa de Ingress para ser acessível via `idp.wasp.local:32080`
-3. **Push do branch `dev`** quando pronto
+1. **Push do branch `dev`** — todos os scripts e serviços validados
+2. **Reprovisionar do zero** para confirmar que os scripts funcionam sem estado anterior
 
 ## Key Files
 
@@ -70,7 +95,8 @@ O lab está completo para execução. Os possíveis próximos passos são:
 |---|---|
 | `local/scripts/env.conf` | Config global do lab local (domínio, portas, credenciais Keycloak) |
 | `local/scripts/env.secrets` | Gerado em runtime — `KEYCLOAK_CLIENT_SECRET`, `STATE_JWT_SECRET` |
-| `local/docs/diferencas-aws.md` | Mapa completo de substituições e gotchas locais |
+| `local/docs/diferencas-aws.md` | Mapa completo de substituições locais |
+| `local/docs/lessons-learned.md` | Todos os problemas encontrados e soluções durante execução |
 | `scripts/13-deploy-services` | Referência original para o `06-deploy-services` local |
 | `scripts/14-configure-istio-auth` | Referência original para o `07-configure-istio-auth` local |
 | `CLAUDE.md` | Contexto do lab AWS (domínios, credenciais, regras de TDD) |

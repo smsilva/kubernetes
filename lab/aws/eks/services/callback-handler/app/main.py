@@ -105,13 +105,16 @@ def handle_callback(
             status_code=403,
         )
 
+    cookie_secure = os.getenv("COOKIE_SECURE", "true").lower() != "false"
+    cookie_domain = os.getenv("COOKIE_DOMAIN", ".wasp.silvios.me")
+
     response = RedirectResponse(url=login_state.return_url, status_code=302)
     response.set_cookie(
         key="session",
         value=tokens.id_token,
         httponly=True,
         samesite="lax",
-        secure=True,
-        domain=".wasp.silvios.me",
+        secure=cookie_secure,
+        domain=cookie_domain,
     )
     return response
