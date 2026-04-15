@@ -106,6 +106,7 @@ Branch: `dev`. Push pendente (não fazer push sem instrução explícita do usu�
 - [ ] **Página de teste — melhorias de layout**: grid de cards não funciona, JSON empurra conteúdo para baixo, hierarquia visual confusa. Ver notas originais para detalhes.
 - [ ] **Botão "Collapse all" nos testes**: evitar que JSON ocupe espaço excessivo após rodar testes.
 - [ ] **Unificar scripts de IDP**: script 11 (Google) e 16 (Microsoft) → script único `configure-idps`.
+- [ ] **Renomear variáveis `COGNITO_*` no lab local**: o lab local usa Keycloak, não Cognito. Variáveis como `COGNITO_CLIENT_SECRET`, `COGNITO_DOMAIN`, `COGNITO_CLIENT_SECRET_CUSTOMER1/2` devem ser renomeadas para `KEYCLOAK_*` ou genéricas (`IDP_*`) para evitar confusão. Verificar também nos ConfigMaps e código dos serviços.
 
 ### P2 — Melhorias importantes
 
