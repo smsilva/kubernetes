@@ -72,12 +72,17 @@ def test_test_page_embeds_five_test_cases(authenticated_client):
 
 
 def test_test_page_starts_with_all_idle(authenticated_client):
-    """Page loads with all tests idle — no results until browser runs them."""
+    """Page loads with all tests idle — no results until browser runs them.
+
+    status-pass and status-fail appear in the results-summary legend (static HTML),
+    so we verify the accordion items section only, which ends before results-summary.
+    """
     response = authenticated_client.get("/test")
     body = response.text
-    assert "status-idle" in body
-    assert "status-pass" not in body
-    assert "status-fail" not in body
+    accordion_section = body.split('class="results-summary"')[0]
+    assert "status-idle" in accordion_section
+    assert "status-pass" not in accordion_section
+    assert "status-fail" not in accordion_section
 
 
 def test_test_page_url_preserves_lowercase(authenticated_client):
