@@ -45,7 +45,6 @@ helm upgrade --install istio-ingressgateway istio/gateway \
   --create-namespace \
   --version "${istio_version}" \
   --set service.type=ClusterIP \
-  --skip-schema-validation \
   --wait
 
 echo ""
