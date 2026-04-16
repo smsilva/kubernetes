@@ -63,6 +63,232 @@
     #sandbox-bar .sb-tab.active { background: #313244; color: #cba6f7; }
     body { padding-bottom: 48px; }
 
+    /* ── Test checklist ──────────────────────────── */
+    .test-progress-wrap {
+      display: none;
+      margin: 12px 0 4px;
+    }
+    .test-progress-wrap.visible { display: block; }
+    .test-progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .test-progress-lbl { color: var(--color-secondary); }
+    .test-progress-pct { font-weight: 600; color: var(--color-on-surface); font-family: 'Roboto Mono', monospace; }
+    .test-progress-bar {
+      height: 6px;
+      background: var(--color-outline-dim);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .test-progress-fill {
+      height: 100%;
+      background: #34a853;
+      border-radius: 99px;
+      width: 0%;
+      transition: width .4s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* Numbered circle */
+    .item-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Roboto Mono', monospace;
+      transition: background .2s, border-color .2s, color .2s;
+    }
+    .item-circle-idle  { border: 2px solid var(--color-outline); color: var(--color-secondary); background: none; }
+    .item-circle-running { border: 2px solid #34a853; color: #34a853; background: none; animation: circle-pulse 1s ease-in-out infinite; }
+    .item-circle-pass  { border: 2px solid #34a853; background: #34a853; color: #fff; }
+    .item-circle-fail  { border: 2px solid #ea4335; background: #ea4335; color: #fff; }
+    @keyframes circle-pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+    .accordion-item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .accordion-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-on-surface);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Result modal overlay ────────────────────── */
+    .result-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      bottom: 40px;
+      background: rgba(0,0,0,.45);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .result-drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    .result-drawer {
+      width: 100%;
+      max-width: 780px;
+      height: calc(100vh - 88px);
+      background: var(--color-surface);
+      border-radius: 12px;
+      border: 1px solid var(--color-outline-dim);
+      box-shadow: 0 12px 48px rgba(0,0,0,.22);
+      z-index: 1001;
+      transform: scale(.96) translateY(10px);
+      opacity: 0;
+      transition: transform .2s cubic-bezier(.4,0,.2,1), opacity .2s;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .result-drawer-overlay.open .result-drawer { transform: scale(1) translateY(0); opacity: 1; }
+
+    .result-drawer-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--color-outline-dim);
+      flex-shrink: 0;
+    }
+    .result-drawer-title {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-on-surface);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .result-drawer-controls { display: flex; align-items: center; gap: 6px; }
+
+    .result-drawer-body {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .drawer-code-block {
+      border: 1px solid var(--color-code-border);
+      border-radius: 6px;
+      background: var(--color-code-bg);
+    }
+    .drawer-code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--color-code-border);
+      font-size: 11px;
+      font-family: 'Roboto Mono', monospace;
+      color: var(--color-secondary);
+      letter-spacing: .3px;
+      text-transform: uppercase;
+    }
+    .drawer-code-header-actions { display: flex; align-items: center; gap: 6px; }
+    .drawer-code-pre {
+      padding: 14px 16px;
+      margin: 0;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 12px;
+      line-height: 1.65;
+      color: var(--color-on-surface);
+      overflow-x: auto;
+      overflow-y: auto;
+      white-space: pre;
+      max-height: 320px;
+    }
+    .drawer-code-pre.wrap { white-space: pre-wrap; word-break: break-all; }
+
+    .drawer-wrap-btn {
+      padding: 2px 8px;
+      font-size: 10px;
+      font-family: 'Roboto Mono', monospace;
+      border-radius: 99px;
+      border: 1px solid var(--color-outline);
+      background: none;
+      color: var(--color-secondary);
+      cursor: pointer;
+      letter-spacing: .3px;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .drawer-wrap-btn:hover  { background: var(--color-hover); }
+    .drawer-wrap-btn.active { background: var(--color-outline-dim); color: var(--color-on-surface); border-color: transparent; }
+
+    .result-code-wrap {
+      position: relative;
+      background: var(--color-code-bg);
+      border: 1px solid var(--color-code-border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .result-code-pre {
+      padding: 10px 12px;
+      margin: 0;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-on-surface);
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .result-fullscreen-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 4px;
+      background: var(--color-surface);
+      color: var(--color-secondary);
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity .15s, background .15s, color .15s;
+    }
+    .result-code-wrap:hover .result-fullscreen-btn { opacity: 1; }
+    .result-fullscreen-btn:hover { background: var(--color-outline-dim); color: var(--color-on-surface); }
+
+    /* Result detail */
+    .result-detail-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 2px 4px;
+      margin: 0 -4px;
+      transition: background .15s;
+    }
+    .result-detail-toggle:hover { background: var(--color-hover); }
+    .result-detail-chevron { color: var(--color-secondary); transition: transform .2s; flex-shrink: 0; }
+    .result-detail-chevron.open { transform: rotate(180deg); }
+    .result-detail-panel { display: none; margin-top: 6px; }
+    .result-detail-panel.open { display: block; }
+
     /* ── Login page layout override ──────────────── */
     body.view-login {
       min-height: calc(100vh - 48px);
@@ -169,6 +395,16 @@
               </svg>
               Run all
             </button>
+          </div>
+        </div>
+
+        <div class="test-progress-wrap" id="test-progress-wrap">
+          <div class="test-progress-header">
+            <span class="test-progress-lbl" id="test-progress-lbl">0 / 5 passed</span>
+            <span class="test-progress-pct" id="test-progress-pct">0%</span>
+          </div>
+          <div class="test-progress-bar">
+            <div class="test-progress-fill" id="test-progress-fill"></div>
           </div>
         </div>
 
@@ -279,6 +515,23 @@
     </div>
   </div>
 
+  <!-- ════════════════ RESULT MODAL ════════════════ -->
+  <div class="result-drawer-overlay" id="result-drawer-overlay" onclick="closeDrawer()">
+    <div class="result-drawer" id="result-drawer" onclick="event.stopPropagation()">
+      <div class="result-drawer-header">
+        <span class="result-drawer-title" id="result-drawer-title"></span>
+        <div class="result-drawer-controls">
+          <button class="copy-btn" style="position:static;width:28px;height:28px" onclick="closeDrawer()" title="Close (Esc)" aria-label="Close">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="result-drawer-body" id="result-drawer-body"></div>
+    </div>
+  </div>
+
   <!-- ════════════════ SANDBOX BAR ════════════════ -->
   <div id="sandbox-bar">
     <span class="sb-label">sandbox</span>
@@ -291,13 +544,20 @@
   </div>
 
   <script>
+    // ── Test results store ────────────────────────────────────────────────────
+    const testResults = {};
+
     // ── Mock data ─────────────────────────────────────────────────────────────
+    const MOCK_JWT = 'eyJhbGciOiJSUzI1NiIsImtpZCI6Indhc3AtMjAyNS0wMSIsInR5cCI6IkpXVCJ9' +
+      '.eyJzdWIiOiJnb29nbGUtb2F1dGgyfDExNTk3MDY4NTYzMjk0NzM5MjA0MyIsImVtYWlsIjoic2lsdmlvQGV4YW1wbGUuY29tIiwibmFtZSI6IlNpbHZpbyBTaWx2YSIsImlzcyI6Imh0dHBzOi8vaWRwLndhc3Auc2lsdmlvcy5tZSIsImF1ZCI6Indhc3AtY3VzdG9tZXIxLWNsaWVudCIsImV4cCI6MTc0MzkwNDAwMCwiaWF0IjoxNzQzOTAwNDAwLCJ0b2tlbl91c2UiOiJpZCIsImNvZ25pdG86Z3JvdXBzIjpbImN1c3RvbWVyMS11c2VycyJdfQ' +
+      '.SxKpL2dN8vTmQjR0fYzHwBuAoEiCgMnXkVsZrPqJhWbDtFcUlOeGyIdK3aT7vN1QwR5mXpZ2sLjHfBuEkCgNyToRaViPdOxSqMhWlFzKbJnUeYcGiDtAvP8wNqXrBmZsLkHoT3fJuCvEyRiPdGaNbVqWxMhFzKoSjUlTcDpAeInYgOrBmZsKqXwLhNvPjFuCdRyToEiGaVbMqWxSzKoNpLhFcJuDtAeYiRbOvCgMqXwPjNhBzKsFuEaTdRyGiLoVcWmNqXpSjHbKzFuOtAdYeCiRgMvBwPqNhLsKoXjZuFcTdRyGiEaVbMqWxSzKo';
+
     const TEST_CASES = [
-      { group: 'Own tenant',   label: 'OWN-200',   url: 'https://customer1.wasp.local/get',     expected: 200, with_jwt: true,  curl_cmd: 'curl -H "Authorization: Bearer $JWT" https://customer1.wasp.local/get' },
-      { group: 'Own tenant',   label: 'OWN-NOAUTH',url: 'https://customer1.wasp.local/get',     expected: 401, with_jwt: false, curl_cmd: 'curl https://customer1.wasp.local/get' },
-      { group: 'Cross-tenant', label: 'CROSS-403', url: 'https://customer2.wasp.local/get',     expected: 403, with_jwt: true,  curl_cmd: 'curl -H "Authorization: Bearer $JWT" https://customer2.wasp.local/get' },
-      { group: 'Cross-tenant', label: 'CROSS-NOAUTH',url:'https://customer2.wasp.local/get',    expected: 401, with_jwt: false, curl_cmd: 'curl https://customer2.wasp.local/get' },
-      { group: 'Public',       label: 'HTTPBIN-200',url:'https://httpbin.wasp.local/get',       expected: 200, with_jwt: false, curl_cmd: 'curl https://httpbin.wasp.local/get' },
+      { label: 'OWN-200',      name: 'Authenticated request to own tenant',       url: 'https://customer1.wasp.local/get',  expected: 200, with_jwt: true,  curl_cmd: `curl -H "Authorization: Bearer ${MOCK_JWT}" https://customer1.wasp.local/get` },
+      { label: 'OWN-NOAUTH',   name: 'Unauthenticated request to own tenant',     url: 'https://customer1.wasp.local/get',  expected: 401, with_jwt: false, curl_cmd: 'curl https://customer1.wasp.local/get' },
+      { label: 'CROSS-403',    name: 'Authenticated request to foreign tenant',   url: 'https://customer2.wasp.local/get',  expected: 403, with_jwt: true,  curl_cmd: `curl -H "Authorization: Bearer ${MOCK_JWT}" https://customer2.wasp.local/get` },
+      { label: 'CROSS-NOAUTH', name: 'Unauthenticated request to foreign tenant', url: 'https://customer2.wasp.local/get',  expected: 401, with_jwt: false, curl_cmd: 'curl https://customer2.wasp.local/get' },
+      { label: 'HTTPBIN-200',  name: 'Public endpoint access',                    url: 'https://httpbin.wasp.local/get',    expected: 200, with_jwt: false, curl_cmd: 'curl https://httpbin.wasp.local/get' },
     ];
 
     const PRIORITY_CLAIMS = [
@@ -373,14 +633,10 @@
     // ── Build test accordion ──────────────────────────────────────────────────
     function buildAccordion() {
       const container = document.getElementById('accordion');
-      let currentGroup = '';
       let html = '';
-      for (const t of TEST_CASES) {
-        if (t.group !== currentGroup) {
-          currentGroup = t.group;
-          html += `<div class="group-separator">${t.group}</div>`;
-        }
+      TEST_CASES.forEach((t, idx) => {
         const badgeCls = t.expected === 200 ? 'badge-ok' : 'badge-deny';
+        const num = idx + 1;
         html += `
           <div class="accordion-item" id="item-${t.label}">
             <div class="accordion-header" role="button" tabindex="0"
@@ -388,16 +644,14 @@
                  onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAccordion('${t.label}')}"
                  aria-expanded="false">
               <div class="accordion-header-left">
-                <span class="accordion-status" id="status-${t.label}">
-                  <span class="status-dot status-idle"></span>
-                </span>
-                <span class="accordion-label">${t.label}</span>
-                <span class="accordion-url url-text">${t.url}</span>
+                <span class="item-circle item-circle-idle" id="circle-${t.label}">${num}</span>
+                <div class="accordion-item-info">
+                  <span class="accordion-title">${t.name}</span>
+                  <span class="accordion-url url-text">${t.url}</span>
+                </div>
               </div>
               <div class="accordion-header-right">
-                <span class="accordion-expected">
-                  <span id="badge-${t.label}" class="badge ${badgeCls}">${t.expected}</span>
-                </span>
+                <span id="badge-${t.label}" class="badge ${badgeCls}" style="visibility:hidden">${t.expected}</span>
                 <button class="btn-outlined btn-sm accordion-run-btn"
                         onclick="event.stopPropagation(); runSingle('${t.label}', '${t.url}', ${t.expected}, ${t.with_jwt})">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -422,7 +676,7 @@
               </div>
             </div>
           </div>`;
-      }
+      });
       container.innerHTML = html;
     }
 
@@ -518,10 +772,12 @@
 
     function updateSummary() {
       let passed = 0, failed = 0, running = 0;
-      document.querySelectorAll('.accordion-status').forEach(el => {
-        if      (el.querySelector('.status-pass')) passed++;
-        else if (el.querySelector('.status-fail')) failed++;
-        else                                       running++;
+      TEST_CASES.forEach(t => {
+        const circle = document.getElementById(`circle-${t.label}`);
+        if (!circle) return;
+        if      (circle.classList.contains('item-circle-pass'))    passed++;
+        else if (circle.classList.contains('item-circle-fail'))    failed++;
+        else if (circle.classList.contains('item-circle-running')) running++;
       });
       document.getElementById('count-passed').textContent = passed;
       document.getElementById('count-failed').textContent = failed;
@@ -535,36 +791,71 @@
         runningEl.style.display  = 'none';
         runningSep.style.display = 'none';
       }
+      const done = passed + failed;
+      if (done > 0) {
+        const pct = Math.round((passed / TEST_CASES.length) * 100);
+        document.getElementById('test-progress-wrap').classList.add('visible');
+        document.getElementById('test-progress-fill').style.width = pct + '%';
+        document.getElementById('test-progress-pct').textContent  = pct + '%';
+        document.getElementById('test-progress-lbl').textContent  = `${passed} / ${TEST_CASES.length} passed`;
+      }
     }
 
     function setRunning(label) {
       document.getElementById(`result-${label}`).innerHTML = '<span class="test-running">Running…</span>';
-      document.getElementById(`status-${label}`).innerHTML = '<span class="status-dot status-idle"></span>';
+      const circle = document.getElementById(`circle-${label}`);
+      if (circle) { circle.className = 'item-circle item-circle-running'; }
       const badge = document.getElementById(`badge-${label}`);
-      if (badge) { badge.className = 'badge badge-running'; badge.textContent = '…'; }
+      if (badge) { badge.className = 'badge badge-running'; badge.textContent = '…'; badge.style.visibility = 'visible'; }
       openAccordion(label);
       updateSummary();
     }
 
+    const EXPAND_ICON = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M15 3v18" stroke="currentColor" stroke-width="2"/></svg>`;
+
     function renderResult(label, t) {
-      const passed   = t.status_code === t.expected;
-      const statusEl = document.getElementById(`status-${label}`);
-      statusEl.innerHTML = passed
-        ? '<span class="status-dot status-pass"></span>'
-        : '<span class="status-dot status-fail"></span>';
+      testResults[label] = t;
+
+      const passed = t.status_code === t.expected;
+      const circle = document.getElementById(`circle-${label}`);
+      if (circle) {
+        if (passed) {
+          circle.className = 'item-circle item-circle-pass';
+          circle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="${CHECK_PATH}" fill="currentColor"/></svg>`;
+        } else {
+          circle.className = 'item-circle item-circle-fail';
+          circle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/></svg>`;
+        }
+      }
 
       const badge = document.getElementById(`badge-${label}`);
       if (badge) {
         badge.textContent = t.status_code ?? t.expected;
         badge.className   = 'badge ' + (passed ? 'badge-ok' : 'badge-deny');
+        badge.style.visibility = 'visible';
       }
 
-      let html = passed
+      const statusLabel = passed
         ? `<span class="result-pass"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="${CHECK_PATH}" fill="currentColor"/></svg>HTTP ${t.status_code} — passed</span>`
         : `<span class="result-fail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/></svg>${t.status_code ? 'HTTP ' + t.status_code : escapeHtml(t.error)} — failed</span>`;
 
-      if (t.result_json) {
-        html += `<div class="code-fence code-fence-sm mt-8"><pre>${escapeHtml(t.result_json)}</pre></div>`;
+      const hasDetail = !!t.result_json;
+      let html = `<div class="result-detail-toggle" onclick="toggleResultDetail('${label}')" style="${hasDetail ? '' : 'cursor:default'}">
+        ${statusLabel}
+        ${hasDetail ? `<svg class="result-detail-chevron" id="detail-chevron-${label}" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
+      </div>`;
+
+      if (hasDetail) {
+        html += `<div class="result-detail-panel" id="detail-${label}">
+          <div class="result-code-wrap">
+            <button class="result-fullscreen-btn" onclick="event.stopPropagation();openDrawer('${label}')" title="Fullscreen">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <pre class="result-code-pre">${escapeHtml(t.result_json)}</pre>
+          </div>
+        </div>`;
       }
 
       document.getElementById(`result-${label}`).innerHTML = html;
@@ -572,12 +863,62 @@
       updateSummary();
     }
 
+    function toggleResultDetail(label) {
+      const panel   = document.getElementById(`detail-${label}`);
+      const chevron = document.getElementById(`detail-chevron-${label}`);
+      if (!panel) return;
+      const open = panel.classList.toggle('open');
+      if (chevron) chevron.classList.toggle('open', open);
+    }
+
+    function getMockResult(label, url) {
+      const host = new URL(url).hostname;
+      if (label === 'HTTPBIN-200') {
+        return JSON.stringify({
+          "args": {},
+          "headers": {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Host": host,
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+            "X-Amzn-Trace-Id": "Root=1-69e15a10-6c2c8c061e52b2be0f934bf4",
+            "X-Envoy-Attempt-Count": "1",
+            "X-Forwarded-For": "177.182.64.55",
+            "X-Forwarded-Proto": "https"
+          },
+          "origin": "177.182.64.55",
+          "url": url
+        }, null, 2);
+      }
+      if (label === 'OWN-200') {
+        return JSON.stringify({
+          "args": {},
+          "headers": {
+            "Accept": "*/*",
+            "Authorization": `Bearer ${MOCK_JWT}`,
+            "Host": host,
+            "User-Agent": "curl/8.7.1",
+            "X-B3-Sampled": "1",
+            "X-B3-Spanid": "a3f4b2c1d8e95b2a",
+            "X-B3-Traceid": "1f2e3d4c5b6a7908a3f4b2c1d8e95b2a",
+            "X-Envoy-Attempt-Count": "1",
+            "X-Forwarded-For": "10.0.1.45",
+            "X-Forwarded-Proto": "https",
+            "X-Request-Id": "e4b1c2d3-f5a6-7890-b1c2-d3e4f5a67890"
+          },
+          "origin": "10.0.1.45",
+          "url": url
+        }, null, 2);
+      }
+      return null;
+    }
+
     async function runSingle(label, url, expected, withJwt) {
       setRunning(label);
-      // Simulate network delay + mock result
       await new Promise(r => setTimeout(r, 300 + Math.random() * 400));
-      const mockJson = JSON.stringify({ url, headers: { host: new URL(url).hostname }, origin: '10.0.0.1' }, null, 2);
-      renderResult(label, { status_code: expected, expected, result_json: expected === 200 ? mockJson : null, error: null });
+      const result_json = expected === 200 ? getMockResult(label, url) : null;
+      renderResult(label, { status_code: expected, expected, result_json, error: null });
     }
 
     async function runAll() {
@@ -586,6 +927,72 @@
       await Promise.all(TEST_CASES.map(t => runSingle(t.label, t.url, t.expected, t.with_jwt)));
       btn.disabled = false;
     }
+
+    // ── Side drawer ──────────────────────────────────────────────────────────
+    function openDrawer(label) {
+      const t      = TEST_CASES.find(r => r.label === label);
+      const result = testResults[label];
+
+      document.getElementById('result-drawer-title').textContent = t ? t.name : label;
+
+      let body = '';
+
+      if (result) {
+        const passed = result.status_code === result.expected;
+        const statusHtml = passed
+          ? `<span class="result-pass"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="${CHECK_PATH}" fill="currentColor"/></svg>HTTP ${result.status_code} — passed</span>`
+          : `<span class="result-fail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/></svg>${result.status_code ? 'HTTP ' + result.status_code : escapeHtml(result.error)} — failed</span>`;
+        body += `<div style="padding:2px 0 4px;font-size:13px">${statusHtml}</div>`;
+
+        if (result.result_json) {
+          body += `<div class="drawer-code-block">
+            <div class="drawer-code-header">
+              <span>response body</span>
+              <div class="drawer-code-header-actions">
+                <button class="drawer-wrap-btn" id="wrap-json-${label}" onclick="toggleDrawerWrap('dpre-json-${label}','wrap-json-${label}')">wrap</button>
+              </div>
+            </div>
+            <pre class="drawer-code-pre" id="dpre-json-${label}">${escapeHtml(result.result_json)}</pre>
+          </div>`;
+        }
+      } else {
+        body += `<p style="color:var(--color-secondary);font-size:13px">Run this test first to see results.</p>`;
+      }
+
+      if (t) {
+        body += `<div class="drawer-code-block">
+          <div class="drawer-code-header">
+            <span>curl command</span>
+            <div class="drawer-code-header-actions">
+              <button class="drawer-wrap-btn" id="wrap-curl-${label}" onclick="toggleDrawerWrap('dpre-curl-${label}','wrap-curl-${label}')">wrap</button>
+              <button class="copy-btn" style="position:static;width:28px;height:24px" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('dpre-curl-${label}').textContent)" title="Copy">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="${CLIPBOARD_PATH}" fill="currentColor"/></svg>
+              </button>
+            </div>
+          </div>
+          <pre class="drawer-code-pre" id="dpre-curl-${label}">${escapeHtml(t.curl_cmd)}</pre>
+        </div>`;
+      }
+
+      document.getElementById('result-drawer-body').innerHTML = body;
+      document.getElementById('result-drawer').classList.add('open');
+      document.getElementById('result-drawer-overlay').classList.add('open');
+    }
+
+    function closeDrawer() {
+      document.getElementById('result-drawer').classList.remove('open');
+      document.getElementById('result-drawer-overlay').classList.remove('open');
+    }
+
+    function toggleDrawerWrap(preId, btnId) {
+      const pre = document.getElementById(preId);
+      const btn = document.getElementById(btnId);
+      if (!pre || !btn) return;
+      const wrapped = pre.classList.toggle('wrap');
+      btn.classList.toggle('active', wrapped);
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 
     // ── Init ──────────────────────────────────────────────────────────────────
     buildAccordion();
