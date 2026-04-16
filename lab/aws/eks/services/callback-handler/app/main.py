@@ -18,7 +18,7 @@ logging.getLogger().setLevel(_log_level)
 
 app = FastAPI(title="Callback Handler", version="1.0.0")
 
-app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
+app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static", follow_symlink=True), name="static")
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 
 

@@ -1,110 +1,5 @@
-/* ── Light theme (default) ────────────────────── */
-:root {
-  --color-primary:        #1A73E8;
-  --color-primary-dim:    rgba(26,115,232,.10);
-  --color-on-primary:     #FFFFFF;
-  --color-surface:        #FFFFFF;
-  --color-surface-2:      #F1F3F4;
-  --color-background:     #F8F9FA;
-  --color-on-surface:     #202124;
-  --color-secondary:      #5F6368;
-  --color-outline:        #747775;
-  --color-outline-dim:    rgba(0,0,0,.12);
-  --color-error:          #B3261E;
-  --color-error-surface:  #FCEEEE;
-  --color-error-outline:  rgba(179,38,30,.30);
-  --color-success-surface:#E6F4EA;
-  --color-toggle-bg:      rgba(0,0,0,.06);
-  --color-toggle-hover:   rgba(0,0,0,.10);
-  --color-card-border:    transparent;
-  --color-nav-bg:         #FFFFFF;
-  --color-nav-shadow:     rgba(0,0,0,.10);
-  --color-code-bg:        #F6F8FA;
-  --color-code-border:    rgba(0,0,0,.12);
-  --color-key:            #0550AE;
-  --color-string:         #0A3069;
-  --color-number:         #953800;
-  --color-bool:           #8250DF;
-  --color-null:           #6E7781;
-  --color-badge-bg:       rgba(26,115,232,.10);
-  --color-badge-text:     #1A73E8;
-  --color-avatar-bg:      #1A73E8;
-  --color-avatar-text:    #FFFFFF;
-  --color-claim-primary-bg: rgba(26,115,232,.06);
-}
-
-/* ── Dark theme ───────────────────────────────── */
-[data-theme="dark"] {
-  --color-primary:        #8AB4F8;
-  --color-primary-dim:    rgba(138,180,248,.12);
-  --color-on-primary:     #003063;
-  --color-surface:        #303134;
-  --color-surface-2:      #3C3F43;
-  --color-background:     #202124;
-  --color-on-surface:     #E8EAED;
-  --color-secondary:      #9AA0A6;
-  --color-outline:        #5F6368;
-  --color-outline-dim:    rgba(255,255,255,.12);
-  --color-error:          #F28B82;
-  --color-error-surface:  rgba(242,139,130,.10);
-  --color-error-outline:  rgba(242,139,130,.30);
-  --color-success-surface:rgba(52,168,83,.12);
-  --color-toggle-bg:      rgba(255,255,255,.08);
-  --color-toggle-hover:   rgba(255,255,255,.13);
-  --color-card-border:    rgba(255,255,255,.08);
-  --color-nav-bg:         #303134;
-  --color-nav-shadow:     rgba(0,0,0,.30);
-  --color-code-bg:        #161B22;
-  --color-code-border:    rgba(255,255,255,.10);
-  --color-key:            #79C0FF;
-  --color-string:         #A5D6FF;
-  --color-number:         #FFA657;
-  --color-bool:           #D2A8FF;
-  --color-null:           #8B949E;
-  --color-badge-bg:       rgba(138,180,248,.15);
-  --color-badge-text:     #8AB4F8;
-  --color-avatar-bg:      #8AB4F8;
-  --color-avatar-text:    #003063;
-  --color-claim-primary-bg: rgba(138,180,248,.08);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-primary:        #8AB4F8;
-    --color-primary-dim:    rgba(138,180,248,.12);
-    --color-on-primary:     #003063;
-    --color-surface:        #303134;
-    --color-surface-2:      #3C3F43;
-    --color-background:     #202124;
-    --color-on-surface:     #E8EAED;
-    --color-secondary:      #9AA0A6;
-    --color-outline:        #5F6368;
-    --color-outline-dim:    rgba(255,255,255,.12);
-    --color-error:          #F28B82;
-    --color-error-surface:  rgba(242,139,130,.10);
-    --color-error-outline:  rgba(242,139,130,.30);
-    --color-success-surface:rgba(52,168,83,.12);
-    --color-toggle-bg:      rgba(255,255,255,.08);
-    --color-toggle-hover:   rgba(255,255,255,.13);
-    --color-card-border:    rgba(255,255,255,.08);
-    --color-nav-bg:         #303134;
-    --color-nav-shadow:     rgba(0,0,0,.30);
-    --color-code-bg:        #161B22;
-    --color-code-border:    rgba(255,255,255,.10);
-    --color-key:            #79C0FF;
-    --color-string:         #A5D6FF;
-    --color-number:         #FFA657;
-    --color-bool:           #D2A8FF;
-    --color-null:           #8B949E;
-    --color-badge-bg:       rgba(138,180,248,.15);
-    --color-badge-text:     #8AB4F8;
-    --color-avatar-bg:      #8AB4F8;
-    --color-avatar-text:    #003063;
-    --color-claim-primary-bg: rgba(138,180,248,.08);
-  }
-}
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+@import './shared/tokens.css';
+@import './shared/base.css';
 
 body {
   font-family: 'Roboto', sans-serif;
@@ -197,40 +92,18 @@ body {
 
 .nav-logout:hover { background: var(--color-error-surface); }
 
-/* ── Theme toggle ─────────────────────────────── */
+/* ── Theme toggle — navbar override ──────────── */
+/* base.css defines the core .theme-toggle styles  */
+/* (position:fixed, top/right). In the app the     */
+/* toggle lives inside the navbar flexbox instead. */
 .theme-toggle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background: var(--color-toggle-bg);
-  color: var(--color-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: static;
+  top: unset;
+  right: unset;
   transition: background-color 150ms ease;
   flex-shrink: 0;
   margin-left: 4px;
 }
-
-.theme-toggle:hover { background: var(--color-toggle-hover); }
-
-.theme-toggle .icon-moon,
-.theme-toggle .icon-sun { display: none; }
-
-[data-theme="dark"]  .theme-toggle .icon-sun  { display: block; }
-[data-theme="dark"]  .theme-toggle .icon-moon { display: none;  }
-[data-theme="light"] .theme-toggle .icon-moon { display: block; }
-[data-theme="light"] .theme-toggle .icon-sun  { display: none;  }
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) .theme-toggle .icon-moon { display: block; }
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .theme-toggle .icon-sun { display: block; }
-}
-:root:not([data-theme]) .theme-toggle .icon-moon { display: block; }
 
 /* ── Page content ─────────────────────────────── */
 .page {
@@ -295,54 +168,11 @@ body {
   flex-wrap: wrap;
 }
 
-/* ── Buttons ──────────────────────────────────── */
-.btn-filled {
-  font-family: 'Roboto', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: .1px;
-  color: var(--color-on-primary);
-  background: var(--color-primary);
-  border: none;
-  padding: 10px 24px;
-  border-radius: 20px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0,0,0,.3);
-  transition: box-shadow 150ms ease, filter 150ms ease, background-color 250ms ease;
-}
-
-.btn-filled:hover  { filter: brightness(.92); box-shadow: 0 2px 6px 2px rgba(0,0,0,.15), 0 1px 2px rgba(0,0,0,.3); }
-.btn-filled:active { filter: brightness(.88); }
-
-.btn-outlined {
-  font-family: 'Roboto', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: .1px;
-  color: var(--color-primary);
-  background: none;
-  border: 1px solid var(--color-primary);
-  padding: 9px 23px;
-  border-radius: 20px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  position: relative;
-  overflow: hidden;
-  transition: background-color 150ms ease, color 250ms ease;
-}
-
+/* ── Buttons — app-specific overrides ────────── */
+.btn-filled:active { filter: brightness(.88); box-shadow: 0 1px 2px rgba(0,0,0,.3); }
 .btn-outlined:hover { background: var(--color-primary-dim); }
 
-/* Ripple */
+/* Ripple — white for filled buttons */
 .ripple {
   position: absolute;
   border-radius: 50%;
@@ -351,8 +181,6 @@ body {
   background: rgba(255,255,255,.35);
   pointer-events: none;
 }
-
-@keyframes ripple { to { transform: scale(4); opacity: 0; } }
 
 /* ── Section header ───────────────────────────── */
 .section-header {

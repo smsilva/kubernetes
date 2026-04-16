@@ -28,7 +28,7 @@ app = FastAPI(title="WASP Tenant Frontend", version="1.0.0")
 _static_dir = Path(__file__).parent / "static"
 _templates_dir = Path(__file__).parent / "templates"
 
-app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+app.mount("/static", StaticFiles(directory=_static_dir, follow_symlink=True), name="static")
 templates = Jinja2Templates(directory=_templates_dir)
 
 
