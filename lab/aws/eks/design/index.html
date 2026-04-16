@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WASP Design Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- CSS reais dos serviços (servir a partir de lab/aws/eks/) -->
+  <link rel="stylesheet" href="/services/tenant-frontend/app/static/app.css">
+  <link rel="stylesheet" id="login-css" href="/services/platform-frontend/app/static/login.css" disabled>
+  <style>
+    /* ── Sandbox chrome ───────────────────────────── */
+    #sandbox-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background: #1e1e2e;
+      color: #cdd6f4;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      height: 40px;
+      border-top: 1px solid #313244;
+      user-select: none;
+    }
+    #sandbox-bar .sb-label {
+      padding: 0 12px;
+      color: #6c7086;
+      font-size: 10px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      border-right: 1px solid #313244;
+    }
+    #sandbox-bar .sb-tabs {
+      display: flex;
+      height: 100%;
+      overflow-x: auto;
+      flex: 1;
+    }
+    #sandbox-bar .sb-tab {
+      padding: 0 16px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: #6c7086;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 12px;
+      white-space: nowrap;
+      border-right: 1px solid #313244;
+      transition: background 100ms, color 100ms;
+    }
+    #sandbox-bar .sb-tab:hover  { background: #313244; color: #cdd6f4; }
+    #sandbox-bar .sb-tab.active { background: #313244; color: #cba6f7; }
+    body { padding-bottom: 48px; }
+
+    /* ── Login page layout override ──────────────── */
+    body.view-login {
+      min-height: calc(100vh - 48px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════ VIEW: HOME ════════════════ -->
+  <div id="view-home">
+    <nav class="navbar">
+      <a href="#" class="navbar-brand">
+        <svg width="32" height="32" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+          <path d="M22 3L40 13V31L22 41L4 31V13L22 3Z" fill="#1A73E8"/>
+          <path d="M13 16L17.5 28L22 19.5L26.5 28L31 16" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="navbar-brand-name">WASP Platform</span>
+        <span class="navbar-brand-tenant">customer1</span>
+      </a>
+      <div class="navbar-links">
+        <a href="#" class="nav-link active" onclick="showView('home');return false">Home</a>
+        <a href="#" class="nav-link"        onclick="showView('test');return false">Test</a>
+        <a href="#" class="nav-link"        onclick="showView('profile');return false">Profile</a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-logout">Logout</a>
+      </div>
+      <button class="theme-toggle" id="theme-toggle-home" aria-label="Toggle dark mode">
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/>
+        </svg>
+        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7zM2 13h2M20 13h2M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </nav>
+    <main class="page">
+      <div class="card">
+        <div class="home-hero">
+          <div class="avatar" aria-hidden="true">S</div>
+          <h1 class="home-title">Welcome back, Silvio</h1>
+          <p class="home-subtitle">
+            Signed in to <strong>customer1</strong>
+            &nbsp;·&nbsp;silvio@example.com
+          </p>
+          <div class="home-actions">
+            <a href="#" class="btn-filled" onclick="showView('test');return false">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 5v14l11-7z" fill="currentColor"/>
+              </svg>
+              Run HTTP test
+            </a>
+            <a href="#" class="btn-outlined" onclick="showView('profile');return false">View profile</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ════════════════ VIEW: TEST ════════════════ -->
+  <div id="view-test" style="display:none">
+    <nav class="navbar">
+      <a href="#" class="navbar-brand">
+        <svg width="32" height="32" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+          <path d="M22 3L40 13V31L22 41L4 31V13L22 3Z" fill="#1A73E8"/>
+          <path d="M13 16L17.5 28L22 19.5L26.5 28L31 16" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="navbar-brand-name">WASP Platform</span>
+        <span class="navbar-brand-tenant">customer1</span>
+      </a>
+      <div class="navbar-links">
+        <a href="#" class="nav-link"        onclick="showView('home');return false">Home</a>
+        <a href="#" class="nav-link active" onclick="showView('test');return false">Test</a>
+        <a href="#" class="nav-link"        onclick="showView('profile');return false">Profile</a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-logout">Logout</a>
+      </div>
+      <button class="theme-toggle" id="theme-toggle-test" aria-label="Toggle dark mode">
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/>
+        </svg>
+        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7zM2 13h2M20 13h2M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </nav>
+    <main class="page">
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <span class="section-title">Tenant Isolation</span>
+            <span class="section-subtitle">Cross-tenant access control via Istio JWT</span>
+          </div>
+          <div class="section-header-actions">
+            <button class="btn-outlined" onclick="collapseAll()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M22 3L2 3M2 21L22 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M16 8l-4-4-4 4M8 16l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Collapse all
+            </button>
+            <button id="run-all-btn" class="btn-filled" onclick="runAll()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+              </svg>
+              Run all
+            </button>
+          </div>
+        </div>
+
+        <div class="accordion" id="accordion">
+          <!-- items injected by JS -->
+        </div>
+
+        <div class="results-summary" id="results-summary">
+          <span class="summary-item summary-passed">
+            <span class="status-dot status-pass"></span>
+            <span id="count-passed">0</span> passed
+          </span>
+          <span class="summary-sep">·</span>
+          <span class="summary-item summary-failed">
+            <span class="status-dot status-fail"></span>
+            <span id="count-failed">0</span> failed
+          </span>
+          <span class="summary-sep summary-running-sep" id="summary-running-sep" style="display:none">·</span>
+          <span class="summary-item summary-running" id="summary-running" style="display:none">
+            <span class="status-dot status-idle"></span>
+            <span id="count-running">0</span> running
+          </span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ════════════════ VIEW: PROFILE ════════════════ -->
+  <div id="view-profile" style="display:none">
+    <nav class="navbar">
+      <a href="#" class="navbar-brand">
+        <svg width="32" height="32" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+          <path d="M22 3L40 13V31L22 41L4 31V13L22 3Z" fill="#1A73E8"/>
+          <path d="M13 16L17.5 28L22 19.5L26.5 28L31 16" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="navbar-brand-name">WASP Platform</span>
+        <span class="navbar-brand-tenant">customer1</span>
+      </a>
+      <div class="navbar-links">
+        <a href="#" class="nav-link"        onclick="showView('home');return false">Home</a>
+        <a href="#" class="nav-link"        onclick="showView('test');return false">Test</a>
+        <a href="#" class="nav-link active" onclick="showView('profile');return false">Profile</a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-logout">Logout</a>
+      </div>
+      <button class="theme-toggle" id="theme-toggle-profile" aria-label="Toggle dark mode">
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/>
+        </svg>
+        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7zM2 13h2M20 13h2M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </nav>
+    <main class="page">
+      <div class="card">
+        <div class="section-header mb-24">
+          <span class="section-title">Identity claims</span>
+        </div>
+        <table class="claims-table">
+          <thead>
+            <tr><th>Claim</th><th>Value</th></tr>
+          </thead>
+          <tbody id="claims-tbody">
+            <!-- injected by JS -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- ════════════════ VIEW: LOGIN ════════════════ -->
+  <div id="view-login" style="display:none">
+    <button class="theme-toggle" id="theme-toggle-login" aria-label="Toggle dark mode">
+      <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/>
+      </svg>
+      <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7zM2 13h2M20 13h2M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="card" id="login-card">
+      <div class="logo-section">
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+          <path d="M22 3L40 13V31L22 41L4 31V13L22 3Z" fill="#1A73E8"/>
+          <path d="M13 16L17.5 28L22 19.5L26.5 28L31 16" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="logo-name">WASP Platform</span>
+      </div>
+      <h1 class="card-title">Sign in</h1>
+      <p class="card-subtitle">Use your WASP Platform account</p>
+      <form onsubmit="return false">
+        <div class="text-field">
+          <input type="email" id="email-input" placeholder=" " autocomplete="email" autofocus>
+          <label for="email-input">Email address</label>
+        </div>
+        <div class="supporting-text" id="login-error" style="min-height:20px"></div>
+        <div class="actions">
+          <a href="#" class="btn-text">Create account</a>
+          <button type="button" class="btn-filled" onclick="simulateLoginError()">Continue</button>
+        </div>
+      </form>
+      <p class="card-footer">
+        By continuing, you agree to the
+        <a href="#">Terms of Service</a> and
+        <a href="#">Privacy Policy</a>.
+      </p>
+    </div>
+  </div>
+
+  <!-- ════════════════ SANDBOX BAR ════════════════ -->
+  <div id="sandbox-bar">
+    <span class="sb-label">sandbox</span>
+    <div class="sb-tabs">
+      <button class="sb-tab active" onclick="showView('home')"    id="tab-home">home</button>
+      <button class="sb-tab"        onclick="showView('test')"    id="tab-test">test</button>
+      <button class="sb-tab"        onclick="showView('profile')" id="tab-profile">profile</button>
+      <button class="sb-tab"        onclick="showView('login')"   id="tab-login">login</button>
+    </div>
+  </div>
+
+  <script>
+    // ── Mock data ─────────────────────────────────────────────────────────────
+    const TEST_CASES = [
+      { group: 'Own tenant',   label: 'OWN-200',   url: 'https://customer1.wasp.local/get',     expected: 200, with_jwt: true,  curl_cmd: 'curl -H "Authorization: Bearer $JWT" https://customer1.wasp.local/get' },
+      { group: 'Own tenant',   label: 'OWN-NOAUTH',url: 'https://customer1.wasp.local/get',     expected: 401, with_jwt: false, curl_cmd: 'curl https://customer1.wasp.local/get' },
+      { group: 'Cross-tenant', label: 'CROSS-403', url: 'https://customer2.wasp.local/get',     expected: 403, with_jwt: true,  curl_cmd: 'curl -H "Authorization: Bearer $JWT" https://customer2.wasp.local/get' },
+      { group: 'Cross-tenant', label: 'CROSS-NOAUTH',url:'https://customer2.wasp.local/get',    expected: 401, with_jwt: false, curl_cmd: 'curl https://customer2.wasp.local/get' },
+      { group: 'Public',       label: 'HTTPBIN-200',url:'https://httpbin.wasp.local/get',       expected: 200, with_jwt: false, curl_cmd: 'curl https://httpbin.wasp.local/get' },
+    ];
+
+    const PRIORITY_CLAIMS = [
+      ['sub',    'google-oauth2|1234567890'],
+      ['email',  'silvio@example.com'],
+      ['name',   'Silvio Silva'],
+    ];
+
+    const OTHER_CLAIMS = [
+      ['iss',       'https://idp.wasp.silvios.me'],
+      ['aud',       'wasp-customer1-client'],
+      ['exp',       '1713290400'],
+      ['iat',       '1713286800'],
+      ['token_use', 'id'],
+      ['cognito:groups', 'customer1-users'],
+    ];
+
+    // ── Login CSS swap ────────────────────────────────────────────────────────
+    const loginCss = document.getElementById('login-css');
+
+    function showView(name) {
+      ['home','test','profile','login'].forEach(v => {
+        document.getElementById(`view-${v}`).style.display = 'none';
+        document.getElementById(`tab-${v}`).classList.remove('active');
+      });
+      document.getElementById(`view-${name}`).style.display = '';
+      document.getElementById(`tab-${name}`).classList.add('active');
+
+      // Login page uses its own layout CSS; app.css handles the rest
+      loginCss.disabled = (name !== 'login');
+
+      if (name === 'login') {
+        document.body.classList.add('view-login');
+        document.body.style.display = 'flex';
+        document.body.style.flexDirection = 'column';
+        document.body.style.alignItems = 'center';
+        document.body.style.justifyContent = 'center';
+        document.body.style.minHeight = 'calc(100vh - 48px)';
+      } else {
+        document.body.classList.remove('view-login');
+        document.body.style.display = '';
+      }
+    }
+
+    // ── Theme toggle ──────────────────────────────────────────────────────────
+    const html = document.documentElement;
+    const saved = localStorage.getItem('wasp-theme');
+    if (saved) html.dataset.theme = saved;
+
+    function toggleTheme() {
+      const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+      html.dataset.theme = next;
+      localStorage.setItem('wasp-theme', next);
+    }
+
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+      btn.addEventListener('click', toggleTheme);
+    });
+
+    // ── Ripple effect ─────────────────────────────────────────────────────────
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.btn-filled, .btn-outlined, .btn-text');
+      if (!btn) return;
+      const r = document.createElement('span');
+      r.className = 'ripple';
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+      btn.appendChild(r);
+      r.addEventListener('animationend', () => r.remove());
+    });
+
+    // ── Build test accordion ──────────────────────────────────────────────────
+    function buildAccordion() {
+      const container = document.getElementById('accordion');
+      let currentGroup = '';
+      let html = '';
+      for (const t of TEST_CASES) {
+        if (t.group !== currentGroup) {
+          currentGroup = t.group;
+          html += `<div class="group-separator">${t.group}</div>`;
+        }
+        const badgeCls = t.expected === 200 ? 'badge-ok' : 'badge-deny';
+        html += `
+          <div class="accordion-item" id="item-${t.label}">
+            <div class="accordion-header" role="button" tabindex="0"
+                 onclick="toggleAccordion('${t.label}')"
+                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAccordion('${t.label}')}"
+                 aria-expanded="false">
+              <div class="accordion-header-left">
+                <span class="accordion-status" id="status-${t.label}">
+                  <span class="status-dot status-idle"></span>
+                </span>
+                <span class="accordion-label">${t.label}</span>
+                <span class="accordion-url url-text">${t.url}</span>
+              </div>
+              <div class="accordion-header-right">
+                <span class="accordion-expected">
+                  <span id="badge-${t.label}" class="badge ${badgeCls}">${t.expected}</span>
+                </span>
+                <button class="btn-outlined btn-sm accordion-run-btn"
+                        onclick="event.stopPropagation(); runSingle('${t.label}', '${t.url}', ${t.expected}, ${t.with_jwt})">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+                  </svg>
+                  Run
+                </button>
+                <svg class="accordion-chevron" id="chevron-${t.label}" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="accordion-body" id="body-${t.label}" style="display:none">
+              <div class="accordion-result" id="result-${t.label}"></div>
+              <div class="curl-block mt-8">
+                <pre class="curl-code">${escapeHtml(t.curl_cmd)}</pre>
+                <button class="copy-btn" onclick="copyCurl('${t.label}', this)" title="Copy command">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    // ── Build profile claims ──────────────────────────────────────────────────
+    function buildProfile() {
+      let html = '';
+      for (const [k, v] of PRIORITY_CLAIMS) {
+        html += `<tr class="claim-row-primary"><td class="claim-key">${k}</td><td class="claim-value">${v}</td></tr>`;
+      }
+      for (const [k, v] of OTHER_CLAIMS) {
+        html += `<tr class="claim-row-other"><td class="claim-key">${k}</td><td class="claim-value">${v}</td></tr>`;
+      }
+      document.getElementById('claims-tbody').innerHTML = html;
+    }
+
+    // ── Login error simulation ────────────────────────────────────────────────
+    function simulateLoginError() {
+      const input = document.getElementById('email-input');
+      const errEl = document.getElementById('login-error');
+      const val   = input.value.trim();
+      if (!val) {
+        input.classList.add('has-error');
+        errEl.innerHTML = `<svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm.75 11.5h-1.5v-1.5h1.5v1.5zm0-3h-1.5V6.5h1.5V10.5z" fill="#B3261E"/></svg> Enter your email address`;
+      } else if (!val.includes('@')) {
+        input.classList.add('has-error');
+        errEl.innerHTML = `<svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm.75 11.5h-1.5v-1.5h1.5v1.5zm0-3h-1.5V6.5h1.5V10.5z" fill="#B3261E"/></svg> Enter a valid email address`;
+      } else {
+        input.classList.remove('has-error');
+        errEl.innerHTML = '';
+        showView('home');
+      }
+    }
+
+    // ── Accordion helpers ─────────────────────────────────────────────────────
+    function toggleAccordion(label) {
+      const body    = document.getElementById(`body-${label}`);
+      const chevron = document.getElementById(`chevron-${label}`);
+      const header  = body.previousElementSibling;
+      const isOpen  = body.style.display !== 'none';
+      body.style.display      = isOpen ? 'none' : 'block';
+      chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+      header.setAttribute('aria-expanded', String(!isOpen));
+    }
+
+    function openAccordion(label) {
+      const body = document.getElementById(`body-${label}`);
+      if (body && body.style.display === 'none') toggleAccordion(label);
+    }
+
+    function collapseAll() {
+      TEST_CASES.forEach(t => {
+        const body = document.getElementById(`body-${t.label}`);
+        if (body && body.style.display !== 'none') toggleAccordion(t.label);
+      });
+    }
+
+    // ── Copy curl ─────────────────────────────────────────────────────────────
+    const CLIPBOARD_PATH = 'M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z';
+    const CHECK_PATH     = 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z';
+
+    function copyCurl(label, btn) {
+      const t = TEST_CASES.find(r => r.label === label);
+      if (!t) return;
+      const done = () => {
+        btn.querySelector('path').setAttribute('d', CHECK_PATH);
+        btn.classList.add('copy-btn-ok');
+        setTimeout(() => {
+          btn.querySelector('path').setAttribute('d', CLIPBOARD_PATH);
+          btn.classList.remove('copy-btn-ok');
+        }, 1500);
+      };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(t.curl_cmd).then(done).catch(() => fallbackCopy(t.curl_cmd, done));
+      } else {
+        fallbackCopy(t.curl_cmd, done);
+      }
+    }
+
+    function fallbackCopy(text, cb) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); cb(); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+
+    // ── Test runner (simulated) ───────────────────────────────────────────────
+    function escapeHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function updateSummary() {
+      let passed = 0, failed = 0, running = 0;
+      document.querySelectorAll('.accordion-status').forEach(el => {
+        if      (el.querySelector('.status-pass')) passed++;
+        else if (el.querySelector('.status-fail')) failed++;
+        else                                       running++;
+      });
+      document.getElementById('count-passed').textContent = passed;
+      document.getElementById('count-failed').textContent = failed;
+      const runningEl  = document.getElementById('summary-running');
+      const runningSep = document.getElementById('summary-running-sep');
+      if (running > 0 && running < TEST_CASES.length) {
+        document.getElementById('count-running').textContent = running;
+        runningEl.style.display  = '';
+        runningSep.style.display = '';
+      } else {
+        runningEl.style.display  = 'none';
+        runningSep.style.display = 'none';
+      }
+    }
+
+    function setRunning(label) {
+      document.getElementById(`result-${label}`).innerHTML = '<span class="test-running">Running…</span>';
+      document.getElementById(`status-${label}`).innerHTML = '<span class="status-dot status-idle"></span>';
+      const badge = document.getElementById(`badge-${label}`);
+      if (badge) { badge.className = 'badge badge-running'; badge.textContent = '…'; }
+      openAccordion(label);
+      updateSummary();
+    }
+
+    function renderResult(label, t) {
+      const passed   = t.status_code === t.expected;
+      const statusEl = document.getElementById(`status-${label}`);
+      statusEl.innerHTML = passed
+        ? '<span class="status-dot status-pass"></span>'
+        : '<span class="status-dot status-fail"></span>';
+
+      const badge = document.getElementById(`badge-${label}`);
+      if (badge) {
+        badge.textContent = t.status_code ?? t.expected;
+        badge.className   = 'badge ' + (passed ? 'badge-ok' : 'badge-deny');
+      }
+
+      let html = passed
+        ? `<span class="result-pass"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="${CHECK_PATH}" fill="currentColor"/></svg>HTTP ${t.status_code} — passed</span>`
+        : `<span class="result-fail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/></svg>${t.status_code ? 'HTTP ' + t.status_code : escapeHtml(t.error)} — failed</span>`;
+
+      if (t.result_json) {
+        html += `<div class="code-fence code-fence-sm mt-8"><pre>${escapeHtml(t.result_json)}</pre></div>`;
+      }
+
+      document.getElementById(`result-${label}`).innerHTML = html;
+      if (!passed) openAccordion(label);
+      updateSummary();
+    }
+
+    async function runSingle(label, url, expected, withJwt) {
+      setRunning(label);
+      // Simulate network delay + mock result
+      await new Promise(r => setTimeout(r, 300 + Math.random() * 400));
+      const mockJson = JSON.stringify({ url, headers: { host: new URL(url).hostname }, origin: '10.0.0.1' }, null, 2);
+      renderResult(label, { status_code: expected, expected, result_json: expected === 200 ? mockJson : null, error: null });
+    }
+
+    async function runAll() {
+      const btn = document.getElementById('run-all-btn');
+      btn.disabled = true;
+      await Promise.all(TEST_CASES.map(t => runSingle(t.label, t.url, t.expected, t.with_jwt)));
+      btn.disabled = false;
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    buildAccordion();
+    buildProfile();
+  </script>
+</body>
+</html>

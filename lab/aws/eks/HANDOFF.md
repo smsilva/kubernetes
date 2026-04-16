@@ -53,6 +53,7 @@ POST /login (user1@customer1.com)
 - `62e60a5` — `docs(eks): add notes on local lab plan and HANDOFF`
 - `218c4ef` — `docs(eks): update HANDOFF with completed local lab status`
 - `5da5ecb` — `fix(eks/local): make local k3d lab work end-to-end with Keycloak 26`
+- `e32187a` — `refactor(eks/local): rename COGNITO_* env vars to IDP_* for provider-agnostic naming`
 
 ## What Worked
 
@@ -92,12 +93,13 @@ POST /login (user1@customer1.com)
 - **`domain=".wasp.silvios.me"` hardcoded** → cookie não aceito em `.wasp.local`. Substituído por `COOKIE_DOMAIN` env var.
 - **`grant_type=password` sem `scope=openid`** → não retorna `id_token` (só `access_token`). Adicionar `--data "scope=openid"` ao testar diretamente.
 - **`rollout restart` necessário quando Secret/ConfigMap muda** — quando apenas o conteúdo de um Secret ou ConfigMap muda (sem troca de imagem), o pod não remonta volumes/env vars automaticamente. É necessário `kubectl rollout restart deployment/<name>` para aplicar as mudanças.
+- **Subagente sem permissão bash** — ao delegar execução de scripts para subagente via Agent tool, ele não herda as permissões da sessão principal mesmo com `Bash(*)` em `~/.claude/settings.json`. A permissão é carregada na inicialização da sessão — reiniciar o Claude Code resolve. Alternativamente, rodar os scripts manualmente.
 
 ## Backlog
 
 ### P1 — Quick wins
 
-- [ ] **Renomear variáveis `COGNITO_*` no lab local**: scripts `06-deploy-services` e `08-deploy-customer2` ainda usam `COGNITO_CLIENT_SECRET_CUSTOMER1/2` e `COGNITO_DOMAIN` nos ConfigMaps/Secrets do Kubernetes. Renomear para `IDP_*` (ex: `IDP_CLIENT_SECRET_CUSTOMER1`, `IDP_DOMAIN`) para evitar confusão. Verificar impacto no código dos serviços (`callback-handler`, `platform-frontend`).
+- [x] **Renomear variáveis `COGNITO_*` → `IDP_*` no lab local**: concluído em `e32187a`. `COGNITO_DOMAIN` → `IDP_DOMAIN`, `COGNITO_CLIENT_SECRET_CUSTOMER1/2` → `IDP_CLIENT_SECRET_CUSTOMER1/2` nos scripts e serviços (TDD: 28 + 16 testes passando).
 - [ ] **Unificar scripts de IDP** (AWS): script 11 (Google) e 16 (Microsoft) → script único `configure-idps`.
 
 ### P2 — Melhorias importantes
@@ -117,9 +119,13 @@ POST /login (user1@customer1.com)
 
 ## Next Steps
 
-1. **Push do branch `dev`** — todos os scripts e serviços validados; nenhum push sem instrução explícita
-2. **Reprovisionar do zero** para confirmar que os scripts funcionam sem estado anterior
-3. **Renomear variáveis `COGNITO_*` → `IDP_*`** no lab local (ver Backlog P1)
+1. **Reprovisionar do zero** — validar que os scripts funcionam sem estado anterior com os novos nomes `IDP_*`:
+   ```bash
+   cd lab/aws/eks/local/scripts
+   ./destroy && ./run
+   ```
+   O subagente que tentava fazer isso falhou por falta de permissão bash (ver Gotchas abaixo). Rodar manualmente ou reiniciar sessão (permissão `Bash(*)` já adicionada em `~/.claude/settings.json`).
+2. **`cognito_pool_id` → `idp_pool_id`** (data model) — rename do campo no discovery service, fora do escopo anterior (requer DB migration + TDD)
 
 ## Key Files
 
