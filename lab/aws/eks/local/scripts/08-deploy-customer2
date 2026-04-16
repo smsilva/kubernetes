@@ -72,7 +72,7 @@ kubectl -n discovery rollout restart deployment/discovery
 kubectl -n discovery rollout status deployment/discovery --timeout=180s
 
 # =============================================================================
-# Atualiza Secret do callback-handler: adiciona COGNITO_CLIENT_SECRET_CUSTOMER2
+# Atualiza Secret do callback-handler: adiciona IDP_CLIENT_SECRET_CUSTOMER2
 # No lab local, customer1 e customer2 usam o mesmo client Keycloak (wasp-platform)
 # =============================================================================
 echo "Atualizando Secret do callback-handler (adicionando customer2)..."
@@ -85,8 +85,8 @@ metadata:
   namespace: auth
 type: Opaque
 stringData:
-  COGNITO_CLIENT_SECRET_CUSTOMER1: "${KEYCLOAK_CLIENT_SECRET}"
-  COGNITO_CLIENT_SECRET_CUSTOMER2: "${KEYCLOAK_CLIENT_SECRET}"
+  IDP_CLIENT_SECRET_CUSTOMER1: "${KEYCLOAK_CLIENT_SECRET}"
+  IDP_CLIENT_SECRET_CUSTOMER2: "${KEYCLOAK_CLIENT_SECRET}"
   STATE_JWT_SECRET: "${STATE_JWT_SECRET}"
 EOF
 

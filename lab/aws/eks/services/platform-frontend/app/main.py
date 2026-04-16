@@ -77,7 +77,7 @@ def process_login(
     )
 
     redirect_url = build_cognito_authorize_url(
-        cognito_domain=os.getenv("COGNITO_DOMAIN", ""),
+        cognito_domain=os.getenv("IDP_DOMAIN", ""),
         client_id=tenant.client_id,
         idp_name=tenant.idp_name,
         callback_url=os.getenv("CALLBACK_URL", ""),

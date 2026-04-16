@@ -49,7 +49,7 @@ def test_callback_returns_error_page_when_token_exchange_fails(api_client, mock_
 
 
 def test_callback_uses_client_id_from_state_jwt(api_client, mock_cognito_success, monkeypatch):
-    monkeypatch.setenv("COGNITO_CLIENT_SECRET_CUSTOMER1", "secret-for-customer1")
+    monkeypatch.setenv("IDP_CLIENT_SECRET_CUSTOMER1", "secret-for-customer1")
     state = jwt.encode(
         {"tenant_id": "customer1", "client_id": "client-from-state", "return_url": "https://customer1.wasp.silvios.me", "nonce": "n", "exp": int(time.time()) + 600},
         SECRET,
@@ -63,7 +63,7 @@ def test_callback_uses_client_id_from_state_jwt(api_client, mock_cognito_success
 
 
 def test_callback_uses_correct_secret_for_tenant(api_client, mock_cognito_success, monkeypatch):
-    monkeypatch.setenv("COGNITO_CLIENT_SECRET_CUSTOMER1", "secret-for-customer1")
+    monkeypatch.setenv("IDP_CLIENT_SECRET_CUSTOMER1", "secret-for-customer1")
     state = jwt.encode(
         {"tenant_id": "customer1", "client_id": "any-client", "return_url": "https://customer1.wasp.silvios.me", "nonce": "n", "exp": int(time.time()) + 600},
         SECRET,

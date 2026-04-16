@@ -29,7 +29,7 @@ def get_cognito_client() -> CognitoClient:
 
 def _build_cognito_client(client_id: str, client_secret: str) -> CognitoClient:
     return CognitoClient(
-        domain=os.getenv("COGNITO_DOMAIN", ""),
+        domain=os.getenv("IDP_DOMAIN", ""),
         client_id=client_id,
         client_secret=client_secret,
         callback_url=os.getenv("CALLBACK_URL", ""),
@@ -79,7 +79,7 @@ def handle_callback(
     cognito_override = app.dependency_overrides.get(get_cognito_client)
     try:
         tenant_key = login_state.tenant_id.upper()
-        client_secret = os.environ[f"COGNITO_CLIENT_SECRET_{tenant_key}"]
+        client_secret = os.environ[f"IDP_CLIENT_SECRET_{tenant_key}"]
     except KeyError:
         return _render_error(request, "Tenant not configured.", status_code=500)
 

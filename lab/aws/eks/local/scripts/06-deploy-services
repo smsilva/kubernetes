@@ -222,7 +222,7 @@ metadata:
   namespace: platform
 data:
   DISCOVERY_URL: "http://discovery.discovery.svc.cluster.local:8000"
-  COGNITO_DOMAIN: "idp.${domain}"
+  IDP_DOMAIN: "idp.${domain}"
   CALLBACK_URL: "http://auth.${domain}:${haproxy_nodeport}/callback"
   IDP_AUTHORIZE_URL: "${keycloak_authorize_url}"
   LOG_LEVEL: "INFO"
@@ -335,7 +335,7 @@ metadata:
   name: callback-handler-config
   namespace: auth
 data:
-  COGNITO_DOMAIN: "idp.${domain}"
+  IDP_DOMAIN: "idp.${domain}"
   CALLBACK_URL: "http://auth.${domain}:${haproxy_nodeport}/callback"
   PLATFORM_URL: "http://${domain}:${haproxy_nodeport}"
   IDP_TOKEN_URL: "${keycloak_token_url}"
@@ -350,7 +350,7 @@ metadata:
   namespace: auth
 type: Opaque
 stringData:
-  COGNITO_CLIENT_SECRET_CUSTOMER1: "${KEYCLOAK_CLIENT_SECRET}"
+  IDP_CLIENT_SECRET_CUSTOMER1: "${KEYCLOAK_CLIENT_SECRET}"
   STATE_JWT_SECRET: "${STATE_JWT_SECRET}"
 ---
 apiVersion: apps/v1

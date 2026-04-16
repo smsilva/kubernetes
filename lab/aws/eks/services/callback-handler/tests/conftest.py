@@ -8,7 +8,7 @@ from app.cognito import CognitoClient, CognitoTokens
 from app.main import app, get_cognito_client
 
 SECRET = "test-secret-key-long-enough-for-hs256"
-COGNITO_DOMAIN = "auth.wasp.silvios.me"
+IDP_DOMAIN = "auth.wasp.silvios.me"
 CALLBACK_URL = "https://auth.wasp.silvios.me/callback"
 
 SAMPLE_STATE = jwt.encode(
@@ -56,8 +56,8 @@ class MockCognitoClient:
 
 @pytest.fixture(autouse=True)
 def set_env_vars(monkeypatch):
-    monkeypatch.setenv("COGNITO_DOMAIN", COGNITO_DOMAIN)
-    monkeypatch.setenv("COGNITO_CLIENT_SECRET_CUSTOMER1", "supersecret")
+    monkeypatch.setenv("IDP_DOMAIN", IDP_DOMAIN)
+    monkeypatch.setenv("IDP_CLIENT_SECRET_CUSTOMER1", "supersecret")
     monkeypatch.setenv("CALLBACK_URL", CALLBACK_URL)
     monkeypatch.setenv("STATE_JWT_SECRET", SECRET)
 
