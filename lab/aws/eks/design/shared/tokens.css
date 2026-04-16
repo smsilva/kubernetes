@@ -1,0 +1,111 @@
+/* ── Light theme (default) ────────────────────── */
+/* Union of all service CSS files. app.css is the superset.      */
+/* error.css adds --color-error-bg; app.css adds all others.     */
+:root {
+  --color-primary:          #1A73E8;
+  --color-primary-dim:      rgba(26,115,232,.10);
+  --color-on-primary:       #FFFFFF;
+  --color-surface:          #FFFFFF;
+  --color-surface-2:        #F1F3F4;
+  --color-background:       #F8F9FA;
+  --color-on-surface:       #202124;
+  --color-secondary:        #5F6368;
+  --color-outline:          #747775;
+  --color-outline-dim:      rgba(0,0,0,.12);
+  --color-error:            #B3261E;
+  --color-error-bg:         rgba(179,38,30,.10);   /* callback-handler/error page */
+  --color-error-surface:    #FCEEEE;               /* tenant-frontend/app */
+  --color-error-outline:    rgba(179,38,30,.30);
+  --color-success-surface:  #E6F4EA;
+  --color-toggle-bg:        rgba(0,0,0,.06);
+  --color-toggle-hover:     rgba(0,0,0,.10);
+  --color-card-border:      transparent;
+  --color-nav-bg:           #FFFFFF;
+  --color-nav-shadow:       rgba(0,0,0,.10);
+  --color-code-bg:          #F6F8FA;
+  --color-code-border:      rgba(0,0,0,.12);
+  --color-key:              #0550AE;
+  --color-string:           #0A3069;
+  --color-number:           #953800;
+  --color-bool:             #8250DF;
+  --color-null:             #6E7781;
+  --color-badge-bg:         rgba(26,115,232,.10);
+  --color-badge-text:       #1A73E8;
+  --color-avatar-bg:        #1A73E8;
+  --color-avatar-text:      #FFFFFF;
+  --color-claim-primary-bg: rgba(26,115,232,.06);
+}
+
+/* ── Dark theme ───────────────────────────────── */
+[data-theme="dark"] {
+  --color-primary:          #8AB4F8;
+  --color-primary-dim:      rgba(138,180,248,.12);
+  --color-on-primary:       #003063;
+  --color-surface:          #303134;
+  --color-surface-2:        #3C3F43;
+  --color-background:       #202124;
+  --color-on-surface:       #E8EAED;
+  --color-secondary:        #9AA0A6;
+  --color-outline:          #5F6368;
+  --color-outline-dim:      rgba(255,255,255,.12);
+  --color-error:            #F28B82;
+  --color-error-bg:         rgba(242,139,130,.12);
+  --color-error-surface:    rgba(242,139,130,.10);
+  --color-error-outline:    rgba(242,139,130,.30);
+  --color-success-surface:  rgba(52,168,83,.12);
+  --color-toggle-bg:        rgba(255,255,255,.08);
+  --color-toggle-hover:     rgba(255,255,255,.13);
+  --color-card-border:      rgba(255,255,255,.08);
+  --color-nav-bg:           #303134;
+  --color-nav-shadow:       rgba(0,0,0,.30);
+  --color-code-bg:          #161B22;
+  --color-code-border:      rgba(255,255,255,.10);
+  --color-key:              #79C0FF;
+  --color-string:           #A5D6FF;
+  --color-number:           #FFA657;
+  --color-bool:             #D2A8FF;
+  --color-null:             #8B949E;
+  --color-badge-bg:         rgba(138,180,248,.15);
+  --color-badge-text:       #8AB4F8;
+  --color-avatar-bg:        #8AB4F8;
+  --color-avatar-text:      #003063;
+  --color-claim-primary-bg: rgba(138,180,248,.08);
+}
+
+/* ── System preference (no manual override) ───── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-primary:          #8AB4F8;
+    --color-primary-dim:      rgba(138,180,248,.12);
+    --color-on-primary:       #003063;
+    --color-surface:          #303134;
+    --color-surface-2:        #3C3F43;
+    --color-background:       #202124;
+    --color-on-surface:       #E8EAED;
+    --color-secondary:        #9AA0A6;
+    --color-outline:          #5F6368;
+    --color-outline-dim:      rgba(255,255,255,.12);
+    --color-error:            #F28B82;
+    --color-error-bg:         rgba(242,139,130,.12);
+    --color-error-surface:    rgba(242,139,130,.10);
+    --color-error-outline:    rgba(242,139,130,.30);
+    --color-success-surface:  rgba(52,168,83,.12);
+    --color-toggle-bg:        rgba(255,255,255,.08);
+    --color-toggle-hover:     rgba(255,255,255,.13);
+    --color-card-border:      rgba(255,255,255,.08);
+    --color-nav-bg:           #303134;
+    --color-nav-shadow:       rgba(0,0,0,.30);
+    --color-code-bg:          #161B22;
+    --color-code-border:      rgba(255,255,255,.10);
+    --color-key:              #79C0FF;
+    --color-string:           #A5D6FF;
+    --color-number:           #FFA657;
+    --color-bool:             #D2A8FF;
+    --color-null:             #8B949E;
+    --color-badge-bg:         rgba(138,180,248,.15);
+    --color-badge-text:       #8AB4F8;
+    --color-avatar-bg:        #8AB4F8;
+    --color-avatar-text:      #003063;
+    --color-claim-primary-bg: rgba(138,180,248,.08);
+  }
+}
