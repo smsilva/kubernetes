@@ -252,7 +252,8 @@
     document.getElementById(`status-${label}`).innerHTML = '<span class="status-dot status-idle"></span>';
     const badge = document.getElementById(`badge-${label}`);
     if (badge) { badge.className = 'badge badge-running'; badge.textContent = '…'; }
-    openAccordion(label);
+    const item = document.getElementById(`item-${label}`);
+    if (item) { item.classList.remove('accordion-item--pass', 'accordion-item--fail'); }
     updateSummary();
   }
 
@@ -279,7 +280,11 @@
     }
 
     document.getElementById(`result-${label}`).innerHTML = html;
-    if (!passed) openAccordion(label);
+    const item = document.getElementById(`item-${label}`);
+    if (item) {
+      item.classList.toggle('accordion-item--pass', passed);
+      item.classList.toggle('accordion-item--fail', !passed);
+    }
     updateSummary();
   }
 </script>

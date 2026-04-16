@@ -34,6 +34,7 @@
   --color-avatar-bg:        #1A73E8;
   --color-avatar-text:      #FFFFFF;
   --color-claim-primary-bg: rgba(26,115,232,.06);
+  --color-accordion-header-bg: rgba(52,168,83,.05);
 }
 
 /* ── Dark theme ───────────────────────────────── */
@@ -70,6 +71,7 @@
   --color-avatar-bg:        #8AB4F8;
   --color-avatar-text:      #003063;
   --color-claim-primary-bg: rgba(138,180,248,.08);
+  --color-accordion-header-bg: rgba(52,168,83,.10);
 }
 
 /* ── System preference (no manual override) ───── */
@@ -107,5 +109,6 @@
     --color-avatar-bg:        #8AB4F8;
     --color-avatar-text:      #003063;
     --color-claim-primary-bg: rgba(138,180,248,.08);
+  --color-accordion-header-bg: rgba(52,168,83,.10);
   }
 }
