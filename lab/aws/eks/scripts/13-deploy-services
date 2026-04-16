@@ -59,7 +59,31 @@ declare -A service_images=(
   [tenant-frontend]="${container_image_tenant_frontend}"
 )
 
+# Serviços que usam design/shared/ (têm CSS compartilhado via symlink).
+# Antes do docker build o symlink é substituído por uma cópia real (o Docker
+# BuildKit não segue symlinks que apontam para fora do build context).
+# Após o build o symlink é restaurado.
+_shared_src="${scripts_dir}/../design/shared"
+_frontend_services=(platform-frontend callback-handler tenant-frontend)
+
+_inject_shared() {
+  local svc_static="${services_dir}/${1}/app/static"
+  rm "${svc_static}/shared"
+  cp --recursive "${_shared_src}" "${svc_static}/shared"
+}
+
+_restore_shared() {
+  local svc_static="${services_dir}/${1}/app/static"
+  rm --recursive --force "${svc_static}/shared"
+  ln --symbolic "../../../../design/shared" "${svc_static}/shared"
+}
+
 for svc in discovery platform-frontend callback-handler tenant-frontend; do
+  # Substitui symlink por diretório real antes do build (apenas frontend services)
+  if [[ " ${_frontend_services[*]} " == *" ${svc} "* ]]; then
+    _inject_shared "${svc}"
+  fi
+
   echo "Build: ${svc}..."
   docker build \
     --platform linux/amd64 \
@@ -68,6 +92,11 @@ for svc in discovery platform-frontend callback-handler tenant-frontend; do
 
   echo "Push: ${service_images[${svc}]}..."
   docker push "${service_images[${svc}]}"
+
+  # Restaura symlink após o build
+  if [[ " ${_frontend_services[*]} " == *" ${svc} "* ]]; then
+    _restore_shared "${svc}"
+  fi
 done
 
 # =============================================================================

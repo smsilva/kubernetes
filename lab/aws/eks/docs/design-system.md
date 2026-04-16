@@ -4,6 +4,39 @@ Decisões visuais, componentes reutilizáveis e fluxo de validação sem subir o
 
 ---
 
+## 0. Fontes de verdade
+
+| Camada | Arquivo | Responsabilidade |
+|---|---|---|
+| **Tokens e componentes** | `design/shared/tokens.css` | CSS custom properties (paleta, dark mode, motion) |
+| **Componentes base** | `design/shared/base.css` | Reset, theme-toggle, botões, animações, logo |
+| **Documentação narrativa** | `docs/design-system.md` (este arquivo) | Decisões de design, trade-offs, guias de uso |
+| **CSS específico** | `services/<svc>/app/static/<svc>.css` | Apenas overrides e componentes exclusivos do serviço |
+
+### Regra
+
+> Toda alteração visual que afeta mais de um serviço deve partir de `design/shared/`. Nunca editar tokens ou componentes compartilhados diretamente nos CSS dos serviços.
+
+### Estrutura de arquivos
+
+```
+design/
+├── shared/
+│   ├── tokens.css    ← edite aqui para mudar cores, dark mode, etc.
+│   └── base.css      ← edite aqui para mudar theme-toggle, botões, ripple
+└── index.html        ← sandbox de visualização
+
+services/<svc>/app/static/
+├── shared -> ../../../../design/shared   (symlink git-tracked, dev local)
+└── <svc>.css                             (@import shared + overrides do serviço)
+```
+
+### Docker (pre-copy automático)
+
+O Docker BuildKit não segue symlinks fora do build context. O script `scripts/13-deploy-services` resolve isso automaticamente: antes de cada `docker build` dos serviços frontend ele substitui o symlink por uma cópia real de `design/shared/`, e restaura o symlink logo após.
+
+---
+
 ## 1. Preferências de design
 
 - Paleta baseada em Google Material You: primária `#1A73E8`, superfícies neutras
@@ -22,6 +55,8 @@ Decisões visuais, componentes reutilizáveis e fluxo de validação sem subir o
 
 O arquivo `design/index.html` é um sandbox autocontido com todas as telas (home, test, profile, login), dados mockados e navegação entre views. Os CSS reais dos serviços são carregados via paths absolutos — editar `app.css` ou `login.css` e recarregar o browser já reflete.
 
+**Para mudanças em tokens ou componentes base**, edite `design/shared/tokens.css` ou `design/shared/base.css` diretamente — o efeito é imediato no sandbox sem reiniciar o servidor.
+
 ```bash
 # Obrigatório: servir a partir de lab/aws/eks/, não de design/
 # O Python http.server bloqueia "../" — os paths /services/... só resolvem da raiz
@@ -30,6 +65,8 @@ python3 -m http.server 8080
 ```
 
 Acessar: **http://localhost:8080/design/**
+
+> Os `@import` dentro dos CSS dos serviços resolvem via os symlinks `app/static/shared -> ../../../../design/shared`, que o Python http.server segue corretamente.
 
 ### O que o sandbox cobre
 
@@ -50,6 +87,21 @@ Acessar: **http://localhost:8080/design/**
 ---
 
 ## 3. Componentes comuns e animações
+
+> **Localização dos componentes compartilhados:** `design/shared/base.css`
+> Componentes exclusivos de cada serviço continuam nos respectivos `<svc>.css`.
+
+| Componente | Onde vive |
+|---|---|
+| Reset `* { box-sizing }` | `base.css` |
+| `.theme-toggle` (core) | `base.css` |
+| `.btn-filled` | `base.css` |
+| `.btn-outlined` | `base.css` |
+| `.logo-section`, `.logo-name` | `base.css` |
+| `@keyframes ripple`, `card-enter` | `base.css` |
+| `.ripple` (element) | CSS do serviço (background varia) |
+| `.card` | CSS do serviço (sombras intencionalmente diferentes) |
+| `.navbar`, `.accordion`, `.claims-table` | `app.css` (tenant-frontend only) |
 
 ### 3.1 Accordion (expand/collapse)
 
