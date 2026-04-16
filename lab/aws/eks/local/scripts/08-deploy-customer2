@@ -225,7 +225,7 @@ spec:
             prefix: /httpbin
       corsPolicy:
         allowOrigins:
-          - regex: "http://.*\\.${domain}:${haproxy_nodeport}"
+          - regex: "http://.*[.]${domain}:${haproxy_nodeport}"
         allowMethods: ["GET", "OPTIONS"]
         allowHeaders: ["authorization", "content-type"]
         maxAge: "24h"
@@ -238,7 +238,7 @@ spec:
               number: 8000
     - corsPolicy:
         allowOrigins:
-          - regex: "http://.*\\.${domain}:${haproxy_nodeport}"
+          - regex: "http://.*[.]${domain}:${haproxy_nodeport}"
         allowMethods: ["GET", "OPTIONS"]
         allowHeaders: ["authorization", "content-type"]
         maxAge: "24h"
