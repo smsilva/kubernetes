@@ -143,6 +143,23 @@ Google redirect URI obrigatório: `https://idp.wasp.silvios.me/oauth2/idprespons
 
 Stack: Python 3.12 + FastAPI + Jinja2 + PyJWT + httpx. Cada serviço tem `.venv` próprio.
 
+### Rodando os testes
+
+A partir de `lab/aws/eks/`:
+
+```bash
+# todos os serviços
+make test
+
+# serviço individual
+make test-callback-handler
+make test-tenant-frontend
+make test-platform-frontend
+make test-discovery
+```
+
+Ou diretamente no serviço (para primeiro setup do `.venv`):
+
 ```bash
 cd lab/aws/eks/services/<serviço>
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
