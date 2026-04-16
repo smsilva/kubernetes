@@ -250,12 +250,21 @@
       line-height: 1.6;
       color: var(--color-on-surface);
       overflow-x: auto;
-      white-space: pre;
+      white-space: pre-wrap;
+      word-break: break-all;
     }
-    .result-fullscreen-btn {
+    .result-code-pre.nowrap { white-space: pre; word-break: normal; }
+    .result-code-actions {
       position: absolute;
       top: 6px;
       right: 6px;
+      display: flex;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .result-code-wrap:hover .result-code-actions { opacity: 1; }
+    .result-fullscreen-btn, .result-copy-btn {
       width: 26px;
       height: 26px;
       display: flex;
@@ -266,11 +275,10 @@
       background: var(--color-surface);
       color: var(--color-secondary);
       cursor: pointer;
-      opacity: 0;
-      transition: opacity .15s, background .15s, color .15s;
+      transition: background .15s, color .15s;
     }
-    .result-code-wrap:hover .result-fullscreen-btn { opacity: 1; }
-    .result-fullscreen-btn:hover { background: var(--color-outline-dim); color: var(--color-on-surface); }
+    .result-fullscreen-btn:hover, .result-copy-btn:hover { background: var(--color-outline-dim); color: var(--color-on-surface); }
+    .result-copy-btn.ok { color: #34a853; }
 
     /* Result detail */
     .result-detail-toggle {
@@ -755,6 +763,33 @@
       }
     }
 
+    function toggleResultWrap(label) {
+      const pre = document.getElementById(`result-pre-${label}`);
+      const btn = document.getElementById(`wrap-result-${label}`);
+      if (!pre || !btn) return;
+      const nowWrapped = pre.classList.toggle('nowrap');
+      btn.classList.toggle('active', !nowWrapped);
+    }
+
+    function copyResult(label) {
+      const pre = document.getElementById(`result-pre-${label}`);
+      const btn = document.getElementById(`copy-result-${label}`);
+      if (!pre || !btn) return;
+      const done = () => {
+        btn.querySelector('path').setAttribute('d', CHECK_PATH);
+        btn.classList.add('ok');
+        setTimeout(() => {
+          btn.querySelector('path').setAttribute('d', CLIPBOARD_PATH);
+          btn.classList.remove('ok');
+        }, 1500);
+      };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(pre.textContent).then(done).catch(() => fallbackCopy(pre.textContent, done));
+      } else {
+        fallbackCopy(pre.textContent, done);
+      }
+    }
+
     function fallbackCopy(text, cb) {
       const ta = document.createElement('textarea');
       ta.value = text;
@@ -807,7 +842,8 @@
       if (circle) { circle.className = 'item-circle item-circle-running'; }
       const badge = document.getElementById(`badge-${label}`);
       if (badge) { badge.className = 'badge badge-running'; badge.textContent = '…'; badge.style.visibility = 'visible'; }
-      openAccordion(label);
+      const item = document.getElementById(`item-${label}`);
+      if (item) { item.classList.remove('accordion-item--pass', 'accordion-item--fail'); }
       updateSummary();
     }
 
@@ -848,18 +884,30 @@
       if (hasDetail) {
         html += `<div class="result-detail-panel" id="detail-${label}">
           <div class="result-code-wrap">
-            <button class="result-fullscreen-btn" onclick="event.stopPropagation();openDrawer('${label}')" title="Fullscreen">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <pre class="result-code-pre">${escapeHtml(t.result_json)}</pre>
+            <div class="result-code-actions">
+              <button class="drawer-wrap-btn active" id="wrap-result-${label}" onclick="event.stopPropagation();toggleResultWrap('${label}')" title="Toggle wrap">wrap</button>
+              <button class="result-copy-btn" id="copy-result-${label}" onclick="event.stopPropagation();copyResult('${label}')" title="Copy">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
+                </svg>
+              </button>
+              <button class="result-fullscreen-btn" onclick="event.stopPropagation();openDrawer('${label}')" title="Fullscreen">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <pre class="result-code-pre" id="result-pre-${label}">${escapeHtml(t.result_json)}</pre>
           </div>
         </div>`;
       }
 
       document.getElementById(`result-${label}`).innerHTML = html;
-      if (!passed) openAccordion(label);
+      const item = document.getElementById(`item-${label}`);
+      if (item) {
+        item.classList.toggle('accordion-item--pass', passed);
+        item.classList.toggle('accordion-item--fail', !passed);
+      }
       updateSummary();
     }
 
@@ -917,8 +965,10 @@
     async function runSingle(label, url, expected, withJwt) {
       setRunning(label);
       await new Promise(r => setTimeout(r, 300 + Math.random() * 400));
-      const result_json = expected === 200 ? getMockResult(label, url) : null;
-      renderResult(label, { status_code: expected, expected, result_json, error: null });
+      // CROSS-403 simulates a misconfigured policy returning 200 instead of 403
+      const actual_code = (label === 'CROSS-403') ? 200 : expected;
+      const result_json = actual_code === 200 ? getMockResult(label, url) : null;
+      renderResult(label, { status_code: actual_code, expected, result_json, error: null });
     }
 
     async function runAll() {
@@ -949,10 +999,13 @@
             <div class="drawer-code-header">
               <span>response body</span>
               <div class="drawer-code-header-actions">
-                <button class="drawer-wrap-btn" id="wrap-json-${label}" onclick="toggleDrawerWrap('dpre-json-${label}','wrap-json-${label}')">wrap</button>
+                <button class="drawer-wrap-btn active" id="wrap-json-${label}" onclick="toggleDrawerWrap('dpre-json-${label}','wrap-json-${label}')">wrap</button>
+                <button class="copy-btn" style="position:static;width:28px;height:24px" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('dpre-json-${label}').textContent)" title="Copy">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="${CLIPBOARD_PATH}" fill="currentColor"/></svg>
+                </button>
               </div>
             </div>
-            <pre class="drawer-code-pre" id="dpre-json-${label}">${escapeHtml(result.result_json)}</pre>
+            <pre class="drawer-code-pre wrap" id="dpre-json-${label}">${escapeHtml(result.result_json)}</pre>
           </div>`;
         }
       } else {
@@ -964,13 +1017,13 @@
           <div class="drawer-code-header">
             <span>curl command</span>
             <div class="drawer-code-header-actions">
-              <button class="drawer-wrap-btn" id="wrap-curl-${label}" onclick="toggleDrawerWrap('dpre-curl-${label}','wrap-curl-${label}')">wrap</button>
+              <button class="drawer-wrap-btn active" id="wrap-curl-${label}" onclick="toggleDrawerWrap('dpre-curl-${label}','wrap-curl-${label}')">wrap</button>
               <button class="copy-btn" style="position:static;width:28px;height:24px" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('dpre-curl-${label}').textContent)" title="Copy">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="${CLIPBOARD_PATH}" fill="currentColor"/></svg>
               </button>
             </div>
           </div>
-          <pre class="drawer-code-pre" id="dpre-curl-${label}">${escapeHtml(t.curl_cmd)}</pre>
+          <pre class="drawer-code-pre wrap" id="dpre-curl-${label}">${escapeHtml(t.curl_cmd)}</pre>
         </div>`;
       }
 
