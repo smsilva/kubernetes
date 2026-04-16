@@ -12,6 +12,20 @@ def test_health_check_returns_200(api_client):
     assert response.json() == {"status": "ok"}
 
 
+def test_shared_tokens_css_accessible(api_client):
+    response = api_client.get("/static/shared/tokens.css")
+
+    assert response.status_code == 200
+    assert "--color-primary" in response.text
+
+
+def test_shared_base_css_accessible(api_client):
+    response = api_client.get("/static/shared/base.css")
+
+    assert response.status_code == 200
+    assert ".theme-toggle" in response.text
+
+
 # ── Home (/) ────────────────────────────────────────────────────────────────
 
 def test_home_redirects_when_no_session_cookie(api_client):

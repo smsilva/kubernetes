@@ -69,6 +69,20 @@ def test_health_check_returns_200(api_client):
     assert response.status_code == 200
 
 
+def test_shared_tokens_css_accessible(api_client):
+    response = api_client.get("/static/shared/tokens.css")
+
+    assert response.status_code == 200
+    assert "--color-primary" in response.text
+
+
+def test_shared_base_css_accessible(api_client):
+    response = api_client.get("/static/shared/base.css")
+
+    assert response.status_code == 200
+    assert ".theme-toggle" in response.text
+
+
 def test_post_login_uses_idp_authorize_url_when_set(api_client, mock_discovery_with_customer1, monkeypatch):
     monkeypatch.setenv("IDP_AUTHORIZE_URL", "http://idp.wasp.local:32080/realms/wasp/protocol/openid-connect/auth")
 

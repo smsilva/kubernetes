@@ -14,6 +14,20 @@ def test_health_check_returns_200(api_client):
     assert response.status_code == 200
 
 
+def test_shared_tokens_css_accessible(api_client):
+    response = api_client.get("/static/shared/tokens.css")
+
+    assert response.status_code == 200
+    assert "--color-primary" in response.text
+
+
+def test_shared_base_css_accessible(api_client):
+    response = api_client.get("/static/shared/base.css")
+
+    assert response.status_code == 200
+    assert ".theme-toggle" in response.text
+
+
 def test_callback_redirects_to_tenant_url_on_success(api_client, mock_cognito_success):
     response = api_client.get(f"/callback?code=valid-code&state={SAMPLE_STATE}")
 
