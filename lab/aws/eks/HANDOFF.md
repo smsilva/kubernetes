@@ -94,6 +94,9 @@ POST /login (user1@customer1.com)
 - **`grant_type=password` sem `scope=openid`** → não retorna `id_token` (só `access_token`). Adicionar `--data "scope=openid"` ao testar diretamente.
 - **`rollout restart` necessário quando Secret/ConfigMap muda** — quando apenas o conteúdo de um Secret ou ConfigMap muda (sem troca de imagem), o pod não remonta volumes/env vars automaticamente. É necessário `kubectl rollout restart deployment/<name>` para aplicar as mudanças.
 - **Subagente sem permissão bash** — ao delegar execução de scripts para subagente via Agent tool, ele não herda as permissões da sessão principal mesmo com `Bash(*)` em `~/.claude/settings.json`. A permissão é carregada na inicialização da sessão — reiniciar o Claude Code resolve. Alternativamente, rodar os scripts manualmente.
+- **`--skip-schema-validation` inválido em Helm v3.12** — flag não existe nesta versão do Helm, causa `Error: unknown flag`. Removida do `04-install-istio`. O istio-ingressgateway não era instalado silenciosamente porque o script usava `set -euo pipefail` mas o erro ocorria dentro de uma subshell de pipeline. Corrigido: removida a flag.
+- **CORS regex `\.` em YAML double-quoted string é inválido** — dentro de `<<EOF` bash, `\\.` vira `\.` que é sequência de escape inválida em YAML (YAML só aceita `\\`, `\"`, `\n`, etc.). O `kubectl apply` falha com `found unknown escape character`. Solução: usar `[.]` no lugar de `\.` nos padrões de regex nos scripts `06-deploy-services` e `08-deploy-customer2`.
+- **Endpoint do discovery é `/tenant?domain=<email_domain>`** — não `/tenants`. A verificação final no HANDOFF.md e no prompt de tarefa usava `/tenants` (404). O endpoint correto é `/tenant?domain=customer1.com`.
 
 ## Backlog
 
@@ -119,12 +122,7 @@ POST /login (user1@customer1.com)
 
 ## Next Steps
 
-1. **Reprovisionar do zero** — validar que os scripts funcionam sem estado anterior com os novos nomes `IDP_*`:
-   ```bash
-   cd lab/aws/eks/local/scripts
-   ./destroy && ./run
-   ```
-   O subagente que tentava fazer isso falhou por falta de permissão bash (ver Gotchas abaixo). Rodar manualmente ou reiniciar sessão (permissão `Bash(*)` já adicionada em `~/.claude/settings.json`).
+1. **Reprovisionar do zero** — ✅ Validado em 2026-04-16. Scripts 01-08 funcionam após correções documentadas nos Gotchas. `./destroy && ./run` funciona a partir de estado limpo.
 2. **`cognito_pool_id` → `idp_pool_id`** (data model) — rename do campo no discovery service, fora do escopo anterior (requer DB migration + TDD)
 
 ## Key Files
