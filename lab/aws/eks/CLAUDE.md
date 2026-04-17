@@ -37,14 +37,16 @@ Internet → ALB (TLS termination, ACM cert)
 
 ## Regra: Visual design deve ser respeitado sempre
 
-- Qualquer alteracao feita em lab/aws/eks/design deve ser refletida nos lab/aws/eks/services de frontend
+- Qualquer alteracao feita em `lab/aws/eks/design` deve ser refletida nos `lab/aws/eks/services` de frontend, e vice-versa
 - As alterações devem ser aplicadas mediante a criação de um plano de implementação, que deve ser aprovado antes da execução
+- **Verificação obrigatória:** após qualquer mudança visual, verificar tanto `make serve` (sandbox) quanto o serviço FastAPI real (`uvicorn`) para garantir paridade
 
-### Arquitetura de sincronização (Design → Serviços)
+### Arquitetura de sincronização (Design ↔ Serviços)
 
 - **CSS:** `design/index.html` carrega `services/tenant-frontend/app/static/app.css` diretamente via `<link>`. Editar `app.css` sincroniza sandbox e serviço automaticamente. O `<style>` inline do `design/index.html` contém apenas chrome do sandbox (`#sandbox-bar`) e overrides pontuais.
 - **CSS compartilhado:** `app/static/shared/` é symlink para `../../../../design/shared`. Scripts de build (`06-deploy-services`, `13-deploy-services`) substituem o symlink por cópia real antes do `docker build` e restauram após.
 - **JS de UI:** extraído para `services/tenant-frontend/app/static/test-ui.js`. Interface: `window.initTestPage({ testCases, jwtToken })`. O `design/index.html` e o `test.html` chamam essa função — editar o arquivo sincroniza os dois.
+- **Dependências externas (CDN, bibliotecas JS/CSS):** qualquer `<script>` ou `<link>` de CDN adicionado ao `test.html` (serviço) **deve ser adicionado também** ao `design/index.html` (sandbox), e vice-versa. Exemplo: highlight.js está declarado em ambos. Omitir em um dos lados quebra a paridade visual silenciosamente.
 
 ---
 

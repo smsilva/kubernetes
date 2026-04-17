@@ -88,7 +88,7 @@ Os gotchas detalhados com soluções estão em `local/docs/lessons-learned.md`. 
 - [x] **Renomear variáveis `COGNITO_*` → `IDP_*` no lab local**: concluído em `e32187a`. `COGNITO_DOMAIN` → `IDP_DOMAIN`, `COGNITO_CLIENT_SECRET_CUSTOMER1/2` → `IDP_CLIENT_SECRET_CUSTOMER1/2` nos scripts e serviços (TDD: 28 + 16 testes passando).
 - [ ] **Unificar scripts de IDP** (AWS): script 11 (Google) e 16 (Microsoft) → script único `configure-idps`.
 - [ ] **Decode JWT na página de teste**: `test.html` exibir claims decodificados do JWT (header + payload) ao lado do token bruto.
-- [~] **Syntax highlight nos resultados de teste**: implementado com highlight.js (CDN). Código completo, 39 testes passando, deploy no k3d feito. **Verificação visual pendente** — screenshot não confirmou se as cores estão aparecendo no browser. Verificar manualmente em `http://customer1.wasp.local:32080/test` após login. Se sem cores: checar se `.result-code-pre { color: var(--color-on-surface) }` está sobrepondo as cores do hljs (aumentar especificidade do override `.result-code-pre .hljs` ou remover `color` do `<pre>`).
+- [x] **Syntax highlight nos resultados de teste**: implementado com highlight.js (CDN). Verificado visualmente via Playwright + FastAPI local com JWT mockado — chaves em azul `rgb(0,92,197)`, strings em azul escuro, números e literais coloridos corretamente. 39 testes passando.
 - [ ] **Screenshots para documentação**: tirar prints das telas principais (login, redirecionamento, página do tenant, isolamento 403) para enriquecer `docs/`.
 
 ### P2 — Melhorias importantes
