@@ -54,11 +54,37 @@ declare -A service_images=(
   [tenant-frontend]="${container_image_tenant_frontend}"
 )
 
+# Serviços que usam design/shared/ (têm CSS compartilhado via symlink).
+# Antes do docker build o symlink é substituído por cópia real (Docker não
+# segue symlinks fora do build context). Após o build o symlink é restaurado.
+_shared_src="${scripts_dir}/../../design/shared"
+_frontend_services=(platform-frontend callback-handler tenant-frontend)
+
+_inject_shared() {
+  local svc_static="${services_dir}/${1}/app/static"
+  rm "${svc_static}/shared"
+  cp --recursive "${_shared_src}" "${svc_static}/shared"
+}
+
+_restore_shared() {
+  local svc_static="${services_dir}/${1}/app/static"
+  rm --recursive --force "${svc_static}/shared"
+  ln --symbolic "../../../../design/shared" "${svc_static}/shared"
+}
+
 for svc in discovery platform-frontend callback-handler tenant-frontend; do
+  if [[ " ${_frontend_services[*]} " == *" ${svc} "* ]]; then
+    _inject_shared "${svc}"
+  fi
+
   echo "Build: ${svc}..."
   docker build \
     --tag "${service_images[${svc}]}" \
     "${services_dir}/${svc}"
+
+  if [[ " ${_frontend_services[*]} " == *" ${svc} "* ]]; then
+    _restore_shared "${svc}"
+  fi
 done
 
 echo "Importando imagens no cluster k3d ${cluster_name}..."

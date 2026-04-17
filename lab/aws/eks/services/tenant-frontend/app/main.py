@@ -79,9 +79,10 @@ def test_page(request: Request):
         parts.append(f"  '{url}'")
         return " \\\n".join(parts)
 
-    def _case(label, url, expected, *, with_jwt: bool = True, group: str = ""):
+    def _case(label, name, url, expected, *, with_jwt: bool = True, group: str = ""):
         return {
             "label":    label,
+            "name":     name,
             "url":      url,
             "expected": expected,
             "with_jwt": with_jwt,
@@ -92,11 +93,11 @@ def test_page(request: Request):
     is_c1 = tenant_id == "customer1"
 
     test_cases = [
-        _case("httpbin",           f"{HTTPBIN_URL}/get",           200,                  group="Own Tenant"),
-        _case("customer1-health",  f"{CUSTOMER1_URL}/health",      200, with_jwt=False,  group="Own Tenant"    if is_c1 else "Cross-Tenant"),
-        _case("customer2-health",  f"{CUSTOMER2_URL}/health",      200, with_jwt=False,  group="Cross-Tenant"  if is_c1 else "Own Tenant"),
-        _case("customer1-httpbin", f"{CUSTOMER1_URL}/httpbin/get", 200 if is_c1 else 403, group="Own Tenant"   if is_c1 else "Cross-Tenant"),
-        _case("customer2-httpbin", f"{CUSTOMER2_URL}/httpbin/get", 200 if not is_c1 else 403, group="Cross-Tenant" if is_c1 else "Own Tenant"),
+        _case("httpbin",           "Public httpbin endpoint",            f"{HTTPBIN_URL}/get",           200,                   group="Own Tenant"),
+        _case("customer1-health",  "Own tenant health check",            f"{CUSTOMER1_URL}/health",      200, with_jwt=False,   group="Own Tenant"   if is_c1 else "Cross-Tenant"),
+        _case("customer2-health",  "Foreign tenant health check",        f"{CUSTOMER2_URL}/health",      200, with_jwt=False,   group="Cross-Tenant" if is_c1 else "Own Tenant"),
+        _case("customer1-httpbin", "Authenticated request to own tenant",     f"{CUSTOMER1_URL}/httpbin/get", 200 if is_c1 else 403, group="Own Tenant"   if is_c1 else "Cross-Tenant"),
+        _case("customer2-httpbin", "Authenticated request to foreign tenant", f"{CUSTOMER2_URL}/httpbin/get", 200 if not is_c1 else 403, group="Cross-Tenant" if is_c1 else "Own Tenant"),
     ]
 
     return templates.TemplateResponse(
