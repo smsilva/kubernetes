@@ -88,7 +88,7 @@ Os gotchas detalhados com soluções estão em `local/docs/lessons-learned.md`. 
 - [x] **Renomear variáveis `COGNITO_*` → `IDP_*` no lab local**: concluído em `e32187a`. `COGNITO_DOMAIN` → `IDP_DOMAIN`, `COGNITO_CLIENT_SECRET_CUSTOMER1/2` → `IDP_CLIENT_SECRET_CUSTOMER1/2` nos scripts e serviços (TDD: 28 + 16 testes passando).
 - [ ] **Unificar scripts de IDP** (AWS): script 11 (Google) e 16 (Microsoft) → script único `configure-idps`.
 - [ ] **Decode JWT na página de teste**: `test.html` exibir claims decodificados do JWT (header + payload) ao lado do token bruto.
-- [ ] **Syntax highlight nos resultados de teste**: respostas JSON e saída shell com highlight de sintaxe na página de teste do tenant-frontend.
+- [~] **Syntax highlight nos resultados de teste**: implementado com highlight.js (CDN). Código completo, 39 testes passando, deploy no k3d feito. **Verificação visual pendente** — screenshot não confirmou se as cores estão aparecendo no browser. Verificar manualmente em `http://customer1.wasp.local:32080/test` após login. Se sem cores: checar se `.result-code-pre { color: var(--color-on-surface) }` está sobrepondo as cores do hljs (aumentar especificidade do override `.result-code-pre .hljs` ou remover `color` do `<pre>`).
 - [ ] **Screenshots para documentação**: tirar prints das telas principais (login, redirecionamento, página do tenant, isolamento 403) para enriquecer `docs/`.
 
 ### P2 — Melhorias importantes
@@ -118,6 +118,39 @@ Os gotchas detalhados com soluções estão em `local/docs/lessons-learned.md`. 
 - [ ] **CIEM** (Cloud Infrastructure Entitlement Management): auditar permissões IAM excessivas; avaliar ferramentas dedicadas.
 - [ ] **CNAPP** (Cloud Native Application Protection Platform): avaliar solução unificada que cubra CSPM + CIEM + runtime security (ex: Wiz, Lacework).
 - [ ] **Simulação waspctl com IA**: interação conversacional simulando comandos `waspctl` com respostas simuladas, para exercitar conceitos e documentar o fluxo esperado da CLI.
+
+## Lab Local — Session 2026-04-17 (syntax highlight)
+
+Branch: `dev` — sem commit novo (mudanças pendentes de commit)
+
+### O que foi feito
+
+Implementado syntax highlight com **highlight.js 11.9.0** nos resultados JSON da página de teste do `tenant-frontend`:
+
+| Arquivo | Mudança |
+|---|---|
+| `services/tenant-frontend/app/templates/test.html` | CDN highlight.js + tema github light/dark via `media="(prefers-color-scheme: ...)"` adicionados no `{% block scripts %}` |
+| `services/tenant-frontend/app/static/test-ui.js` | Função `highlightJson()` com fallback para `escapeHtml()` se hljs offline; substituída em 2 pontos: accordion inline (linha 162) e drawer fullscreen (linha 231) |
+| `services/tenant-frontend/app/static/app.css` | Override `.result-code-pre .hljs, .drawer-code-pre .hljs { background: transparent; padding: 0; }` para evitar fundo duplicado |
+| `services/tenant-frontend/tests/test_routes.py` | +2 testes: `test_test_page_loads_highlightjs` e `test_test_page_loads_highlightjs_json_language` |
+
+**Resultado dos testes:** 39 passando (era 37).
+
+**Deploy:** `local/scripts/06-deploy-services` executado com sucesso no k3d.
+
+### Verificação visual — inconclusiva
+
+Screenshot capturado do browser mas resolução insuficiente para confirmar se as cores estão presentes. Verificar manualmente:
+
+1. Login em `http://wasp.local:32080`
+2. Navegar para `/test`
+3. Clicar "Run all"
+4. Expandir accordion "Public httpbin endpoint"
+5. Checar se strings estão em cor diferente de chaves e números
+
+**Se sem cores:** o provável culpado é `color: var(--color-on-surface)` em `.result-code-pre` sobrepondo os spans do hljs. Fix: remover a linha `color:` de `.result-code-pre` (o hljs theme já define todas as cores) ou aumentar especificidade: `.result-code-pre .hljs-attr { color: #0550ae !important; }`.
+
+---
 
 ## Lab Local — Run 2026-04-16
 
