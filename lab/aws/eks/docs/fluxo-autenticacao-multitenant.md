@@ -453,7 +453,7 @@ GET /tenant?domain=gmail.com
   "tenant_url": "customer1.wasp.silvios.me",
   "client_id": "<cognito-app-client-id>",
   "idp_name": "Google",
-  "cognito_pool_id": "<pool-id>"
+  "idp_pool_id": "<pool-id>"
 }
 
 404 Not Found

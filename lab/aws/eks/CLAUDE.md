@@ -205,7 +205,7 @@ Imagens Docker Hub (build com `--platform linux/amd64`; tag = git short SHA, nun
 
 ### `tenants.json` deve ter valores reais do Cognito
 
-`services/discovery/app/data/tenants.json` é fonte de dados estática. Ao reprovisionar o Cognito, atualizar `client_id` e `cognito_pool_id` antes do build, fazer commit e rebuild com nova tag SHA.
+`services/discovery/app/data/tenants.json` é fonte de dados estática. Ao reprovisionar o Cognito, atualizar `client_id` e `idp_pool_id` antes do build, fazer commit e rebuild com nova tag SHA.
 
 ### `COGNITO_DOMAIN` sem `https://`
 

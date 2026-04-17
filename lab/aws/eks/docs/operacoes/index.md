@@ -34,7 +34,7 @@ Todos os scripts ficam em `scripts/`. A configuração global está em `scripts/
 ## Gotchas operacionais
 
 !!! warning "`tenants.json` deve ter valores reais do Cognito"
-    `services/discovery/app/data/tenants.json` é fonte de dados estática. Ao reprovisionar o Cognito, atualizar `client_id` e `cognito_pool_id` antes do build, fazer commit e rebuild com nova tag SHA.
+    `services/discovery/app/data/tenants.json` é fonte de dados estática. Ao reprovisionar o Cognito, atualizar `client_id` e `idp_pool_id` antes do build, fazer commit e rebuild com nova tag SHA.
 
 !!! warning "`COGNITO_DOMAIN` sem `https://`"
     No ConfigMap `platform-frontend-config`, o campo `COGNITO_DOMAIN` deve ser só o hostname (`idp.wasp.silvios.me`). O código em `auth.py` já adiciona o scheme — colocar a URL completa gera `https://https://idp...`.

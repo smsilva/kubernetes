@@ -134,7 +134,7 @@ data:
         "tenant_url": "http://customer1.${domain}:${haproxy_nodeport}",
         "client_id": "wasp-platform",
         "idp_name": "",
-        "cognito_pool_id": ""
+        "idp_pool_id": ""
       }
     ]
 ---

@@ -53,7 +53,7 @@ data:
         "tenant_url": "http://customer1.${domain}:${haproxy_nodeport}",
         "client_id": "wasp-platform",
         "idp_name": "",
-        "cognito_pool_id": ""
+        "idp_pool_id": ""
       },
       {
         "domain": "customer2.com",
@@ -61,7 +61,7 @@ data:
         "tenant_url": "http://customer2.${domain}:${haproxy_nodeport}",
         "client_id": "wasp-platform",
         "idp_name": "",
-        "cognito_pool_id": ""
+        "idp_pool_id": ""
       }
     ]
 EOF

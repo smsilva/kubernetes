@@ -10,7 +10,7 @@ CUSTOMER1 = TenantConfig(
     tenant_url="customer1.wasp.silvios.me",
     client_id="abc123client",
     idp_name="Google",
-    cognito_pool_id="us-east-1_ABC123",
+    idp_pool_id="us-east-1_ABC123",
 )
 
 CUSTOMER2 = TenantConfig(
@@ -18,7 +18,7 @@ CUSTOMER2 = TenantConfig(
     tenant_url="customer2.wasp.silvios.me",
     client_id="def456client",
     idp_name="MicrosoftAD-Customer2",
-    cognito_pool_id="us-east-1_DEF456",
+    idp_pool_id="us-east-1_DEF456",
 )
 
 

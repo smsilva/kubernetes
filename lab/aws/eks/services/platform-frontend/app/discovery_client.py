@@ -7,7 +7,7 @@ class TenantInfo(BaseModel):
     tenant_url: str
     client_id: str
     idp_name: str
-    cognito_pool_id: str
+    idp_pool_id: str
 
 
 class DiscoveryClient:

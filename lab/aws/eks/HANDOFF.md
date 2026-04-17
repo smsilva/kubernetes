@@ -199,7 +199,7 @@ Nenhuma nova. Backlog inalterado.
 ## Next Steps
 
 1. **Reprovisionar do zero** — ✅ Validado em 2026-04-16. Scripts 01-08 funcionam após correções documentadas nos Gotchas. `./destroy && ./run` funciona a partir de estado limpo.
-2. **`cognito_pool_id` → `idp_pool_id`** (data model) — rename do campo no discovery service, fora do escopo anterior (requer DB migration + TDD)
+2. ~~**`cognito_pool_id` → `idp_pool_id`**~~ — ✅ concluído: `models.py`, `repository.py`, `discovery_client.py`, scripts locais e docs atualizados com TDD (34 + 18 testes passando).
 
 ## Key Files
 

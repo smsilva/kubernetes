@@ -9,7 +9,7 @@ CUSTOMER1_TENANT = TenantInfo(
     tenant_url="customer1.wasp.silvios.me",
     client_id="abc123client",
     idp_name="Google",
-    cognito_pool_id="us-east-1_ABC123",
+    idp_pool_id="us-east-1_ABC123",
 )
 
 
@@ -52,7 +52,7 @@ def mock_discovery_with_full_url():
             tenant_url="http://customer1.wasp.local:32080",
             client_id="wasp-platform",
             idp_name="",
-            cognito_pool_id="",
+            idp_pool_id="",
         )
     )
     app.dependency_overrides[get_discovery_client] = lambda: client
@@ -71,7 +71,7 @@ def mock_discovery_no_idp():
                 tenant_url="customer1.wasp.local",
                 client_id="wasp-platform",
                 idp_name="",
-                cognito_pool_id="",
+                idp_pool_id="",
             )
 
     app.dependency_overrides[get_discovery_client] = lambda: MockDiscoveryNoIdp()

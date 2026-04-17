@@ -31,7 +31,7 @@ class SQLiteTenantRepository:
                 tenant_url      TEXT NOT NULL,
                 client_id       TEXT NOT NULL,
                 idp_name        TEXT NOT NULL,
-                cognito_pool_id TEXT NOT NULL
+                idp_pool_id TEXT NOT NULL
             )
         """)
         self._conn.commit()
@@ -40,9 +40,9 @@ class SQLiteTenantRepository:
         self._conn.executemany(
             """
             INSERT OR REPLACE INTO tenants
-                (domain, tenant_id, tenant_url, client_id, idp_name, cognito_pool_id)
+                (domain, tenant_id, tenant_url, client_id, idp_name, idp_pool_id)
             VALUES
-                (:domain, :tenant_id, :tenant_url, :client_id, :idp_name, :cognito_pool_id)
+                (:domain, :tenant_id, :tenant_url, :client_id, :idp_name, :idp_pool_id)
             """,
             records,
         )
@@ -60,7 +60,7 @@ class SQLiteTenantRepository:
             tenant_url=row["tenant_url"],
             client_id=row["client_id"],
             idp_name=row["idp_name"],
-            cognito_pool_id=row["cognito_pool_id"],
+            idp_pool_id=row["idp_pool_id"],
         )
 
 
@@ -92,5 +92,5 @@ class DynamoDBTenantRepository:
             tenant_url=item["url"]["S"],
             client_id=item["cognito_app_client_id"]["S"],
             idp_name=item["auth"]["M"]["cognito_idp_name"]["S"],
-            cognito_pool_id=item["auth"]["M"]["cognito_user_pool_id"]["S"],
+            idp_pool_id=item["auth"]["M"]["cognito_user_pool_id"]["S"],
         )

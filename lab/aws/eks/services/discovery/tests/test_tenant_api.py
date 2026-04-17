@@ -93,7 +93,7 @@ def test_get_repository_seeds_sqlite_from_file_when_seed_file_is_set(tmp_path):
             "tenant_url": "http://customer1.wasp.local:32080",
             "client_id": "wasp-platform",
             "idp_name": "",
-            "cognito_pool_id": "",
+            "idp_pool_id": "",
         }
     ]
     seed_file = tmp_path / "seed.json"
@@ -130,7 +130,7 @@ def test_get_tenant_returns_200_and_config_for_registered_domain(api_client):
     assert data["tenant_url"] == CUSTOMER1.tenant_url
     assert data["client_id"] == CUSTOMER1.client_id
     assert data["idp_name"] == CUSTOMER1.idp_name
-    assert data["cognito_pool_id"] == CUSTOMER1.cognito_pool_id
+    assert data["idp_pool_id"] == CUSTOMER1.idp_pool_id
 
 
 def test_get_tenant_returns_correct_config_for_second_registered_domain(api_client):

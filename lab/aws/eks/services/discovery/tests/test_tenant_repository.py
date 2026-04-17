@@ -159,4 +159,4 @@ def test_sqlite_repository_returns_all_fields(sqlite_repository):
     assert tenant.tenant_url == CUSTOMER1.tenant_url
     assert tenant.client_id == CUSTOMER1.client_id
     assert tenant.idp_name == CUSTOMER1.idp_name
-    assert tenant.cognito_pool_id == CUSTOMER1.cognito_pool_id
+    assert tenant.idp_pool_id == CUSTOMER1.idp_pool_id

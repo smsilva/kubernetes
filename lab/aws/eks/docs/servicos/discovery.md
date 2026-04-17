@@ -31,7 +31,7 @@ Retorna a configuração do tenant para o domínio informado.
       "tenant_url": "customer1.wasp.silvios.me",
       "client_id": "<cognito-app-client-id>",
       "idp_name": "Google",
-      "cognito_pool_id": "<pool-id>"
+      "idp_pool_id": "<pool-id>"
     }
     ```
 
@@ -59,7 +59,7 @@ Definido em `services/discovery/app/models.py`:
 | `tenant_url` | `str` | Hostname do tenant sem scheme (ex: `customer1.wasp.silvios.me`) |
 | `client_id` | `str` | Cognito App Client ID do tenant |
 | `idp_name` | `str` | Nome do IdP configurado no Cognito (ex: `Google`, `MicrosoftAD-Customer2`) |
-| `cognito_pool_id` | `str` | ID do User Pool do Cognito |
+| `idp_pool_id` | `str` | ID do User Pool / Pool do IdP |
 
 ## Repositório DynamoDB
 
@@ -76,7 +76,7 @@ Mapeamento dos atributos DynamoDB → `TenantConfig`:
 | `url` | `tenant_url` | |
 | `cognito_app_client_id` | `client_id` | |
 | `auth.M.cognito_idp_name` | `idp_name` | Atributo aninhado no mapa `auth` |
-| `auth.M.cognito_user_pool_id` | `cognito_pool_id` | Atributo aninhado no mapa `auth` |
+| `auth.M.cognito_user_pool_id` | `idp_pool_id` | Atributo aninhado no mapa `auth` |
 
 !!! warning "DynamoDB — palavras reservadas"
     `auth` é uma palavra reservada no DynamoDB. Em `--update-expression`, use alias `#auth` com `--expression-attribute-names '{"#auth": "auth"}'`. Ver [gotchas operacionais](../operacoes/index.md#gotchas-operacionais).
