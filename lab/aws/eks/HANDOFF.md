@@ -220,4 +220,3 @@ Nenhuma nova. Backlog inalterado.
 - `/etc/hosts`: `127.0.0.1` para `wasp.local`, `auth.wasp.local`, `discovery.wasp.local`, `idp.wasp.local`, `customer1.wasp.local`, `customer2.wasp.local`
 - customer1 e customer2 usam o mesmo client Keycloak (`wasp-platform`) — isolamento via `custom:tenant_id`
 - Regra do projeto: TDD — testes antes de qualquer alteração nos serviços
-- Nunca fazer push sem instrução explícita
