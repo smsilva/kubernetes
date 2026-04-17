@@ -1,4 +1,4 @@
-.PHONY: serve stop test test-callback-handler test-tenant-frontend test-platform-frontend test-discovery
+.PHONY: serve stop test test-callback-handler test-tenant-frontend test-platform-frontend test-discovery smoke-test
 
 SERVICES_DIR := services
 
@@ -26,3 +26,6 @@ test-platform-frontend:
 test-discovery:
 	@echo "==> discovery"
 	@cd $(SERVICES_DIR)/discovery && .venv/bin/pytest tests/ -v
+
+smoke-test:
+	@local/scripts/smoke-test
