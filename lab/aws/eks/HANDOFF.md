@@ -86,7 +86,8 @@ Os gotchas detalhados com soluções estão em `local/docs/lessons-learned.md`. 
 ### P1 — Quick wins
 
 - [x] **Renomear variáveis `COGNITO_*` → `IDP_*` no lab local**: concluído em `e32187a`. `COGNITO_DOMAIN` → `IDP_DOMAIN`, `COGNITO_CLIENT_SECRET_CUSTOMER1/2` → `IDP_CLIENT_SECRET_CUSTOMER1/2` nos scripts e serviços (TDD: 28 + 16 testes passando).
-- [ ] **Unificar scripts de IDP** (AWS): script 11 (Google) e 16 (Microsoft) → script único `configure-idps`.
+- [ ] **Unificar scripts de IDP** (AWS): script 11 mantém infra base (User Pool + Lambda); novo script `configure-idps` recebe `--tenant <name> --provider google|microsoft` e registra IdP + App Client + DynamoDB. Script 16 se torna obsoleto e é deletado.
+- [ ] **Script `add-tenant` para lab local** (k3d): análogo ao `configure-idps` AWS, mas para Keycloak — adiciona client + usuário + registro SQLite para um novo tenant sem recriar tudo. Hoje o `08-deploy-customer2` faz isso de forma hardcoded; tornar genérico quando necessário adicionar customer3+.
 - [ ] **Decode JWT na página de teste**: `test.html` exibir claims decodificados do JWT (header + payload) ao lado do token bruto.
 - [x] **Syntax highlight nos resultados de teste**: highlight.js 11.9.0, tema stackoverflow-light/dark, JSON e curl (bash) coloridos. 40 testes passando. Verificado visualmente em `make serve` e FastAPI local. Design sandbox em paridade com o serviço.
 - [ ] **Screenshots para documentação**: tirar prints das telas principais (login, redirecionamento, página do tenant, isolamento 403) para enriquecer `docs/`.

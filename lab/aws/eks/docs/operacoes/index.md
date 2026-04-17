@@ -23,7 +23,7 @@ Todos os scripts ficam em `scripts/`. A configuração global está em `scripts/
 | `13-deploy-services` | Build/push Docker Hub, IRSA do discovery, deploy dos 4 namespaces K8s |
 | `14-configure-istio-auth` | `RequestAuthentication` + `AuthorizationPolicy` no namespace `customer1` |
 | `15-configure-waf-ratelimit` | Rate limiting WAF para `/login` e `/callback` |
-| `16-add-microsoft-idp` | Adiciona Microsoft como IdP no Cognito para customer2 |
+| `configure-idps` | Registra IdP (Google ou Microsoft) + App Client + DynamoDB para um tenant |
 | `17-deploy-customer2` | Deploy do namespace `customer2` com autenticação Microsoft |
 | `destroy` | Remove todos os recursos na ordem inversa |
 | `destroy-auth` | Remove apenas a stack de autenticação (Cognito, DynamoDB, serviços) |

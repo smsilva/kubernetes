@@ -48,7 +48,7 @@ customer2_app_client_id=$(
 
 if [[ -z "${customer2_app_client_id}" ]]; then
   echo "Erro: App Client 'customer2' não encontrado no User Pool '${cognito_user_pool_id}'"
-  echo "  Execute scripts/16-add-microsoft-idp primeiro"
+  echo "  Execute scripts/configure-idps --tenant customer2 --provider microsoft primeiro"
   exit 1
 fi
 

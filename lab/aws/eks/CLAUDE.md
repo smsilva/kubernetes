@@ -103,7 +103,7 @@ Scripts em `scripts/`, documentos em `docs/`. Configurações globais em `script
 | `scripts/13-deploy-services` | Build/push Docker Hub, IRSA discovery, deploy K8s dos 4 namespaces | ~1min15s |
 | `scripts/14-configure-istio-auth` | Istio `RequestAuthentication` + `AuthorizationPolicy` no namespace `customer1` | ~10s |
 | `scripts/15-configure-waf-ratelimit` | Rate limiting WAF para `/login` e `/callback` | ~10s |
-| `scripts/16-add-microsoft-idp` | IdP Microsoft OIDC + App Client customer2 + DynamoDB | ~10s |
+| `scripts/configure-idps` | Registra IdP (Google\|Microsoft) + App Client + DynamoDB para um tenant | ~10s |
 | `scripts/17-deploy-customer2` | Build/push + deploy namespace customer2 + rollout callback-handler | ~1min |
 | `scripts/destroy` | Destrói tudo na ordem inversa (ACM deve ser removido manualmente) | ~20-30min |
 

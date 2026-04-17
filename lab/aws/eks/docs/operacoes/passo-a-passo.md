@@ -241,13 +241,19 @@ Adiciona regras de rate limiting à WebACL existente:
 - `/login` — 100 requests/5 min por IP
 - `/callback` — 100 requests/5 min por IP
 
-## 16. Adicionar IdP Microsoft
+## 16. Registrar IdP e tenant
 
 ```bash
-./scripts/16-add-microsoft-idp
+echo "${AZURE_CLIENT_SECRET}" | ./scripts/configure-idps \
+  --tenant customer2 \
+  --provider microsoft \
+  --domain msn.com \
+  --client-id "${AZURE_CLIENT_ID}" \
+  --client-secret-stdin
 ```
 
-Configura o Microsoft como Identity Provider no Cognito para suportar contas Azure AD / Microsoft pessoais.
+Registra IdP (Google ou Microsoft) + App Client Cognito + item DynamoDB para um tenant.
+Usar `--provider google` para tenants com Google IdP.
 
 ## 17. Deploy do customer2
 
