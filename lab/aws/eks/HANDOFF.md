@@ -88,7 +88,7 @@ Os gotchas detalhados com soluções estão em `local/docs/lessons-learned.md`. 
 - [x] **Renomear variáveis `COGNITO_*` → `IDP_*` no lab local**: concluído em `e32187a`. `COGNITO_DOMAIN` → `IDP_DOMAIN`, `COGNITO_CLIENT_SECRET_CUSTOMER1/2` → `IDP_CLIENT_SECRET_CUSTOMER1/2` nos scripts e serviços (TDD: 28 + 16 testes passando).
 - [ ] **Unificar scripts de IDP** (AWS): script 11 (Google) e 16 (Microsoft) → script único `configure-idps`.
 - [ ] **Decode JWT na página de teste**: `test.html` exibir claims decodificados do JWT (header + payload) ao lado do token bruto.
-- [x] **Syntax highlight nos resultados de teste**: implementado com highlight.js (CDN). Verificado visualmente via Playwright + FastAPI local com JWT mockado — chaves em azul `rgb(0,92,197)`, strings em azul escuro, números e literais coloridos corretamente. 39 testes passando.
+- [x] **Syntax highlight nos resultados de teste**: highlight.js 11.9.0, tema stackoverflow-light/dark, JSON e curl (bash) coloridos. 40 testes passando. Verificado visualmente em `make serve` e FastAPI local. Design sandbox em paridade com o serviço.
 - [ ] **Screenshots para documentação**: tirar prints das telas principais (login, redirecionamento, página do tenant, isolamento 403) para enriquecer `docs/`.
 
 ### P2 — Melhorias importantes
@@ -119,36 +119,29 @@ Os gotchas detalhados com soluções estão em `local/docs/lessons-learned.md`. 
 - [ ] **CNAPP** (Cloud Native Application Protection Platform): avaliar solução unificada que cubra CSPM + CIEM + runtime security (ex: Wiz, Lacework).
 - [ ] **Simulação waspctl com IA**: interação conversacional simulando comandos `waspctl` com respostas simuladas, para exercitar conceitos e documentar o fluxo esperado da CLI.
 
-## Lab Local — Session 2026-04-17 (syntax highlight)
+## Lab Local — Session 2026-04-17 (syntax highlight — parte 2)
 
-Branch: `dev` — sem commit novo (mudanças pendentes de commit)
+Branch: `dev` — commits `4f061f8`, `b501c26`, `5bdc590`
 
 ### O que foi feito
 
-Implementado syntax highlight com **highlight.js 11.9.0** nos resultados JSON da página de teste do `tenant-frontend`:
+Concluído e verificado visualmente o syntax highlight da página de teste do `tenant-frontend`. k3d estava destruído — verificação feita com `make serve` (sandbox estático) e FastAPI local (`uvicorn` na porta 8081 com JWT mockado via Playwright).
 
 | Arquivo | Mudança |
 |---|---|
-| `services/tenant-frontend/app/templates/test.html` | CDN highlight.js + tema github light/dark via `media="(prefers-color-scheme: ...)"` adicionados no `{% block scripts %}` |
-| `services/tenant-frontend/app/static/test-ui.js` | Função `highlightJson()` com fallback para `escapeHtml()` se hljs offline; substituída em 2 pontos: accordion inline (linha 162) e drawer fullscreen (linha 231) |
-| `services/tenant-frontend/app/static/app.css` | Override `.result-code-pre .hljs, .drawer-code-pre .hljs { background: transparent; padding: 0; }` para evitar fundo duplicado |
-| `services/tenant-frontend/tests/test_routes.py` | +2 testes: `test_test_page_loads_highlightjs` e `test_test_page_loads_highlightjs_json_language` |
+| `design/index.html` | CDN highlight.js adicionado (paridade com `test.html`); tema stackoverflow; `shell.min.js`; `highlightShell()` no `buildAccordion` |
+| `services/tenant-frontend/app/templates/test.html` | Tema github → stackoverflow-light/dark; `shell.min.js`; script pós-render para `.curl-code` com `bash` |
+| `services/tenant-frontend/app/static/test-ui.js` | `highlightShell()` usando `bash` (não `shell` — 0 spans); exposto em `initTestPage`; drawer usa `highlightShell` |
+| `services/tenant-frontend/tests/test_routes.py` | `test_test_page_loads_highlightjs_shell_language` |
+| `CLAUDE.md` | Regra design↔serviços expandida: bidirecional, CDN/libs devem estar em ambos os arquivos |
 
-**Resultado dos testes:** 39 passando (era 37).
+**Testes:** 40 passando.
 
-**Deploy:** `local/scripts/06-deploy-services` executado com sucesso no k3d.
+### Gotchas desta sessão
 
-### Verificação visual — inconclusiva
-
-Screenshot capturado do browser mas resolução insuficiente para confirmar se as cores estão presentes. Verificar manualmente:
-
-1. Login em `http://wasp.local:32080`
-2. Navegar para `/test`
-3. Clicar "Run all"
-4. Expandir accordion "Public httpbin endpoint"
-5. Checar se strings estão em cor diferente de chaves e números
-
-**Se sem cores:** o provável culpado é `color: var(--color-on-surface)` em `.result-code-pre` sobrepondo os spans do hljs. Fix: remover a linha `color:` de `.result-code-pre` (o hljs theme já define todas as cores) ou aumentar especificidade: `.result-code-pre .hljs-attr { color: #0550ae !important; }`.
+- **`hljs` language `shell` produz 0 spans para `curl`** — usar `bash` (alias `sh`). O arquivo `shell.min.js` do CDN registra o language como `shell` mas com suporte a `bash`; porém `hljs.highlight(cmd, {language:'shell'})` não colore curl. Trocar para `'bash'` resolve.
+- **Design sandbox (`make serve`) não carregava hljs** — CDN tags do `test.html` não estavam no `design/index.html`. Regra adicionada ao `CLAUDE.md`: dependências externas devem estar em ambos.
+- **Verificação visual sem k3d** — método: subir `uvicorn app.main:app --port 8081` no diretório do serviço + injetar cookie JWT via `playwright add_cookies` antes de navegar. `decode_session` usa `verify_signature=False`, então qualquer JWT HS256 válido funciona.
 
 ---
 
