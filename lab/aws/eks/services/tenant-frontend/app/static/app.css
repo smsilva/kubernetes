@@ -654,6 +654,8 @@ body {
   word-break: break-all;
 }
 .result-code-pre.nowrap { white-space: pre; word-break: normal; }
+.result-code-pre .hljs,
+.drawer-code-pre .hljs { background: transparent; padding: 0; }
 .result-code-actions {
   position: absolute;
   top: 6px;

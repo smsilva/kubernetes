@@ -18,6 +18,11 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  function highlightJson(json) {
+    if (typeof hljs === 'undefined') return escapeHtml(json);
+    return hljs.highlight(json, { language: 'json' }).value;
+  }
+
   function _fallbackCopy(text, onSuccess) {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -159,7 +164,7 @@
         + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         + '</button>'
         + '</div>'
-        + '<pre class="result-code-pre" id="result-pre-' + label + '">' + escapeHtml(t.result_json) + '</pre>'
+        + '<pre class="result-code-pre" id="result-pre-' + label + '">' + highlightJson(t.result_json) + '</pre>'
         + '</div>'
         + '</div>';
     }
@@ -228,7 +233,7 @@
           + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="' + CLIPBOARD_PATH + '" fill="currentColor"/></svg>'
           + '</button>'
           + '</div></div>'
-          + '<pre class="drawer-code-pre wrap" id="dpre-json-' + label + '">' + escapeHtml(result.result_json) + '</pre>'
+          + '<pre class="drawer-code-pre wrap" id="dpre-json-' + label + '">' + highlightJson(result.result_json) + '</pre>'
           + '</div>';
       }
     } else {

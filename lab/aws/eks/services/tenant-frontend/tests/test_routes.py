@@ -215,6 +215,18 @@ def test_test_page_calls_init_test_page(authenticated_client):
     assert "initTestPage" in response.text
 
 
+def test_test_page_loads_highlightjs(authenticated_client):
+    """test.html must load highlight.js core for JSON syntax highlighting."""
+    response = authenticated_client.get("/test")
+    assert "highlight.min.js" in response.text
+
+
+def test_test_page_loads_highlightjs_json_language(authenticated_client):
+    """test.html must load the highlight.js JSON language pack."""
+    response = authenticated_client.get("/test")
+    assert "languages/json.min.js" in response.text
+
+
 # ── Profile (/profile) ───────────────────────────────────────────────────────
 
 def test_profile_redirects_when_no_session(api_client):
