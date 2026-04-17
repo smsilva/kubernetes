@@ -320,6 +320,11 @@
     </div>
   </div>
 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/stackoverflow-light.min.css" media="(prefers-color-scheme: light), not all">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/stackoverflow-dark.min.css" media="(prefers-color-scheme: dark)">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/shell.min.js"></script>
   <script src="/services/tenant-frontend/app/static/test-ui.js"></script>
   <script>
     // ── Test results store ────────────────────────────────────────────────────
@@ -445,7 +450,7 @@
             <div class="accordion-body" id="body-${t.label}" style="display:none">
               <div class="accordion-result" id="result-${t.label}"></div>
               <div class="curl-block mt-8">
-                <pre class="curl-code">${escapeHtml(t.curl_cmd)}</pre>
+                <pre class="curl-code">${highlightShell(t.curl_cmd)}</pre>
                 <button class="copy-btn" data-label="${t.label}" onclick="copyCurl(this)" title="Copy command">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                     <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
