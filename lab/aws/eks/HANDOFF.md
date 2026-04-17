@@ -120,6 +120,82 @@ POST /login (user1@customer1.com)
 - [ ] **SSM Parameter Store**: migrar secrets de `env.secrets` para SSM (alternativa gratuita ao Secrets Manager).
 - [ ] **waspctl network proxy**: comando para provisionar cluster e integrar ao Global Accelerator.
 
+## Lab Local — Run 2026-04-16
+
+Commit: `016d9d4` — Branch: `dev`
+
+### Resultados por script
+
+| Script | Status | Duração (s) | Notas |
+|---|---|---|---|
+| `bootstrap` | ✅ | 1 | Todos os pré-requisitos presentes; k3d 5.8.3, kubectl 1.31, helm 3.12.2, docker 29.4.0, istioctl 1.29.1; entradas `/etc/hosts` já existiam |
+| `01-create-cluster` | ✅ | 52 | Cluster k3d `wasp` criado com 3 server nodes (v1.31.5+k3s1); traefik desabilitado; portas 9080, 9443, 32080 mapeadas |
+| `02-install-haproxy-ingress` | ✅ | 3 | HAProxy Ingress instalado via Helm; NodePort 32080 funcional |
+| `03-install-cert-manager` | ✅ | 28 | cert-manager v1.20.2; ClusterIssuer `wasp-local-ca` pronto |
+| `04-install-istio` | ✅ | 35 | Istio 1.24.3; istio-base, istiod, istio-ingressgateway (ClusterIP); Ingress catch-all HAProxy→Istio criado |
+| `05-deploy-keycloak` | ✅ | 79 | Keycloak 26.1 deployado; realm `wasp` configurado; client `wasp-platform`; Protocol Mapper `custom:tenant_id`; `VERIFY_PROFILE` desabilitado; client secret salvo em `env.secrets` |
+| `06-deploy-services` | ✅ | 77 | Build local das 4 imagens (git tag `016d9d4`); import k3d; deploy discovery (SQLite), platform-frontend, callback-handler, customer1 (httpbin + tenant-frontend) |
+| `07-configure-istio-auth` | ✅ | 1 | `RequestAuthentication` + `AuthorizationPolicy` em `customer1`; JWT issuer `http://idp.wasp.local:32080/realms/wasp` |
+| `08-deploy-customer2` | ✅ | 31 | ConfigMap discovery-seed atualizado; callback-handler secret atualizado; namespace `customer2` com Istio auth; rollouts concluídos |
+
+**Tempo total: ~307 s (~5 min 7 s)**
+
+### Smoke tests (todos passaram)
+
+| Endpoint | HTTP | Esperado |
+|---|---|---|
+| `http://wasp.local:32080/health` | 200 | ✅ |
+| `http://discovery.wasp.local:32080/health` | 200 | ✅ |
+| `http://auth.wasp.local:32080/health` | 200 | ✅ |
+| `http://customer1.wasp.local:32080/` (sem JWT) | 403 | ✅ |
+| `http://customer2.wasp.local:32080/` (sem JWT) | 403 | ✅ |
+| `GET /tenant?domain=customer1.com` | tenant_id=customer1 | ✅ |
+| `GET /tenant?domain=customer2.com` | tenant_id=customer2 | ✅ |
+
+### Problemas encontrados
+
+Nenhum — todos os 8 scripts passaram sem falha na primeira execução. Ambiente estava em estado limpo (cluster k3d não existia).
+
+---
+
+## Design → Frontend: sincronização de UI
+
+### Contexto
+
+O arquivo `design/index.html` é o **single source of truth visual**. Ele carrega o CSS real dos serviços via `<link rel="stylesheet" href="/services/tenant-frontend/app/static/app.css">`, então qualquer mudança em `app.css` é imediatamente refletida no sandbox ao rodar `make serve`.
+
+### O que foi feito
+
+- **Passo 1 (concluído):** Todo CSS de componentes que estava inline no `<style>` do `design/index.html` foi movido para `app.css`. O `<style>` agora contém apenas o chrome do sandbox (`#sandbox-bar`, `body { padding-bottom }`) e um override pontual (`.result-drawer-overlay { bottom: 40px }` para não cobrir a barra do sandbox).
+
+  **Fluxo atual:** editar CSS → editar `app.css` → design sandbox e serviço ficam sincronizados automaticamente.
+
+- **Passo 2 (concluído):** Script `06-deploy-services` (local) alinhado com `13-deploy-services` (AWS): o symlink `app/static/shared → ../../../../design/shared` é substituído por cópia real antes do `docker build` e restaurado após, garantindo que `shared/tokens.css` e `shared/base.css` entrem na imagem.
+
+- **Passo 3 (concluído):** JS de UI extraído para `services/tenant-frontend/app/static/test-ui.js`.
+
+  **Interface de inicialização:**
+  ```js
+  window.initTestPage({ testCases, jwtToken });
+  ```
+  - `design/index.html`: carrega via `<script src="/services/tenant-frontend/app/static/test-ui.js">`, chama `initTestPage({ testCases: TEST_CASES, jwtToken: MOCK_JWT })` após `buildAccordion()`.
+  - `test.html`: `<script src="{{ url_for('static', path='test-ui.js') }}">` + `initTestPage({ testCases: ..., jwtToken: ... })` com dados Jinja2.
+  - `test-ui.js` expõe `window._testUi` e registra funções globais (`toggleAccordion`, `runSingle`, `openDrawer`, etc.) no `initTestPage()` para compatibilidade com atributos `onclick=` inline.
+
+  **Fluxo atual:** editar JS de UI → editar `test-ui.js` → sandbox e serviço ficam sincronizados automaticamente.
+
+### Observações
+
+- Script `05-deploy-keycloak` regenerou `KEYCLOAK_CLIENT_SECRET` em `env.secrets` (valor anterior era da sessão anterior).
+- `env.secrets` existia com `STATE_JWT_SECRET` reaproveitado — `06-deploy-services` detectou e usou sem regenerar.
+- Cluster usa 3 server nodes (HA etcd); build das imagens usa cache Docker — builds quasi-instantâneos.
+
+### Issues abertas
+
+Nenhuma nova. Backlog inalterado.
+
+---
+
 ## Next Steps
 
 1. **Reprovisionar do zero** — ✅ Validado em 2026-04-16. Scripts 01-08 funcionam após correções documentadas nos Gotchas. `./destroy && ./run` funciona a partir de estado limpo.

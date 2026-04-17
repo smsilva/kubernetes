@@ -74,15 +74,15 @@ def test_test_page_embeds_five_test_cases(authenticated_client):
 def test_test_page_starts_with_all_idle(authenticated_client):
     """Page loads with all tests idle — no results until browser runs them.
 
-    status-pass and status-fail appear in the results-summary legend (static HTML),
-    so we verify the accordion items section only, which ends before results-summary.
+    item-circle-pass and item-circle-fail appear only after JS runs tests.
+    We verify the accordion section only (before results-summary).
     """
     response = authenticated_client.get("/test")
     body = response.text
     accordion_section = body.split('class="results-summary"')[0]
-    assert "status-idle" in accordion_section
-    assert "status-pass" not in accordion_section
-    assert "status-fail" not in accordion_section
+    assert "item-circle-idle" in accordion_section
+    assert "item-circle-pass" not in accordion_section
+    assert "item-circle-fail" not in accordion_section
 
 
 def test_test_page_url_preserves_lowercase(authenticated_client):
@@ -148,22 +148,37 @@ def test_test_page_badge_has_id_for_dynamic_update(authenticated_client):
     assert set(badge_ids) == {"httpbin", "customer1-health", "customer2-health", "customer1-httpbin", "customer2-httpbin"}
 
 
-def test_test_page_has_group_separators(authenticated_client):
-    """Page must render group separator rows with Own Tenant and Cross-Tenant labels."""
+
+def test_test_page_has_progress_bar(authenticated_client):
+    """Page must include the progress bar element (hidden initially, shown by JS)."""
     response = authenticated_client.get("/test")
     body = response.text
-    assert "group-separator" in body
-    assert "Own Tenant" in body
-    assert "Cross-Tenant" in body
+    assert "test-progress-wrap" in body
+    assert "test-progress-fill" in body
 
 
-def test_test_page_group_order(authenticated_client):
-    """Own Tenant group must appear before Cross-Tenant group in the HTML."""
+def test_test_page_items_have_human_readable_names(authenticated_client):
+    """Each test case must have a human-readable name (accordion-title), not just the label."""
     response = authenticated_client.get("/test")
     body = response.text
-    own_pos = body.index("Own Tenant")
-    cross_pos = body.index("Cross-Tenant")
-    assert own_pos < cross_pos
+    assert "accordion-title" in body
+
+
+def test_test_page_has_result_drawer(authenticated_client):
+    """Page must include the fullscreen result drawer overlay (opened by JS on Fullscreen click)."""
+    response = authenticated_client.get("/test")
+    body = response.text
+    assert "result-drawer-overlay" in body
+    assert "result-drawer-body" in body
+
+
+def test_test_page_has_openDrawer_function(api_client, authenticated_client):
+    """openDrawer must be defined in test-ui.js (loaded by the page)."""
+    page = authenticated_client.get("/test")
+    assert "test-ui.js" in page.text  # page loads the script
+    js = api_client.get("/static/test-ui.js")
+    assert "openDrawer" in js.text
+    assert "closeDrawer" in js.text
 
 
 def test_test_page_run_buttons_are_client_side(authenticated_client):
@@ -178,6 +193,26 @@ def test_test_run_endpoint_removed(api_client):
     """/test/run endpoint must not exist — tests run client-side."""
     response = api_client.get("/test/run", params={"url": "http://example.com", "expected": 200})
     assert response.status_code == 404
+
+
+def test_test_ui_js_accessible(api_client):
+    """test-ui.js must be served as a static file."""
+    response = api_client.get("/static/test-ui.js")
+    assert response.status_code == 200
+    assert "initTestPage" in response.text
+
+
+def test_test_page_loads_test_ui_js(authenticated_client):
+    """test.html must load test-ui.js via script tag, not inline."""
+    response = authenticated_client.get("/test")
+    body = response.text
+    assert "test-ui.js" in body
+
+
+def test_test_page_calls_init_test_page(authenticated_client):
+    """test.html must call initTestPage() to bootstrap the JS."""
+    response = authenticated_client.get("/test")
+    assert "initTestPage" in response.text
 
 
 # ── Profile (/profile) ───────────────────────────────────────────────────────

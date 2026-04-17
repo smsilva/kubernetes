@@ -27,13 +27,18 @@
     </div>
   </div>
 
+  <div class="test-progress-wrap" id="test-progress-wrap">
+    <div class="test-progress-header">
+      <span class="test-progress-lbl" id="test-progress-lbl">0 / {{ test_cases|length }} passed</span>
+      <span class="test-progress-pct" id="test-progress-pct">0%</span>
+    </div>
+    <div class="test-progress-bar">
+      <div class="test-progress-fill" id="test-progress-fill"></div>
+    </div>
+  </div>
+
   <div class="accordion">
-    {% set ns = namespace(current_group="") %}
     {% for t in test_cases %}
-    {% if t.group != ns.current_group %}
-      {% set ns.current_group = t.group %}
-      <div class="group-separator">{{ t.group }}</div>
-    {% endif %}
     <div class="accordion-item" id="item-{{ t.label }}">
 
       <div class="accordion-header" role="button" tabindex="0"
@@ -41,17 +46,15 @@
            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAccordion('{{ t.label }}')}"
            aria-expanded="false">
         <div class="accordion-header-left">
-          <span class="accordion-status" id="status-{{ t.label }}">
-            <span class="status-dot status-idle"></span>
-          </span>
-          <span class="accordion-label">{{ t.label }}</span>
-          <span class="accordion-url url-text">{{ t.url }}</span>
+          <span class="item-circle item-circle-idle" id="circle-{{ t.label }}">{{ loop.index }}</span>
+          <div class="accordion-item-info">
+            <span class="accordion-title">{{ t.name }}</span>
+            <span class="accordion-url url-text">{{ t.url }}</span>
+          </div>
         </div>
         <div class="accordion-header-right">
-          <span class="accordion-expected">
-            <span id="badge-{{ t.label }}" class="badge {% if t.expected == 200 %}badge-ok{% else %}badge-deny{% endif %}">
-              {{ t.expected }}
-            </span>
+          <span id="badge-{{ t.label }}" class="badge {% if t.expected == 200 %}badge-ok{% else %}badge-deny{% endif %}" style="visibility:hidden">
+            {{ t.expected }}
           </span>
           <button class="btn-outlined btn-sm accordion-run-btn"
                   onclick="event.stopPropagation(); runSingle('{{ t.label }}', '{{ t.url }}', {{ t.expected }}, {{ 'true' if t.with_jwt else 'false' }})">
@@ -100,192 +103,30 @@
   </div>
 
 </div>
+
+<div class="result-drawer-overlay" id="result-drawer-overlay" onclick="closeDrawer()">
+  <div class="result-drawer" id="result-drawer" onclick="event.stopPropagation()">
+    <div class="result-drawer-header">
+      <span class="result-drawer-title" id="result-drawer-title"></span>
+      <div class="result-drawer-controls">
+        <button class="copy-btn" style="position:static;width:28px;height:28px" onclick="closeDrawer()" title="Close (Esc)" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="result-drawer-body" id="result-drawer-body"></div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', path='test-ui.js') }}"></script>
 <script>
-  const testCases  = {{ test_cases | tojson }};
-  const JWT_TOKEN  = {{ jwt_token | tojson }};
-
-  // ── Syntax highlighter ────────────────────────────────────────────────────
-  function syntaxHighlight(jsonStr) {
-    return jsonStr.replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-      function(match) {
-        let cls = 'json-number';
-        if (/^"/.test(match)) cls = /:$/.test(match) ? 'json-key' : 'json-string';
-        else if (/true|false/.test(match)) cls = 'json-bool';
-        else if (/null/.test(match)) cls = 'json-null';
-        return `<span class="${cls}">${escapeHtml(match)}</span>`;
-      }
-    );
-  }
-
-  function escapeHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  // ── Accordion toggle ──────────────────────────────────────────────────────
-  function toggleAccordion(label) {
-    const body    = document.getElementById(`body-${label}`);
-    const chevron = document.getElementById(`chevron-${label}`);
-    const header  = body.previousElementSibling;
-    const isOpen  = body.style.display !== 'none';
-    body.style.display          = isOpen ? 'none' : 'block';
-    chevron.style.transform     = isOpen ? '' : 'rotate(180deg)';
-    header.setAttribute('aria-expanded', String(!isOpen));
-  }
-
-  function openAccordion(label) {
-    const body = document.getElementById(`body-${label}`);
-    if (body.style.display === 'none') toggleAccordion(label);
-  }
-
-  // ── Copy curl command ─────────────────────────────────────────────────────
-  const CLIPBOARD_ICON = '<path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>';
-  const CHECK_ICON     = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>';
-
-  function _showCheckmark(btn) {
-    const path = btn.querySelector('path');
-    path.setAttribute('d', CHECK_ICON.match(/d="([^"]+)"/)[1]);
-    btn.classList.add('copy-btn-ok');
-    setTimeout(() => {
-      path.setAttribute('d', CLIPBOARD_ICON.match(/d="([^"]+)"/)[1]);
-      btn.classList.remove('copy-btn-ok');
-    }, 1500);
-  }
-
-  function _fallbackCopy(text, onSuccess) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try { document.execCommand('copy'); onSuccess(); } catch(e) {}
-    document.body.removeChild(ta);
-  }
-
-  function copyCurl(btn) {
-    const label = btn.dataset.label;
-    const t = testCases.find(r => r.label === label);
-    if (!t?.curl_cmd) return;
-    const onSuccess = () => _showCheckmark(btn);
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(t.curl_cmd).then(onSuccess).catch(() => _fallbackCopy(t.curl_cmd, onSuccess));
-    } else {
-      _fallbackCopy(t.curl_cmd, onSuccess);
-    }
-  }
-
-  // ── Summary ───────────────────────────────────────────────────────────────
-  function updateSummary() {
-    let passed = 0, failed = 0, running = 0;
-    document.querySelectorAll('.accordion-status').forEach(el => {
-      if (el.querySelector('.status-pass'))      passed++;
-      else if (el.querySelector('.status-fail')) failed++;
-      else                                       running++;
-    });
-    document.getElementById('count-passed').textContent = passed;
-    document.getElementById('count-failed').textContent = failed;
-    const runningEl  = document.getElementById('summary-running');
-    const runningSep = document.getElementById('summary-running-sep');
-    if (running > 0 && running < testCases.length) {
-      document.getElementById('count-running').textContent = running;
-      runningEl.style.display  = '';
-      runningSep.style.display = '';
-    } else {
-      runningEl.style.display  = 'none';
-      runningSep.style.display = 'none';
-    }
-  }
-
-  // ── Collapse all ──────────────────────────────────────────────────────────
-  function collapseAll() {
-    testCases.forEach(t => {
-      const body = document.getElementById(`body-${t.label}`);
-      if (body && body.style.display !== 'none') toggleAccordion(t.label);
-    });
-  }
-
-  // ── Run single test (direct browser fetch) ────────────────────────────────
-  async function runSingle(label, url, expected, withJwt) {
-    setRunning(label);
-    try {
-      const headers = {};
-      if (withJwt && JWT_TOKEN) headers['Authorization'] = `Bearer ${JWT_TOKEN}`;
-
-      const resp = await fetch(url, { headers, mode: 'cors' });
-
-      let resultJson = null;
-      const ct = resp.headers.get('content-type') || '';
-      if (ct.includes('application/json')) {
-        try { resultJson = JSON.stringify(await resp.json(), null, 2); } catch(e) {}
-      }
-
-      renderResult(label, {
-        status_code: resp.status,
-        expected,
-        result_json: resultJson,
-        error: null,
-      });
-    } catch (e) {
-      renderResult(label, {
-        status_code: null,
-        expected,
-        result_json: null,
-        error: e.message || String(e),
-      });
-    }
-  }
-
-  // ── Run all tests in parallel ─────────────────────────────────────────────
-  async function runAll() {
-    const btn = document.getElementById('run-all-btn');
-    btn.disabled = true;
-    await Promise.all(testCases.map(t => runSingle(t.label, t.url, t.expected, t.with_jwt)));
-    btn.disabled = false;
-  }
-
-  function setRunning(label) {
-    document.getElementById(`result-${label}`).innerHTML = '<span class="test-running">Running…</span>';
-    document.getElementById(`status-${label}`).innerHTML = '<span class="status-dot status-idle"></span>';
-    const badge = document.getElementById(`badge-${label}`);
-    if (badge) { badge.className = 'badge badge-running'; badge.textContent = '…'; }
-    const item = document.getElementById(`item-${label}`);
-    if (item) { item.classList.remove('accordion-item--pass', 'accordion-item--fail'); }
-    updateSummary();
-  }
-
-  // ── Render result into DOM ─────────────────────────────────────────────────
-  function renderResult(label, t) {
-    const passed  = t.status_code === t.expected;
-    const statusEl = document.getElementById(`status-${label}`);
-    statusEl.innerHTML = passed
-      ? '<span class="status-dot status-pass"></span>'
-      : '<span class="status-dot status-fail"></span>';
-
-    const badge = document.getElementById(`badge-${label}`);
-    if (badge) {
-      badge.textContent = t.status_code ?? t.expected;
-      badge.className   = 'badge ' + (passed ? 'badge-ok' : 'badge-deny');
-    }
-
-    let html = passed
-      ? `<span class="result-pass"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/></svg>HTTP ${t.status_code} — passed</span>`
-      : `<span class="result-fail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/></svg>${t.status_code ? 'HTTP ' + t.status_code : escapeHtml(t.error)} — failed</span>`;
-
-    if (t.result_json) {
-      html += `<div class="code-fence code-fence-sm mt-8"><pre>${syntaxHighlight(t.result_json)}</pre></div>`;
-    }
-
-    document.getElementById(`result-${label}`).innerHTML = html;
-    const item = document.getElementById(`item-${label}`);
-    if (item) {
-      item.classList.toggle('accordion-item--pass', passed);
-      item.classList.toggle('accordion-item--fail', !passed);
-    }
-    updateSummary();
-  }
+  window.initTestPage({
+    testCases: {{ test_cases | tojson }},
+    jwtToken:  {{ jwt_token  | tojson }},
+  });
 </script>
 {% endblock %}
