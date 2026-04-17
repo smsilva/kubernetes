@@ -87,12 +87,21 @@ Os gotchas detalhados com soluções estão em `local/docs/lessons-learned.md`. 
 
 - [x] **Renomear variáveis `COGNITO_*` → `IDP_*` no lab local**: concluído em `e32187a`. `COGNITO_DOMAIN` → `IDP_DOMAIN`, `COGNITO_CLIENT_SECRET_CUSTOMER1/2` → `IDP_CLIENT_SECRET_CUSTOMER1/2` nos scripts e serviços (TDD: 28 + 16 testes passando).
 - [ ] **Unificar scripts de IDP** (AWS): script 11 (Google) e 16 (Microsoft) → script único `configure-idps`.
+- [ ] **Decode JWT na página de teste**: `test.html` exibir claims decodificados do JWT (header + payload) ao lado do token bruto.
+- [ ] **Syntax highlight nos resultados de teste**: respostas JSON e saída shell com highlight de sintaxe na página de teste do tenant-frontend.
+- [ ] **Screenshots para documentação**: tirar prints das telas principais (login, redirecionamento, página do tenant, isolamento 403) para enriquecer `docs/`.
 
 ### P2 — Melhorias importantes
 
 - [ ] **Nomes estáveis para recursos de rede**: avaliar usar `cluster_name` fixo em `env.conf` (ex: `wasp-eks-lab`) para VPC/subnets com nome estável entre sessões.
 - [ ] **Health check dedicado `/healthz`**: separar tráfego de health check (ALB) do tráfego real; avaliar se expõe risco de segurança.
 - [ ] **Redirect ao expirar token**: Istio retorna 403 puro quando JWT expira. O `tenant-frontend` deve detectar expiração (claim `exp`) e redirecionar para `/login`. Alternativa: configurar Istio para redirecionar em vez de 403.
+- [ ] **Network policy isolando namespaces**: complementar o isolamento do Istio com `NetworkPolicy` K8s bloqueando tráfego direto entre namespaces de tenants.
+- [ ] **Diagrama do Lab EKS**: atualizar `docs/` com diagrama de arquitetura (fluxo de tráfego, componentes, namespaces).
+- [ ] **Métricas com OpenTelemetry**: instrumentar os serviços Python para emitir métricas via OTEL (latência, erros, requisições por tenant).
+- [ ] **Fitness function / Business metrics**: endpoint de saúde semântica do cluster (ex: `/healthz/business`) com métricas de tenants ativos, autenticações bem-sucedidas, disponível localmente com indicador visual.
+- [ ] **Métricas do cluster**: Prometheus + Grafana ou similar para observabilidade de infra (CPU, memória, pods por namespace).
+- [ ] **Teste de interface local (e2e)**: testes automatizados de browser para o fluxo de login completo (Playwright ou similar), rodando contra k3d.
 
 ### P3 — Exploração / futuro
 
@@ -102,6 +111,13 @@ Os gotchas detalhados com soluções estão em `local/docs/lessons-learned.md`. 
 - [ ] **Remover `COGNITO_CLIENT_ID` órfão dos ConfigMaps** (AWS): serviços não usam essa variável (vem do discovery via state JWT).
 - [ ] **SSM Parameter Store**: migrar secrets de `env.secrets` para SSM (alternativa gratuita ao Secrets Manager).
 - [ ] **waspctl network proxy**: comando para provisionar cluster e integrar ao Global Accelerator.
+- [ ] **Resource quotas por namespace**: limitar CPU/memória por tenant para evitar noisy neighbor.
+- [ ] **Proteger repositório GitHub**: branch protection rules, required reviews, signed commits.
+- [ ] **Penetration test**: avaliar OWASP ZAP ou similar contra o lab local (k3d) antes de rodar contra AWS.
+- [ ] **CSPM** (Cloud Security Posture Management): avaliar ferramenta para detectar misconfigurações na conta AWS (ex: Prowler, AWS Security Hub).
+- [ ] **CIEM** (Cloud Infrastructure Entitlement Management): auditar permissões IAM excessivas; avaliar ferramentas dedicadas.
+- [ ] **CNAPP** (Cloud Native Application Protection Platform): avaliar solução unificada que cubra CSPM + CIEM + runtime security (ex: Wiz, Lacework).
+- [ ] **Simulação waspctl com IA**: interação conversacional simulando comandos `waspctl` com respostas simuladas, para exercitar conceitos e documentar o fluxo esperado da CLI.
 
 ## Lab Local — Run 2026-04-16
 
@@ -164,3 +180,9 @@ Nenhum — todos os 8 scripts passaram sem falha na primeira execução. Ambient
 - `/etc/hosts`: `127.0.0.1` para `wasp.local`, `auth.wasp.local`, `discovery.wasp.local`, `idp.wasp.local`, `customer1.wasp.local`, `customer2.wasp.local`
 - customer1 e customer2 usam o mesmo client Keycloak (`wasp-platform`) — isolamento via `custom:tenant_id`
 - Regra do projeto: TDD — testes antes de qualquer alteração nos serviços
+
+## Referências externas
+
+- [smsilva.github.io/kubernetes](https://smsilva.github.io/kubernetes) — documentação publicada do projeto
+- [Building a Multi-Tenant SaaS Solution Using Amazon EKS](https://aws.amazon.com/pt/blogs/apn/building-a-multi-tenant-saas-solution-using-amazon-eks) — referência de arquitetura multi-tenant
+- [Operating a multi-regional stateless application using Amazon EKS](https://aws.amazon.com/pt/blogs/containers/operating-a-multi-regional-stateless-application-using-amazon-eks) — referência para expansão multi-região
