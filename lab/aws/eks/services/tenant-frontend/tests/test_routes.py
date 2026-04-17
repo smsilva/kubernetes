@@ -227,6 +227,12 @@ def test_test_page_loads_highlightjs_json_language(authenticated_client):
     assert "languages/json.min.js" in response.text
 
 
+def test_test_page_loads_highlightjs_shell_language(authenticated_client):
+    """test.html must load the highlight.js shell language pack for curl commands."""
+    response = authenticated_client.get("/test")
+    assert "languages/shell.min.js" in response.text
+
+
 # ── Profile (/profile) ───────────────────────────────────────────────────────
 
 def test_profile_redirects_when_no_session(api_client):

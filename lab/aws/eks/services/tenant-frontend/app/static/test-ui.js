@@ -23,6 +23,11 @@
     return hljs.highlight(json, { language: 'json' }).value;
   }
 
+  function highlightShell(cmd) {
+    if (typeof hljs === 'undefined') return escapeHtml(cmd);
+    return hljs.highlight(cmd, { language: 'bash' }).value;
+  }
+
   function _fallbackCopy(text, onSuccess) {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -249,7 +254,7 @@
         + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="' + CLIPBOARD_PATH + '" fill="currentColor"/></svg>'
         + '</button>'
         + '</div></div>'
-        + '<pre class="drawer-code-pre wrap" id="dpre-curl-' + label + '">' + escapeHtml(t.curl_cmd) + '</pre>'
+        + '<pre class="drawer-code-pre wrap" id="dpre-curl-' + label + '">' + highlightShell(t.curl_cmd) + '</pre>'
         + '</div>';
     }
 
@@ -333,6 +338,7 @@
     window.toggleResultWrap   = toggleResultWrap;
     window.copyResult         = copyResult;
     window.escapeHtml         = escapeHtml;
+    window.highlightShell     = highlightShell;
 
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
   };
