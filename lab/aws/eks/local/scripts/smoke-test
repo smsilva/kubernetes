@@ -1,0 +1,36 @@
+#!/bin/bash
+set -euo pipefail
+. "$(dirname "$0")/env.conf"
+
+port="${haproxy_nodeport}"
+base="http://${domain}:${port}"
+pass=0
+fail=0
+
+check() {
+  local url="$1"
+  local expected="$2"
+  local label="${3:-$url}"
+  local actual
+  actual=$(curl --silent --output /dev/null --write-out "%{http_code}" "${url}")
+  if [[ "${actual}" == "${expected}" ]]; then
+    echo "  [PASS] ${actual}  ${label}"
+    (( pass++ )) || true
+  else
+    echo "  [FAIL] ${actual} (esperado ${expected})  ${label}"
+    (( fail++ )) || true
+  fi
+}
+
+echo "=== Smoke tests (porta ${port}) ==="
+check "${base}/health"                                                 200 "platform-frontend /health"
+check "http://discovery.${domain}:${port}/health"                      200 "discovery /health"
+check "http://auth.${domain}:${port}/health"                           200 "callback-handler /health"
+check "http://customer1.${domain}:${port}/"                            403 "customer1 (sem JWT)"
+check "http://customer2.${domain}:${port}/"                            403 "customer2 (sem JWT)"
+check "http://discovery.${domain}:${port}/tenant?domain=customer1.com" 200 "discovery tenant customer1"
+check "http://discovery.${domain}:${port}/tenant?domain=customer2.com" 200 "discovery tenant customer2"
+
+echo ""
+echo "  Resultado: ${pass} passou, ${fail} falhou"
+[[ "${fail}" -eq 0 ]]
