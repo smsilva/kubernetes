@@ -35,6 +35,19 @@ Internet → ALB (TLS termination, ACM cert)
 
 ---
 
+## Regra: Visual design deve ser respeitado sempre
+
+- Qualquer alteracao feita em lab/aws/eks/design deve ser refletida nos lab/aws/eks/services de frontend
+- As alterações devem ser aplicadas mediante a criação de um plano de implementação, que deve ser aprovado antes da execução
+
+### Arquitetura de sincronização (Design → Serviços)
+
+- **CSS:** `design/index.html` carrega `services/tenant-frontend/app/static/app.css` diretamente via `<link>`. Editar `app.css` sincroniza sandbox e serviço automaticamente. O `<style>` inline do `design/index.html` contém apenas chrome do sandbox (`#sandbox-bar`) e overrides pontuais.
+- **CSS compartilhado:** `app/static/shared/` é symlink para `../../../../design/shared`. Scripts de build (`06-deploy-services`, `13-deploy-services`) substituem o symlink por cópia real antes do `docker build` e restauram após.
+- **JS de UI:** extraído para `services/tenant-frontend/app/static/test-ui.js`. Interface: `window.initTestPage({ testCases, jwtToken })`. O `design/index.html` e o `test.html` chamam essa função — editar o arquivo sincroniza os dois.
+
+---
+
 ## Regra: sempre adicionar entrada de destroy ao criar recurso novo
 
 Toda vez que um script de provisionamento criar um recurso AWS ou Azure, **a entrada correspondente de deleção deve ser adicionada ao `scripts/destroy` na mesma sessão**, na posição correta da ordem inversa. A ordem deve respeitar dependências (ex: Cognito custom domain antes do User Pool) — se houver conflito com ordem de custo, a ordem de dependência prevalece.
@@ -93,6 +106,36 @@ Scripts em `scripts/`, documentos em `docs/`. Configurações globais em `script
 | `scripts/destroy` | Destrói tudo na ordem inversa (ACM deve ser removido manualmente) | ~20-30min |
 
 **Tempo total de criação: ~26min** (dominado pelo `02-create-cluster` ~15min via CloudFormation).
+
+---
+
+## Lab local (k3d)
+
+Versão offline do lab em `lab/aws/eks/local/` — k3d, sem dependências de cloud.
+
+| Item | Valor |
+|---|---|
+| **Domínio** | `wasp.local` (wildcard `*.wasp.local`) |
+| **Porta externa** | `32080` (NodePort HAProxy) |
+| **IdP** | Keycloak 26.1 (`quay.io/keycloak/keycloak:26.1`) em `idp.wasp.local:32080` |
+| **Backend discovery** | SQLite (env `BACKEND=sqlite`; default `dynamodb` para AWS) |
+| **Scripts** | `local/scripts/` — mesma numeração dos scripts AWS |
+| **Docs** | `local/docs/diferencas-aws.md`, `local/docs/lessons-learned.md` |
+
+**`/etc/hosts` necessário:**
+```
+127.0.0.1 wasp.local auth.wasp.local discovery.wasp.local idp.wasp.local customer1.wasp.local customer2.wasp.local
+```
+
+**Variáveis adicionais (lab local):**
+
+| Variável | Serviço | Descrição |
+|---|---|---|
+| `KEYCLOAK_CLIENT_SECRET` | `callback-handler` | Gerado em runtime, salvo em `local/scripts/env.secrets` |
+| `COOKIE_SECURE` | `callback-handler` | `false` no lab local (sem TLS externo) |
+| `COOKIE_DOMAIN` | `callback-handler` | `.wasp.local` no lab local |
+| `IDP_TOKEN_URL` | `callback-handler` | URL in-cluster do Keycloak (evita round-trip pelo HAProxy) |
+| `IDP_AUTHORIZE_URL` | `platform-frontend` | Opcional; `identity_provider` omitido quando `idp_name=""` |
 
 ---
 

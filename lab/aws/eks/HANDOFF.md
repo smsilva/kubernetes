@@ -48,13 +48,6 @@ POST /login (user1@customer1.com)
   → 403 customer2 sem JWT              ← Istio AuthorizationPolicy ✅
 ```
 
-**Commits neste branch:**
-- `d6afefd` — `feat(eks/local): add local k3d lab and extend services for offline operation`
-- `62e60a5` — `docs(eks): add notes on local lab plan and HANDOFF`
-- `218c4ef` — `docs(eks): update HANDOFF with completed local lab status`
-- `5da5ecb` — `fix(eks/local): make local k3d lab work end-to-end with Keycloak 26`
-- `e32187a` — `refactor(eks/local): rename COGNITO_* env vars to IDP_* for provider-agnostic naming`
-
 ## What Worked
 
 - HAProxy Ingress em vez de Nginx (deprecated) — `NodePort 32080`
@@ -80,23 +73,13 @@ POST /login (user1@customer1.com)
 
 ## What Didn't Work / Gotchas
 
-- **Bitnami removeu imagens do Docker Hub** — `bitnami/keycloak` retorna `pull access denied`. Usar `quay.io/keycloak/keycloak:26.1`.
-- **`frontendUrl` no body de criação do realm** → `"unable to read contents from stream"` no KC 26. Separar criação da configuração do `frontendUrl`.
-- **JSON multiline em `--data` com Istio sidecar** → KC 26 rejeita com erro de parse. Todo JSON nos `--data` dos scripts deve ser em linha única.
-- **KC 26 User Profile descarta atributos não declarados** — `tenant_id` silenciosamente ignorado ao criar usuários se não estiver no schema.
-- **`VERIFY_PROFILE` intercepta login mesmo com `defaultAction:false`** — precisa de `enabled:false`.
-- **Parâmetro Helm `controller.service.nodePorts.http`** não tem efeito. Correto: `controller.service.httpPorts[0].nodePort`.
-- **HAProxy sem `Ingress` resource** → 503 em tudo. O HAProxy não encaminha para o Istio sem um `Ingress` com `defaultBackend`.
-- **Discovery falha sem volume em `/data`** — `unable to open database file` se não houver `emptyDir`.
-- **Domínio do seed deve ser o do e-mail** (`customer1.com`), não o subdomínio da app (`customer1.wasp.local`).
-- **`secure=True` hardcoded** no callback-handler → cookie não enviado em HTTP. Substituído por `COOKIE_SECURE` env var.
-- **`domain=".wasp.silvios.me"` hardcoded** → cookie não aceito em `.wasp.local`. Substituído por `COOKIE_DOMAIN` env var.
-- **`grant_type=password` sem `scope=openid`** → não retorna `id_token` (só `access_token`). Adicionar `--data "scope=openid"` ao testar diretamente.
-- **`rollout restart` necessário quando Secret/ConfigMap muda** — quando apenas o conteúdo de um Secret ou ConfigMap muda (sem troca de imagem), o pod não remonta volumes/env vars automaticamente. É necessário `kubectl rollout restart deployment/<name>` para aplicar as mudanças.
-- **Subagente sem permissão bash** — ao delegar execução de scripts para subagente via Agent tool, ele não herda as permissões da sessão principal mesmo com `Bash(*)` em `~/.claude/settings.json`. A permissão é carregada na inicialização da sessão — reiniciar o Claude Code resolve. Alternativamente, rodar os scripts manualmente.
-- **`--skip-schema-validation` inválido em Helm v3.12** — flag não existe nesta versão do Helm, causa `Error: unknown flag`. Removida do `04-install-istio`. O istio-ingressgateway não era instalado silenciosamente porque o script usava `set -euo pipefail` mas o erro ocorria dentro de uma subshell de pipeline. Corrigido: removida a flag.
-- **CORS regex `\.` em YAML double-quoted string é inválido** — dentro de `<<EOF` bash, `\\.` vira `\.` que é sequência de escape inválida em YAML (YAML só aceita `\\`, `\"`, `\n`, etc.). O `kubectl apply` falha com `found unknown escape character`. Solução: usar `[.]` no lugar de `\.` nos padrões de regex nos scripts `06-deploy-services` e `08-deploy-customer2`.
-- **Endpoint do discovery é `/tenant?domain=<email_domain>`** — não `/tenants`. A verificação final no HANDOFF.md e no prompt de tarefa usava `/tenants` (404). O endpoint correto é `/tenant?domain=customer1.com`.
+Os gotchas detalhados com soluções estão em `local/docs/lessons-learned.md`. Resumo dos não óbvios:
+
+- **`rollout restart` necessário quando Secret/ConfigMap muda** — sem troca de imagem, pods não remontam env vars automaticamente. `kubectl rollout restart deployment/<name>`.
+- **Subagente sem permissão bash** — subagentes via Agent tool não herdam permissões da sessão principal. Reiniciar o Claude Code ou rodar scripts manualmente.
+- **`--skip-schema-validation` inválido em Helm v3.12** — causa `Error: unknown flag`; removida do `04-install-istio`.
+- **CORS regex `\.` em YAML dentro de `<<EOF` bash** — `\\.` vira `\.`, escape inválido em YAML. Usar `[.]` no lugar de `\.` nos scripts.
+- **Endpoint do discovery é `/tenant?domain=<email_domain>`** — não `/tenants` (404).
 
 ## Backlog
 
@@ -158,48 +141,9 @@ Nenhum — todos os 8 scripts passaram sem falha na primeira execução. Ambient
 
 ---
 
-## Design → Frontend: sincronização de UI
-
-### Contexto
-
-O arquivo `design/index.html` é o **single source of truth visual**. Ele carrega o CSS real dos serviços via `<link rel="stylesheet" href="/services/tenant-frontend/app/static/app.css">`, então qualquer mudança em `app.css` é imediatamente refletida no sandbox ao rodar `make serve`.
-
-### O que foi feito
-
-- **Passo 1 (concluído):** Todo CSS de componentes que estava inline no `<style>` do `design/index.html` foi movido para `app.css`. O `<style>` agora contém apenas o chrome do sandbox (`#sandbox-bar`, `body { padding-bottom }`) e um override pontual (`.result-drawer-overlay { bottom: 40px }` para não cobrir a barra do sandbox).
-
-  **Fluxo atual:** editar CSS → editar `app.css` → design sandbox e serviço ficam sincronizados automaticamente.
-
-- **Passo 2 (concluído):** Script `06-deploy-services` (local) alinhado com `13-deploy-services` (AWS): o symlink `app/static/shared → ../../../../design/shared` é substituído por cópia real antes do `docker build` e restaurado após, garantindo que `shared/tokens.css` e `shared/base.css` entrem na imagem.
-
-- **Passo 3 (concluído):** JS de UI extraído para `services/tenant-frontend/app/static/test-ui.js`.
-
-  **Interface de inicialização:**
-  ```js
-  window.initTestPage({ testCases, jwtToken });
-  ```
-  - `design/index.html`: carrega via `<script src="/services/tenant-frontend/app/static/test-ui.js">`, chama `initTestPage({ testCases: TEST_CASES, jwtToken: MOCK_JWT })` após `buildAccordion()`.
-  - `test.html`: `<script src="{{ url_for('static', path='test-ui.js') }}">` + `initTestPage({ testCases: ..., jwtToken: ... })` com dados Jinja2.
-  - `test-ui.js` expõe `window._testUi` e registra funções globais (`toggleAccordion`, `runSingle`, `openDrawer`, etc.) no `initTestPage()` para compatibilidade com atributos `onclick=` inline.
-
-  **Fluxo atual:** editar JS de UI → editar `test-ui.js` → sandbox e serviço ficam sincronizados automaticamente.
-
-### Observações
-
-- Script `05-deploy-keycloak` regenerou `KEYCLOAK_CLIENT_SECRET` em `env.secrets` (valor anterior era da sessão anterior).
-- `env.secrets` existia com `STATE_JWT_SECRET` reaproveitado — `06-deploy-services` detectou e usou sem regenerar.
-- Cluster usa 3 server nodes (HA etcd); build das imagens usa cache Docker — builds quasi-instantâneos.
-
-### Issues abertas
-
-Nenhuma nova. Backlog inalterado.
-
----
-
 ## Next Steps
 
-1. **Reprovisionar do zero** — ✅ Validado em 2026-04-16. Scripts 01-08 funcionam após correções documentadas nos Gotchas. `./destroy && ./run` funciona a partir de estado limpo.
-2. ~~**`cognito_pool_id` → `idp_pool_id`**~~ — ✅ concluído: `models.py`, `repository.py`, `discovery_client.py`, scripts locais e docs atualizados com TDD (34 + 18 testes passando).
+- Ver Backlog abaixo.
 
 ## Key Files
 
