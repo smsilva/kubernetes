@@ -1,3 +1,7 @@
+> **Este lab foi movido.**
+> O conteúdo deste diretório foi migrado para o repositório independente
+> [aws-saas-platform](https://github.com/smsilva/aws-saas-platform).
+
 # EKS com ALB + Istio Gateway
 
 ## Objetivo
