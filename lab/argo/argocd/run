@@ -3,4 +3,5 @@
 . ./k3d-cluster-creation.sh
 . ./argocd-install.sh
 . ./argocd-notification.sh
+. ./crossplane-install.sh
 . ./argocd-get-initial-password.sh
