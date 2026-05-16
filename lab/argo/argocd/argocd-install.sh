@@ -14,6 +14,7 @@ helm upgrade \
   --create-namespace \
   argocd argo/argo-cd \
   --values "values/resource-customizations.yaml" \
+  --values "values/service.yaml" \
   --wait &> /dev/null
 
 echo ""
