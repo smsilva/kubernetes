@@ -19,10 +19,12 @@ helm upgrade \
 
 echo ""
 
-for deployment in $(kubectl \
-  --namespace argocd \
-  get deploy \
-  --output name); do
+for deployment in $(
+  kubectl \
+    --namespace argocd \
+    get deploy \
+    --output name
+); do
   kubectl \
     --namespace argocd \
     wait \
@@ -38,3 +40,24 @@ if ! which argocd &> /dev/null; then
 
   sh cli/install.sh
 fi
+
+argocd_password=$(
+  kubectl \
+    --namespace argocd \
+    get secret argocd-initial-admin-secret \
+    --output jsonpath="{.data.password}" \
+  | base64 --decode
+)
+
+echo ""
+
+echo "ArgoCD CLI login"
+
+argocd login localhost:32080 \
+  --username admin \
+  --password "${argocd_password}" \
+  --insecure
+
+echo ""
+
+argocd app list
